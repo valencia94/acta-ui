@@ -36,7 +36,7 @@ jobs:
       - name: Build & deploy
         run: |
           corepack enable
-          corepack prepare pnpm@9 --activate   # ← guarantees pnpm 9
+          corepack prepare pnpm@9 --activate   # ← pins pnpm 9.x
           chmod +x scripts/deploy_ui.sh
           ./scripts/deploy_ui.sh
         env:
@@ -44,3 +44,4 @@ jobs:
           S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
           CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
           BUILD_DIR: dist
+
