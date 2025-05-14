@@ -2,76 +2,75 @@ name: Deploy UI to S3 + CloudFront
 
 on:
   push:
-    branches: [ develop ]   # change if your prod branch is develop
+    branches: [ develop ]          # adjust if you deploy from another branch
 
 permissions:
-  id-token: write        # for OIDC
+  id-token: write                  # GitHub-to-AWS OIDC
   contents: read
 
 env:
-  BUILD_DIR: dist
+  BUILD_DIR: dist                  # Vite output folder
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Checkout source
+      # 1 – Check out source
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2) Wallet-less AWS login via GitHub OIDC
+      # 2 – AWS login via OIDC (no static keys)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region:     ${{ vars.AWS_REGION }}
+          aws-region:     ${{ secrets.AWS_REGION }}
 
-      # 3) Install deps & build with pnpm
+      # 3 – Install deps & build with pnpm
       - name: Build Vite app
         run: |
           corepack enable
           pnpm install --frozen-lockfile
           pnpm run build
 
-      # 4) Ensure bucket exists (idempotent)
-      - name: Create/verify S3 bucket
+      # 4 – Create (if needed) & configure S3 bucket for static website
+      - name: Ensure S3 bucket
         run: |
-          aws s3api head-bucket --bucket ${{ vars.BUCKET_NAME }} 2>/dev/null || \
+          aws s3api head-bucket --bucket ${{ secrets.S3_BUCKET_NAME }} 2>/dev/null || \
           aws s3api create-bucket \
-                --bucket ${{ vars.BUCKET_NAME }} \
-                --region ${{ vars.AWS_REGION }} \
-                --create-bucket-configuration LocationConstraint=${{ vars.AWS_REGION }}
-          aws s3 website s3://${{ vars.BUCKET_NAME }} --index-document index.html || true
+                --bucket ${{ secrets.S3_BUCKET_NAME }} \
+                --region ${{ secrets.AWS_REGION }} \
+                --create-bucket-configuration LocationConstraint=${{ secrets.AWS_REGION }}
+          aws s3 website s3://${{ secrets.S3_BUCKET_NAME }} --index-document index.html || true
 
-      # 5) Sync build to S3
-      - name: Upload static site
-        run: aws s3 sync $BUILD_DIR s3://${{ vars.BUCKET_NAME }} --delete
+      # 5 – Upload build artifacts
+      - name: Sync build to S3
+        run: aws s3 sync $BUILD_DIR s3://${{ secrets.S3_BUCKET_NAME }} --delete
 
-      # 6) Create (first run) or reuse CloudFront distro
+      # 6 – Ensure CloudFront distribution (create on first run)
       - name: Ensure CloudFront distribution
         id: cfdist
         run: |
-          if [ -z "${{ vars.CLOUDFRONT_DIST_ID }}" ]; then
+          if [ -z "${{ secrets.CLOUDFRONT_DIST_ID }}" ]; then
             DIST_ID=$(aws cloudfront create-distribution \
-              --origin-domain-name ${{ vars.BUCKET_NAME }}.s3.${{ vars.AWS_REGION }}.amazonaws.com \
+              --origin-domain-name ${{ secrets.S3_BUCKET_NAME }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com \
               --default-root-object index.html \
               --query 'Distribution.Id' --output text)
             echo "distid=$DIST_ID" >> $GITHUB_OUTPUT
           else
-            echo "distid=${{ vars.CLOUDFRONT_DIST_ID }}" >> $GITHUB_OUTPUT
+            echo "distid=${{ secrets.CLOUDFRONT_DIST_ID }}" >> $GITHUB_OUTPUT
           fi
 
-      # 7) Invalidate cache so users get the latest bundle
+      # 7 – Invalidate CDN cache
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ steps.cfdist.outputs.distid }} \
             --paths "/*"
 
-      # 8) Output frontend URL
+      # 8 – Print live URL
       - name: Show site URL
-        run: echo "🚀 Deployed: https://$(aws cloudfront get-distribution \
+        run: echo "🚀  Deployed: https://$(aws cloudfront get-distribution \
               --id ${{ steps.cfdist.outputs.distid }} \
               --query 'Distribution.DomainName' --output text)"
-
