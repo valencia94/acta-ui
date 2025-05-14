@@ -1,0 +1,71 @@
+name: Deploy-UI-to-S3+CloudFront
+
+on:
+  push:
+    branches: [ main ]      # change if your prod branch is develop
+
+env:
+  AWS_REGION: us-east-2     # 🔁 pick the region you’ve been using
+  BUCKET_NAME: acta-ui-prod-bucket          # 🔁 unique S3 bucket name
+  CLOUDFRONT_DIST_ID: E12ABC34DEF56         # 🔁 existing dist or leave blank
+  BUILD_DIR: dist
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write       # required for AWS OIDC auth
+      contents: read
+
+    steps:
+      # 1) Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) Configure AWS credentials via GitHub OIDC (no long-lived keys)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/GitHubOIDCRole   # 🔁 create once (see notes)
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3) Enable pnpm, install deps, build
+      - name: Install dependencies & build
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+      # 4) Ensure S3 bucket exists & is website-ready
+      - name: Create S3 bucket (idempotent)
+        run: |
+          aws s3api head-bucket --bucket $BUCKET_NAME 2>/dev/null || \
+          aws s3api create-bucket --bucket $BUCKET_NAME --region $AWS_REGION \
+            --create-bucket-configuration LocationConstraint=$AWS_REGION
+          aws s3 website s3://$BUCKET_NAME --index-document index.html || true
+
+      # 5) Sync build to S3
+      - name: Sync build to S3
+        run: |
+          aws s3 sync $BUILD_DIR s3://$BUCKET_NAME --delete
+
+      # 6) Provision or update CloudFront (one-time)
+      - name: Ensure CloudFront distribution
+        id: cfdist
+        run: |
+          if [ -z "$CLOUDFRONT_DIST_ID" ]; then
+            DIST_ID=$(aws cloudfront create-distribution \
+              --origin-domain-name $BUCKET_NAME.s3.$AWS_REGION.amazonaws.com \
+              --default-root-object index.html \
+              --query 'Distribution.Id' --output text)
+            echo "distid=$DIST_ID" >> $GITHUB_OUTPUT
+          else
+            echo "distid=$CLOUDFRONT_DIST_ID" >> $GITHUB_OUTPUT
+          fi
+
+      # 7) Invalidate CDN cache so users get the latest bundle
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ steps.cfdist.outputs.distid }} --paths "/*"
+
