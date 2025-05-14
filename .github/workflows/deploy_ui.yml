@@ -2,7 +2,7 @@ name: Deploy UI to S3 + CloudFront
 
 on:
   push:
-    branches: [ main ]   # change if your prod branch is develop
+    branches: [ develope ]   # change if your prod branch is develop
 
 permissions:
   id-token: write        # for OIDC
