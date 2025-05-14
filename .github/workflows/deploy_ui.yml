@@ -19,18 +19,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS creds (OIDC)
+      # NEW — Install Node 22.x (matches engines.node)
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # AWS creds step unchanged
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region:     ${{ secrets.AWS_REGION }}
 
-      - name: Build & deploy via script
+      # Build & deploy via script (pin pnpm 9.x)
+      - name: Build & deploy
         run: |
           corepack enable
+          corepack prepare pnpm@9 --activate   # ← guarantees pnpm 9
           chmod +x scripts/deploy_ui.sh
           ./scripts/deploy_ui.sh
         env:
-          AWS_REGION:          ${{ secrets.AWS_REGION }}
-          S3_BUCKET_NAME:      ${{ secrets.S3_BUCKET_NAME }}
-          CLOUDFRONT_DIST_ID:  ${{ secrets.CLOUDFRONT_DIST_ID }}  # empty on first run
+          AWS_REGION:         ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+          BUILD_DIR: dist
