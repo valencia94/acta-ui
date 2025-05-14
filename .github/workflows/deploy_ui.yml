@@ -1,71 +1,77 @@
-name: Deploy-UI-to-S3+CloudFront
+name: Deploy UI to S3 + CloudFront
 
 on:
   push:
-    branches: [ main ]      # change if your prod branch is develop
+    branches: [ main ]   # change if your prod branch is develop
+
+permissions:
+  id-token: write        # for OIDC
+  contents: read
 
 env:
-  AWS_REGION: us-east-2     # 🔁 pick the region you’ve been using
-  BUCKET_NAME: acta-ui-prod-bucket          # 🔁 unique S3 bucket name
-  CLOUDFRONT_DIST_ID: E12ABC34DEF56         # 🔁 existing dist or leave blank
   BUILD_DIR: dist
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    permissions:
-      id-token: write       # required for AWS OIDC auth
-      contents: read
-
     steps:
-      # 1) Checkout code
+      # 1) Checkout source
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2) Configure AWS credentials via GitHub OIDC (no long-lived keys)
+      # 2) Wallet-less AWS login via GitHub OIDC
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/GitHubOIDCRole   # 🔁 create once (see notes)
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region:     ${{ vars.AWS_REGION }}
 
-      # 3) Enable pnpm, install deps, build
-      - name: Install dependencies & build
+      # 3) Install deps & build with pnpm
+      - name: Build Vite app
         run: |
           corepack enable
           pnpm install --frozen-lockfile
           pnpm run build
 
-      # 4) Ensure S3 bucket exists & is website-ready
-      - name: Create S3 bucket (idempotent)
+      # 4) Ensure bucket exists (idempotent)
+      - name: Create/verify S3 bucket
         run: |
-          aws s3api head-bucket --bucket $BUCKET_NAME 2>/dev/null || \
-          aws s3api create-bucket --bucket $BUCKET_NAME --region $AWS_REGION \
-            --create-bucket-configuration LocationConstraint=$AWS_REGION
-          aws s3 website s3://$BUCKET_NAME --index-document index.html || true
+          aws s3api head-bucket --bucket ${{ vars.BUCKET_NAME }} 2>/dev/null || \
+          aws s3api create-bucket \
+                --bucket ${{ vars.BUCKET_NAME }} \
+                --region ${{ vars.AWS_REGION }} \
+                --create-bucket-configuration LocationConstraint=${{ vars.AWS_REGION }}
+          aws s3 website s3://${{ vars.BUCKET_NAME }} --index-document index.html || true
 
       # 5) Sync build to S3
-      - name: Sync build to S3
-        run: |
-          aws s3 sync $BUILD_DIR s3://$BUCKET_NAME --delete
+      - name: Upload static site
+        run: aws s3 sync $BUILD_DIR s3://${{ vars.BUCKET_NAME }} --delete
 
-      # 6) Provision or update CloudFront (one-time)
+      # 6) Create (first run) or reuse CloudFront distro
       - name: Ensure CloudFront distribution
         id: cfdist
         run: |
-          if [ -z "$CLOUDFRONT_DIST_ID" ]; then
+          if [ -z "${{ vars.CLOUDFRONT_DIST_ID }}" ]; then
             DIST_ID=$(aws cloudfront create-distribution \
-              --origin-domain-name $BUCKET_NAME.s3.$AWS_REGION.amazonaws.com \
+              --origin-domain-name ${{ vars.BUCKET_NAME }}.s3.${{ vars.AWS_REGION }}.amazonaws.com \
               --default-root-object index.html \
               --query 'Distribution.Id' --output text)
             echo "distid=$DIST_ID" >> $GITHUB_OUTPUT
           else
-            echo "distid=$CLOUDFRONT_DIST_ID" >> $GITHUB_OUTPUT
+            echo "distid=${{ vars.CLOUDFRONT_DIST_ID }}" >> $GITHUB_OUTPUT
           fi
 
-      # 7) Invalidate CDN cache so users get the latest bundle
+      # 7) Invalidate cache so users get the latest bundle
       - name: Invalidate CloudFront cache
         run: |
-          aws cloudfront create-invalidation --distribution-id ${{ steps.cfdist.outputs.distid }} --paths "/*"
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.cfdist.outputs.distid }} \
+            --paths "/*"
+
+      # 8) Output frontend URL
+      - name: Show site URL
+        run: echo "🚀 Deployed: https://$(aws cloudfront get-distribution \
+              --id ${{ steps.cfdist.outputs.distid }} \
+              --query 'Distribution.DomainName' --output text)"
 
