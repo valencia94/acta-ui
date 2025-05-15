@@ -4,22 +4,22 @@
   "homepage": "https://github.com/cTux/vitejs-react-ts-template",
   "license": "MIT",
   "type": "module",
+
   "engines": {
     "node": "^22",
     "pnpm": "^9"
   },
+
   "scripts": {
-    "build": "pnpm build:bundle",
-    "build:bundle": "vite build",
-    "build:analyze": "vite-bundle-visualizer",
-    "deploy": "gh-pages -d dist",
-    "dev": "vite",
-    "dev:storybook": "storybook dev -p 6006",
-    "lint": "tsc --noEmit && eslint .",
-    "postinstall": "check-engine",
-    "prepare": "playwright install chromium && husky",
-    "preview": "vite preview",
-    "serve": "vite serve",
+    "build": "vite build",                            // 🌐 builds the SPA into dist/
+    "build:analyze": "vite-bundle-visualizer",        // optional bundle-size report
+    "dev": "vite",                                    // local hot-reload dev server
+    "dev:storybook": "storybook dev -p 6006",         // component sandbox
+    "lint": "tsc --noEmit && eslint .",               // type-check + lint
+    "postinstall": "check-engine",                    // enforces engines.node / pnpm
+    "prepare": "playwright install chromium && husky",// git hooks + e2e browser
+    "preview": "vite preview",                        // serve built dist/ locally
+    "serve": "vite serve",                            // SSR fallback (unused)
     "test": "pnpm run test:vitest && pnpm run test:playwright",
     "test:playwright": "playwright test playwright",
     "test:vitest": "vitest --run",
@@ -29,22 +29,24 @@
     "update:minor": "pnpm exec npm-check-updates -u --target minor --packageManager pnpm",
     "update:patch": "pnpm exec npm-check-updates -u --target patch --packageManager pnpm"
   },
+
   "dependencies": {
     "@emotion/styled": "^11.13.0",
     "@mui/material": "^6.1.6",
     "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.1.6",
     "@mui/styled-engine-sc": "^6.1.6",
+    "@headlessui/react": "^1.7.18",
+    "clsx": "^2.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "styled-components": "^6.1.13",
-    "zod": "^3.23.8",
-    "@headlessui/react": "^1.7.18",
-    "clsx": "^2.1.0"
-
+    "zod": "^3.23.8"
   },
+
   "resolutions": {
     "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.0.1"
   },
+
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
@@ -67,31 +69,31 @@
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "@vitejs/plugin-react": "^4.3.3",
     "@vitest/coverage-v8": "^2.1.4",
+    "autoprefixer": "^10.4.19",
     "ctux-check-engine": "^1.13.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^3.2.0",
-    "gh-pages": "^6.2.0",
+    "gh-pages": "^6.2.0",                             // not used in S3 workflow, harmless
     "happy-dom": "^15.11.2",
     "husky": "^9.1.6",
     "node-fetch": "^3.3.2",
     "npm-check-updates": "^17.1.10",
     "playwright": "^1.48.2",
+    "postcss": "^8.4.38",
     "prettier": "^3.3.3",
     "storybook": "^8.4.2",
+    "tailwindcss": "^3.4.4",
     "typescript": "5.5.4",
     "vite": "^5.4.11",
     "vite-bundle-visualizer": "^1.2.1",
     "vite-plugin-chunk-split": "^0.5.0",
     "vite-plugin-svgr": "^4.3.0",
-    "vitest": "^2.1.4",
-    "tailwindcss": "^3.4.4",
-    "postcss": "^8.4.38",
-    "autoprefixer": "^10.4.19"
-
+    "vitest": "^2.1.4"
   },
+
   "pnpm": {
     "overrides": {
       "glob-parent@<5.1.2": ">=5.1.2",
@@ -99,7 +101,6 @@
       "trim@<0.0.3": ">=0.0.3",
       "trim-newlines@<3.0.1": ">=3.0.1",
       "ejs@<3.1.7": ">=3.1.7",
-      "async@>=2.0.0 <2.6.4": ">=2.6.4",
       "got@<11.8.5": ">=11.8.5",
       "terser@>=5.0.0 <5.14.2": ">=5.14.2",
       "minimatch@<3.0.5": ">=3.0.5",
@@ -107,7 +108,6 @@
       "http-cache-semantics@<4.1.1": ">=4.1.1",
       "cacheable-request@<10.2.7": ">=10.2.7",
       "semver@<7.5.2": ">=7.5.2",
-      "semver@>=7.0.0 <7.5.2": ">=7.5.2",
       "word-wrap@<1.2.4": ">=1.2.4",
       "get-func-name@<2.0.1": ">=2.0.1",
       "zod@<=3.22.2": ">=3.22.3",
@@ -116,17 +116,13 @@
       "vite@>=5.0.0 <5.0.5": ">=5.0.5",
       "vite@>=5.0.0 <=5.0.11": ">=5.0.12",
       "ip@<1.1.9": ">=1.1.9",
-      "ip@=2.0.0": ">=2.0.1",
       "express@<4.19.2": ">=4.19.2",
       "tar@<6.2.1": ">=6.2.1",
-      "ejs@<3.1.10": ">=3.1.10",
       "ws@>=8.0.0 <8.17.1": ">=8.17.1",
-      "braces@<3.0.3": ">=3.0.3",
       "micromatch@<4.0.8": ">=4.0.8",
       "body-parser@<1.20.3": ">=1.20.3",
       "send@<0.19.0": ">=0.19.0",
       "serve-static@<1.16.0": ">=1.16.0",
-      "express@<4.20.0": ">=4.20.0",
       "path-to-regexp@<0.1.10": ">=0.1.10",
       "rollup@>=4.0.0 <4.22.4": ">=4.22.4",
       "cookie@<0.7.0": ">=0.7.0",
