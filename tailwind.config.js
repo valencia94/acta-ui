@@ -3,10 +3,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        ikusi: "#4ac795",
-        cvdex: "#0060af"
-      }
-    }
+        ikusi: {
+          DEFAULT: "#00a878",
+          dark: "#00815c",
+        },
+        cvdex: {
+          DEFAULT: "#003366",
+          light: "#0051a3",
+        },
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };
