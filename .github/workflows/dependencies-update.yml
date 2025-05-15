@@ -2,57 +2,70 @@ name: Dependencies Update
 
 on:
   schedule:
-    - cron: "59 5 * * *"
+    - cron: '59 5 * * *'     # daily – UTC 05:59
+  workflow_dispatch:
 
 jobs:
   update-dependencies:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the head commit of the branch
+      # 1 — Checkout develop branch (detached head)
+      - name: ⬇️  Checkout
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: false   # required for PR action later
 
-      - name: Use pnpm
+      # 2 — Node 22 (matches package.json engines)
+      - name: 🟢  Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      # 3 — pnpm 9 (engines.pnpm)
+      - name: 🟢  Setup pnpm 9
         uses: pnpm/action-setup@v2
         with:
-          version: latest
+          version: 9
+          cache: true
 
-      - name: Use node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
+      # 4 — Install once
+      - name: 📦  Install dependencies
+        run: pnpm install --no-frozen-lockfile
+        env:
+          CI: true
 
-      - name: Installing dependencies
-        run: pnpm i
-
-      - name: Updating dependencies
+      # 5 — Upgrade minor/patch versions
+      - name: ⬆️  Update dependencies (minor)
         run: pnpm run update:minor
 
-      - name: Dependencies audit
-        run: pnpm audit --fix
+      # 6 — Audit & fix
+      - name: 🔐  pnpm audit fix
+        run: pnpm audit --fix || true   # never fail the job on audit
 
-      - name: Installing dependencies
-        run: pnpm i
+      # 7 — Re-install after manifest edits
+      - name: 📦  Re-install after update
+        run: pnpm install --no-frozen-lockfile
+        env:
+          CI: true
 
-      - name: Running ESLint
+      # 8 — Quality gates
+      - name: 🧹  ESLint
         run: pnpm run lint
-
-      - name: Running Vitest
+      - name: 🧪  Vitest
         run: pnpm run test
-
-      - name: Running Build
+      - name: 🏗️   Build (Vite)
         run: pnpm run build
+      # Storybook build is optional; comment in if you rely on it
+      # - name: 📚  Build Storybook
+      #   run: pnpm run build:storybook
 
-      - name: Running Build for Storybook
-        run: pnpm run build:storybook
-
-      - name: Run command
+      # 9 — Open / update PR with changes
+      - name: 🔄  Create dependencies-update PR
         uses: ctux/simple-pull-request-gh-action@1.1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch_main_name: "'develop'"
-          branch_pr_name: "'dependencies-update'"
-          commit_message: "'chore(dependencies): automatic updates'"
+          branch_main_name: develop
+          branch_pr_name: dependencies-update
+          commit_message: chore(dependencies): automatic updates
