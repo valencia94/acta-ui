@@ -37,6 +37,7 @@ jobs:
         run: |
           corepack enable
           corepack prepare pnpm@9 --activate   # ← pins pnpm 9.x
+          pnpm install --no-frozen-lockfile   # ← replace line
           chmod +x scripts/deploy_ui.sh
           ./scripts/deploy_ui.sh
         env:
