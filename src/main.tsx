@@ -1,11 +1,10 @@
-import React, { Suspense } from 'react';
-import { createRoot } from 'react-dom/client';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
 
-import { AppHooksWrapper } from '~/components/AppHooksWrapper';
-import { LoadingMessage } from '~/components/LoadingMessage';
-
-createRoot(document.getElementById('root')).render(
-  <Suspense fallback={<LoadingMessage />}>
-    <AppHooksWrapper />
-  </Suspense>
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );
