@@ -2,7 +2,7 @@ name: Deploy UI to S3 + CloudFront
 
 on:
   push:
-    branches: [ develop ]     # deploy from develop
+    branches: [ develop ]
   workflow_dispatch:
 
 permissions:
@@ -10,54 +10,41 @@ permissions:
   contents: read
 
 env:
-  BUILD_DIR: dist             # passed into deploy_ui.sh
+  BUILD_DIR: dist
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # --------------------------------------------------
-    # 1) Checkout source
-    # --------------------------------------------------
+    # 1) Checkout
     - name: ⬇️  Checkout code
       uses: actions/checkout@v4
 
-    # --------------------------------------------------
-    # 2) Install Node 22.x (matches package.json engines)
-    # --------------------------------------------------
+    # 2) Node 22 (no cache key — avoids pnpm lookup)
     - name: 🟢  Setup Node 22
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'pnpm'         # built-in cache for pnpm store
 
-    # --------------------------------------------------
-    # 3) Install deps & build bundle with Vite
-    #    — pins pnpm 9.x via Corepack
-    # --------------------------------------------------
+    # 3) Install deps & build (Core-pack installs pnpm 9)
     - name: 📦  Install dependencies & build
       run: |
         corepack enable
-        corepack prepare pnpm@9 --activate     # ensure correct pnpm
-        pnpm install --no-frozen-lockfile      # prod + dev deps
-        pnpm run build                         # outputs to dist/
+        corepack prepare pnpm@9 --activate
+        pnpm install --no-frozen-lockfile           # prod + dev
+        pnpm run build                              # dist/
       env:
-        # no NODE_ENV here – we need devDeps for Vite
         CI: true
 
-    # --------------------------------------------------
-    # 4) AWS credentials via GitHub OIDC
-    # --------------------------------------------------
+    # 4) AWS creds
     - name: 🔐  Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         aws-region:     ${{ secrets.AWS_REGION }}
 
-    # --------------------------------------------------
-    # 5) Sync to S3 & invalidate CloudFront
-    # --------------------------------------------------
+    # 5) Deploy
     - name: 🚀  Deploy to S3 + CloudFront
       run: |
         chmod +x scripts/deploy_ui.sh
