@@ -20,21 +20,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node 22
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region:     ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Build & deploy
+      - name: Install dependencies and deploy
         run: |
-          corepack enable
-          corepack prepare pnpm@9 --activate
           pnpm install --no-frozen-lockfile
           chmod +x scripts/deploy_ui.sh
           ./scripts/deploy_ui.sh
