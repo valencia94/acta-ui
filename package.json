@@ -11,15 +11,15 @@
   },
 
   "scripts": {
-    "build": "vite build",                            // 🌐 builds the SPA into dist/
-    "build:analyze": "vite-bundle-visualizer",        // optional bundle-size report
-    "dev": "vite",                                    // local hot-reload dev server
-    "dev:storybook": "storybook dev -p 6006",         // component sandbox
-    "lint": "tsc --noEmit && eslint .",               // type-check + lint
-    "postinstall": "check-engine",                    // enforces engines.node / pnpm
-    "prepare": "playwright install chromium && husky",// git hooks + e2e browser
-    "preview": "vite preview",                        // serve built dist/ locally
-    "serve": "vite serve",                            // SSR fallback (unused)
+    "build": "vite build",
+    "build:analyze": "vite-bundle-visualizer",
+    "dev": "vite",
+    "dev:storybook": "storybook dev -p 6006",
+    "lint": "tsc --noEmit && eslint .",
+    "postinstall": "check-engine",
+    "prepare": "playwright install chromium && husky",
+    "preview": "vite preview",
+    "serve": "vite serve",
     "test": "pnpm run test:vitest && pnpm run test:playwright",
     "test:playwright": "playwright test playwright",
     "test:vitest": "vitest --run",
@@ -76,7 +76,7 @@
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^3.2.0",
-    "gh-pages": "^6.2.0",                             // not used in S3 workflow, harmless
+    "gh-pages": "^6.2.0",
     "happy-dom": "^15.11.2",
     "husky": "^9.1.6",
     "node-fetch": "^3.3.2",
