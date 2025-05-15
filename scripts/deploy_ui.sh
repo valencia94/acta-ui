@@ -1,54 +1,50 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------
-# Build Vite app (if src/ present) and deploy to S3 + CloudFront
+# Deploy Vite build to an EXISTING S3 bucket + CloudFront distro
 # ----------------------------------------------------------
 set -euo pipefail
 
-# ----- Config (taken from env) -----
-AWS_REGION=${AWS_REGION:-us-east-2}
+# ----- Mandatory config (fail fast if absent) -----------------
+: "${AWS_REGION:?AWS_REGION not set}"
+: "${S3_BUCKET_NAME:?S3_BUCKET_NAME not set}"
+: "${CLOUDFRONT_DIST_ID:?CLOUDFRONT_DIST_ID not set}"
+
 BUILD_DIR=${BUILD_DIR:-dist}
-BUCKET_NAME=${S3_BUCKET_NAME:?S3_BUCKET_NAME not set}
-CLOUDFRONT_DIST_ID=${CLOUDFRONT_DIST_ID:-}
 
 echo "🔧 Region ............ $AWS_REGION"
-echo "🔧 Bucket ............ $BUCKET_NAME"
+echo "🔧 Bucket ............ $S3_BUCKET_NAME"
 echo "🔧 Build dir ......... $BUILD_DIR"
-echo "🔧 CloudFront distro . ${CLOUDFRONT_DIST_ID:-<will create>}"
+echo "🔧 CloudFront distro . $CLOUDFRONT_DIST_ID"
 
-# ----- Build (skip in CI if already built) -----
+# ----- Build (skip in CI if already built) --------------------
 if [[ -d src ]]; then
   corepack enable
-  pnpm install --frozen-lockfile
+  pnpm install --no-frozen-lockfile
   pnpm run build
 fi
 
-# ----- Ensure S3 bucket -----
-aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null || {
-  echo "🪣 Creating bucket $BUCKET_NAME"
+# ----- Ensure bucket exists (creates only on first run) -------
+if ! aws s3api head-bucket --bucket "$S3_BUCKET_NAME" 2>/dev/null; then
+  echo "🪣  Creating bucket $S3_BUCKET_NAME"
   aws s3api create-bucket \
-      --bucket "$BUCKET_NAME" \
+      --bucket "$S3_BUCKET_NAME" \
       --region "$AWS_REGION" \
       --create-bucket-configuration LocationConstraint="$AWS_REGION"
-  aws s3 website s3://"$BUCKET_NAME" --index-document index.html
-}
-
-# ----- Upload build -----
-echo "⬆️  Syncing build → s3://$BUCKET_NAME"
-aws s3 sync "$BUILD_DIR" "s3://$BUCKET_NAME" --delete
-
-# ----- CloudFront distro -----
-if [[ -z "$CLOUDFRONT_DIST_ID" ]]; then
-  echo "🌐 Creating CloudFront distribution"
-  CLOUDFRONT_DIST_ID=$(aws cloudfront create-distribution \
-        --origin-domain-name "$BUCKET_NAME.s3.$AWS_REGION.amazonaws.com" \
-        --default-root-object index.html \
-        --query 'Distribution.Id' --output text)
+  aws s3 website s3://"$S3_BUCKET_NAME" --index-document index.html
 fi
 
-DOMAIN=$(aws cloudfront get-distribution --id "$CLOUDFRONT_DIST_ID" \
-        --query 'Distribution.DomainName' --output text)
+# ----- Upload build ------------------------------------------
+echo "⬆️  Syncing $BUILD_DIR → s3://$S3_BUCKET_NAME"
+aws s3 sync "$BUILD_DIR" "s3://$S3_BUCKET_NAME" --delete
 
-echo "♻️  Invalidating cache"
-aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DIST_ID" --paths '/*' >/dev/null
+# ----- Invalidate CloudFront cache ---------------------------
+echo "♻️  Invalidating CloudFront cache"
+aws cloudfront create-invalidation \
+    --distribution-id "$CLOUDFRONT_DIST_ID" \
+    --paths '/*' >/dev/null
+
+DOMAIN=$(aws cloudfront get-distribution \
+    --id "$CLOUDFRONT_DIST_ID" \
+    --query 'Distribution.DomainName' --output text)
 
 echo "🚀  Deployed → https://$DOMAIN"
