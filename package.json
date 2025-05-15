@@ -16,7 +16,7 @@
     "dev": "vite",
     "dev:storybook": "storybook dev -p 6006",
     "lint": "tsc --noEmit && eslint .",
-    "postinstall": "check-engine",
+    "postinstall": "if [ -z \"$CI\" ]; then check-engine; fi",
     "prepare": "playwright install chromium && husky",
     "preview": "vite preview",
     "serve": "vite serve",
