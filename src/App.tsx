@@ -1,15 +1,26 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
 import "./index.css";
 
 export default function App() {
   return (
-    <div className="min-h-screen flex">
-      <aside className="w-52 bg-cvdex text-white p-4">Acta Automation</aside>
-      <main className="flex-1 p-6">
-        <h1 className="text-2xl font-semibold">Welcome</h1>
-        <p className="mt-2 text-slate-600">
-          UI scaffold is ready – Dashboard coming next.
-        </p>
-      </main>
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen flex bg-gray-50 font-sans">
+        <aside className="w-60 bg-cvdex text-white p-4 text-lg font-semibold shadow-md">
+          <img
+            src="/assets/ikusi-logo.png"
+            alt="Ikusi Logo"
+            className="w-32 mb-6"
+          />
+          Acta Platform
+        </aside>
+        <main className="flex-1 p-6">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            {/* Future routes go here */}
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
