@@ -10,43 +10,46 @@ permissions:
   contents: read
 
 env:
-  BUILD_DIR: dist
+  BUILD_DIR: dist                   # same value passed into deploy_ui.sh
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: ⬇️  Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🟢  Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: Install pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@9 --activate
+      - name: 🟢  Setup pnpm 9
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          cache: true               # speeds up repeated builds
 
-      - name: Install dependencies and build
+      - name: 📦  Install & build
         run: |
           pnpm install --no-frozen-lockfile
-          pnpm run build
+          pnpm run build            # → dist/
+        env:
+          NODE_ENV: production
 
-      - name: Configure AWS credentials
+      - name: 🔐  Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region:     ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to S3 and Invalidate CloudFront
+      - name: 🚀  Deploy to S3 + CloudFront
         run: |
           chmod +x scripts/deploy_ui.sh
           ./scripts/deploy_ui.sh
         env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_REGION:         ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
           CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-          BUILD_DIR: dist
+          BUILD_DIR:          ${{ env.BUILD_DIR }}
