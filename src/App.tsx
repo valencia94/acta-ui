@@ -7,7 +7,7 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen flex bg-gray-50 font-sans">
         <aside className="w-60 bg-cvdex text-white p-4 text-lg font-semibold">
-          <img src="/assets/pnc-logo.png" alt="PNC Logo" className="w-32 mb-4" />
+          <img src="/assets/ikusi-logo.png" alt="ikusi Logo" className="w-32 mb-4" />
           Acta Platform
         </aside>
         <main className="flex-1">
