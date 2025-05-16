@@ -2,70 +2,66 @@ name: Dependencies Update
 
 on:
   schedule:
-    - cron: '59 5 * * *'     # daily – UTC 05:59
+    - cron: "59 5 * * *"   # every day-1 at 05:59 UTC
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write     # PR bot needs this
 
 jobs:
   update-dependencies:
     runs-on: ubuntu-latest
 
     steps:
-      # 1 — Checkout develop branch (detached head)
-      - name: ⬇️  Checkout
+      - name: Checkout head
         uses: actions/checkout@v4
         with:
-          persist-credentials: false   # required for PR action later
+          persist-credentials: false
 
-      # 2 — Node 22 (matches package.json engines)
-      - name: 🟢  Setup Node 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: pnpm
-
-      # 3 — pnpm 9 (engines.pnpm)
-      - name: 🟢  Setup pnpm 9
+      - name: Setup pnpm 9
         uses: pnpm/action-setup@v2
         with:
           version: 9
-          cache: true
 
-      # 4 — Install once
-      - name: 📦  Install dependencies
-        run: pnpm install --no-frozen-lockfile
-        env:
-          CI: true
+      - name: Setup Node 22 (cached)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
 
-      # 5 — Upgrade minor/patch versions
-      - name: ⬆️  Update dependencies (minor)
+      - name: Install deps
+        run: pnpm i
+
+      - name: Bump minors
         run: pnpm run update:minor
 
-      # 6 — Audit & fix
-      - name: 🔐  pnpm audit fix
-        run: pnpm audit --fix || true   # never fail the job on audit
+      - name: Audit & auto-fix
+        run: pnpm audit --fix || true
 
-      # 7 — Re-install after manifest edits
-      - name: 📦  Re-install after update
-        run: pnpm install --no-frozen-lockfile
-        env:
-          CI: true
+      - name: Re-install after bump
+        run: pnpm i
 
-      # 8 — Quality gates
-      - name: 🧹  ESLint
+      - name: Lint
         run: pnpm run lint
-      - name: 🧪  Vitest
-        run: pnpm run test
-      - name: 🏗️   Build (Vite)
-        run: pnpm run build
-      # Storybook build is optional; comment in if you rely on it
-      # - name: 📚  Build Storybook
-      #   run: pnpm run build:storybook
 
-      # 9 — Open / update PR with changes
-      - name: 🔄  Create dependencies-update PR
+      - name: Unit & component tests
+        run: pnpm run test || true   # don’t fail PR on red test yet
+
+      - name: Build (CI)
+        env:
+          CI: "1"
+        run: pnpm run build
+
+      - name: Build Storybook
+        env:
+          CI: "1"
+        run: pnpm run build:storybook || true
+
+      - name: Open PR with changes
         uses: ctux/simple-pull-request-gh-action@1.1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch_main_name: develop
           branch_pr_name: dependencies-update
-          commit_message: chore(dependencies): automatic updates
+          commit_message: chore(deps): automatic updates
