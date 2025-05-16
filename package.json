@@ -4,12 +4,10 @@
   "homepage": "https://github.com/cTux/vitejs-react-ts-template",
   "license": "MIT",
   "type": "module",
-
   "engines": {
     "node": "^22",
     "pnpm": "^9"
   },
-
   "scripts": {
     "build": "vite build",
     "build:analyze": "vite-bundle-visualizer",
@@ -29,7 +27,6 @@
     "update:minor": "pnpm exec npm-check-updates -u --target minor --packageManager pnpm",
     "update:patch": "pnpm exec npm-check-updates -u --target patch --packageManager pnpm"
   },
-
   "dependencies": {
     "@emotion/styled": "^11.13.0",
     "@mui/material": "^6.1.6",
@@ -47,7 +44,6 @@
   "resolutions": {
     "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.0.1"
   },
-  
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
@@ -94,7 +90,6 @@
     "vite-plugin-svgr": "^4.3.0",
     "vitest": "^2.1.4"
   },
-
   "pnpm": {
     "overrides": {
       "glob-parent@<5.1.2": ">=5.1.2",
