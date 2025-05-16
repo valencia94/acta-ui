@@ -1,87 +1,42 @@
-import { useEffect, useState } from 'react';
-
-interface Project {
-  id: string;
-  name: string;
-  pm: string;
-  status: 'IN_PROGRESS' | 'READY' | 'APPROVED';
-}
+import { useState } from 'react';
 
 export default function Dashboard() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // 🚧  dummy data until Lambda/APIGW wiring is done
-    setTimeout(() => {
-      setProjects([
-        {
-          id: '10001',
-          name: 'BANCOLOMBIA – SD-WAN EXT',
-          pm: 'C. Valencia',
-          status: 'READY',
-        },
-        {
-          id: '10002',
-          name: 'SAP Migration',
-          pm: 'J. Smith',
-          status: 'IN_PROGRESS',
-        },
-      ]);
-      setLoading(false);
-    }, 600);
-  }, []);
+  const [rows] = useState([
+    { id: '10001', name: 'BANCOLOMBIA – SD-WAN EXT', pm: 'C. Valencia', status: 'READY' },
+    { id: '10002', name: 'SAP Migration',            pm: 'J. Smith',    status: 'IN PROGRESS' }
+  ]);
 
   return (
-    <main className="min-h-screen font-sans">
-      <header className="flex items-center gap-2 px-6 py-4 shadow">
-        <img src="/ikusi-logo.png" alt="Ikusi Logo" className="h-8" />
-        <h1 className="text-2xl font-semibold">Acta Platform</h1>
+    <main className="min-h-screen flex flex-col font-sans">
+      <header className="bg-ikusi-700 text-white flex items-center px-6 h-12">
+        <img src="/ikusi-logo.png" alt="Ikusi Logo" className="h-6 mr-3" />
+        <h1 className="text-lg font-semibold">Acta Platform</h1>
       </header>
 
-      <section className="p-8">
+      <section className="p-8 max-w-5xl mx-auto w-full">
         <h2 className="text-3xl font-bold mb-6">Project Summary</h2>
 
-        {loading && <p>Loading&nbsp;projects…</p>}
+        <table className="w-full border-collapse">
+          <thead className="bg-slate-100">
+            <tr className="text-left">
+              <th className="py-2 px-3">ID</th>
+              <th className="py-2 px-3">Name</th>
+              <th className="py-2 px-3">PM</th>
+              <th className="py-2 px-3">Status</th>
+            </tr>
+          </thead>
 
-        {!loading && projects.length === 0 && (
-          <p className="italic text-gray-600">No projects found</p>
-        )}
-
-        {!loading && projects.length > 0 && (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-emerald-600 text-white text-left">
-                <th className="p-3">ID</th>
-                <th className="p-3">Name</th>
-                <th className="p-3">PM</th>
-                <th className="p-3">Status</th>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id} className="border-b last:border-none">
+                <td className="py-2 px-3">{r.id}</td>
+                <td className="py-2 px-3">{r.name}</td>
+                <td className="py-2 px-3">{r.pm}</td>
+                <td className="py-2 px-3">{r.status}</td>
               </tr>
-            </thead>
-            <tbody>
-              {projects.map((p) => (
-                <tr key={p.id} className="odd:bg-gray-50">
-                  <td className="p-3 font-mono">{p.id}</td>
-                  <td className="p-3">{p.name}</td>
-                  <td className="p-3">{p.pm}</td>
-                  <td className="p-3">
-                    <span
-                      className={
-                        p.status === 'READY'
-                          ? 'text-emerald-600'
-                          : p.status === 'APPROVED'
-                            ? 'text-emerald-800'
-                            : 'text-gray-500'
-                      }
-                    >
-                      {p.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
       </section>
     </main>
   );

@@ -1,21 +1,18 @@
+/** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
         ikusi: {
-          DEFAULT: '#00a878',
-          dark: '#00815c',
-        },
-        cvdex: {
-          DEFAULT: '#003366',
-          light: '#0051a3',
-        },
+          600: '#00815c',
+          700: '#006c4d'
+        }
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      },
-    },
+        sans: ['Inter', 'sans-serif']
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };
