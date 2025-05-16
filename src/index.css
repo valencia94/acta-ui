@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .input { @apply w-full border rounded px-3 py-2 focus:outline-cvdex/70; }
+  .btn   { @apply bg-cvdex text-white font-semibold px-4 py-2 rounded hover:bg-cvdex-dark transition; }
+}
