@@ -2,7 +2,7 @@ name: Deploy UI to S3 + CloudFront
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   workflow_dispatch:
 
 permissions:
@@ -17,40 +17,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1) Checkout
-    - name: ⬇️  Checkout code
-      uses: actions/checkout@v4
+      # 1) Checkout
+      - name: ⬇️  Checkout code
+        uses: actions/checkout@v4
 
-    # 2) Node 22 (no cache key — avoids pnpm lookup)
-    - name: 🟢  Setup Node 22
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
+      # 2) Node 22 (no cache key — avoids pnpm lookup)
+      - name: 🟢  Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-    # 3) Install deps & build (Core-pack installs pnpm 9)
-    - name: 📦  Install dependencies & build
-      run: |
-        corepack enable
-        corepack prepare pnpm@9 --activate
-        pnpm install --no-frozen-lockfile           # prod + dev
-        pnpm run build                              # dist/
-      env:
-        CI: true
+      # 3) Install deps & build (Core-pack installs pnpm 9)
+      - name: 📦  Install dependencies & build
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+          pnpm install --no-frozen-lockfile           # prod + dev
+          pnpm run build                              # dist/
+        env:
+          CI: true
 
-    # 4) AWS creds
-    - name: 🔐  Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region:     ${{ secrets.AWS_REGION }}
+      # 4) AWS creds
+      - name: 🔐  Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    # 5) Deploy
-    - name: 🚀  Deploy to S3 + CloudFront
-      run: |
-        chmod +x scripts/deploy_ui.sh
-        ./scripts/deploy_ui.sh
-      env:
-        AWS_REGION:         ${{ secrets.AWS_REGION }}
-        S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
-        CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-        BUILD_DIR:          ${{ env.BUILD_DIR }}
+      # 5) Deploy
+      - name: 🚀  Deploy to S3 + CloudFront
+        run: |
+          chmod +x scripts/deploy_ui.sh
+          ./scripts/deploy_ui.sh
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+          BUILD_DIR: ${{ env.BUILD_DIR }}

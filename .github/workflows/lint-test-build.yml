@@ -2,12 +2,11 @@ name: Lint & Test & Build
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   pull_request:
-    branches: [ develop ]
+    branches: [develop]
 
 jobs:
-
   lint:
     runs-on: ubuntu-latest
 

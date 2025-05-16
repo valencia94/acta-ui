@@ -1,11 +1,11 @@
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     open-pull-requests-limit: 5
     # only security updates
     allow:
-      - dependency-type: "direct"
+      - dependency-type: 'direct'
     ignore:
-      - dependency-type: "all"
+      - dependency-type: 'all'

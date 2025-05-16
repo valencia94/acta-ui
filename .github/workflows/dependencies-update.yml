@@ -2,12 +2,12 @@ name: Dependencies Update
 
 on:
   schedule:
-    - cron: "59 5 * * *"   # every day-1 at 05:59 UTC
+    - cron: '59 5 * * *' # every day-1 at 05:59 UTC
   workflow_dispatch:
 
 permissions:
   contents: read
-  pull-requests: write     # PR bot needs this
+  pull-requests: write # PR bot needs this
 
 jobs:
   update-dependencies:
@@ -46,16 +46,16 @@ jobs:
         run: pnpm run lint
 
       - name: Unit & component tests
-        run: pnpm run test || true   # don’t fail PR on red test yet
+        run: pnpm run test || true # don’t fail PR on red test yet
 
       - name: Build (CI)
         env:
-          CI: "1"
+          CI: '1'
         run: pnpm run build
 
       - name: Build Storybook
         env:
-          CI: "1"
+          CI: '1'
         run: pnpm run build:storybook || true
 
       - name: Open PR with changes
