@@ -4,7 +4,6 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: '.', // Ensure root path
-  publicDir: 'public', // Pick up index.html
   build: {
     outDir: 'dist',
     emptyOutDir: true,
