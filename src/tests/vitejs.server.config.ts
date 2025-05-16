@@ -1,9 +1,13 @@
-import { port as defaultPort } from '../../vite.config';
+// src/tests/vitejs.server.config.ts
+// ✔ Type-check that the Vite config is importable
+//   and expose a port number for any other tests.
 
-export const getViteServerConfig = (port = defaultPort) => ({
-  configFile: `${__dirname}/../../vite.config.ts`,
-  root: `${__dirname}/../../`,
-  server: {
-    port,
-  },
-});
+import config from '../../vite.config'
+
+// narrow the type a bit so TS is satisfied
+type ViteConfig = {
+  server?: { port?: number }
+}
+
+const cfg = config as ViteConfig
+export const port = cfg.server?.port ?? 5173  // fall back to default dev port
