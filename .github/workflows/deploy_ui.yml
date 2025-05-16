@@ -15,42 +15,47 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
 
     steps:
-      # 1) Checkout
+      # 1) checkout the repo
       - name: ⬇️  Checkout code
         uses: actions/checkout@v4
 
-      # 2) Node 22 (no cache key — avoids pnpm lookup)
+      # 2) Node 22 + pnpm 9
       - name: 🟢  Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      # 3) Install deps & build (Core-pack installs pnpm 9)
-      - name: 📦  Install dependencies & build
+      - name: 🟢  Setup pnpm 9
         run: |
           corepack enable
           corepack prepare pnpm@9 --activate
-          pnpm install --no-frozen-lockfile           # prod + dev
-          pnpm run build                              # dist/
-        env:
-          CI: true
 
-      # 4) AWS creds
+      # 3) install & build
+      - name: 📦  Install deps + build
+        run: |
+          pnpm install --frozen-lockfile          # prod + dev deps
+          pnpm run build                          # → dist/
+        env:
+          CI: true                                # disable interactive hooks
+
+      # 4) assume role for S3/CloudFront
       - name: 🔐  Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region:     ${{ secrets.AWS_REGION }}
 
-      # 5) Deploy
+      # 5) sync to S3 and invalidate CF
       - name: 🚀  Deploy to S3 + CloudFront
         run: |
           chmod +x scripts/deploy_ui.sh
           ./scripts/deploy_ui.sh
         env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_REGION:         ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
           CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-          BUILD_DIR: ${{ env.BUILD_DIR }}
+          BUILD_DIR:          ${{ env.BUILD_DIR }}
