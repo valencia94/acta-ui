@@ -6,13 +6,13 @@ export default {
       colors: {
         ikusi: {
           600: '#00815c',
-          700: '#006c4d'
-        }
+          700: '#006c4d',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif']
-      }
-    }
+        sans: ['Inter', 'sans-serif'],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };

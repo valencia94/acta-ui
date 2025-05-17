@@ -2,8 +2,18 @@ import { useState } from 'react';
 
 export default function Dashboard() {
   const [rows] = useState([
-    { id: '10001', name: 'BANCOLOMBIA – SD-WAN EXT', pm: 'C. Valencia', status: 'READY' },
-    { id: '10002', name: 'SAP Migration',            pm: 'J. Smith',    status: 'IN PROGRESS' }
+    {
+      id: '10001',
+      name: 'BANCOLOMBIA – SD-WAN EXT',
+      pm: 'C. Valencia',
+      status: 'READY',
+    },
+    {
+      id: '10002',
+      name: 'SAP Migration',
+      pm: 'J. Smith',
+      status: 'IN PROGRESS',
+    },
   ]);
 
   return (
@@ -27,7 +37,7 @@ export default function Dashboard() {
           </thead>
 
           <tbody>
-            {rows.map(r => (
+            {rows.map((r) => (
               <tr key={r.id} className="border-b last:border-none">
                 <td className="py-2 px-3">{r.id}</td>
                 <td className="py-2 px-3">{r.name}</td>
