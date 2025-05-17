@@ -19,7 +19,7 @@
     "preview": "vite preview",
     "serve": "vite serve",
     "test": "pnpm run test:vitest && pnpm run test:playwright",
-    "test:vitest": "vitest --run --passWithNoTests",
+    "test:vitest": "vitest --run --passWithNoTests",,
     "test:vitest:coverage": "vitest --run --coverage",
     "test:vitest:watch": "vitest",
     "update:major": "pnpm exec npm-check-updates -u --packageManager pnpm",
