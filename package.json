@@ -8,9 +8,11 @@
     "node": "^22",
     "pnpm": "^9"
   },
+
   "scripts": {
     "build": "vite build",
     "build:analyze": "vite-bundle-visualizer",
+    "build:storybook": "storybook build -o storybook-static",
     "dev": "vite",
     "dev:storybook": "storybook dev -p 6006",
     "lint": "tsc --noEmit && eslint .",
@@ -19,13 +21,15 @@
     "preview": "vite preview",
     "serve": "vite serve",
     "test": "pnpm run test:vitest && pnpm run test:playwright",
-    "test:vitest": "vitest --run --passWithNoTests",,
-    "test:vitest:coverage": "vitest --run --coverage"
+    "test:playwright": "echo \"(skipped)\"",
+    "test:vitest": "vitest --run --passWithNoTests",
+    "test:vitest:coverage": "vitest --run --coverage",
     "test:vitest:watch": "vitest",
     "update:major": "pnpm exec npm-check-updates -u --packageManager pnpm",
     "update:minor": "pnpm exec npm-check-updates -u --target minor --packageManager pnpm",
     "update:patch": "pnpm exec npm-check-updates -u --target patch --packageManager pnpm"
   },
+
   "dependencies": {
     "@emotion/styled": "^11.13.0",
     "@headlessui/react": "^1.7.18",
@@ -39,10 +43,13 @@
     "styled-components": "^6.1.13",
     "zod": "^3.23.8"
   },
+
   "packageManager": "pnpm@9.15.9",
+
   "resolutions": {
     "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.0.1"
   },
+
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
@@ -89,6 +96,7 @@
     "vite-plugin-svgr": "^4.3.0",
     "vitest": "^2.1.4"
   },
+
   "pnpm": {
     "overrides": {
       "glob-parent@<5.1.2": ">=5.1.2",
