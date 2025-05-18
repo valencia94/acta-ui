@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IkusiLogo } from "./IkusiLogo";
 
 export default function Dashboard() {
   const [rows] = useState([
@@ -19,7 +20,7 @@ export default function Dashboard() {
   return (
     <main className="min-h-screen flex flex-col font-sans">
       <header className="bg-ikusi-700 text-white flex items-center px-6 h-12">
-        <img src="/ikusi-logo.png" alt="Ikusi Logo" className="h-6 mr-3" />
+        <IkusiLogo  alt="Ikusi Logo" className="h-6 mr-3" / />
         <h1 className="text-lg font-semibold">Acta Platform</h1>
       </header>
 
