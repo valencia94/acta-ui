@@ -7,7 +7,7 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 env:
   BUILD_DIR: dist
@@ -24,11 +24,11 @@ jobs:
       - name: ⬇️  Checkout code
         uses: actions/checkout@v4
 
-      # 2) Node 22 + pnpm 9
-      - name: 🟢  Setup Node 22
+      # 2) Node 20 + pnpm 9
+      - name: 🟢  Setup Node 
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
       - name: 🟢  Setup pnpm 9
         run: |
           corepack enable
