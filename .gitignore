@@ -10,3 +10,7 @@ test-results
 *.log
 .vitest-result.json
 .env
+
+# build output
+dist/
+
