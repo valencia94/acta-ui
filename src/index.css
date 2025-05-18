@@ -1,6 +1,0 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* quick visual check */
-body { @apply bg-white text-slate-900; }
