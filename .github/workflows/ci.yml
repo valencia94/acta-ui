@@ -1,6 +1,9 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: ["develop", "main", "master"]
+  pull_request:
 
 permissions:
   contents: read
@@ -16,7 +19,12 @@ jobs:
           version: 9
           run_install: true
 
-      - name: Lint & types
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Lint & type-check
         run: pnpm lint
 
       - name: Unit tests
