@@ -14,3 +14,7 @@ test-results
 # build output
 dist/
 
+
+# local helper scripts
+apply-package-tidy.sh
+patch-storybook-ci.sh
