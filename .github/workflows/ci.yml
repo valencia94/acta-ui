@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: ["develop", "main", "master"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Lint & type-check
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Format check
+        run: |
+          pnpm format --check || (echo "::error::Code not formatted"; exit 1)
