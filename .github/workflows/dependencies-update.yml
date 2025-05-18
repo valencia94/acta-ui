@@ -40,7 +40,7 @@ jobs:
         run: pnpm audit --fix || true
 
       - name: Re-install after bump
-aaZrun: pnpm i
+        run: pnpm i
 
       - name: Lint
         run: pnpm run lint
@@ -59,9 +59,9 @@ aaZrun: pnpm i
         run: pnpm run build:storybook || true
 
       - name: Run command
-      uses: ctux/simple-pull-request-gh-action@1.1.0
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        branch_main_name: develop
-        branch_pr_name: dependencies-update
-        commit_message: chore: automatic dependency update
+        uses: ctux/simple-pull-request-gh-action@1.1.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch_main_name: develop
+          branch_pr_name: dependencies-update
+          commit_message: chore(deps): automatic updates
