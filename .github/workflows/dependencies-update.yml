@@ -40,13 +40,13 @@ jobs:
         run: pnpm audit --fix || true
 
       - name: Re-install after bump
-        run: pnpm i
+aaZrun: pnpm i
 
       - name: Lint
         run: pnpm run lint
 
       - name: Unit & component tests
-        run: pnpm run test || true # don’t fail PR on red test yet
+        run: pnpm run test || true # don’t fail PR on red test yet                                                                                QQ
 
       - name: Build (CI)
         env:
@@ -58,10 +58,10 @@ jobs:
           CI: '1'
         run: pnpm run build:storybook || true
 
-      - name: Open PR with changes
-        uses: ctux/simple-pull-request-gh-action@1.1.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch_main_name: develop
-          branch_pr_name: dependencies-update
-          commit_message: 'chore(deps): automatic updates'
+      - name: Run command
+      uses: ctux/simple-pull-request-gh-action@1.1.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        branch_main_name: develop
+        branch_pr_name: dependencies-update
+        commit_message: chore: automatic dependency update
