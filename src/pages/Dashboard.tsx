@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { IkusiLogo } from "./IkusiLogo";
 
 export default function Dashboard() {
   const [rows] = useState([

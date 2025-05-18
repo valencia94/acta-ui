@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { IkusiLogo } from "./IkusiLogo";
+
 export default function Login() {
   const nav = useNavigate();
   const onSubmit = (e: React.FormEvent) => {
