@@ -148,11 +148,11 @@ importers:
         specifier: ^8.57.1
         version: 8.57.1
       eslint-config-prettier:
-        specifier: ^9.1.0
-        version: 9.1.0(eslint@8.57.1)
+        specifier: ^10.1.5
+        version: 10.1.5(eslint@8.57.1)
       eslint-plugin-prettier:
         specifier: ^5.4.0
-        version: 5.4.0(eslint-config-prettier@9.1.0(eslint@8.57.1))(eslint@8.57.1)(prettier@3.5.3)
+        version: 5.4.0(eslint-config-prettier@10.1.5(eslint@8.57.1))(eslint@8.57.1)(prettier@3.5.3)
       eslint-plugin-simple-import-sort:
         specifier: ^12.1.1
         version: 12.1.1(eslint@8.57.1)
@@ -169,8 +169,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       npm-check-updates:
-        specifier: ^18.0.1
-        version: 18.0.1
+        specifier: ^17.1.18
+        version: 17.1.18
       playwright:
         specifier: ^1.52.0
         version: 1.52.0
@@ -1822,8 +1822,8 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
-  eslint-config-prettier@9.1.0:
-    resolution: {integrity: sha512-NSWl5BFQWEPi1j4TjVNItzYV7dZXZ+wP6I6ZhrBGpChQhZRUaElihE9uRRkcbRnNb76UMKDF3r+WTmNcGPKsqw==}
+  eslint-config-prettier@10.1.5:
+    resolution: {integrity: sha512-zc1UmCpNltmVY34vuLRV61r1K27sWuX39E+uyUnY8xS2Bex88VV9cugG+UZbRSRGtGyFboj+D8JODyme1plMpw==}
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
@@ -2495,8 +2495,8 @@ packages:
     resolution: {integrity: sha512-bdok/XvKII3nUpklnV6P2hxtMNrCboOjAcyBuQnWEhO665FwrSNRxU+AqpsyvO6LgGYPspN+lu5CLtw4jPRKNA==}
     engines: {node: '>=0.10.0'}
 
-  npm-check-updates@18.0.1:
-    resolution: {integrity: sha512-MO7mLp/8nm6kZNLLyPgz4gHmr9tLoU+pWPLdXuGAx+oZydBHkHWN0ibTonsrfwC2WEQNIQxuZagYwB67JQpAuw==}
+  npm-check-updates@17.1.18:
+    resolution: {integrity: sha512-bkUy2g4v1i+3FeUf5fXMLbxmV95eG4/sS7lYE32GrUeVgQRfQEk39gpskksFunyaxQgTIdrvYbnuNbO/pSUSqw==}
     engines: {node: ^18.18.0 || >=20.0.0, npm: '>=8.12.1'}
     hasBin: true
 
@@ -5052,18 +5052,18 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-config-prettier@9.1.0(eslint@8.57.1):
+  eslint-config-prettier@10.1.5(eslint@8.57.1):
     dependencies:
       eslint: 8.57.1
 
-  eslint-plugin-prettier@5.4.0(eslint-config-prettier@9.1.0(eslint@8.57.1))(eslint@8.57.1)(prettier@3.5.3):
+  eslint-plugin-prettier@5.4.0(eslint-config-prettier@10.1.5(eslint@8.57.1))(eslint@8.57.1)(prettier@3.5.3):
     dependencies:
       eslint: 8.57.1
       prettier: 3.5.3
       prettier-linter-helpers: 1.0.0
       synckit: 0.11.6
     optionalDependencies:
-      eslint-config-prettier: 9.1.0(eslint@8.57.1)
+      eslint-config-prettier: 10.1.5(eslint@8.57.1)
 
   eslint-plugin-simple-import-sort@12.1.1(eslint@8.57.1):
     dependencies:
@@ -5718,7 +5718,7 @@ snapshots:
 
   normalize-range@0.1.2: {}
 
-  npm-check-updates@18.0.1: {}
+  npm-check-updates@17.1.18: {}
 
   object-assign@4.1.1: {}
 
