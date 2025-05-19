@@ -79,7 +79,7 @@
     "gh-pages":                           "^6.3.0",
     "husky":                              "^9.1.7",
     "node-fetch":                         "^3.3.2",
-    "npm-check-updates":                  "^18.0.1",
+    "npm-check-updates":                  "^17.1.18",
     "playwright":                         "^1.52.0",
     "postcss":                            "^8.5.3",
     "prettier":                           "^3.5.3",
