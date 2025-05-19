@@ -8,6 +8,8 @@
     "node": ">=20 <23",
     "pnpm": "^9"
   },
+  "packageManager": "pnpm@9.15.9",
+
   "scripts": {
     "build": "vite build",
     "build:analyze": "vite-bundle-visualizer",
@@ -28,6 +30,7 @@
     "update:patch": "pnpm exec npm-check-updates -u --target patch --packageManager pnpm",
     "format": "prettier --write ."
   },
+
   "dependencies": {
     "@headlessui/react": "^1.7.19",
     "@mui/material": "^6.4.11",
@@ -40,12 +43,7 @@
     "styled-components": "^6.1.18",
     "zod": "^3.24.4"
   },
-  "packageManager": "pnpm@9.15.9",
-  "pnpm": {
-    "overrides": {
-      "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.0.1"
-    }
-  },
+
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
@@ -90,8 +88,11 @@
     "vite-plugin-svgr": "^4.3.0",
     "vitest": "^2.1.9"
   },
+
   "pnpm": {
     "overrides": {
+      "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.0.1",
+
       "vite@<5.4.19": ">=5.4.19",
       "glob-parent@<5.1.2": ">=5.1.2",
       "async@<2.6.4": ">=2.6.4",
@@ -131,3 +132,4 @@
     }
   }
 }
+
