@@ -1,4 +1,4 @@
-# scripts/smoke_ui.sh ─ place at repo root, then:  bash scripts/smoke_ui.sh
+# scripts/smoke-ui.sh ─ place at repo root, then:  bash scripts/smoke-ui.sh
 set -euo pipefail
 DIST_ID="${CLOUDFRONT_DIST_ID:-$(aws cloudfront list-distributions \
          --query 'DistributionList.Items[?Comment==`acta-ui-prod`].Id|[0]' \
