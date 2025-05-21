@@ -1,5 +1,4 @@
 name: CI
-
 on:
   push:
     branches: [develop, main, master]
@@ -11,41 +10,35 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       # 1) checkout
       - uses: actions/checkout@v4
 
-      # 2) Node 20 first, so pnpm uses it
-      - name: 🟢  Set up Node 20
+      # 2) Node 20 – **no cache line**
+      - name: 🟢  Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
 
-      # 3) pnpm 9 (installs deps automatically)
-      - name: 📦  Set up pnpm 9 + install
+      # 3) pnpm 9 (+ deps install + cache)
+      - name: 📦  Setup pnpm 9
         uses: pnpm/action-setup@v2
         with:
           version: 9
           run_install: |
             args: [--frozen-lockfile]
         env:
-          CI: true  # disable any interactive hooks
+          CI: true
 
-      # 4) lint + type-check
-      - name: 🔍  ESLint & tsc
+      # 4) lint, tests, format, build
+      - name: 🔍  Lint & type-check
         run: pnpm lint
 
-      # 5) unit tests (Vitest + Playwright stub)
       - name: 🧪  Unit tests
         run: pnpm test
 
-      # 6) ensure code is Prettier-formatted
       - name: 🎨  Format check
-        run: |
-          pnpm format --check || (echo "::error::Code not formatted"; exit 1)
+        run: pnpm format --check
 
-      # 7) optional — verify prod build
       - name: 🏗️  Build bundle
         run: pnpm run build
