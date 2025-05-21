@@ -1,13 +1,13 @@
 const awsmobile = {
-  aws_project_region: 'us-east-2',
-  aws_user_pools_id: 'us-east-2_FyHLtOhiY',
-  aws_user_pools_web_client_id: '1hdn8b19ub2kmfkuse8rsjpv8e',
+  aws_project_region:  import.meta.env.VITE_AWS_REGION,
+  aws_user_pools_id:   import.meta.env.VITE_COGNITO_POOL_ID,
+  aws_user_pools_web_client_id: import.meta.env.VITE_COGNITO_CLIENT_ID,
   oauth: {
-    domain: 'us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com',
+    domain: import.meta.env.VITE_COGNITO_DOMAIN,
     scope: ['email', 'openid'],
-    redirectSignIn: 'https://d3rho4lut2re5r.cloudfront.net/',
-    redirectSignOut: 'https://d3rho4lut2re5r.cloudfront.net/',
-    responseType: 'code',
-  },
+    redirectSignIn:  import.meta.env.VITE_APP_URL,
+    redirectSignOut: import.meta.env.VITE_APP_URL,
+    responseType: 'code'
+  }
 };
 export default awsmobile;
