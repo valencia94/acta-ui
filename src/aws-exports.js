@@ -1,13 +1,19 @@
+// src/aws-exports.js
 const awsmobile = {
-  aws_project_region:  import.meta.env.VITE_AWS_REGION,
-  aws_user_pools_id:   import.meta.env.VITE_COGNITO_POOL_ID,
-  aws_user_pools_web_client_id: import.meta.env.VITE_COGNITO_CLIENT_ID,
+  aws_project_region: 'us-east-2',
+
+  // ── Cognito ─────────────────────────────────────────────────────────────
+  aws_user_pools_id: 'us-east-2_FyHLtOhiY',
+  aws_user_pools_web_client_id: '1hdn8b19ub2kmfkuse8rsjpv8e',
+
   oauth: {
-    domain: import.meta.env.VITE_COGNITO_DOMAIN,
+    // NO https://  and NO trailing slash on the domain line
+    domain: 'us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com',
     scope: ['email', 'openid'],
-    redirectSignIn:  import.meta.env.VITE_APP_URL,
-    redirectSignOut: import.meta.env.VITE_APP_URL,
-    responseType: 'code'
-  }
+    redirectSignIn: 'https://dexmsbwszpniw.cloudfront.net/',
+    redirectSignOut: 'https://dexmsbwszpniw.cloudfront.net/',
+    responseType: 'code',
+  },
 };
+
 export default awsmobile;
