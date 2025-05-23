@@ -3,4 +3,6 @@
 @tailwind utilities;
 
 /* project-wide tweaks below */
-body { @apply bg-white text-slate-900 antialiased; }
+body {
+  @apply bg-white text-slate-900 antialiased;
+}

@@ -1,12 +1,12 @@
 name: Check CloudFront Deployment Status
 
 on:
-  workflow_dispatch:  # Run manually from GitHub Actions UI
+  workflow_dispatch: # Run manually from GitHub Actions UI
 
 permissions:
   id-token: write
   contents: read
-  
+
 jobs:
   check-cloudfront-status:
     name: Check CloudFront Status

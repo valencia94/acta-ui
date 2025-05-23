@@ -65,4 +65,3 @@ jobs:
           branch_main_name: develop
           branch_pr_name: dependencies-update
           commit_message: "'chore(deps): automatic updates'"
-          
