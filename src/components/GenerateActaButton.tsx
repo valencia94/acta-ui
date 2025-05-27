@@ -6,6 +6,7 @@ interface Props { projectId: string; recipient: string; }
 
 export function GenerateActaButton({ projectId, recipient }: Props) {
   const [busy, setBusy] = useState(false);
+
   async function handle() {
     try {
       setBusy(true);
@@ -13,8 +14,11 @@ export function GenerateActaButton({ projectId, recipient }: Props) {
       toast.success("Acta sent for approval");
     } catch (e: any) {
       toast.error(e.message || "Error sending Acta");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
+
   return (
     <button className="btn btn-primary" disabled={busy} onClick={handle}>
       {busy ? "Sending…" : "Generate Acta"}
