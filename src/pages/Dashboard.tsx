@@ -1,10 +1,13 @@
+import { Download } from 'lucide-react';
 import { useState } from 'react';
-import { Download, Send } from 'lucide-react';
+
 import { GenerateActaButton } from '../components/GenerateActaButton';
 
 export default function Dashboard() {
   const [projectId, setProjectId] = useState('');
-  const [summary, setSummary]     = useState<null | { name: string; pm: string }>(null);
+  const [summary, setSummary] = useState<null | { name: string; pm: string }>(
+    null
+  );
 
   function fetchSummary() {
     // ⚡️ TODO call API Gateway → Lambda
@@ -30,7 +33,9 @@ export default function Dashboard() {
             className="input w-64"
           />
         </div>
-        <button onClick={fetchSummary} className="btn">Retrieve</button>
+        <button onClick={fetchSummary} className="btn">
+          Retrieve
+        </button>
       </div>
 
       {!summary && (
@@ -47,13 +52,22 @@ export default function Dashboard() {
           </div>
 
           <div className="flex gap-4">
-            <button onClick={() => download('pdf')}  className="btn flex items-center gap-2">
-              <Download size={16}/> PDF
+            <button
+              onClick={() => download('pdf')}
+              className="btn flex items-center gap-2"
+            >
+              <Download size={16} /> PDF
             </button>
-            <button onClick={() => download('docx')} className="btn flex items-center gap-2">
-              <Download size={16}/> Word
+            <button
+              onClick={() => download('docx')}
+              className="btn flex items-center gap-2"
+            >
+              <Download size={16} /> Word
             </button>
-            <GenerateActaButton projectId={projectId} recipient="demo@ikusi.com" />
+            <GenerateActaButton
+              projectId={projectId}
+              recipient="demo@ikusi.com"
+            />
           </div>
         </div>
       )}
