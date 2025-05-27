@@ -1,0 +1,4 @@
+
+// Usage example (React JSX)
+<GenerateActaButton projectId={project.id} recipient={user.email} />
+
