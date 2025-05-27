@@ -1,11 +1,12 @@
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import './Login.css';
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const nav = useNavigate();
   const [email, setEmail] = useState('');
-  const [pass, setPass]   = useState('');
+  const [pass, setPass] = useState('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -16,25 +17,43 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <form onSubmit={handleSubmit}
-            className="w-full max-w-sm space-y-6 p-8 bg-white shadow rounded-xl">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm space-y-6 p-8 bg-white shadow rounded-xl"
+      >
         <img src="/ikusi-logo.png" alt="Ikusi" className="w-40 mx-auto" />
         <h1 className="text-2xl font-semibold text-center">Acta Platform</h1>
 
         <div>
-          <label className="block text-sm font-medium text-slate-600 mb-1">Email</label>
-          <input type="email" required value={email}
-                 onChange={(e) => setEmail(e.target.value)} className="input" />
+          <label className="block text-sm font-medium text-slate-600 mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input"
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-600 mb-1">Password</label>
-          <input type="password" required value={pass}
-                 onChange={(e) => setPass(e.target.value)} className="input" />
+          <label className="block text-sm font-medium text-slate-600 mb-1">
+            Password
+          </label>
+          <input
+            type="password"
+            required
+            value={pass}
+            onChange={(e) => setPass(e.target.value)}
+            className="input"
+          />
         </div>
 
-        <button type="submit"
-                className="w-full py-2 rounded bg-cvdex text-white font-semibold hover:bg-cvdex-dark transition">
+        <button
+          type="submit"
+          className="w-full py-2 rounded bg-cvdex text-white font-semibold hover:bg-cvdex-dark transition"
+        >
           Sign in
         </button>
       </form>

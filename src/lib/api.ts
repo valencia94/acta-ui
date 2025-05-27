@@ -1,9 +1,6 @@
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
-export async function sendApprovalEmail(
-  projectId: string,
-  recipient: string
-) {
+export async function sendApprovalEmail(projectId: string, recipient: string) {
   const response = await fetch(`${BASE}/sendapprovalemail`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

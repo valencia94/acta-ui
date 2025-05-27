@@ -17,8 +17,7 @@ export function GenerateActaButton({ projectId, recipient }: Props) {
       await sendApprovalEmail(projectId, recipient);
       toast.success('Acta sent for approval');
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : 'Error sending Acta';
+      const msg = err instanceof Error ? err.message : 'Error sending Acta';
       toast.error(msg);
     } finally {
       setBusy(false);
@@ -26,11 +25,7 @@ export function GenerateActaButton({ projectId, recipient }: Props) {
   }
 
   return (
-    <button
-      className="btn btn-primary"
-      disabled={busy}
-      onClick={handleClick}
-    >
+    <button className="btn btn-primary" disabled={busy} onClick={handleClick}>
       {busy ? 'Sending…' : 'Generate Acta'}
     </button>
   );
