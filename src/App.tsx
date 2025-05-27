@@ -1,24 +1,17 @@
-import Shell from '@/components/Layout';
-import ProjectTable, { Project } from '@/components/ProjectTable';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login      from '~/pages/Login';
+import Dashboard  from '~/pages/Dashboard';
+import './index.css';
 
 export default function App() {
-  const data: Project[] = [
-    {
-      id: 10001,
-      name: 'BANCOLOMBIA – SD-WAN EXT',
-      pm: 'C. Valencia',
-      status: 'READY',
-    },
-    { id: 10002, name: 'SAP Migration', pm: 'J. Smith', status: 'IN PROGRESS' },
-  ];
+  const isAuthed = !!localStorage.getItem('ikusi.jwt');
   return (
-    <Shell>
-      <h1 className="text-4xl font-bold tracking-tight text-white">
-        Project Summary
-      </h1>
-      <div className="mt-6">
-        <ProjectTable data={data} />
-      </div>
-    </Shell>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/"           element={<Navigate to={isAuthed ? '/dashboard' : '/login'} />} />
+        <Route path="/login"      element={<Login />} />
+        <Route path="/dashboard"  element={isAuthed ? <Dashboard /> : <Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

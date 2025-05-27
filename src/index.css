@@ -6,3 +6,14 @@
 body {
   @apply bg-white text-slate-900 antialiased;
 }
+
+@layer components {
+  .input { @apply w-full border rounded px-3 py-2 focus:outline-cvdex/70; }
+  .btn   { @apply bg-cvdex text-white font-semibold px-4 py-2 rounded hover:bg-cvdex-dark transition; }
+}
+
+/* Ikusi green */
+:root {
+  --cvdex: #006a52;
+  --cvdex-dark: #004c38;
+}

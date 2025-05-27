@@ -2,6 +2,7 @@
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
+	\tcolors: { cvdex: "var(--cvdex)", "cvdex-dark": "var(--cvdex-dark)" },
     extend: {
       colors: {
         ikusi: {
