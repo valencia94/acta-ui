@@ -10,5 +10,5 @@ export async function sendApprovalEmail(projectId: string, recipient: string) {
     const text = await res.text();
     throw new Error(`API ${res.status}: ${text}`);
   }
-  return res.json();   // { message, token }
+  return res.json();
 }
