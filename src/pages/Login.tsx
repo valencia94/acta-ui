@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import ikusi from '~/assets/ikusi-logo.png';
+import ikusi from '@/assets/ikusi-logo.png';
 import './Login.css';
 
 export default function Login() {
