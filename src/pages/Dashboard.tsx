@@ -1,53 +1,62 @@
 import { useState } from 'react';
+import { Download, Send } from 'lucide-react';
+import { GenerateActaButton } from '../components/GenerateActaButton';
 
 export default function Dashboard() {
-  const [rows] = useState([
-    {
-      id: '10001',
-      name: 'BANCOLOMBIA – SD-WAN EXT',
-      pm: 'C. Valencia',
-      status: 'READY',
-    },
-    {
-      id: '10002',
-      name: 'SAP Migration',
-      pm: 'J. Smith',
-      status: 'IN PROGRESS',
-    },
-  ]);
+  const [projectId, setProjectId] = useState('');
+  const [summary, setSummary]     = useState<null | { name: string; pm: string }>(null);
+
+  function fetchSummary() {
+    // ⚡️ TODO call API Gateway → Lambda
+    setSummary({ name: 'SD-WAN Filiales', pm: 'Juan Pérez' });
+  }
+
+  function download(format: 'pdf' | 'docx') {
+    // 📄 TODO presigned URL
+    alert(`Downloading ${format.toUpperCase()} (mock)`);
+  }
 
   return (
-    <main className="min-h-screen flex flex-col font-sans">
-      <header className="bg-ikusi-700 text-white flex items-center px-6 h-12">
-        <img src="/ikusi-logo.png" alt="Ikusi Logo" className="h-6 mr-3" />
-        <h1 className="text-lg font-semibold">Acta Platform</h1>
-      </header>
+    <div className="p-8 space-y-8">
+      <h1 className="text-3xl font-bold">Project Dashboard</h1>
 
-      <section className="p-8 max-w-5xl mx-auto w-full">
-        <h2 className="text-3xl font-bold mb-6">Project Summary</h2>
+      <div className="flex gap-4 items-end">
+        <div>
+          <label className="block text-sm font-medium mb-1">Project #</label>
+          <input
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            placeholder="1000000061690051"
+            className="input w-64"
+          />
+        </div>
+        <button onClick={fetchSummary} className="btn">Retrieve</button>
+      </div>
 
-        <table className="w-full border-collapse">
-          <thead className="bg-slate-100">
-            <tr className="text-left">
-              <th className="py-2 px-3">ID</th>
-              <th className="py-2 px-3">Name</th>
-              <th className="py-2 px-3">PM</th>
-              <th className="py-2 px-3">Status</th>
-            </tr>
-          </thead>
+      {!summary && (
+        <p className="text-slate-500 italic">
+          Enter a project number to load its latest Acta.
+        </p>
+      )}
 
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-b last:border-none">
-                <td className="py-2 px-3">{r.id}</td>
-                <td className="py-2 px-3">{r.name}</td>
-                <td className="py-2 px-3">{r.pm}</td>
-                <td className="py-2 px-3">{r.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    </main>
+      {summary && (
+        <div className="space-y-4">
+          <div className="rounded-lg border p-6 bg-white shadow-sm">
+            <h2 className="text-xl font-semibold mb-2">{summary.name}</h2>
+            <p className="text-slate-600">PM • {summary.pm}</p>
+          </div>
+
+          <div className="flex gap-4">
+            <button onClick={() => download('pdf')}  className="btn flex items-center gap-2">
+              <Download size={16}/> PDF
+            </button>
+            <button onClick={() => download('docx')} className="btn flex items-center gap-2">
+              <Download size={16}/> Word
+            </button>
+            <GenerateActaButton projectId={projectId} recipient="demo@ikusi.com" />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
