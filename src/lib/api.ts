@@ -1,56 +1,50 @@
-/* src/lib/api.ts ------------------------------------------------------- */
-const BASE =
-  import.meta.env.VITE_API_BASE_URL ??
-  'https://4r0pt34gx4.execute-api.us-east-2.amazonaws.com/prod';
+// src/pages/ProjectOverview.tsx
+import { useLoaderData } from 'react-router-dom';
+import { Download } from 'lucide-react';
+import { getDownloadUrl } from '@/lib/api';
 
-/* ---------- approval flow (already existed) ---------- */
-
-export async function sendApprovalEmail(
-  projectId: string,
-  recipient: string,
-) {
-  const res = await fetch(`${BASE}/sendapprovalemail`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ project_id: projectId, recipient }),
-  });
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
-  return res.json() as Promise<{ message: string; token: string }>;
+export async function loader({ params }) {
+  const [summary, timeline] = await Promise.all([
+    getSummary(params.id),
+    getTimeline(params.id),
+  ]);
+  return { summary, timeline };
 }
 
-/* ---------- NEW read-only endpoints ---------- */
+export default function ProjectOverview() {
+  const { summary, timeline } = useLoaderData() as LoaderData;
 
-export type ProjectSummary = {
-  project_id: string;
-  project_name: string;
-  pm: string;
-  pm_email: string;
-  status: string;
-  last_title: string;
-  last_comment: string | null;
-};
+  return (
+    <div className="p-8 space-y-6">
+      <h1 className="text-2xl font-bold">{summary.project_name}</h1>
+      <p className="text-slate-600">PM • {summary.pm}</p>
 
-export function fetchSummary(id: string) {
-  return fetch(`${BASE}/project-summary/${id}`).then(
-    (r) => r.json() as Promise<ProjectSummary>,
+      <section className="space-y-2">
+        <h2 className="font-semibold">Timeline</h2>
+        <ul className="border rounded divide-y">
+          {timeline.map((row) => (
+            <li key={row.orden} className="p-2 flex gap-4">
+              <span className="w-1/3">{row.hito}</span>
+              <span className="w-1/3">{row.actividad}</span>
+              <span className="flex-1">{row.desarrollo}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="flex gap-4">
+        {(['pdf', 'docx'] as const).map((fmt) => (
+          <button
+            key={fmt}
+            className="btn flex items-center gap-2"
+            onClick={async () =>
+              window.open(await getDownloadUrl(summary.project_id, fmt))
+            }
+          >
+            <Download size={16} /> {fmt.toUpperCase()}
+          </button>
+        ))}
+      </div>
+    </div>
   );
-}
-
-export type TimelineEntry = {
-  hito: string;
-  actividad: string;
-  desarrollo: string;
-  orden: number;
-  fecha_crea: string;
-};
-
-export function fetchTimeline(id: string) {
-  return fetch(`${BASE}/timeline/${id}`).then(
-    (r) => r.json() as Promise<TimelineEntry[]>,
-  );
-}
-
-/** presigned-URL generator */
-export function getActaUrl(id: string, fmt: 'pdf' | 'docx' = 'pdf') {
-  return `${BASE}/download-acta/${id}?format=${fmt}`;
 }
