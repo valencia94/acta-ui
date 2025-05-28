@@ -1,12 +1,9 @@
-/* src/lib/api.ts
- * Central place for every call the UI makes to your backend.
- * BASE is still driven by Vite’s env value so it works for
- * prod, preview, or local mocking.
- */
-const BASE = import.meta.env.VITE_API_BASE_URL ??
+/* src/lib/api.ts ------------------------------------------------------- */
+const BASE =
+  import.meta.env.VITE_API_BASE_URL ??
   'https://4r0pt34gx4.execute-api.us-east-2.amazonaws.com/prod';
 
-/* ----------  approval flow (already there) ---------- */
+/* ---------- approval flow (already existed) ---------- */
 
 export async function sendApprovalEmail(
   projectId: string,
@@ -17,14 +14,11 @@ export async function sendApprovalEmail(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ project_id: projectId, recipient }),
   });
-
-  if (!res.ok) {
-    throw new Error(`API ${res.status}: ${await res.text()}`);
-  }
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
   return res.json() as Promise<{ message: string; token: string }>;
 }
 
-/* ----------  NEW read-only endpoints  ---------- */
+/* ---------- NEW read-only endpoints ---------- */
 
 export type ProjectSummary = {
   project_id: string;
@@ -47,7 +41,7 @@ export type TimelineEntry = {
   actividad: string;
   desarrollo: string;
   orden: number;
-  fecha_crea: string; // ISO string from Dynamo
+  fecha_crea: string;
 };
 
 export function fetchTimeline(id: string) {
@@ -56,10 +50,7 @@ export function fetchTimeline(id: string) {
   );
 }
 
-export function getActaUrl(
-  id: string,
-  fmt: 'pdf' | 'docx' = 'pdf',
-): string {
-  // browser will follow 302 directly to S3
+/** presigned-URL generator */
+export function getActaUrl(id: string, fmt: 'pdf' | 'docx' = 'pdf') {
   return `${BASE}/download-acta/${id}?format=${fmt}`;
 }
