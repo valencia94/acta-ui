@@ -1,5 +1,5 @@
 # ===== fix-tailwind-dup.sh  ================================================
-# Keeps src/tailwind.css, removes the old src/index.css + its import line
+# Keeps src/tailwind.css, removes the old, src/index.css + its import line
 # ===========================================================================
 set -euo pipefail
 
