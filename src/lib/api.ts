@@ -37,5 +37,20 @@ export async function getDownloadUrl(
   if (!url) throw new Error("Missing Location header");
   return url;
 }
+/* ---------- APPROVAL E-MAIL ---------- */
+/** triggers the Lambda that sends the approval e-mail
+ *  returns { message, token } */
+export async function sendApprovalEmail(
+  projectId: string,
+  recipient: string
+) {
+  const r = await fetch(`${BASE}/sendapprovalemail`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: projectId, recipient }),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ message: string; token: string }>;
+}
 // ---------- end file ----------
 TS
