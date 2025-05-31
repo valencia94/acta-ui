@@ -1,50 +1,41 @@
-// src/pages/ProjectOverview.tsx
-import { useLoaderData } from 'react-router-dom';
-import { Download } from 'lucide-react';
-import { getDownloadUrl } from '@/lib/api';
+cd ~/acta-ui           # repo root
 
-export async function loader({ params }) {
-  const [summary, timeline] = await Promise.all([
-    getSummary(params.id),
-    getTimeline(params.id),
-  ]);
-  return { summary, timeline };
+cat > src/lib/api.ts <<'TS'
+// ---------- src/lib/api.ts (LIVE AWS back-end) ----------
+const BASE = import.meta.env.VITE_API_BASE_URL;
+
+/* ---------- SUMMARY ---------- */
+export async function getSummary(id: string) {
+  const r = await fetch(`${BASE}/project-summary/${id}`);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();            // { project_id, project_name, … }
 }
 
-export default function ProjectOverview() {
-  const { summary, timeline } = useLoaderData() as LoaderData;
+/* ---------- TIMELINE ---------- */
+export async function getTimeline(id: string) {
+  const r = await fetch(`${BASE}/timeline/${id}`);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();            // [ { hito, actividad, … } ]
+}
 
-  return (
-    <div className="p-8 space-y-6">
-      <h1 className="text-2xl font-bold">{summary.project_name}</h1>
-      <p className="text-slate-600">PM • {summary.pm}</p>
-
-      <section className="space-y-2">
-        <h2 className="font-semibold">Timeline</h2>
-        <ul className="border rounded divide-y">
-          {timeline.map((row) => (
-            <li key={row.orden} className="p-2 flex gap-4">
-              <span className="w-1/3">{row.hito}</span>
-              <span className="w-1/3">{row.actividad}</span>
-              <span className="flex-1">{row.desarrollo}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <div className="flex gap-4">
-        {(['pdf', 'docx'] as const).map((fmt) => (
-          <button
-            key={fmt}
-            className="btn flex items-center gap-2"
-            onClick={async () =>
-              window.open(await getDownloadUrl(summary.project_id, fmt))
-            }
-          >
-            <Download size={16} /> {fmt.toUpperCase()}
-          </button>
-        ))}
-      </div>
-    </div>
+/* ---------- ACTA DOWNLOAD ---------- */
+export async function getDownloadUrl(
+  id: string,
+  format: "pdf" | "docx"
+): Promise<string> {
+  // Ask Lambda for the signed URL but DON’T follow the redirect –
+  // we just need the “Location” header.
+  const r = await fetch(
+    `${BASE}/download-acta/${id}?format=${format}`,
+    { redirect: "manual" }
   );
+
+  if (r.status !== 302) {
+    throw new Error(`Download endpoint returned ${r.status}`);
+  }
+  const url = r.headers.get("Location");
+  if (!url) throw new Error("Missing Location header");
+  return url;
 }
+// ---------- end file ----------
+TS
