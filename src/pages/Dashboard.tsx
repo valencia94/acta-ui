@@ -129,19 +129,21 @@ export default function Dashboard() {
                 {timeline.length === 0 ? (
                   <li>No timeline data available.</li>
                 ) : (
-                  timeline.map((event, idx) => (
-                    <li key={idx}>
-                      <strong>
-                        {event.hito || event.milestone || 'Event'}:
-                      </strong>{' '}
-                      {event.actividad || event.activity || ''}
-                    </li>
-                  ))
+                  <>
+                    {timeline.map((event, idx) => (
+                      <li key={idx}>
+                        <strong>
+                          {event.hito || event.milestone || 'Event'}:
+                        </strong>{' '}
+                        {event.actividad || event.activity || ''}
+                      </li>
+                    ))}
+                  </>
                 )}
               </ul>
             </div>
           )}
-
+          
           <div className="flex gap-4">
             <button
               onClick={() => download('pdf')}
