@@ -14,13 +14,22 @@ jobs:
       # 1) checkout
       - uses: actions/checkout@v4
 
-      # 2) Node 20 – **no cache line**
+      # 2) Node 20 setup
       - name: 🟢  Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3) pnpm 9 (+ deps install + cache)
+      # 3) pnpm store cache for faster deps
+      - name: ♻️ pnpm store cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # 4) pnpm 9 (+ deps install)
       - name: 📦  Setup pnpm 9
         uses: pnpm/action-setup@v2
         with:
@@ -30,7 +39,7 @@ jobs:
         env:
           CI: true
 
-      # 4) lint, tests, format, build
+      # 5) lint, tests, format, build
       - name: 🔍  Lint & type-check
         run: pnpm lint
 
