@@ -125,20 +125,36 @@ export default function Dashboard() {
           {timeline && Array.isArray(timeline) && (
             <div className="rounded-lg border p-4 bg-slate-50 text-sm">
               <h3 className="font-semibold mb-2">Timeline</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {timeline.length === 0 ? (
-                  <li>No timeline data available.</li>
-                ) : (
-                  timeline.map((event, idx) => (
-                    <li key={idx}>
-                      <strong>
-                        {event.hito || event.milestone || 'Event'}:
-                      </strong>{' '}
-                      {event.actividad || event.activity || ''}
-                    </li>
-                  ))
-                )}
-              </ul>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th className="px-2 py-1 text-left">Hito</th>
+                      <th className="px-2 py-1 text-left">Actividades</th>
+                      <th className="px-2 py-1 text-left">Desarrollo</th>
+                      <th className="px-2 py-1 text-left">Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timeline.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-center text-slate-400">
+                          No timeline data available.
+                        </td>
+                      </tr>
+                    ) : (
+                      timeline.map((event, idx) => (
+                        <tr key={idx}>
+                          <td className="border px-2 py-1">{event.hito}</td>
+                          <td className="border px-2 py-1">{event.actividades}</td>
+                          <td className="border px-2 py-1">{event.desarrollo}</td>
+                          <td className="border px-2 py-1">{event.fecha}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
