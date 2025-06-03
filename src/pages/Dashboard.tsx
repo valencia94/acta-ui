@@ -1,15 +1,21 @@
 import { Download } from 'lucide-react';
 import { useState } from 'react';
 
-import { getSummary, getTimeline, getDownloadUrl, extractProjectPlaceData } from '../lib/api';
+import {
+  getSummary,
+  getTimeline,
+  getDownloadUrl,
+  extractProjectPlaceData,
+  ProjectSummary,
+  TimelineEvent,
+} from '../lib/api';
 import { GenerateActaButton } from '../components/GenerateActaButton';
-// If you use a toast library like 'sonner', import it here:
-// import { toast } from 'sonner';
+// import { toast } from 'sonner'; // Uncomment if you use sonner for toasts
 
 export default function Dashboard() {
   const [projectId, setProjectId] = useState('');
-  const [summary, setSummary] = useState<null | any>(null);
-  const [timeline, setTimeline] = useState<null | any[]>(null);
+  const [summary, setSummary] = useState<ProjectSummary | null>(null);
+  const [timeline, setTimeline] = useState<TimelineEvent[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,15 +25,15 @@ export default function Dashboard() {
     setSummary(null);
     setTimeline(null);
     try {
-      // Fetch project summary
       const summaryData = await getSummary(projectId);
       setSummary(summaryData);
 
-      // Fetch timeline as well
       const timelineData = await getTimeline(projectId);
       setTimeline(timelineData);
-    } catch (err: any) {
-      setError(err.message || 'Error fetching data');
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : 'Error fetching data'
+      );
     } finally {
       setLoading(false);
     }
@@ -39,8 +45,10 @@ export default function Dashboard() {
     try {
       const url = await getDownloadUrl(projectId, format);
       window.open(url, '_blank');
-    } catch (err: any) {
-      setError(err.message || 'Download failed');
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : 'Download failed'
+      );
     } finally {
       setLoading(false);
     }
@@ -51,11 +59,13 @@ export default function Dashboard() {
     setError(null);
     try {
       await extractProjectPlaceData(projectId);
-      // If using a toast library, use toast.success for better UX, else fallback to alert
+      // Replace alert with toast.success if you use a toast library
       // toast.success('ProjectPlace data extracted!');
       alert('ProjectPlace data extracted!');
-    } catch (err: any) {
-      setError(err.message || 'Extraction failed');
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : 'Extraction failed'
+      );
     } finally {
       setLoading(false);
     }
@@ -67,7 +77,9 @@ export default function Dashboard() {
 
       <div className="flex gap-4 items-end">
         <div>
-          <label className="block text-sm font-medium mb-1">Project #</label>
+          <label className="block text-sm font-medium mb-1">
+            Project #
+          </label>
           <input
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
@@ -76,7 +88,11 @@ export default function Dashboard() {
             disabled={loading}
           />
         </div>
-        <button onClick={fetchSummary} className="btn" disabled={loading || !projectId}>
+        <button
+          onClick={fetchSummary}
+          className="btn"
+          disabled={loading || !projectId}
+        >
           {loading ? 'Loading…' : 'Retrieve'}
         </button>
       </div>
@@ -96,7 +112,9 @@ export default function Dashboard() {
       {summary && (
         <div className="space-y-4">
           <div className="rounded-lg border p-6 bg-white shadow-sm">
-            <h2 className="text-xl font-semibold mb-2">{summary.project_name || summary.name}</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              {summary.project_name || summary.name}
+            </h2>
             <p className="text-slate-600">
               Project ID: {summary.project_id || projectId}
               <br />
@@ -104,19 +122,22 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* Timeline Display */}
           {timeline && Array.isArray(timeline) && (
             <div className="rounded-lg border p-4 bg-slate-50 text-sm">
               <h3 className="font-semibold mb-2">Timeline</h3>
               <ul className="list-disc list-inside space-y-1">
-                {timeline.length === 0 && (
+                {timeline.length === 0 ? (
                   <li>No timeline data available.</li>
+                ) : (
+                  timeline.map((event, idx) => (
+                    <li key={idx}>
+                      <strong>
+                        {event.hito || event.milestone || 'Event'}:
+                      </strong>{' '}
+                      {event.actividad || event.activity || ''}
+                    </li>
+                  ))
                 )}
-                {timeline.map((event, idx) => (
-                  <li key={idx}>
-                    <strong>{event.hito || event.milestone || 'Event'}:</strong> {event.actividad || event.activity || ''}
-                  </li>
-                ))}
               </ul>
             </div>
           )}
@@ -136,11 +157,7 @@ export default function Dashboard() {
             >
               <Download size={16} /> Word
             </button>
-            <GenerateActaButton
-              projectId={projectId}
-              recipient="demo@ikusi.com"
-            />
-            {/* New: Extract ProjectPlace Data Button */}
+            <GenerateActaButton projectId={projectId} recipient="demo@ikusi.com" />
             <button
               onClick={handleExtractProjectPlace}
               className="btn"
