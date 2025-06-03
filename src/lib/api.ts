@@ -9,11 +9,10 @@ export interface ProjectSummary {
 }
 
 export interface TimelineEvent {
-  hito?: string;
-  milestone?: string;
-  actividad?: string;
-  activity?: string;
-  [key: string]: unknown;
+  hito: string;
+  actividades: string;
+  desarrollo: string;
+  fecha: string;
 }
 
 /* ---------- SUMMARY ---------- */
@@ -27,7 +26,11 @@ export async function getSummary(id: string): Promise<ProjectSummary> {
 export async function getTimeline(id: string): Promise<TimelineEvent[]> {
   const r = await fetch(`${BASE}/timeline/${id}`);
   if (!r.ok) throw new Error(await r.text());
-  return r.json();
+  const data = await r.json();
+  // Validate structure a bit for safety
+  if (!Array.isArray(data)) throw new Error('Timeline response is not an array');
+  // Optionally, you could validate each event's keys here if you want
+  return data as TimelineEvent[];
 }
 
 /* ---------- ACTA DOWNLOAD ---------- */
@@ -38,8 +41,7 @@ export async function getDownloadUrl(
   const r = await fetch(`${BASE}/download-acta/${id}?format=${format}`, {
     redirect: 'manual',
   });
-  // Accept any redirect (301, 302, 303, 307, 308) but default to 302 if you want
-  if (![301, 302, 303, 307, 308].includes(r.status)) {
+  if (r.status !== 302) {
     throw new Error(`Download endpoint returned ${r.status}`);
   }
   const url = r.headers.get('Location');
