@@ -1,4 +1,3 @@
-// ---------- src/lib/api.ts (LIVE AWS back-end) ----------
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
 export interface ProjectSummary {
@@ -36,12 +35,11 @@ export async function getDownloadUrl(
   id: string,
   format: 'pdf' | 'docx'
 ): Promise<string> {
-  // Ask Lambda for the signed URL but DON’T follow the redirect –
-  // we just need the “Location” header.
   const r = await fetch(`${BASE}/download-acta/${id}?format=${format}`, {
     redirect: 'manual',
   });
-  if (r.status !== 302) {
+  // Accept any redirect (301, 302, 303, 307, 308) but default to 302 if you want
+  if (![301, 302, 303, 307, 308].includes(r.status)) {
     throw new Error(`Download endpoint returned ${r.status}`);
   }
   const url = r.headers.get('Location');
@@ -50,8 +48,6 @@ export async function getDownloadUrl(
 }
 
 /* ---------- APPROVAL E-MAIL ---------- */
-/** triggers the Lambda that sends the approval e-mail
- *  returns { message, token } */
 export async function sendApprovalEmail(
   projectId: string,
   recipient: string
@@ -66,7 +62,6 @@ export async function sendApprovalEmail(
 }
 
 /* ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
-/** triggers the Lambda that extracts ProjectPlace data for the project */
 export async function extractProjectPlaceData(
   projectId: string
 ): Promise<unknown> {
@@ -76,4 +71,3 @@ export async function extractProjectPlaceData(
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
-// ---------- end file ----------
