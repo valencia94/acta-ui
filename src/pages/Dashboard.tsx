@@ -1,8 +1,10 @@
 import { Download } from 'lucide-react';
 import { useState } from 'react';
 
-import { getSummary, getTimeline, getDownloadUrl } from '../lib/api';
+import { getSummary, getTimeline, getDownloadUrl, extractProjectPlaceData } from '../lib/api';
 import { GenerateActaButton } from '../components/GenerateActaButton';
+// If you use a toast library like 'sonner', import it here:
+// import { toast } from 'sonner';
 
 export default function Dashboard() {
   const [projectId, setProjectId] = useState('');
@@ -21,7 +23,7 @@ export default function Dashboard() {
       const summaryData = await getSummary(projectId);
       setSummary(summaryData);
 
-      // Optionally fetch timeline as well, remove if not needed
+      // Fetch timeline as well
       const timelineData = await getTimeline(projectId);
       setTimeline(timelineData);
     } catch (err: any) {
@@ -39,6 +41,21 @@ export default function Dashboard() {
       window.open(url, '_blank');
     } catch (err: any) {
       setError(err.message || 'Download failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleExtractProjectPlace() {
+    setLoading(true);
+    setError(null);
+    try {
+      await extractProjectPlaceData(projectId);
+      // If using a toast library, use toast.success for better UX, else fallback to alert
+      // toast.success('ProjectPlace data extracted!');
+      alert('ProjectPlace data extracted!');
+    } catch (err: any) {
+      setError(err.message || 'Extraction failed');
     } finally {
       setLoading(false);
     }
@@ -87,7 +104,7 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* Optional Timeline Display */}
+          {/* Timeline Display */}
           {timeline && Array.isArray(timeline) && (
             <div className="rounded-lg border p-4 bg-slate-50 text-sm">
               <h3 className="font-semibold mb-2">Timeline</h3>
@@ -123,6 +140,14 @@ export default function Dashboard() {
               projectId={projectId}
               recipient="demo@ikusi.com"
             />
+            {/* New: Extract ProjectPlace Data Button */}
+            <button
+              onClick={handleExtractProjectPlace}
+              className="btn"
+              disabled={loading || !projectId}
+            >
+              Extract ProjectPlace Data
+            </button>
           </div>
         </div>
       )}
