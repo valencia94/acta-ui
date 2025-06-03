@@ -1,6 +1,3 @@
-cd ~/acta-ui           # repo root
-
-cat > src/lib/api.ts <<'TS'
 // ---------- src/lib/api.ts (LIVE AWS back-end) ----------
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -37,6 +34,7 @@ export async function getDownloadUrl(
   if (!url) throw new Error("Missing Location header");
   return url;
 }
+
 /* ---------- APPROVAL E-MAIL ---------- */
 /** triggers the Lambda that sends the approval e-mail
  *  returns { message, token } */
@@ -52,5 +50,14 @@ export async function sendApprovalEmail(
   if (!r.ok) throw new Error(await r.text());
   return r.json() as Promise<{ message: string; token: string }>;
 }
+
+/* ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
+/** triggers the Lambda that extracts ProjectPlace data for the project */
+export async function extractProjectPlaceData(projectId: string) {
+  const r = await fetch(`${BASE}/extract-project-place/${projectId}`, {
+    method: "POST"
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json(); // You may want to type this with a suitable interface if you know the return shape
+}
 // ---------- end file ----------
-TS
