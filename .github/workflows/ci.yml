@@ -51,3 +51,7 @@ jobs:
 
       - name: 🏗️  Build bundle
         run: pnpm run build
+
+      - name: ✅ Check environment variables
+        run: pnpm run check:env
+
