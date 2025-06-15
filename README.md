@@ -31,11 +31,11 @@
 
 ## Environment variables
 
-Create a `.env` file based on `.env.example` and provide the API URL used by
-the UI:
+Create a `.env` file based on `.env.example` and set `VITE_API_BASE_URL` to the
+backend URL used by the UI:
 
 ```bash
-VITE_API_BASE_URL=https://your-api.example.com
+VITE_API_BASE_URL=http://localhost:9999
 ```
 
-This variable must be set for the application to fetch data from the backend.
+Adjust this value if your API is hosted elsewhere.
