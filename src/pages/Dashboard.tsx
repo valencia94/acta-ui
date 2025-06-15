@@ -105,7 +105,7 @@ export default function Dashboard() {
         <div className="space-y-4">
           <div className="rounded-lg border p-6 bg-white shadow-sm">
             <h2 className="text-xl font-semibold mb-2">
-              {summary.project_name || String(summary.name)}
+              {String(summary.project_name || summary.name)}
             </h2>
             <p className="text-slate-600">
               Project ID: {summary.project_id || projectId}
