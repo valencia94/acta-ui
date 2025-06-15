@@ -10,4 +10,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 import './tailwind.css';
-import './tailwind.css';
