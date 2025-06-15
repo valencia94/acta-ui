@@ -1,8 +1,8 @@
 import './Login.css';
 
+import { Auth } from 'aws-amplify';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Auth } from 'aws-amplify';
 
 export default function Login() {
   const nav = useNavigate();
