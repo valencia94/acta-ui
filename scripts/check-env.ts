@@ -1,6 +1,7 @@
-import { existsSync } from 'fs';
 import { config } from 'dotenv';
+import { existsSync } from 'fs';
 import { z, ZodError } from 'zod';
+
 import { envSchema } from '../env.schema';
 
 const envFile = existsSync('.env') ? '.env' : '.env.example';

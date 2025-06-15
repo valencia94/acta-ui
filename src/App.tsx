@@ -1,7 +1,6 @@
-
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import { Auth } from 'aws-amplify';
+import { useEffect, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
