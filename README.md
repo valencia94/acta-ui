@@ -28,3 +28,10 @@
   - commit-msg: conventional commit message
 - [Storybook](https://storybook.js.org/)
 - GitHub Pages Deployment
+
+## Environment variables
+
+Create a `.env` file (see `.env.example`) with the following keys:
+
+- `VITE_COUNTER` – initial value for the demo counter.
+- `VITE_API_BASE_URL` – base URL of the backend API.

@@ -3,6 +3,7 @@ const BASE = import.meta.env.VITE_API_BASE_URL;
 export interface ProjectSummary {
   project_id: string;
   project_name: string;
+  name?: string;
   pm?: string;
   project_manager?: string;
   [key: string]: unknown;
@@ -28,7 +29,8 @@ export async function getTimeline(id: string): Promise<TimelineEvent[]> {
   if (!r.ok) throw new Error(await r.text());
   const data = await r.json();
   // Validate structure a bit for safety
-  if (!Array.isArray(data)) throw new Error('Timeline response is not an array');
+  if (!Array.isArray(data))
+    throw new Error('Timeline response is not an array');
   // Optionally, you could validate each event's keys here if you want
   return data as TimelineEvent[];
 }
