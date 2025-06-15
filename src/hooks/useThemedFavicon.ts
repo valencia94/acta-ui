@@ -1,24 +1,25 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 
 export const useThemedFavicon = () => {
-  const matcher = window.matchMedia('(prefers-color-scheme: dark)');
-  const lightSchemeIcon = window.document.querySelector('#fav-dark');
-  const darkSchemeIcon = window.document.querySelector('#fav-light');
-
-  const onUpdate = useCallback(() => {
-    if (matcher.matches) {
-      lightSchemeIcon.remove();
-      window.document.head.append(darkSchemeIcon);
-    } else {
-      window.document.head.append(lightSchemeIcon);
-      darkSchemeIcon.remove();
-    }
-  }, []);
-
   useEffect(() => {
-    matcher.addEventListener('change', onUpdate);
-    onUpdate();
+    const matcher = window.matchMedia('(prefers-color-scheme: dark)');
+    const lightIcon = document.querySelector<HTMLLinkElement>('#fav-light');
+    const darkIcon = document.querySelector<HTMLLinkElement>('#fav-dark');
 
-    return () => matcher.removeEventListener('change', onUpdate);
+    const updateIcon = () => {
+      if (!lightIcon || !darkIcon) return;
+      if (matcher.matches) {
+        lightIcon.remove();
+        document.head.append(darkIcon);
+      } else {
+        document.head.append(lightIcon);
+        darkIcon.remove();
+      }
+    };
+
+    matcher.addEventListener('change', updateIcon);
+    updateIcon();
+
+    return () => matcher.removeEventListener('change', updateIcon);
   }, []);
 };
