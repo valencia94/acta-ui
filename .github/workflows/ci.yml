@@ -1,4 +1,5 @@
 name: CI
+
 on:
   push:
     branches: [develop, main, master]
@@ -10,27 +11,24 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # ↳ allow future OIDC deploy steps if you add them
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
-      # 1) checkout
+      # 1) Checkout
       - uses: actions/checkout@v4
 
-      # 2) Node 20 setup
+      # 2) Node 20
       - name: 🟢  Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3) pnpm store cache for faster deps
-      - name: ♻️ pnpm store cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      # 4) pnpm 9 (+ deps install)
-      - name: 📦  Setup pnpm 9
+      # 3) pnpm 9 + cache + install
+      - name: ♻️  pnpm cache & install
         uses: pnpm/action-setup@v2
         with:
           version: 9
@@ -38,14 +36,20 @@ jobs:
             args: [--frozen-lockfile]
         env:
           CI: true
+      - name: Restore pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
-      - name: Build
-        run: |
-          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> $GITHUB_ENV
-          npm ci
-          npm run build
-      # 5) lint, tests, format, build
-      - name: 🔍  Lint & type-check
+      # 4) Export backend URL for Vite build
+      - name: Inject API base URL
+        run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+
+      # 5) Lint, test, type-check
+      - name: 🔍  Lint
         run: pnpm lint
 
       - name: 🧪  Unit tests
@@ -54,9 +58,11 @@ jobs:
       - name: 🎨  Format check
         run: pnpm format --check
 
+      - name: ✅  Env-schema check
+        run: pnpm run check:env
+
+      # 6) Build once (production bundle)
       - name: 🏗️  Build bundle
         run: pnpm run build
 
-      - name: ✅ Check environment variables
-        run: pnpm run check:env
-
+      # (Optional) deploy steps go here … e.g. configure-aws-credentials + s3 sync
