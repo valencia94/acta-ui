@@ -1,4 +1,6 @@
-const BASE = import.meta.env.VITE_API_BASE_URL;
+import { apiBaseUrl } from '../env.variables';
+
+const BASE = apiBaseUrl;
 
 export interface ProjectSummary {
   project_id: string;
