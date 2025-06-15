@@ -52,6 +52,7 @@ jobs:
           pnpm run build                          # → dist/
         env:
           CI: true # disable interactive hooks
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
       # 6) assume role for S3/CloudFront
       - name: 🔐  Configure AWS credentials

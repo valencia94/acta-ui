@@ -28,3 +28,10 @@
   - commit-msg: conventional commit message
 - [Storybook](https://storybook.js.org/)
 - GitHub Pages Deployment
+
+## Deployment
+
+The GitHub Actions workflow `deploy_ui.yml` requires the repository secret
+`VITE_API_BASE_URL` during the build step.
+Make sure this secret is configured for both the **staging** and **production**
+environments.
