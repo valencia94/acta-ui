@@ -1,15 +1,15 @@
 import { Download } from 'lucide-react';
 import { useState } from 'react';
 
+import { GenerateActaButton } from '../components/GenerateActaButton';
 import {
+  extractProjectPlaceData,
+  getDownloadUrl,
   getSummary,
   getTimeline,
-  getDownloadUrl,
-  extractProjectPlaceData,
   ProjectSummary,
   TimelineEvent,
 } from '../lib/api';
-import { GenerateActaButton } from '../components/GenerateActaButton';
 // import { toast } from 'sonner'; // Uncomment if you use sonner for toasts
 
 export default function Dashboard() {
@@ -31,9 +31,7 @@ export default function Dashboard() {
       const timelineData = await getTimeline(projectId);
       setTimeline(timelineData);
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : 'Error fetching data'
-      );
+      setError(err instanceof Error ? err.message : 'Error fetching data');
     } finally {
       setLoading(false);
     }
@@ -46,9 +44,7 @@ export default function Dashboard() {
       const url = await getDownloadUrl(projectId, format);
       window.open(url, '_blank');
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : 'Download failed'
-      );
+      setError(err instanceof Error ? err.message : 'Download failed');
     } finally {
       setLoading(false);
     }
@@ -63,9 +59,7 @@ export default function Dashboard() {
       // toast.success('ProjectPlace data extracted!');
       alert('ProjectPlace data extracted!');
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : 'Extraction failed'
-      );
+      setError(err instanceof Error ? err.message : 'Extraction failed');
     } finally {
       setLoading(false);
     }
@@ -77,9 +71,7 @@ export default function Dashboard() {
 
       <div className="flex gap-4 items-end">
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Project #
-          </label>
+          <label className="block text-sm font-medium mb-1">Project #</label>
           <input
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
@@ -113,7 +105,7 @@ export default function Dashboard() {
         <div className="space-y-4">
           <div className="rounded-lg border p-6 bg-white shadow-sm">
             <h2 className="text-xl font-semibold mb-2">
-              {summary.project_name || summary.name}
+              {summary.project_name || String(summary.name)}
             </h2>
             <p className="text-slate-600">
               Project ID: {summary.project_id || projectId}
@@ -146,8 +138,12 @@ export default function Dashboard() {
                       timeline.map((event, idx) => (
                         <tr key={idx}>
                           <td className="border px-2 py-1">{event.hito}</td>
-                          <td className="border px-2 py-1">{event.actividades}</td>
-                          <td className="border px-2 py-1">{event.desarrollo}</td>
+                          <td className="border px-2 py-1">
+                            {event.actividades}
+                          </td>
+                          <td className="border px-2 py-1">
+                            {event.desarrollo}
+                          </td>
                           <td className="border px-2 py-1">{event.fecha}</td>
                         </tr>
                       ))
@@ -173,7 +169,10 @@ export default function Dashboard() {
             >
               <Download size={16} /> Word
             </button>
-            <GenerateActaButton projectId={projectId} recipient="demo@ikusi.com" />
+            <GenerateActaButton
+              projectId={projectId}
+              recipient="demo@ikusi.com"
+            />
             <button
               onClick={handleExtractProjectPlace}
               className="btn"

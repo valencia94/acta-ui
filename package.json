@@ -20,7 +20,7 @@
     "prepare": "if [ -z \"$CI\" ]; then playwright install chromium && husky; fi",
     "preview": "vite preview",
     "test": "pnpm run test:vitest && pnpm run test:playwright",
-    "test:playwright": "echo \"(skipped)\"",
+    "test:playwright": "playwright test",
     "test:vitest": "vitest --run --passWithNoTests",
     "test:vitest:coverage": "vitest --run --coverage",
     "test:vitest:watch": "vitest",
