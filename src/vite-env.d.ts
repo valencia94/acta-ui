@@ -3,6 +3,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_COUNTER: string;
+  readonly VITE_API_BASE_URL: string;
 }
 
 interface ImportMeta {
