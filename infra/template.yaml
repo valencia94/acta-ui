@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless API for document generation and approval
+
+Parameters:
+  EmailFrom:
+    Type: String
+    Description: Email address used as the source for notifications
+  Bucket:
+    Type: String
+    Description: S3 bucket name for generated documents
+
+Resources:
+  ApplicationApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/
+      Handler: handler.lambda_handler
+      Runtime: python3.12
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          EMAIL_FROM: !Ref EmailFrom
+          BUCKET: !Ref Bucket
+      Events:
+        Approve:
+          Type: Api
+          Properties:
+            Path: /approve
+            Method: get
+            RestApiId: !Ref ApplicationApi
+        GenerateDocument:
+          Type: Api
+          Properties:
+            Path: /generateDocument
+            Method: post
+            RestApiId: !Ref ApplicationApi
+
+Outputs:
+  ApiUrl:
+    Description: API endpoint URL
+    Value: !Sub "https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/"
