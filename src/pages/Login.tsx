@@ -2,17 +2,25 @@ import './Login.css';
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Auth } from 'aws-amplify';
 
 export default function Login() {
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // 🔐 TODO replace with Cognito later
-    localStorage.setItem('ikusi.jwt', 'mock-token');
-    nav('/dashboard');
+    try {
+      await Auth.signIn(email, pass);
+      const session = await Auth.currentSession();
+      const token = session.getIdToken().getJwtToken();
+      localStorage.setItem('ikusi.jwt', token);
+      nav('/dashboard');
+    } catch (err) {
+      console.error(err);
+      alert('Sign-in failed');
+    }
   }
 
   return (
