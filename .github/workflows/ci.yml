@@ -39,6 +39,11 @@ jobs:
         env:
           CI: true
 
+      - name: Build
+        run: |
+          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> $GITHUB_ENV
+          npm ci
+          npm run build
       # 5) lint, tests, format, build
       - name: 🔍  Lint & type-check
         run: pnpm lint
