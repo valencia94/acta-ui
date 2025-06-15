@@ -28,3 +28,14 @@
   - commit-msg: conventional commit message
 - [Storybook](https://storybook.js.org/)
 - GitHub Pages Deployment
+
+## Environment variables
+
+Create a `.env` file based on `.env.example` and provide the API URL used by
+the UI:
+
+```bash
+VITE_API_BASE_URL=https://your-api.example.com
+```
+
+This variable must be set for the application to fetch data from the backend.
