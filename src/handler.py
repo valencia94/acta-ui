@@ -10,6 +10,22 @@ def lambda_handler(event, context):
             "body": json.dumps({"message": "approve"})
         }
 
+    if path and path.startswith("/project-summary/") and method == "GET":
+        project_id = path.split("/", 2)[-1]
+        return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "project_id": project_id,
+                "project_name": f"Project {project_id}",
+            }),
+        }
+
+    if path == "/sendapprovalemail" and method == "POST":
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"message": "email sent"})
+        }
+
     if path == "/generateDocument" and method == "POST":
         return {
             "statusCode": 200,
