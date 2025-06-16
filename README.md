@@ -27,7 +27,13 @@
   - pre-commit: lint and test
   - commit-msg: conventional commit message
 - [Storybook](https://storybook.js.org/)
-- GitHub Pages Deployment
+- Deployment to S3 and CloudFront via [`deploy_ui.yml`](.github/workflows/deploy_ui.yml)
+
+## Deployment
+
+The GitHub Actions workflow `deploy_ui.yml` requires the repository secret
+`VITE_API_BASE_URL` during the build step. Make sure this secret is configured for
+both the **staging** and **production** environments.
 
 ## Environment variables
 
