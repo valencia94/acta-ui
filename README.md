@@ -34,4 +34,4 @@
 Create a `.env` file (see `.env.example`) with the following keys:
 
 - `VITE_COUNTER` – initial value for the demo counter.
-- `VITE_API_BASE_URL` – base URL of the backend API.
+- `VITE_API_BASE_URL` – base URL of the backend API (e.g. `https://api.example.com`).
