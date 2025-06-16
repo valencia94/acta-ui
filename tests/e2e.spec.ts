@@ -72,6 +72,9 @@ test('end-to-end workflow', async ({ page }) => {
     page.evaluate(() => localStorage.getItem('ikusi.jwt'))
   ).resolves.toBe('mock-token');
   await page.goto('/dashboard');
+  await expect(
+    page.getByRole('heading', { name: 'Project Dashboard' })
+  ).toBeVisible();
   await page.locator('input[placeholder="1000000061690051"]').fill('123');
   await Promise.all([
     page.waitForRequest(`${API}/project-summary/123`),
