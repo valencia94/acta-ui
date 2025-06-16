@@ -3,6 +3,21 @@ import { expect, test } from '@playwright/test';
 const API = 'http://localhost:9999';
 
 test('end-to-end workflow', async ({ page }) => {
+  await page.addInitScript(() => {
+    const auth = {
+      signIn: async () => {
+        localStorage.setItem('ikusi.jwt', 'mock-token');
+        return { username: 'mock-user' };
+      },
+      currentSession: async () => ({
+        getIdToken: () => ({ getJwtToken: () => 'mock-token' }),
+      }),
+    };
+    interface WithAuth extends Window {
+      Auth: typeof auth;
+    }
+    (window as unknown as WithAuth).Auth = auth;
+  });
   await page.route(`${API}/project-summary/*`, (route) =>
     route.fulfill({
       status: 200,
