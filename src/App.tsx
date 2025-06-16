@@ -2,10 +2,12 @@ import { Auth } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
+import { useThemedFavicon } from '@/hooks/useThemedFavicon';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 
 export default function App() {
+  useThemedFavicon();
   const [checked, setChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
 
