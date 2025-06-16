@@ -32,7 +32,8 @@
 ## Environment variables
 
 Create a `.env` file based on `.env.example` and set `VITE_API_BASE_URL` to the
-backend URL used by the UI:
+backend URL used by the UI. The value must be a valid URL or the app will exit
+on start:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:9999
