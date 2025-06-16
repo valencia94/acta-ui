@@ -49,7 +49,7 @@ Adjust this value if your API is hosted elsewhere.
 The environment is validated during `vite dev` and `vite build` via
 [`vite-plugin-validate-env`](https://github.com/Julien-R44/vite-plugin-validate-env).
 
-When running the automated tests or building the project, provide the variable on the command line:
+When running tests or building the project, provide the variable on the command line:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:9999 pnpm test
