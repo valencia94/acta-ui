@@ -10,6 +10,11 @@ export default function App() {
   const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
+    if (import.meta.env.VITE_SKIP_AUTH === 'true') {
+      setChecked(true);
+      setIsAuthed(false);
+      return;
+    }
     const verify = async () => {
       try {
         const session = await Auth.currentSession();

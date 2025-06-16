@@ -15,7 +15,7 @@ const config: PlaywrightTestConfig = {
     timeout,
     url,
     command: 'pnpm run dev -- --port 5173 --strictPort',
-    env: { VITE_API_BASE_URL: 'http://localhost:9999' },
+    env: { VITE_API_BASE_URL: 'http://localhost:9999', VITE_SKIP_AUTH: 'true' },
     reuseExistingServer: !process.env.CI,
     ignoreHTTPSErrors: true,
   },
