@@ -33,5 +33,5 @@
 
 This project uses the `deploy_ui.yml` GitHub Actions workflow to build and
 publish the UI. The build step expects the repository secret
-`VITE_API_BASE_URL`, so ensure it is defined for both the **staging** and
+`VITE_API_BASE_URL` to be set. Add this secret to both the **staging** and
 **production** environments.
