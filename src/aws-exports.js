@@ -8,7 +8,7 @@ const awsmobile = {
 
   oauth: {
     // NO https://  and NO trailing slash on the domain line
-    domain: 'us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com',
+    domain: 'us-east-2-fyhltohiy.auth.us-east-2.amazoncognito.com',
     scope: ['email', 'openid'],
     redirectSignIn: 'https://d1pdn8jj8kyfw8.cloudfront.net/',
     redirectSignOut: 'https://d1pdn8jj8kyfw8.cloudfront.net/',
