@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const API = 'http://localhost:9999';
 
 test('end-to-end workflow', async ({ page }) => {
-  await page.route(`${API}/project-summary/*`, (route) =>
+  await page.route(`${API}/projectSummary/*`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -24,7 +24,7 @@ test('end-to-end workflow', async ({ page }) => {
       ]),
     })
   );
-  await page.route(`${API}/sendapprovalemail`, (route) =>
+  await page.route(`${API}/send-approval-email`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -59,7 +59,7 @@ test('end-to-end workflow', async ({ page }) => {
   await page.goto('/dashboard');
   await page.locator('input[placeholder="1000000061690051"]').fill('123');
   await Promise.all([
-    page.waitForRequest(`${API}/project-summary/123`),
+    page.waitForRequest(`${API}/projectSummary/123`),
     page.waitForRequest(`${API}/timeline/123`),
     page.getByRole('button', { name: 'Retrieve' }).click(),
   ]);
@@ -75,7 +75,7 @@ test('end-to-end workflow', async ({ page }) => {
   ]);
 
   await Promise.all([
-    page.waitForRequest(`${API}/sendapprovalemail`),
+    page.waitForRequest(`${API}/send-approval-email`),
     page.getByRole('button', { name: 'Generate Acta' }).click(),
   ]);
 

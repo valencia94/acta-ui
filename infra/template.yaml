@@ -39,6 +39,18 @@ Resources:
             Path: /approve
             Method: get
             RestApiId: !Ref ApplicationApi
+        ProjectSummary:
+          Type: Api
+          Properties:
+            Path: /projectSummary/{id}
+            Method: get
+            RestApiId: !Ref ApplicationApi
+        SendApprovalEmail:
+          Type: Api
+          Properties:
+            Path: /send-approval-email
+            Method: post
+            RestApiId: !Ref ApplicationApi
         GenerateDocument:
           Type: Api
           Properties:

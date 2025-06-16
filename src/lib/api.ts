@@ -19,7 +19,7 @@ export interface TimelineEvent {
 
 /* ---------- SUMMARY ---------- */
 export async function getSummary(id: string): Promise<ProjectSummary> {
-  const r = await fetch(`${BASE}/project-summary/${id}`);
+  const r = await fetch(`${BASE}/projectSummary/${id}`);
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -57,7 +57,7 @@ export async function sendApprovalEmail(
   projectId: string,
   recipient: string
 ): Promise<{ message: string; token: string }> {
-  const r = await fetch(`${BASE}/sendapprovalemail`, {
+  const r = await fetch(`${BASE}/send-approval-email`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ project_id: projectId, recipient }),
