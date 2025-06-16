@@ -27,7 +27,7 @@
   - pre-commit: lint and test
   - commit-msg: conventional commit message
 - [Storybook](https://storybook.js.org/)
-- GitHub Pages Deployment
+- Deployment to S3 and CloudFront via [`deploy_ui.yml`](.github/workflows/deploy_ui.yml)
 
 ## Deployment
 
