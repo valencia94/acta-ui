@@ -11,7 +11,10 @@ def lambda_handler(event, context):
         }
 
     if path and path.startswith("/project-summary/") and method == "GET":
-        project_id = path.split("/", 2)[-1]
+        project_id = event.get("pathParameters", {}).get("id")
+        if not project_id:
+            # fallback to rawPath when path parameters are absent
+            project_id = event.get("rawPath", path).split("/", 2)[-1]
         return {
             "statusCode": 200,
             "body": json.dumps({
