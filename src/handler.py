@@ -14,7 +14,7 @@ def lambda_handler(event, context):
         project_id = event.get("pathParameters", {}).get("id")
         if not project_id:
             # fallback to rawPath when path parameters are absent
-            project_id = event.get("rawPath", path).split("/", 2)[-1]
+            project_id = event.get("rawPath", path).split("/project-summary/", 1)[-1]
         return {
             "statusCode": 200,
             "body": json.dumps({
