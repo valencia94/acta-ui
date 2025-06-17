@@ -1,0 +1,15 @@
+{
+  // Visible name in the Codespace status bar
+  "name": "acta-ui-dev",
+
+  // Base image (Node 20 + TypeScript) – fine for Vite + Amplify
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20-bullseye",
+
+  // Outbound domains that the container is allowed to reach
+  "networkAccess": {
+    "allowedDomains": [
+      "registry.npmjs.org",  // npm installs
+      "cdn.playwright.dev"   // Playwright browser binaries
+    ]
+  }
+}
