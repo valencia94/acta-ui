@@ -1,6 +1,6 @@
 import './Login.css';
 
-import { Auth } from 'aws-amplify';
+import { fetchAuthSession, signIn } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,9 +12,10 @@ export default function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await Auth.signIn(email, pass);
-      const session = await Auth.currentSession();
-      const token = session.getIdToken().getJwtToken();
+      const { isSignedIn } = await signIn({ username: email, password: pass });
+      if (!isSignedIn) throw new Error('sign-in failed');
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString() ?? '';
       localStorage.setItem('ikusi.jwt', token);
       nav('/dashboard');
     } catch (err) {
