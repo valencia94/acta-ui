@@ -1,5 +1,5 @@
 import { Authenticator } from '@aws-amplify/ui-react';
-import { Auth } from 'aws-amplify';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
@@ -15,8 +15,8 @@ export default function App() {
   useEffect(() => {
     const verify = async () => {
       try {
-        const session = await Auth.currentSession();
-        const token = session.getIdToken().getJwtToken();
+        const { tokens } = await fetchAuthSession();
+        const token = tokens?.idToken?.toString() ?? '';
         localStorage.setItem('ikusi.jwt', token);
         setIsAuthed(true);
       } catch {

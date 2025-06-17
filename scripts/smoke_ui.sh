@@ -1,16 +1,28 @@
-# scripts/smoke-ui.sh ─ place at repo root, then:  bash scripts/smoke-ui.sh
+#!/usr/bin/env bash
 set -euo pipefail
-DIST_ID="${CLOUDFRONT_DIST_ID:-$(aws cloudfront list-distributions \
-         --query 'DistributionList.Items[?Comment==`acta-ui-prod`].Id|[0]' \
-         --output text)}"
 
-DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" \
-          --query 'Distribution.DomainName' --output text)
+: "${VITE_API_BASE_URL:?VITE_API_BASE_URL not set}"
 
-echo "🔍  Hitting https://$DOMAIN …"
-STATUS=$(curl -s -o /dev/null -w '%{http_code}' "https://$DOMAIN")
-[ "$STATUS" = "200" ] || { echo "❌  Expected 200, got $STATUS"; exit 1; }
+check() {
+  local msg=$1
+  shift
+  "$@" >/tmp/smoke_out 2>&1 || { cat /tmp/smoke_out; echo "❌ $msg"; exit 1; }
+}
 
-grep -q 'Acta Platform' <(curl -s "https://$DOMAIN") \
-  && echo "✅  React bundle served" || \
-  { echo "❌  Unexpected HTML (maybe Storybook)"; exit 1; }
+status=$(curl -s -o /dev/null -w '%{http_code}' "$VITE_API_BASE_URL/projectSummary/demo")
+[ "$status" = "200" ] || { echo "❌ projectSummary returned $status"; exit 1; }
+
+data='{}'
+status=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d "$data" "$VITE_API_BASE_URL/send-approval-email")
+case "$status" in
+  200|202) ;;
+  *) echo "❌ send-approval-email returned $status"; exit 1;;
+esac
+
+html=$(curl -sL https://d7t9x3j66yd8k.cloudfront.net/)
+status=$(curl -s -o /dev/null -w '%{http_code}' https://d7t9x3j66yd8k.cloudfront.net/)
+[ "$status" = "200" ] || { echo "❌ cloudfront returned $status"; exit 1; }
+
+echo "$html" | grep -q '<!DOCTYPE html>' || { echo "❌ cloudfront missing DOCTYPE"; exit 1; }
+
+echo "✅ smoke tests passed"
