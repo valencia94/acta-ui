@@ -1,3 +1,4 @@
+import { Authenticator } from '@aws-amplify/ui-react';
 import { Auth } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
@@ -31,18 +32,20 @@ export default function App() {
   if (!checked) return null;
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={<Navigate to={isAuthed ? '/dashboard' : '/login'} />}
-        />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={isAuthed ? <Dashboard /> : <Navigate to="/login" />}
-        />
-      </Routes>
-    </BrowserRouter>
+    <Authenticator>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={<Navigate to={isAuthed ? '/dashboard' : '/login'} />}
+          />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={isAuthed ? <Dashboard /> : <Navigate to="/login" />}
+          />
+        </Routes>
+      </BrowserRouter>
+    </Authenticator>
   );
 }
