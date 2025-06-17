@@ -39,3 +39,15 @@ both the **staging** and **production** environments.
 
 Create a `.env` file based on `.env.example` and set `VITE_API_BASE_URL` to your
 backend URL.
+
+## Playwright + FFMPEG Boot Package
+
+Follow these steps to prepare the Codex environment with Playwright and a static
+FFMPEG binary:
+
+1. Run `pnpm run setup` to install Playwright dependencies and download the
+   binary.
+2. The `.env` file sets `FFMPEG_PATH=./bin/ffmpeg`. Export this variable in your
+   shell if not using `pnpm run setup`.
+3. Verify the installation with `pnpm run ffmpeg:version`.
+4. Run tests with `pnpm run test`.
