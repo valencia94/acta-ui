@@ -39,3 +39,11 @@ both the **staging** and **production** environments.
 
 Create a `.env` file based on `.env.example` and set `VITE_API_BASE_URL` to your
 backend URL.
+
+When running integration tests locally, you can set `VITE_SKIP_AUTH=true` to
+bypass Cognito checks.
+
+### API endpoints
+
+- `GET /projectSummary/{id}` – fetch project summary details
+- `POST /send-approval-email` – trigger approval email sending
