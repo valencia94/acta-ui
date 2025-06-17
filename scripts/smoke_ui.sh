@@ -3,12 +3,6 @@ set -euo pipefail
 
 : "${VITE_API_BASE_URL:?VITE_API_BASE_URL not set}"
 
-check() {
-  local msg=$1
-  shift
-  "$@" >/tmp/smoke_out 2>&1 || { cat /tmp/smoke_out; echo "❌ $msg"; exit 1; }
-}
-
 status=$(curl -s -o /dev/null -w '%{http_code}' "$VITE_API_BASE_URL/projectSummary/demo")
 [ "$status" = "200" ] || { echo "❌ projectSummary returned $status"; exit 1; }
 
