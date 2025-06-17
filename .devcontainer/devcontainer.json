@@ -8,8 +8,11 @@
   // Outbound domains that the container is allowed to reach
   "networkAccess": {
     "allowedDomains": [
-      "registry.npmjs.org",  // npm installs
-      "cdn.playwright.dev"   // Playwright browser binaries
+    "registry.npmjs.org",
+    "cdn.playwright.dev",
+    "github.com",
+    "objects.githubusercontent.com",
+    "awscli.amazonaws.com"
     ]
   }
 }
