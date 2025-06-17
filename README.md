@@ -50,5 +50,4 @@ FFMPEG binary:
 2. The `.env` file sets `FFMPEG_PATH=./bin/ffmpeg`. Export this variable in your
    shell if not using `pnpm run setup`.
 3. Verify the installation with `pnpm run ffmpeg:version`.
-4. Run tests with `pnpm run test`. Playwright will automatically start the Vite
-   dev server on `http://localhost:5199` before running the tests.
+4. Run tests with `pnpm run test`.
