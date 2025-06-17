@@ -1,20 +1,20 @@
 import './Login.css';
 
-import { Auth } from 'aws-amplify';
+import { fetchAuthSession, signIn } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const nav = useNavigate();
   const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
+  const [password, setPassword] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await Auth.signIn(email, pass);
-      const session = await Auth.currentSession();
-      const token = session.getIdToken().getJwtToken();
+      await signIn({ username: email, password });
+      const { tokens } = await fetchAuthSession();
+      const token = tokens?.idToken?.toString() ?? '';
       localStorage.setItem('ikusi.jwt', token);
       nav('/dashboard');
     } catch (err) {
@@ -52,8 +52,8 @@ export default function Login() {
           <input
             type="password"
             required
-            value={pass}
-            onChange={(e) => setPass(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="input"
           />
         </div>

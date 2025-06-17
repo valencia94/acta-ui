@@ -1,0 +1,18 @@
+name: Smoke Test Production
+
+on:
+  workflow_run:
+    workflows: ["Deploy UI to S3 + CloudFront"]
+    types:
+      - completed
+
+jobs:
+  smoke:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: chmod +x scripts/smoke_ui.sh
+      - run: ./scripts/smoke_ui.sh
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
