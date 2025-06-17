@@ -38,7 +38,14 @@ both the **staging** and **production** environments.
 ## Environment variables
 
 Create a `.env` file based on `.env.example` and set `VITE_API_BASE_URL` to your
-backend URL.
+backend URL.  The sample file also includes AWS Cognito settings:
+
+- `VITE_COGNITO_REGION`
+- `VITE_COGNITO_POOL_ID`
+- `VITE_COGNITO_WEB_CLIENT`
+
+Older versions of the project referenced a `VITE_SKIP_AUTH` variable.  This
+variable is no longer required and can be removed from local environment files.
 
 ## Playwright + FFMPEG Boot Package
 
