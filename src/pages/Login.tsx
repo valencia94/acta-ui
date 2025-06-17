@@ -1,13 +1,17 @@
 import './Login.css';
 
-import { fetchAuthSession, signIn } from 'aws-amplify/auth';
-import { useState } from 'react';
+import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    signOut().catch(() => {});
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

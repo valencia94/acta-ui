@@ -1,5 +1,5 @@
 import { Authenticator } from '@aws-amplify/ui-react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
@@ -21,6 +21,7 @@ export default function App() {
         setIsAuthed(true);
       } catch {
         localStorage.removeItem('ikusi.jwt');
+        await signOut().catch(() => {});
         setIsAuthed(false);
       } finally {
         setChecked(true);
