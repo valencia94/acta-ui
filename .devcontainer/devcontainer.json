@@ -1,18 +1,11 @@
 {
-  // Visible name in the Codespace status bar
   "name": "acta-ui-dev",
 
-  // Base image (Node 20 + TypeScript) – fine for Vite + Amplify
+  // Base image: Node 20 + TypeScript
   "image": "mcr.microsoft.com/devcontainers/typescript-node:20-bullseye",
 
-  // Outbound domains that the container is allowed to reach
-  "networkAccess": {
-    "allowedDomains": [
-    "registry.npmjs.org",
-    "cdn.playwright.dev",
-    "github.com",
-    "objects.githubusercontent.com",
-    "awscli.amazonaws.com"
-    ]
+  // Auto-installs AWS CLI v2 every time a Codespace is created
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/aws-cli:2": {}
   }
 }
