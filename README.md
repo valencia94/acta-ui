@@ -35,6 +35,13 @@ The GitHub Actions workflow `deploy_ui.yml` requires the repository secret
 `VITE_API_BASE_URL` during the build step. Make sure this secret is configured for
 both the **staging** and **production** environments.
 
+For deployment to AWS the workflow expects these additional secrets:
+
+- `AWS_ROLE_ARN` – IAM role assumed via OIDC
+- `AWS_REGION` – the target AWS region
+- `S3_BUCKET_NAME` – destination S3 bucket
+- `CLOUDFRONT_DIST_ID` – CloudFront distribution to invalidate
+
 ## Environment variables
 
 Create a `.env` file based on `.env.example` and set `VITE_API_BASE_URL` to your
