@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -36,15 +36,12 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to S3 and invalidate CloudFront
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-          
+      # single, proper step: has env **and** run
       - name: Deploy to S3 + invalidate CloudFront
+        env:
+          AWS_REGION:           ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME:       ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFRONT_DIST_ID:   ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
           chmod +x scripts/deploy-to-s3.sh
           ./scripts/deploy-to-s3.sh
-
-
