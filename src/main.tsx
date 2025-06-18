@@ -6,6 +6,8 @@ import awsmobile from './aws-exports';
 
 Amplify.configure(awsmobile);
 
+import '@aws-amplify/ui-react/styles.css';
+
 import App from './App';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
