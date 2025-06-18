@@ -37,7 +37,10 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+          
+      - name: Deploy to S3 + invalidate CloudFront
         run: |
           chmod +x scripts/deploy-to-s3.sh
           ./scripts/deploy-to-s3.sh
+
 
