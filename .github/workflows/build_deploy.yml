@@ -9,51 +9,59 @@ jobs:
   build_deploy:
     runs-on: ubuntu-latest
     environment: prod
+
+    # 👇 Required so GitHub issues an OIDC token the AWS action can exchange
+    permissions:
+      id-token: write      # needed for OIDC
+      contents: read       # allows actions/checkout
+
     steps:
+      # 1️⃣  Checkout code
       - uses: actions/checkout@v4
 
+      # 2️⃣  Set up PNPM
       - uses: pnpm/action-setup@v2
         with:
           version: 9
           run_install: |
             args: [--no-frozen-lockfile]
 
+      # 3️⃣  Set up Node
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'pnpm'
 
+      # 4️⃣  Install dependencies
       - name: Install deps
         run: pnpm install --no-frozen-lockfile
 
+      # 5️⃣  Build the UI
       - name: Build UI
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: pnpm run build
 
-      - name: Configure AWS credentials    # ← MUST come first
+      # 6️⃣  Configure AWS credentials (OIDC)
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region:   ${{ secrets.AWS_REGION }}
-    
-      - name: Deploy API via CloudFormation
+          aws-region:     ${{ secrets.AWS_REGION }}
+
+      # 7️⃣  Deploy API CloudFormation stack
+      - name: Deploy API
         run: |
           aws cloudformation deploy \
             --stack-name acta-api \
             --template-file infra/template.yaml \
             --capabilities CAPABILITY_IAM
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
+      # 8️⃣  Deploy UI bundle to S3 + invalidate CloudFront
       - name: Deploy UI to S3
         env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+          S3_BUCKET_NAME:      ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFRONT_DIST_ID:  ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
           chmod +x scripts/deploy-to-s3.sh
           ./scripts/deploy-to-s3.sh
