@@ -1,10 +1,10 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: "/"
-    target-branch: "dependabot-updates"   # not develop
+    directory: '/'
+    target-branch: 'dependabot-updates' # not develop
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     open-pull-requests-limit: 5
     # 👇  Add
     ignore:
