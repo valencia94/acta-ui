@@ -65,8 +65,15 @@ jobs:
       - name: 🏗️  Build bundle
         run: pnpm run build
 
-      # (Optional) deploy steps go here … e.g. configure-aws-credentials + s3 sync
-      - name: 🚀  Deploy to S3 + CloudFront
+      # ---------- OIDC credentials ----------
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # ---------- Deploy ----------
+      - name: Deploy to S3 + invalidate CloudFront
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
