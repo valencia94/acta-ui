@@ -29,7 +29,8 @@
     "update:major": "pnpm exec npm-check-updates -u --packageManager pnpm",
     "update:minor": "pnpm exec npm-check-updates -u --target minor --packageManager pnpm",
     "update:patch": "pnpm exec npm-check-updates -u --target patch --packageManager pnpm",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "check:env": "node scripts/check-env.cjs"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6",
