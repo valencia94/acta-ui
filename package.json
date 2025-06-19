@@ -89,6 +89,7 @@
     "eslint-plugin-prettier": "^5.5.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unused-imports": "^3.2.0",
+    "expect": "30.0.2",
     "framer-motion": "^12.18.1",
     "gh-pages": "^6.3.0",
     "husky": "^9.1.7",

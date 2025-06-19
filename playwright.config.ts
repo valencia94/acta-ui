@@ -9,6 +9,8 @@ const config: PlaywrightTestConfig = {
   timeout,
   globalTimeout,
   globalSetup: './tests/playwright.setup.ts',
+  testDir: './tests',
+  testMatch: ['**/e2e.spec.ts'],
   expect: {
     timeout,
   },
