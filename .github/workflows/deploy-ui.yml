@@ -5,7 +5,7 @@ on:
     branches: [develop]
   workflow_dispatch:
 
-permissions:          # ⚠️  REQUIRED for OIDC
+permissions: # ⚠️  REQUIRED for OIDC
   id-token: write
   contents: read
 
@@ -29,6 +29,13 @@ jobs:
           corepack prepare pnpm@9 --activate
           pnpm install --frozen-lockfile
           pnpm run build
+
+      - name: Install AWS CLI if missing
+        run: |
+          if ! command -v aws >/dev/null; then
+            pip install --user awscli
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
 
       # ---------- OIDC credentials ----------
       - name: Configure AWS credentials
