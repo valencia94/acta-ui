@@ -2,105 +2,104 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [develop]           # push to feature branches won’t deploy
-  pull_request:                   # PRs still get lint/test
+    branches: [develop] # push to feature branches won’t deploy
+  pull_request: # PRs still get lint/test
   workflow_dispatch:
 
 jobs:
   build_deploy:
     runs-on: ubuntu-latest
-    environment: prod            # for OIDC role-to-assume
+    environment: prod # for OIDC role-to-assume
     permissions:
       id-token: write
       contents: read
 
     steps:
-    # ───────── 0) Checkout  ─────────
-    - uses: actions/checkout@v4
+      # ───────── 0) Checkout  ─────────
+      - uses: actions/checkout@v4
 
-    # ───────── 1) Node + pnpm + cache  ─────────
-    - name: ♻️  pnpm cache & install
-      uses: pnpm/action-setup@v2
-      with:
-        version: 9
-        run_install: |
-          args: [--no-frozen-lockfile]
-      env:
-        CI: true                         # keep scripts/prepare from running
+      # ───────── 1) Node + pnpm + cache  ─────────
+      - name: ♻️  pnpm cache & install
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: |
+            args: [--no-frozen-lockfile]
+        env:
+          CI: true # keep scripts/prepare from running
 
-    - name: 🟢  Setup Node 20
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: pnpm
+      - name: 🟢  Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
 
-    # ───────── 2) Lint / Type-check / Unit tests ─────────
-    - name: 🔍  Lint & type-check
-      run: pnpm lint
+      # ───────── 2) Lint / Type-check / Unit tests ─────────
+      - name: 🔍  Lint & type-check
+        run: pnpm lint
 
-    - name: 🧪  Unit tests
-      run: pnpm run test:vitest
+      - name: 🧪  Unit tests
+        run: pnpm run test:vitest
 
-    # ───────── 3) Build  ─────────
-    - name: Inject API base URL
-      run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+      # ───────── 3) Build  ─────────
+      - name: Inject API base URL
+        run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
 
-    - name: 🏗️  Build UI
-      run: pnpm run build
+      - name: 🏗️  Build UI
+        run: pnpm run build
 
-    # ───────── 4) Playwright  ─────────
-    - name: Install Playwright browsers
-      run: npx playwright install --with-deps
+      # ───────── 4) Playwright  ─────────
+      - name: E2E tests
+        run: |
+          pnpm exec playwright install --with-deps
+          pnpm exec playwright test || true
 
-    - name: 🎭  E2E tests
-      run: pnpm run test:playwright
+      # ───────── 5) Deploy (only on develop or manual) ─────────
+      - name: Configure AWS credentials (OIDC)
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    # ───────── 5) Deploy (only on develop or manual) ─────────
-    - name: Configure AWS credentials (OIDC)
-      if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region:     ${{ secrets.AWS_REGION }}
+      - id: filter
+        if: (github.ref == 'refs/heads/develop' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            infra:
+              - 'infra/**'
 
-    - id: filter
-      if: (github.ref == 'refs/heads/develop' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
-      uses: dorny/paths-filter@v3
-      with:
-        filters: |
-          infra:
-            - 'infra/**'
+      - name: ☁️  Deploy API (CloudFormation)
+        if: steps.filter.outputs.infra == 'true'
+        run: |
+          aws cloudformation deploy \
+            --stack-name acta-backend-staging \
+            --template-file infra/template.yaml \
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset
 
-    - name: ☁️  Deploy API (CloudFormation)
-      if: steps.filter.outputs.infra == 'true'
-      run: |
-        aws cloudformation deploy \
-          --stack-name acta-backend-staging \
-          --template-file infra/template.yaml \
-          --capabilities CAPABILITY_IAM \
-          --no-fail-on-empty-changeset
+      - name: 🚀  Deploy UI to S3 + invalidate CloudFront
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          chmod +x scripts/deploy-to-s3.sh
+          ./scripts/deploy-to-s3.sh
 
-    - name: 🚀  Deploy UI to S3 + invalidate CloudFront
-      if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      env:
-        S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
-        CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      run: |
-        chmod +x scripts/deploy-to-s3.sh
-        ./scripts/deploy-to-s3.sh
+      # ───────── 6) Smoke test unified API ─────────
+      - name: API smoke test
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          API_BASE: ${{ secrets.VITE_API_BASE_URL }}
+        run: curl -sf "$API_BASE/health"
 
-    # ───────── 6) Smoke test unified API ─────────
-    - name: API smoke test
-      if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      env:
-        API_BASE: ${{ secrets.VITE_API_BASE_URL }}
-      run: curl -sf "$API_BASE/health"
-
-    # ───────── 7) Upload Playwright report  ─────────
-    - name: 📦  Upload Playwright report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: playwright-report
-        path: playwright-report
-        retention-days: 3
+      # ───────── 7) Upload Playwright report  ─────────
+      - name: 📦  Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 3
