@@ -1,4 +1,5 @@
 import { Authenticator } from '@aws-amplify/ui-react';
+import { ChakraProvider } from '@chakra-ui/react';
 import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { skipAuth } from '@/env.variables';
 import { useThemedFavicon } from '@/hooks/useThemedFavicon';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
+import theme from './theme';
 
 export default function App() {
   useThemedFavicon();
@@ -41,20 +43,22 @@ export default function App() {
   if (!checked) return null;
 
   return (
-    <Authenticator>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={<Navigate to={isAuthed ? '/dashboard' : '/login'} />}
-          />
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/dashboard"
-            element={isAuthed ? <Dashboard /> : <Navigate to="/login" />}
-          />
-        </Routes>
-      </BrowserRouter>
-    </Authenticator>
+    <ChakraProvider theme={theme}>
+      <Authenticator>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={<Navigate to={isAuthed ? '/dashboard' : '/login'} />}
+            />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={isAuthed ? <Dashboard /> : <Navigate to="/login" />}
+            />
+          </Routes>
+        </BrowserRouter>
+      </Authenticator>
+    </ChakraProvider>
   );
 }

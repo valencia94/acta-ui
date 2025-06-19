@@ -1,15 +1,28 @@
-import './Login.css';
-
+import {
+  Button,
+  Flex,
+  FormControl,
+  FormLabel,
+  Heading,
+  Image,
+  Input,
+  Stack,
+} from '@chakra-ui/react';
 import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import { skipAuth } from '../env.variables';
 
+interface FormData {
+  email: string;
+  password: string;
+}
+
 export default function Login() {
   const nav = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { register, handleSubmit } = useForm<FormData>();
 
   useEffect(() => {
     if (!skipAuth) {
@@ -17,8 +30,7 @@ export default function Login() {
     }
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function onSubmit({ email, password }: FormData) {
     try {
       if (skipAuth) {
         localStorage.setItem('ikusi.jwt', 'dev-token');
@@ -36,51 +48,30 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-6 p-8 bg-white shadow rounded-xl"
-      >
-        <img
-          src="/assets/ikusi-logo.png"
-          alt="Ikusi"
-          className="w-40 mx-auto"
-        />
-        <h1 className="text-2xl font-semibold text-center">Acta Platform</h1>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-600 mb-1">
-            Email
-          </label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-600 mb-1">
-            Password
-          </label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full py-2 rounded bg-cvdex text-white font-semibold hover:bg-cvdex-dark transition"
-        >
-          Sign in
-        </button>
-      </form>
-    </div>
+    <Flex minH="100vh" align="center" justify="center" bg="white">
+      <Stack spacing={8} mx="auto" w="sm">
+        <Image src="/ikusi-logo.svg" boxSize="72px" mx="auto" />
+        <Heading color="var(--ikusi-dark)">Acta Platform</Heading>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <FormControl isRequired>
+            <FormLabel>Email</FormLabel>
+            <Input type="email" {...register('email')} />
+          </FormControl>
+          <FormControl mt={4} isRequired>
+            <FormLabel>Password</FormLabel>
+            <Input type="password" {...register('password')} />
+          </FormControl>
+          <Button
+            mt={6}
+            w="full"
+            bg="var(--ikusi-green)"
+            _hover={{ bg: 'var(--ikusi-teal)' }}
+            type="submit"
+          >
+            Sign in
+          </Button>
+        </form>
+      </Stack>
+    </Flex>
   );
 }
