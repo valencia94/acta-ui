@@ -52,8 +52,9 @@ Cognito settings:
 - `VITE_COGNITO_POOL_ID`
 - `VITE_COGNITO_WEB_CLIENT`
 
-Older versions of the project referenced a `VITE_SKIP_AUTH` variable.  This
-variable is no longer required and can be removed from local environment files.
+Optional for local development:
+
+- `VITE_SKIP_AUTH` – set to `true` to bypass AWS Cognito during testing
 
 ## Playwright + FFMPEG Boot Package
 

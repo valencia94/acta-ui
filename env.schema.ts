@@ -6,4 +6,7 @@ export const envSchema = {
   VITE_COGNITO_REGION: z.string(),
   VITE_COGNITO_POOL_ID: z.string(),
   VITE_COGNITO_WEB_CLIENT: z.string(),
+  VITE_SKIP_AUTH: z
+    .preprocess((v) => v === 'true' || v === true, z.boolean())
+    .optional(),
 };
