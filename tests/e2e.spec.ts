@@ -1,5 +1,20 @@
 import { expect, test } from '@playwright/test';
 
+// Vitest's expect may already define this symbol when running in certain
+// environments which leads Playwright's expect to throw "Cannot redefine
+// property: Symbol($$jest-matchers-object)". Ensure it's removed before the
+// tests start so Playwright can safely register its own expect implementation.
+// Delete any existing expect markers added by other test runners so
+// Playwright can register its own without conflicts. If the property is
+// non-configurable, overwrite it instead of deleting.
+const jestSymbol = Symbol.for('$$jest-matchers-object');
+const globalObj = globalThis as Record<symbol, unknown>;
+if (Object.getOwnPropertyDescriptor(globalObj, jestSymbol)?.configurable) {
+  delete globalObj[jestSymbol];
+} else {
+  globalObj[jestSymbol] = undefined;
+}
+
 const API = 'http://localhost:9999';
 
 test('end-to-end workflow', async ({ page }) => {
