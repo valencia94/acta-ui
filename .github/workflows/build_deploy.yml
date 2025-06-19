@@ -30,9 +30,13 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: pnpm run build
 
-      - name: Deploy API
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials    # ← MUST come first
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region:   ${{ secrets.AWS_REGION }}
+    
+      - name: Deploy API via CloudFormation
         run: |
           aws cloudformation deploy \
             --stack-name acta-api \
