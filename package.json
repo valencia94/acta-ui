@@ -50,6 +50,9 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@chakra-ui/form-control": "^2.2.0",
+    "@chakra-ui/input": "^2.1.2",
+    "@chakra-ui/theme-utils": "^2.0.21",
     "@chakra-ui/react": "^3.21.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
