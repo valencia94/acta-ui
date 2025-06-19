@@ -1,14 +1,13 @@
 import { defineConfig } from '@playwright/test';
 
-const PORT = 5173;
+const PORT = process.env.CI ? 4173 : 5173;          // 4173 when running in CI
 const HOST = `http://localhost:${PORT}`;
-const TIMEOUT = 60_000; // test & action timeout (60 s)
-const EXPECT_TIMEOUT = 10_000; // individual expect timeout (10 s)
+const TIMEOUT = 60_000;                             // test & action timeout
+const EXPECT_TIMEOUT = 10_000;                      // individual expect timeout
 
-/** @type {import('@playwright/test').PlaywrightTestConfig} */
 export default defineConfig({
   timeout: TIMEOUT,
-  globalTimeout: 2 * TIMEOUT, // 2 min total per worker
+  globalTimeout: 2 * TIMEOUT,                       // 2-minute worker cap
   globalSetup: './tests/playwright.setup.ts',
 
   testDir: './tests',
@@ -16,19 +15,15 @@ export default defineConfig({
 
   expect: { timeout: EXPECT_TIMEOUT },
 
-  /* ------------------------------------------
-     Local server for both dev (local runs) and
-     preview build (CI) — picked by NODE_ENV
-  ------------------------------------------ */
+  /* ─────────────  Local dev vs CI  ───────────── */
   webServer: {
     command: process.env.CI
-      ? 'pnpm preview --port 5173 --strictPort'
-      : 'pnpm dev --port 5173 --strictPort',
+      ? 'vite preview --port 4173 --strictPort'     // serve built bundle in CI
+      : 'vite dev --port 5173 --strictPort',        // dev-server locally
     port: PORT,
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000, // wait up to 60 s for server to be ready
+    timeout: 60_000,                               // wait up to 60 s for server
     env: {
-      // During local runs hit the mock/stub API
       VITE_API_BASE_URL:
         process.env.VITE_API_BASE_URL ?? 'http://localhost:9999',
     },
