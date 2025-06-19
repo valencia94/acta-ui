@@ -23,7 +23,7 @@ def lambda_handler(event, context):
             }),
         }
 
-    if path == "/sendapprovalemail" and method == "POST":
+    if path == "/send-approval-email" and method == "POST":
         return {
             "statusCode": 200,
             "body": json.dumps({"message": "email sent"})
