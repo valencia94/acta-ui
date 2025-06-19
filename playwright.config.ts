@@ -1,28 +1,20 @@
 import { defineConfig } from '@playwright/test';
 
-const PORT = process.env.CI ? 4173 : 5173;          // 4173 when running in CI
+const PORT = 5173; // dev-server everywhere (CI + local)
 const HOST = `http://localhost:${PORT}`;
-const TIMEOUT = 60_000;                             // test & action timeout
-const EXPECT_TIMEOUT = 10_000;                      // individual expect timeout
+const TIMEOUT = 60_000;
 
 export default defineConfig({
-  timeout: TIMEOUT,
-  globalTimeout: 2 * TIMEOUT,                       // 2-minute worker cap
-  globalSetup: './tests/playwright.setup.ts',
-
   testDir: './tests',
-  testMatch: ['**/e2e.spec.ts'],
+  timeout: TIMEOUT,
+  expect: { timeout: 10_000 },
 
-  expect: { timeout: EXPECT_TIMEOUT },
-
-  /* ─────────────  Local dev vs CI  ───────────── */
+  /* spin up vite dev-server in both CI and local runs */
   webServer: {
-    command: process.env.CI
-      ? 'vite preview --port 4173 --strictPort'     // serve built bundle in CI
-      : 'vite dev --port 5173 --strictPort',        // dev-server locally
+    command: 'vite dev --port 5173 --strictPort',
     port: PORT,
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,                               // wait up to 60 s for server
+    timeout: 60_000,
     env: {
       VITE_API_BASE_URL:
         process.env.VITE_API_BASE_URL ?? 'http://localhost:9999',
@@ -33,9 +25,6 @@ export default defineConfig({
   use: {
     baseURL: `${HOST}/`,
     headless: true,
-    actionTimeout: TIMEOUT,
-    navigationTimeout: TIMEOUT,
-    ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
   },
 });
