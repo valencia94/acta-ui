@@ -20,45 +20,129 @@ Resources:
         AllowHeaders: "'*'"
         AllowOrigin: "'*'"
 
-  ApiFunction:
+  InvokePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: InvokeAll
+      Roles: []
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: arn:aws:lambda:us-east-2:703671891952:function:*
+
+  GetTimeline:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ../src/
       Handler: handler.lambda_handler
       Runtime: python3.12
-      Timeout: 30
-      MemorySize: 128
-      Environment:
-        Variables:
-          EMAIL_FROM: !Ref EmailFrom
-          BUCKET: !Ref Bucket
       Events:
-        Approve:
+        Api:
           Type: Api
           Properties:
-            Path: /approve
+            Path: /timeline/{id}
             Method: get
             RestApiId: !Ref ApplicationApi
-        ProjectSummary:
+      Policies:
+        - InvokePolicy
+
+  GetDownloadActa:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/
+      Handler: handler.lambda_handler
+      Runtime: python3.12
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /download-acta/{id}
+            Method: get
+            RestApiId: !Ref ApplicationApi
+      Policies:
+        - InvokePolicy
+
+  GetProjectSummary:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/
+      Handler: handler.lambda_handler
+      Runtime: python3.12
+      Events:
+        Api:
           Type: Api
           Properties:
             Path: /project-summary/{id}
             Method: get
             RestApiId: !Ref ApplicationApi
-        SendApprovalEmail:
+      Policies:
+        - InvokePolicy
+
+  SendApprovalEmail:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/
+      Handler: handler.lambda_handler
+      Runtime: python3.12
+      Events:
+        Api:
           Type: Api
           Properties:
-            Path: /sendapprovalemail
+            Path: /send-approval-email
             Method: post
             RestApiId: !Ref ApplicationApi
-        GenerateDocument:
+      Policies:
+        - InvokePolicy
+
+  ProjectPlaceDataExtractor:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/
+      Handler: handler.lambda_handler
+      Runtime: python3.12
+      Events:
+        Api:
           Type: Api
           Properties:
-            Path: /generateDocument
+            Path: /extract-project-place/{id}
             Method: post
             RestApiId: !Ref ApplicationApi
+      Policies:
+        - InvokePolicy
 
 Outputs:
   ApiUrl:
     Description: API endpoint URL
     Value: !Sub "https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+
+  TimelineParam:
+    Description: Timeline URL
+    Value: !Sub "https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/timeline"
+    Export:
+      Name: /acta-ui/api/getTimeline
+
+  DownloadParam:
+    Description: Download URL
+    Value: !Sub "https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/download-acta"
+    Export:
+      Name: /acta-ui/api/getDownloadActa
+
+  SummaryParam:
+    Description: Summary URL
+    Value: !Sub "https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/project-summary"
+    Export:
+      Name: /acta-ui/api/getProjectSummary
+
+  SendEmailParam:
+    Description: Send approval email URL
+    Value: !Sub "https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/send-approval-email"
+    Export:
+      Name: /acta-ui/api/sendApprovalEmail
+
+  ExtractParam:
+    Description: Extract ProjectPlace URL
+    Value: !Sub "https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/extract-project-place"
+    Export:
+      Name: /acta-ui/api/ProjectPlaceDataExtractor

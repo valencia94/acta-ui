@@ -55,6 +55,21 @@ jobs:
       - name: 🧪  Unit tests
         run: pnpm test
 
+      - name: Deploy API
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          aws cloudformation deploy \
+            --stack-name acta-api \
+            --template-file infra/template.yaml \
+            --capabilities CAPABILITY_IAM || true
+          n=1
+          while aws cloudformation describe-stacks --stack-name acta-api | grep -q UPDATE_IN_PROGRESS; do
+            sleep $((n*10))
+            n=$((n+1))
+            [ $n -gt 6 ] && exit 1
+          done
+
       - name: 🎨  Format check
         run: pnpm format --check
 
@@ -81,3 +96,8 @@ jobs:
         run: |
           chmod +x scripts/deploy-to-s3.sh
           ./scripts/deploy-to-s3.sh
+
+      - name: Smoke test API
+        env:
+          API_BASE: ${{ secrets.VITE_API_BASE_URL }}
+        run: curl -sf "$API_BASE/timeline/health" || exit 1

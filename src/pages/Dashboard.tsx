@@ -1,15 +1,14 @@
 import { Download } from 'lucide-react';
 import { useState } from 'react';
 
-import { GenerateActaButton } from '../components/GenerateActaButton';
 import {
-  extractProjectPlaceData,
+  extractProjectData,
   getDownloadUrl,
   getSummary,
   getTimeline,
-  ProjectSummary,
-  TimelineEvent,
-} from '../lib/api';
+  sendApprovalEmail,
+} from '../services/actaApi';
+import type { ProjectSummary, TimelineEvent } from '../lib/api';
 // import { toast } from 'sonner'; // Uncomment if you use sonner for toasts
 
 export default function Dashboard() {
@@ -19,7 +18,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchSummary() {
+  async function handleRetrieve() {
     setLoading(true);
     setError(null);
     setSummary(null);
@@ -50,11 +49,11 @@ export default function Dashboard() {
     }
   }
 
-  async function handleExtractProjectPlace() {
+  async function handleExtractProjectData() {
     setLoading(true);
     setError(null);
     try {
-      await extractProjectPlaceData(projectId);
+      await extractProjectData(projectId);
       // Replace alert with toast.success if you use a toast library
       // toast.success('ProjectPlace data extracted!');
       alert('ProjectPlace data extracted!');
@@ -81,7 +80,7 @@ export default function Dashboard() {
           />
         </div>
         <button
-          onClick={fetchSummary}
+          onClick={handleRetrieve}
           className="btn"
           disabled={loading || !projectId}
         >
@@ -171,9 +170,15 @@ export default function Dashboard() {
         >
           <Download size={16} /> Word
         </button>
-        <GenerateActaButton projectId={projectId} recipient="demo@ikusi.com" />
         <button
-          onClick={handleExtractProjectPlace}
+          onClick={() => sendApprovalEmail({ projectId, clientEmail: 'demo@ikusi.com' })}
+          className="btn"
+          disabled={loading || !projectId}
+        >
+          Generate Acta
+        </button>
+        <button
+          onClick={handleExtractProjectData}
           className="btn"
           disabled={loading || !projectId}
         >
