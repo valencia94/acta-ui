@@ -19,7 +19,7 @@
     "lint": "tsc --noEmit && eslint .",
     "postinstall": "echo \"postinstall: engine check skipped\"",
     "setup": "bash setup_playwright_ffmpeg.sh",
-    "prepare": "node scripts/prepare.js",
+    "prepare": "node scripts/prepare.cjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:playwright": "node scripts/run_playwright.cjs",
