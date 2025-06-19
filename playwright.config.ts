@@ -3,6 +3,8 @@ import { defineConfig } from '@playwright/test';
 const PORT = 5173; // dev-server everywhere (CI + local)
 const HOST = `http://localhost:${PORT}`;
 const TIMEOUT = 60_000;
+const HOST = `http://localhost:${PORT}`;
+const TIMEOUT = 60_000;
 
 export default defineConfig({
   testDir: './tests',
