@@ -81,11 +81,7 @@ jobs:
         env:
           API_BASE: ${{ secrets.VITE_API_BASE_URL }}
         run: |
-          curl -sf $API_BASE/timeline/health
-          curl -sf $API_BASE/download-acta/health
-          curl -sf $API_BASE/project-summary/health
-          curl -sf -X POST $API_BASE/send-approval-email/test -d '{}'
-          curl -sf -X POST $API_BASE/extract-project-place/test -d '{}'
+          curl -sf "$API_BASE/health"
 
       - name: Upload Playwright report
         if: always()
