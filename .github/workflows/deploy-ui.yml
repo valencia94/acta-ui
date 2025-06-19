@@ -9,40 +9,36 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
 
-      - name: Setup pnpm
+      - name: Install & build
         run: |
           corepack enable
           corepack prepare pnpm@9 --activate
+          pnpm install --frozen-lockfile
+          pnpm run build
+        env: { CI: true }
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        env:
-          CI: true
-
-      - name: Build
-        run: pnpm run build
-
+      # 1️⃣  OIDC → temp AWS creds
       - name: Configure AWS credentials
+        id: aws-creds            # <-- gives us outputs.*
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region:     us-east-2
 
-      # 7) sync to S3 and invalidate CF
-      - name: 🚀  Deploy to S3 + CloudFront
+      # 2️⃣  Deploy script inherits those outputs
+      - name: Deploy to S3 + invalidate CloudFront
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ steps.aws-creds.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN:     ${{ steps.aws-creds.outputs.aws-session-token }}
+          AWS_REGION:            us-east-2
+          S3_BUCKET_NAME:        acta-ui-frontend-prod
+          CLOUDFRONT_DIST_ID:    EPQU7PVDLQXUA
         run: |
           chmod +x scripts/deploy-to-s3.sh
           ./scripts/deploy-to-s3.sh
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-          BUILD_DIR: ${{ env.BUILD_DIR }}
