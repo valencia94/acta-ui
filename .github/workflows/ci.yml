@@ -11,6 +11,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BUILD_DIR: dist
 
     # ↳ allow future OIDC deploy steps if you add them
     permissions:
@@ -65,7 +67,14 @@ jobs:
       - name: 🏗️  Build bundle
         run: pnpm run build
 
-      # (Optional) deploy steps go here … e.g. configure-aws-credentials + s3 sync
+      # 7) assume role for S3/CloudFront
+      - name: 🔐  Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 8) sync to S3 and invalidate CF
       - name: 🚀  Deploy to S3 + CloudFront
         run: |
           chmod +x scripts/deploy-to-s3.sh
