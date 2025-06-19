@@ -81,7 +81,7 @@ jobs:
         env:
           API_BASE: ${{ secrets.VITE_API_BASE_URL }}
         run: |
-          curl -sf "$API_BASE/health"
+          curl -sf https://<id>.execute-api.<region>.amazonaws.com/prod/health
 
       - name: Upload Playwright report
         if: always()
