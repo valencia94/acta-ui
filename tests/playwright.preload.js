@@ -5,10 +5,14 @@ const jestSymbol = Symbol.for('$$jest-matchers-object');
 // when @playwright/test tries to set it up.
 if (jestSymbol in global) {
   try {
-    // remove the property so Playwright can define it again
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete global[jestSymbol];
+    // Redefine the symbol with a configurable descriptor so Playwright can
+    // override it without throwing.
+    Object.defineProperty(global, jestSymbol, {
+      configurable: true,
+      writable: true,
+      value: global[jestSymbol],
+    });
   } catch {
-    // ignore if deletion fails
+    // ignore if redefinition fails
   }
 }
