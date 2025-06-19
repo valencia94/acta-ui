@@ -1,4 +1,4 @@
-// scripts/prepare.js
+// scripts/prepare.cjs
 if (!process.env.CI) {
   const { execSync } = require("child_process");
 
