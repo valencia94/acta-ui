@@ -5,7 +5,7 @@ on:
     branches: [develop]
   workflow_dispatch:
 
-permissions:          # ⚠️  REQUIRED for OIDC
+permissions: # ⚠️  REQUIRED for OIDC
   id-token: write
   contents: read
 

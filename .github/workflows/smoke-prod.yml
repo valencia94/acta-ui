@@ -2,7 +2,7 @@ name: Smoke Test Production
 
 on:
   workflow_run:
-    workflows: ["Deploy UI to S3 + CloudFront"]
+    workflows: ['Deploy UI to S3 + CloudFront']
     types:
       - completed
 
