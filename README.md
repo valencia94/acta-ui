@@ -44,8 +44,9 @@ For deployment to AWS the workflow expects these additional secrets:
 
 ## Environment variables
 
-Create a `.env` file based on `.env.example` and set `VITE_API_BASE_URL` to your
-backend URL.  The sample file also includes AWS Cognito settings:
+Copy `.env.example` to `.env` (e.g. `cp .env.example .env`) and set
+`VITE_API_BASE_URL` to your backend URL.  The sample file also includes AWS
+Cognito settings:
 
 - `VITE_COGNITO_REGION`
 - `VITE_COGNITO_POOL_ID`
