@@ -15,34 +15,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Install & build
+        env:
+          CI: true
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: |
           corepack enable
           corepack prepare pnpm@9 --activate
           pnpm install --frozen-lockfile
           pnpm run build
-        env: { CI: true }
 
       # ---------- OIDC credentials ----------
       - name: Configure AWS credentials
-        id: aws_creds                      # snake-case id to avoid dash slip-ups
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}   # ProjectplaceLambdaRole
-          aws-region: us-east-2
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # ---------- Deploy ----------
       - name: Deploy to S3 + invalidate CloudFront
         env:
-          AWS_ACCESS_KEY_ID:     ${{ steps.aws_creds.outputs.aws-access-key-id }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.aws_creds.outputs.aws-secret-access-key }}
-          AWS_SESSION_TOKEN:     ${{ steps.aws_creds.outputs.aws-session-token }}
-          AWS_REGION:            us-east-2
-          S3_BUCKET_NAME:        acta-ui-frontend-prod
-          CLOUDFRONT_DIST_ID:    EPQU7PVDLQXUA
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
           chmod +x scripts/deploy-to-s3.sh
           ./scripts/deploy-to-s3.sh
