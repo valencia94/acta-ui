@@ -3,6 +3,7 @@ import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
+import { skipAuth } from '@/env.variables';
 import { useThemedFavicon } from '@/hooks/useThemedFavicon';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
@@ -13,6 +14,13 @@ export default function App() {
   const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
+    if (skipAuth) {
+      localStorage.setItem('ikusi.jwt', 'dev-token');
+      setIsAuthed(true);
+      setChecked(true);
+      return;
+    }
+
     const verify = async () => {
       try {
         const { tokens } = await fetchAuthSession();

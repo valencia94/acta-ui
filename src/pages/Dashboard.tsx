@@ -153,36 +153,33 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-
-          <div className="flex gap-4">
-            <button
-              onClick={() => download('pdf')}
-              className="btn flex items-center gap-2"
-              disabled={loading}
-            >
-              <Download size={16} /> PDF
-            </button>
-            <button
-              onClick={() => download('docx')}
-              className="btn flex items-center gap-2"
-              disabled={loading}
-            >
-              <Download size={16} /> Word
-            </button>
-            <GenerateActaButton
-              projectId={projectId}
-              recipient="demo@ikusi.com"
-            />
-            <button
-              onClick={handleExtractProjectPlace}
-              className="btn"
-              disabled={loading || !projectId}
-            >
-              Extract ProjectPlace Data
-            </button>
-          </div>
         </div>
       )}
+
+      <div className="flex gap-4">
+        <button
+          onClick={() => download('pdf')}
+          className="btn flex items-center gap-2"
+          disabled={loading || !projectId}
+        >
+          <Download size={16} /> PDF
+        </button>
+        <button
+          onClick={() => download('docx')}
+          className="btn flex items-center gap-2"
+          disabled={loading || !projectId}
+        >
+          <Download size={16} /> Word
+        </button>
+        <GenerateActaButton projectId={projectId} recipient="demo@ikusi.com" />
+        <button
+          onClick={handleExtractProjectPlace}
+          className="btn"
+          disabled={loading || !projectId}
+        >
+          Extract ProjectPlace Data
+        </button>
+      </div>
     </div>
   );
 }

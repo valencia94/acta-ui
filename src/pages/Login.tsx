@@ -4,22 +4,30 @@ import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { skipAuth } from '../env.variables';
+
 export default function Login() {
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   useEffect(() => {
-    signOut().catch(() => {});
+    if (!skipAuth) {
+      signOut().catch(() => {});
+    }
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await signIn({ username: email, password });
-      const { tokens } = await fetchAuthSession();
-      const token = tokens?.idToken?.toString() ?? '';
-      localStorage.setItem('ikusi.jwt', token);
+      if (skipAuth) {
+        localStorage.setItem('ikusi.jwt', 'dev-token');
+      } else {
+        await signIn({ username: email, password });
+        const { tokens } = await fetchAuthSession();
+        const token = tokens?.idToken?.toString() ?? '';
+        localStorage.setItem('ikusi.jwt', token);
+      }
       nav('/dashboard');
     } catch (err) {
       console.error(err);
