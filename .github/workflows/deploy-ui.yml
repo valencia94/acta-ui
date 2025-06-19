@@ -1,0 +1,47 @@
+name: Deploy UI
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          CI: true
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # single, proper step: has env **and** run
+      - name: Deploy to S3 + invalidate CloudFront
+        env:
+          AWS_REGION:           ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME:       ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFRONT_DIST_ID:   ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          chmod +x scripts/deploy-to-s3.sh
+          ./scripts/deploy-to-s3.sh
