@@ -5,40 +5,51 @@ on:
     branches: [develop]
   workflow_dispatch:
 
+# ────────────── REQUIRED so OIDC can fetch AWS creds ──────────────
+permissions:
+  id-token: write      # allow GitHub to mint an OIDC token
+  contents: read       # allow checkout
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+    # 1 ▸ Check out the repo
+    - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+    # 2 ▸ Set up Node & pnpm
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
 
-      - name: Install & build
-        run: |
-          corepack enable
-          corepack prepare pnpm@9 --activate
-          pnpm install --frozen-lockfile
-          pnpm run build
-        env: { CI: true }
+    - name: Install & build
+      run: |
+        corepack enable
+        corepack prepare pnpm@9 --activate
+        pnpm install --frozen-lockfile
+        pnpm run build
+      env:
+        CI: true
 
-      # 1️⃣  OIDC → temp AWS creds
-      - name: Configure AWS credentials
-        id: aws-creds            # <-- gives us outputs.*
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region:     us-east-2
+    # 3 ▸ Configure AWS credentials via OIDC
+    - name: Configure AWS credentials
+      id: aws-creds                           # exposes outputs.*
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}   # e.g. ProjectplaceLambdaRole
+        aws-region: us-east-2
 
-      # 2️⃣  Deploy script inherits those outputs
-      - name: Deploy to S3 + invalidate CloudFront
-        env:
-          AWS_ACCESS_KEY_ID:     ${{ steps.aws-creds.outputs.aws-access-key-id }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
-          AWS_SESSION_TOKEN:     ${{ steps.aws-creds.outputs.aws-session-token }}
-          AWS_REGION:            us-east-2
-          S3_BUCKET_NAME:        acta-ui-frontend-prod
-          CLOUDFRONT_DIST_ID:    EPQU7PVDLQXUA
-        run: |
-          chmod +x scripts/deploy-to-s3.sh
-          ./scripts/deploy-to-s3.sh
+    # 4 ▸ Deploy build to S3 and invalidate CloudFront
+    - name: Deploy to S3 + invalidate CloudFront
+      env:
+        # pass the temp creds produced by the previous step
+        AWS_ACCESS_KEY_ID:     ${{ steps.aws-creds.outputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
+        AWS_SESSION_TOKEN:     ${{ steps.aws-creds.outputs.aws-session-token }}
+        AWS_REGION:            us-east-2
+        S3_BUCKET_NAME:        acta-ui-frontend-prod
+        CLOUDFRONT_DIST_ID:    EPQU7PVDLQXUA
+      run: |
+        chmod +x scripts/deploy-to-s3.sh
+        ./scripts/deploy-to-s3.sh
