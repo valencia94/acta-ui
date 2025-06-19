@@ -1,12 +1,6 @@
-import {
-  Button,
-  Flex,
-  FormControl,
-  FormLabel,
-  Heading,
-  Input,
-  Stack,
-} from '@chakra-ui/react';
+import { Button, Flex, Heading, Stack, Image } from '@chakra-ui/react';
+import { FormControl, FormLabel } from '@chakra-ui/form-control';
+import { Input } from '@chakra-ui/input';
 import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
