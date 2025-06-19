@@ -8,6 +8,7 @@ const globalTimeout = 120000;
 const config: PlaywrightTestConfig = {
   timeout,
   globalTimeout,
+  globalSetup: './tests/playwright.setup.ts',
   expect: {
     timeout,
   },

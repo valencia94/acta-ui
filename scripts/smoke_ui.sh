@@ -13,7 +13,7 @@ status=$(curl -s -o /dev/null -w '%{http_code}' "$VITE_API_BASE_URL/project-summ
 [ "$status" = "200" ] || { echo "❌ project-summary returned $status"; exit 1; }
 
 data='{}'
-status=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d "$data" "$VITE_API_BASE_URL/sendapprovalemail")
+status=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d "$data" "$VITE_API_BASE_URL/send-approval-email")
 case "$status" in
   200|202) ;;
   *) echo "❌ send-approval-email returned $status"; exit 1;;
