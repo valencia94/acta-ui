@@ -7573,6 +7573,9 @@ snapshots:
       magic-string: 0.30.17
     optionalDependencies:
       vite: 5.4.19(@types/node@22.15.32)
+'@vitest/pretty-format@2.0.5':
+  dependencies:
+    tinyrainbow: 1.2.0
 
   '@vitest/pretty-format@2.1.9':
     dependencies:
@@ -7611,6 +7614,12 @@ snapshots:
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
       vitest: 2.1.9(@types/node@22.15.32)(@vitest/ui@3.2.4)
+'@vitest/utils@2.0.5':
+  dependencies:
+    '@vitest/pretty-format': 2.0.5
+    estree-walker: 3.0.3
+    loupe: 3.1.4
+    tinyrainbow: 1.2.0
 
   '@vitest/utils@2.1.9':
     dependencies:
