@@ -1,7 +1,6 @@
-import { Button, Flex, Heading, Stack, Image } from '@chakra-ui/react';
-import { Button, Flex, Heading, Stack, Image } from '@chakra-ui/react';
 import { FormControl, FormLabel } from '@chakra-ui/form-control';
 import { Input } from '@chakra-ui/input';
+import { Button, Flex, Heading, Stack } from '@chakra-ui/react';
 import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -44,7 +43,7 @@ export default function Login() {
 
   return (
     <Flex minH="100vh" align="center" justify="center" bg="white">
-      <Stack spacing={8} mx="auto" w="sm">
+      <Stack gap={8} mx="auto" w="sm">
         <IkusiLogo style={{ width: '72px', margin: '0 auto' }} />
         <Heading color="var(--ikusi-dark)">Acta Platform</Heading>
         <form onSubmit={handleSubmit(onSubmit)}>

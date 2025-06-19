@@ -1,6 +1,7 @@
 import { Download } from 'lucide-react';
 import { useState } from 'react';
 
+import type { ProjectSummary, TimelineEvent } from '../lib/api';
 import {
   extractProjectData,
   getDownloadUrl,
@@ -8,7 +9,6 @@ import {
   getTimeline,
   sendApprovalEmail,
 } from '../services/actaApi';
-import type { ProjectSummary, TimelineEvent } from '../lib/api';
 // import { toast } from 'sonner'; // Uncomment if you use sonner for toasts
 
 export default function Dashboard() {
@@ -24,11 +24,11 @@ export default function Dashboard() {
     setSummary(null);
     setTimeline(null);
     try {
-      const summaryData = await getSummary(projectId);
-      setSummary(summaryData);
+      const { data: summaryData } = await getSummary(projectId);
+      setSummary(summaryData as ProjectSummary);
 
-      const timelineData = await getTimeline(projectId);
-      setTimeline(timelineData);
+      const { data: timelineData } = await getTimeline(projectId);
+      setTimeline(timelineData as TimelineEvent[]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error fetching data');
     } finally {
@@ -40,7 +40,8 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const url = await getDownloadUrl(projectId, format);
+      const { data } = await getDownloadUrl(projectId, format);
+      const url = data.url;
       window.open(url, '_blank');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Download failed');
@@ -171,7 +172,9 @@ export default function Dashboard() {
           <Download size={16} /> Word
         </button>
         <button
-          onClick={() => sendApprovalEmail({ projectId, clientEmail: 'demo@ikusi.com' })}
+          onClick={() =>
+            sendApprovalEmail({ projectId, clientEmail: 'demo@ikusi.com' })
+          }
           className="btn"
           disabled={loading || !projectId}
         >

@@ -1,15 +1,16 @@
 import nock from 'nock';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import {
   api,
-  getTimeline,
+  extractProjectData,
   getDownloadUrl,
   getSummary,
+  getTimeline,
   sendApprovalEmail,
-  extractProjectData,
 } from '../src/services/actaApi';
 beforeEach(() => {
-  api.defaults.baseURL = "http://localhost";
+  api.defaults.baseURL = 'http://localhost';
 });
 
 afterEach(() => {
@@ -18,7 +19,9 @@ afterEach(() => {
 
 describe('actaApi', () => {
   it('getTimeline', async () => {
-    nock('http://localhost').get('/timeline/1').reply(200, [{ hito: 'x' }]);
+    nock('http://localhost')
+      .get('/timeline/1')
+      .reply(200, [{ hito: 'x' }]);
     const res = await getTimeline('1');
     expect(res.data[0].hito).toBe('x');
   });
@@ -44,7 +47,10 @@ describe('actaApi', () => {
     nock('http://localhost')
       .post('/send-approval-email', { projectId: '1', clientEmail: 'a@b.com' })
       .reply(200, { ok: true });
-    const res = await sendApprovalEmail({ projectId: '1', clientEmail: 'a@b.com' });
+    const res = await sendApprovalEmail({
+      projectId: '1',
+      clientEmail: 'a@b.com',
+    });
     expect(res.data.ok).toBe(true);
   });
 
