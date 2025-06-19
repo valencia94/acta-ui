@@ -10,58 +10,101 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
 
-    # 👇 Required so GitHub issues an OIDC token the AWS action can exchange
+    # GitHub must issue an OIDC token so AWS creds can be assumed
     permissions:
-      id-token: write      # needed for OIDC
+      id-token: write      # for sts:AssumeRoleWithWebIdentity
       contents: read       # allows actions/checkout
 
     steps:
-      # 1️⃣  Checkout code
-      - uses: actions/checkout@v4
+    # ───────── Preparation ────────────────────────────────────────
+    - name: 🛒 Checkout
+      uses: actions/checkout@v4
 
-      # 2️⃣  Set up PNPM
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 9
-          run_install: |
-            args: [--no-frozen-lockfile]
+    - name: 📦 Set up PNPM
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+        run_install: |
+          args: [--no-frozen-lockfile]
 
-      # 3️⃣  Set up Node
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
+    - name: 🟢 Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
 
-      # 4️⃣  Install dependencies
-      - name: Install deps
-        run: pnpm install --no-frozen-lockfile
+    - name: 📥 Install dependencies
+      run: pnpm install --no-frozen-lockfile
 
-      # 5️⃣  Build the UI
-      - name: Build UI
-        env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-        run: pnpm run build
+    # ───────── Build & Test ───────────────────────────────────────
+    - name: 🔧 Lint & type-check
+      run: pnpm lint
 
-      # 6️⃣  Configure AWS credentials (OIDC)
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region:     ${{ secrets.AWS_REGION }}
+    - name: 🏗️ Build UI
+      env:
+        VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+      run: pnpm run build
 
-      # 7️⃣  Deploy API CloudFormation stack
-      - name: Deploy API
-        run: |
-          aws cloudformation deploy \
-            --stack-name acta-api \
-            --template-file infra/template.yaml \
-            --capabilities CAPABILITY_IAM
+    - name: 🧪 Unit tests (Vitest)
+      run: pnpm run test:vitest
 
-      # 8️⃣  Deploy UI bundle to S3 + invalidate CloudFront
-      - name: Deploy UI to S3
-        env:
-          S3_BUCKET_NAME:      ${{ secrets.S3_BUCKET_NAME }}
-          CLOUDFRONT_DIST_ID:  ${{ secrets.CLOUDFRONT_DIST_ID }}
-        run: |
-          chmod +x scripts/deploy-to-s3.sh
-          ./scripts/deploy-to-s3.sh
+    - name: 🎭 Install Playwright browsers
+      run: npx playwright install --with-deps
+
+    - name: 🎭 E2E tests (Playwright)
+      run: pnpm run test:playwright
+
+    # ───────── AWS credentials ────────────────────────────────────
+    - name: 🔐 Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region:     ${{ secrets.AWS_REGION }}
+
+    # ───────── Decide if infra changed ────────────────────────────
+    - id: filter
+      uses: dorny/paths-filter@v3
+      with:
+        filters: |
+          infra:
+            - 'infra/**'
+
+    # ───────── Deploy API (only when needed) ──────────────────────
+    - name: 🚀 Deploy API (CloudFormation)
+      if: github.event_name == 'workflow_dispatch' || steps.filter.outputs.infra == 'true'
+      run: |
+        aws cloudformation deploy \
+          --stack-name acta-api \
+          --template-file infra/template.yaml \
+          --capabilities CAPABILITY_IAM \
+          --no-fail-on-empty-changeset
+
+    # ───────── Deploy UI bucket & invalidate CF ───────────────────
+    - name: 🚀 Deploy UI to S3 / CloudFront
+      env:
+        S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
+        CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        chmod +x scripts/deploy-to-s3.sh
+        ./scripts/deploy-to-s3.sh
+
+    # ───────── API smoke tests against prod ───────────────────────
+    - name: 🔎 API smoke tests
+      env:
+        API_BASE: ${{ secrets.VITE_API_BASE_URL }}
+      run: |
+        set -e
+        curl -sf $API_BASE/timeline/health
+        curl -sf $API_BASE/download-acta/health
+        curl -sf $API_BASE/project-summary/health
+        curl -sf -X POST $API_BASE/send-approval-email/test -d '{}'
+        curl -sf -X POST $API_BASE/extract-project-place/test -d '{}'
+
+    # ───────── Upload Playwright HTML report ──────────────────────
+    - name: 📤 Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: playwright-report
+        retention-days: 3
