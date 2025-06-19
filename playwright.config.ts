@@ -22,8 +22,8 @@ export default defineConfig({
   ------------------------------------------ */
   webServer: {
     command: process.env.CI
-      ? 'pnpm run preview -- --port 5173 --strictPort'
-      : 'pnpm run dev -- --port 5173 --strictPort',
+      ? 'pnpm preview --port 5173 --strictPort'
+      : 'pnpm dev --port 5173 --strictPort',
     port: PORT,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000, // wait up to 60 s for server to be ready
