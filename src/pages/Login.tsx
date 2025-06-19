@@ -33,7 +33,11 @@ export default function Login() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm space-y-6 p-8 bg-white shadow rounded-xl"
       >
-        <img src="/ikusi-logo.png" alt="Ikusi" className="w-40 mx-auto" />
+        <img
+          src="/assets/ikusi-logo.png"
+          alt="Ikusi"
+          className="w-40 mx-auto"
+        />
         <h1 className="text-2xl font-semibold text-center">Acta Platform</h1>
 
         <div>
