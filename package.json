@@ -19,7 +19,7 @@
     "lint": "tsc --noEmit && eslint .",
     "postinstall": "echo \"postinstall: engine check skipped\"",
     "setup": "bash setup_playwright_ffmpeg.sh",
-    "prepare": "if [ -z \"$CI\" ]; then playwright install chromium && husky; fi",
+    "prepare": "node scripts/prepare.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:playwright": "node scripts/run_playwright.cjs",
