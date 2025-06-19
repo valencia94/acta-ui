@@ -97,7 +97,8 @@ jobs:
           chmod +x scripts/deploy-to-s3.sh
           ./scripts/deploy-to-s3.sh
 
-      - name: Smoke test API
+      - name: API smoke tests
         env:
           API_BASE: ${{ secrets.VITE_API_BASE_URL }}
-        run: curl -sf "$API_BASE/timeline/health" || exit 1
+        run: |
+          curl -sf "$API_BASE/health"
