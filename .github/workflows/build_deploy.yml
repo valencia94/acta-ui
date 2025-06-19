@@ -9,59 +9,50 @@ jobs:
   build_deploy:
     runs-on: ubuntu-latest
     environment: prod
-
-    # GitHub must issue an OIDC token so AWS creds can be assumed
     permissions:
-      id-token: write      # for sts:AssumeRoleWithWebIdentity
-      contents: read       # allows actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-    # ───────── Preparation ────────────────────────────────────────
-    - name: 🛒 Checkout
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: 📦 Set up PNPM
-      uses: pnpm/action-setup@v2
+    - uses: pnpm/action-setup@v2
       with:
         version: 9
         run_install: |
           args: [--no-frozen-lockfile]
 
-    - name: 🟢 Set up Node
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: 'pnpm'
 
-    - name: 📥 Install dependencies
+    - name: Install deps
       run: pnpm install --no-frozen-lockfile
 
-    # ───────── Build & Test ───────────────────────────────────────
-    - name: 🔧 Lint & type-check
+    - name: Lint & TypeCheck
       run: pnpm lint
 
-    - name: 🏗️ Build UI
+    - name: Build UI
       env:
         VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
       run: pnpm run build
 
-    - name: 🧪 Unit tests (Vitest)
+    - name: Unit tests
       run: pnpm run test:vitest
 
-    - name: 🎭 Install Playwright browsers
+    - name: Install Playwright browsers
       run: npx playwright install --with-deps
 
-    - name: 🎭 E2E tests (Playwright)
+    - name: E2E tests
       run: pnpm run test:playwright
 
-    # ───────── AWS credentials ────────────────────────────────────
-    - name: 🔐 Configure AWS credentials
+    - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         aws-region:     ${{ secrets.AWS_REGION }}
 
-    # ───────── Decide if infra changed ────────────────────────────
     - id: filter
       uses: dorny/paths-filter@v3
       with:
@@ -69,8 +60,7 @@ jobs:
           infra:
             - 'infra/**'
 
-    # ───────── Deploy API (only when needed) ──────────────────────
-    - name: 🚀 Deploy API (CloudFormation)
+    - name: Deploy API (CloudFormation)
       if: github.event_name == 'workflow_dispatch' || steps.filter.outputs.infra == 'true'
       run: |
         aws cloudformation deploy \
@@ -79,8 +69,7 @@ jobs:
           --capabilities CAPABILITY_IAM \
           --no-fail-on-empty-changeset
 
-    # ───────── Deploy UI bucket & invalidate CF ───────────────────
-    - name: 🚀 Deploy UI to S3 / CloudFront
+    - name: Deploy UI to S3 / CloudFront
       env:
         S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
         CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
@@ -88,20 +77,17 @@ jobs:
         chmod +x scripts/deploy-to-s3.sh
         ./scripts/deploy-to-s3.sh
 
-    # ───────── API smoke tests against prod ───────────────────────
-    - name: 🔎 API smoke tests
+    - name: API smoke tests
       env:
         API_BASE: ${{ secrets.VITE_API_BASE_URL }}
       run: |
-        set -e
         curl -sf $API_BASE/timeline/health
         curl -sf $API_BASE/download-acta/health
         curl -sf $API_BASE/project-summary/health
         curl -sf -X POST $API_BASE/send-approval-email/test -d '{}'
         curl -sf -X POST $API_BASE/extract-project-place/test -d '{}'
 
-    # ───────── Upload Playwright HTML report ──────────────────────
-    - name: 📤 Upload Playwright report
+    - name: Upload Playwright report
       if: always()
       uses: actions/upload-artifact@v4
       with:
