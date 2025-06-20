@@ -54,6 +54,17 @@ jobs:
       run: |
         pip install aws-sam-cli --quiet
 
+
+    # ───── 4.1) Verify Aritifact Bucket ───────────────────────────────────
+    - name: 🔒 Verify ARTIFACT_BUCKET is set
+      run: |
+        if [ -z "$ARTIFACT_BUCKET" ]; then
+          echo "::error ::ARTIFACT_BUCKET secret is not defined"
+          exit 1
+        fi
+      env:
+        ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
+
     # ───── 5) Package & deploy API with SAM ─────────────────────
     - name: ☁️  Package & deploy backend (SAM)
       if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
