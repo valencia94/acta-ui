@@ -2,127 +2,126 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [develop] # push to feature branches won’t deploy
-  pull_request: # PRs still get lint/test
-  workflow_dispatch:
+    branches: [develop]       # automatic deploys from develop
+  pull_request:               # PRs still run lint/tests
+  workflow_dispatch:          # manual button
 
 jobs:
   build_deploy:
     runs-on: ubuntu-latest
-    environment: prod # for OIDC role-to-assume
+    environment: prod         # holds OIDC_AWS_ROLE_ARN + region
     permissions:
-      id-token: write
+      id-token: write         # needed for OIDC
       contents: read
 
     steps:
-      # ───────── 0) Checkout  ─────────
-      - uses: actions/checkout@v4
+    # ───── 0) Checkout ────────────────────────────────────────────
+    - uses: actions/checkout@v4
 
-      # ───────── 1) Node + pnpm + cache  ─────────
-      - name: ♻️  pnpm cache & install
-        uses: pnpm/action-setup@v2
-        with:
-          version: 9
-          run_install: |
-            args: [--no-frozen-lockfile]
-        env:
-          CI: true # keep scripts/prepare from running
+    # ───── 1) pnpm + Node cache & install ─────────────────────────
+    - name: ♻️  pnpm cache & install
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+        run_install: |
+          args: [--no-frozen-lockfile]
+      env:
+        CI: true              # prevents scripts/prepare from running
 
-      - name: 🟢  Setup Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
+    - name: 🟢  Setup Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
 
-      # ───────── 2) Lint / Type-check / Unit tests ─────────
-      - name: 🔍  Lint & type-check
-        run: pnpm lint
-      
-      - name: 🧪  Unit tests
-        run: pnpm run test:vitest
-      
-      # --- Build and Deploy -------------------------------------------------
-      - name: Configure AWS credentials (OIDC)
-        if: github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}   # ← new GitHubDeployRole ARN
-          aws-region:       ${{ secrets.AWS_REGION }}
+    # ───── 2) Lint / type-check / unit tests ──────────────────────
+    - name: 🔍  Lint & type-check
+      run: pnpm lint
 
-      # --- API CloudFormation -------------------------------------------------
-      - name: ☁️  Deploy API (CloudFormation)
-        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        run: |
-          attempts=0
-          until [ $attempts -ge 5 ]; do
-            aws cloudformation deploy \
-              --stack-name acta-backend-staging \
-              --template-file infra/template.yaml \
-              --capabilities CAPABILITY_IAM \
-              --no-fail-on-empty-changeset && break
-            status=$(aws cloudformation describe-stacks --stack-name acta-backend-staging --query "Stacks[0].StackStatus" --output text || echo "")
-            if [[ "$status" == "UPDATE_IN_PROGRESS" ]]; then
-              sleep $((2 ** attempts))
-              attempts=$((attempts + 1))
-            else
-              exit 1
-            fi
-          done
-          
-      # --- API Smoke Test -------------------------------------------------
-      - name: API Smoke Test
-        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        env:
-          API_BASE: ${{ secrets.VITE_API_BASE_URL }}
-        run: curl -sf $API_BASE/timeline/health
+    - name: 🧪  Unit tests
+      run: pnpm run test:vitest
 
-      # ───────── 3) Build  ─────────
-      - name: Inject API base URL
-        run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+    # ───── 3) Configure AWS credentials (OIDC) ────────────────────
+    - name: Configure AWS credentials (OIDC)
+      if: ${{ github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}   # new GitHubDeployRole
+        aws-region:     ${{ secrets.AWS_REGION }}
 
-      - name: 🏗️  Build UI
-        run: pnpm run build
+    # ───── 4) Deploy/update backend stack ─────────────────────────
+    - name: ☁️  Deploy API (CloudFormation)
+      if: ${{ github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+      run: |
+        attempts=0
+        until [ $attempts -ge 5 ]; do
+          aws cloudformation deploy \
+            --stack-name acta-backend-staging \
+            --template-file infra/template.yaml \
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset && break
+          status=$(aws cloudformation describe-stacks \
+                     --stack-name acta-backend-staging \
+                     --query "Stacks[0].StackStatus" --output text || echo "")
+          if [ "$status" = "UPDATE_IN_PROGRESS" ]; then
+            sleep "$((2 ** attempts))"
+            attempts=$((attempts + 1))
+          else
+            exit 1
+          fi
+        done
 
-      # ───────── 4) Playwright  ─────────
-      - name: E2E tests
-        run: |
-          pnpm exec playwright install --with-deps
-          pnpm exec playwright test || true
+    # ───── 5) Backend smoke test ──────────────────────────────────
+    - name: API smoke test
+      if: ${{ github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+      env:
+        API_BASE: ${{ secrets.VITE_API_BASE_URL }}
+      run: curl -sf "$API_BASE/health"
 
-      # ───────── 5) Deploy (only on develop or manual) ─────────
+    # ───── 6) Build UI ────────────────────────────────────────────
+    - name: Inject API base URL
+      run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
 
-      - name: 🚀  Deploy UI to S3 + invalidate CloudFront
-        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        env:
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-        run: |
-          chmod +x scripts/deploy-to-s3.sh
-          ./scripts/deploy-to-s3.sh
-          
-      # ───────── 6) Smoke Test ─────────   
-      
-      - name: Smoke Test (UI via CloudFront)
-        env:
-          CLOUDFRONT_DOMAIN: ${{ secrets.DISTRIBUTION_DOMAIN_NAME }}
-        run: |
-          echo "🔧 Checking CloudFront health endpoint via /health"
-          n=0
-          until [ $n -ge 5 ]; do
-            echo "Attempt $((n+1))..."
-            curl -f -s https://$CLOUDFRONT_DOMAIN/health && { echo "UI live ✅"; exit 0; }
-            n=$((n+1))
-            echo "Still not healthy. Waiting 15s..."
-            sleep 15
-          done
-          echo "UI health endpoint failed after multiple attempts." >&2
-          exit 1
+    - name: 🏗️  Build UI
+      run: pnpm run build
 
-      # ───────── 7) Upload Playwright report  ─────────
-      - name: 📦  Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report
-          retention-days: 3
+    # ───── 7) Playwright E2E ──────────────────────────────────────
+    - name: E2E tests
+      run: |
+        pnpm exec playwright install --with-deps
+        pnpm exec playwright test || true   # don't block deploy on flake
+
+    # ───── 8) Deploy UI bundle ────────────────────────────────────
+    - name: 🚀  Deploy UI to S3 + invalidate CloudFront
+      if: ${{ github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+      env:
+        S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
+        CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        chmod +x scripts/deploy-to-s3.sh
+        ./scripts/deploy-to-s3.sh
+
+    # ───── 9) Front-end smoke test (CloudFront) ───────────────────
+    - name: Smoke Test (UI via CloudFront)
+      if: ${{ github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+      env:
+        CLOUDFRONT_DOMAIN: ${{ secrets.DISTRIBUTION_DOMAIN_NAME }}
+      run: |
+        echo "🔧 Checking CloudFront /health"
+        for n in {1..5}; do
+          echo "Attempt $n..."
+          curl -f -s "https://$CLOUDFRONT_DOMAIN/health" && { echo "UI live ✅"; exit 0; }
+          echo "Not healthy yet. Sleeping 15 s…"
+          sleep 15
+        done
+        echo "❌ UI health endpoint failed after multiple attempts." >&2
+        exit 1
+
+    # ───── 10) Upload Playwright report ───────────────────────────
+    - name: 📦  Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: playwright-report
+        retention-days: 3
