@@ -1,13 +1,12 @@
 import { FormControl, FormLabel } from '@chakra-ui/form-control';
 import { Input } from '@chakra-ui/input';
-import { Button, Flex, Heading, Stack } from '@chakra-ui/react';
+import { Button, Flex, Heading, Image, Stack } from '@chakra-ui/react';
 import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import { skipAuth } from '../env.variables';
-import { IkusiLogo } from './IkusiLogo';
 
 interface FormData {
   email: string;
@@ -44,7 +43,7 @@ export default function Login() {
   return (
     <Flex minH="100vh" align="center" justify="center" bg="white">
       <Stack gap={8} mx="auto" w="sm">
-        <IkusiLogo style={{ width: '72px', margin: '0 auto' }} />
+        <Image src="/ikusi-logo.svg" boxSize="72px" mx="auto" />
         <Heading color="var(--ikusi-dark)">Acta Platform</Heading>
         <form onSubmit={handleSubmit(onSubmit)}>
           <FormControl isRequired>

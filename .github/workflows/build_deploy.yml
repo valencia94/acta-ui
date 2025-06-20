@@ -41,6 +41,38 @@ jobs:
       - name: 🧪  Unit tests
         run: pnpm run test:vitest
 
+      - name: Configure AWS credentials (OIDC)
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: ☁️  Deploy API (CloudFormation)
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          attempts=0
+          until [ $attempts -ge 5 ]; do
+            aws cloudformation deploy \
+              --stack-name acta-backend-staging \
+              --template-file infra/template.yaml \
+              --capabilities CAPABILITY_IAM \
+              --no-fail-on-empty-changeset && break
+            status=$(aws cloudformation describe-stacks --stack-name acta-backend-staging --query "Stacks[0].StackStatus" --output text || echo "")
+            if [[ "$status" == "UPDATE_IN_PROGRESS" ]]; then
+              sleep $((2 ** attempts))
+              attempts=$((attempts + 1))
+            else
+              exit 1
+            fi
+          done
+
+      - name: API Smoke Test
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          API_BASE: ${{ secrets.VITE_API_BASE_URL }}
+        run: curl -sf $API_BASE/timeline/health
+
       # ───────── 3) Build  ─────────
       - name: Inject API base URL
         run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
@@ -55,29 +87,6 @@ jobs:
           pnpm exec playwright test || true
 
       # ───────── 5) Deploy (only on develop or manual) ─────────
-      - name: Configure AWS credentials (OIDC)
-        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - id: filter
-        if: (github.ref == 'refs/heads/develop' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            infra:
-              - 'infra/**'
-
-      - name: ☁️  Deploy API (CloudFormation)
-        if: steps.filter.outputs.infra == 'true'
-        run: |
-          aws cloudformation deploy \
-            --stack-name acta-backend-staging \
-            --template-file infra/template.yaml \
-            --capabilities CAPABILITY_IAM \
-            --no-fail-on-empty-changeset
 
       - name: 🚀  Deploy UI to S3 + invalidate CloudFront
         if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
