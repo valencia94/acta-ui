@@ -90,7 +90,7 @@ jobs:
       
       - name: Smoke Test (UI via CloudFront)
         env:
-          CLOUDFRONT_DOMAIN: ${{ secrets.CLOUDFRONT_DOMAIN }}
+          CLOUDFRONT_DOMAIN: ${{ secrets.DISTRIBUTION_DOMAIN_NAME }}
         run: |
           echo "🔧 Checking CloudFront health endpoint via /health"
           n=0
