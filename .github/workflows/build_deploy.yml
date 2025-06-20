@@ -87,13 +87,22 @@ jobs:
         run: |
           chmod +x scripts/deploy-to-s3.sh
           ./scripts/deploy-to-s3.sh
-
-      # ───────── 6) Smoke test unified API ─────────
-      - name: API smoke test
-        if: github.ref == 'refs/heads/develop' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      
+      - name: Smoke Test (UI via CloudFront)
         env:
-          API_BASE: ${{ secrets.VITE_API_BASE_URL }}
-        run: curl -sf "$API_BASE/health"
+          CLOUDFRONT_DOMAIN: ${{ secrets.CLOUDFRONT_DOMAIN }}
+        run: |
+          echo "🔧 Checking CloudFront health endpoint via /health"
+          n=0
+          until [ $n -ge 5 ]; do
+            echo "Attempt $((n+1))..."
+            curl -f -s https://$CLOUDFRONT_DOMAIN/health && { echo "UI live ✅"; exit 0; }
+            n=$((n+1))
+            echo "Still not healthy. Waiting 15s..."
+            sleep 15
+          done
+          echo "UI health endpoint failed after multiple attempts." >&2
+          exit 1
 
       # ───────── 7) Upload Playwright report  ─────────
       - name: 📦  Upload Playwright report
