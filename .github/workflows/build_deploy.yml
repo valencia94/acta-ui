@@ -9,9 +9,9 @@ on:
 jobs:
   build_deploy:
     runs-on: ubuntu-latest
-    environment: prod         # holds OIDC_AWS_ROLE_ARN + region
+    environment: prod          
     permissions:
-      id-token: write         # needed for OIDC
+      id-token: write          
       contents: read
 
     steps:
@@ -43,10 +43,9 @@ jobs:
 
     # ───── 3) Configure AWS credentials (OIDC) ────────────────────
     - name: Configure AWS credentials (OIDC)
-      if: ${{ github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}   # new GitHubDeployRole
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}    
         aws-region:     ${{ secrets.AWS_REGION }}
 
     # ───── 4) Deploy/update backend stack ─────────────────────────
