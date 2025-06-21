@@ -7,4 +7,7 @@ set -euo pipefail
 BUILD_DIR="${BUILD_DIR:-dist}"
 
 aws s3 sync "${BUILD_DIR}/" "s3://${S3_BUCKET_NAME}/" --delete --region "${AWS_REGION}"
+# Upload /health with no caching so CloudFront checks origin each time
+aws s3 cp dist/health "s3://${S3_BUCKET_NAME}/health" \
+  --content-type text/plain --cache-control no-cache
 aws cloudfront create-invalidation --distribution-id "${CLOUDFRONT_DIST_ID}" --paths "/*" --region "${AWS_REGION}"
