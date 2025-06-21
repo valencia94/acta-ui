@@ -2,125 +2,125 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [develop]          # auto-deploy only from develop
-  pull_request:                  # PRs still run lint/unit tests
+    branches: [develop] # auto-deploy only from develop
+  pull_request: # PRs still run lint/unit tests
     branches: [develop]
-  workflow_dispatch: {}          # manual trigger
+  workflow_dispatch: {} # manual trigger
 
 jobs:
   build_deploy:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
-      id-token: write            # OIDC for AWS
+      id-token: write # OIDC for AWS
       contents: read
 
     steps:
-    # ── 0) Checkout ──────────────────────────────────────────
-    - uses: actions/checkout@v4
+      # ── 0) Checkout ──────────────────────────────────────────
+      - uses: actions/checkout@v4
 
-    # 0.0) Ensure UI health file is present before build
-    - name: 💚  Add static /health object
-      run: |
-        echo '{"status":"ok"}' > public/health
+      # 0.0) Ensure UI health file is present before build
+      - name: 💚  Add static /health object
+        run: |
+          echo '{"status":"ok"}' > public/health
 
-    # ── 0.1) Prettier – auto-fix so ESLint passes quickly ───
-    - name: 🧼  Run Prettier (write)
-      run: npx prettier --write .
+      # ── 0.1) Prettier – auto-fix so ESLint passes quickly ───
+      - name: 🧼  Run Prettier (write)
+        run: npx prettier --write .
 
-    # ── 1) pnpm → Node (cache = pnpm) ───────────────────────
-    - uses: pnpm/action-setup@v2
-      with:
-        version: 9
-        run_install: |
-          args: [--no-frozen-lockfile]
+      # ── 1) pnpm → Node (cache = pnpm) ───────────────────────
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: |
+            args: [--no-frozen-lockfile]
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: pnpm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
 
-    # ── 2) Lint  &  unit tests ──────────────────────────────
-    - name: 🔍  ESLint + type check
-      run: pnpm lint
-    - name: 🧪  Unit tests
-      run: pnpm run test:vitest
+      # ── 2) Lint  &  unit tests ──────────────────────────────
+      - name: 🔍  ESLint + type check
+        run: pnpm lint
+      - name: 🧪  Unit tests
+        run: pnpm run test:vitest
 
-    # ── 3) Build UI (dist/) ─────────────────────────────────
-    - name: Inject API base URL
-      run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+      # ── 3) Build UI (dist/) ─────────────────────────────────
+      - name: Inject API base URL
+        run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
 
-    - name: 🏗️  Build UI (Vite)
-      run: pnpm run build          # dist/ now exists
+      - name: 🏗️  Build UI (Vite)
+        run: pnpm run build # dist/ now exists
 
-    # ── 4) Canary UI smoke test (no mocks, just 200 check)───
-    - name: 🌐  Canary check / (local preview)
-      run: |
-        pnpm exec vite preview --port 4173 --strictPort &
-        PREVIEW_PID=$!
-        sleep 3   # give preview a breath
-        code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4173/)
-        kill $PREVIEW_PID
-        test "$code" = "200"
+      # ── 4) Canary UI smoke test (no mocks, just 200 check)───
+      - name: 🌐  Canary check / (local preview)
+        run: |
+          pnpm exec vite preview --port 4173 --strictPort &
+          PREVIEW_PID=$!
+          sleep 3   # give preview a breath
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4173/)
+          kill $PREVIEW_PID
+          test "$code" = "200"
 
-    # ── 5) AWS credentials (OIDC) ───────────────────────────
-    - uses: aws-actions/configure-aws-credentials@v4
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region:     ${{ secrets.AWS_REGION }}
+      # ── 5) AWS credentials (OIDC) ───────────────────────────
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    # ── 6) Package & deploy SAM stack ───────────────────────
-    - name: ☁️  SAM deploy backend
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env:
-        ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
-      run: |
-        pip install --quiet aws-sam-cli
-        sam package \
-          --template-file infra/template.yaml \
-          --s3-bucket "$ARTIFACT_BUCKET" \
-          --output-template-file packaged.yaml
-        sam deploy \
-          --template-file packaged.yaml \
-          --stack-name acta-backend-staging \
-          --capabilities CAPABILITY_IAM \
-          --no-fail-on-empty-changeset
+      # ── 6) Package & deploy SAM stack ───────────────────────
+      - name: ☁️  SAM deploy backend
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        env:
+          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
+        run: |
+          pip install --quiet aws-sam-cli
+          sam package \
+            --template-file infra/template.yaml \
+            --s3-bucket "$ARTIFACT_BUCKET" \
+            --output-template-file packaged.yaml
+          sam deploy \
+            --template-file packaged.yaml \
+            --stack-name acta-backend-staging \
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset
 
-    # ── 7) API /health smoke ────────────────────────────────
-    - name: 🌡️  API /health
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env:
-        API_BASE: ${{ secrets.VITE_API_BASE_URL }}
-      run: |
-        for n in {1..5}; do
-          echo "Ping $API_BASE/health (try $n)"
-          curl -fs "$API_BASE/health" && exit 0
-          sleep 5
-        done
-        echo "API health endpoint failed" >&2
-        exit 1
+      # ── 7) API /health smoke ────────────────────────────────
+      - name: 🌡️  API /health
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        env:
+          API_BASE: ${{ secrets.VITE_API_BASE_URL }}
+        run: |
+          for n in {1..5}; do
+            echo "Ping $API_BASE/health (try $n)"
+            curl -fs "$API_BASE/health" && exit 0
+            sleep 5
+          done
+          echo "API health endpoint failed" >&2
+          exit 1
 
-    # ── 8) Upload UI → S3 + invalidate CloudFront ───────────
-    - name: 🚀  Deploy UI
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env:
-        S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
-        CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      run: |
-        chmod +x scripts/deploy-to-s3.sh
-        ./scripts/deploy-to-s3.sh
+      # ── 8) Upload UI → S3 + invalidate CloudFront ───────────
+      - name: 🚀  Deploy UI
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        env:
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          chmod +x scripts/deploy-to-s3.sh
+          ./scripts/deploy-to-s3.sh
 
-    # ── 9) CloudFront /health smoke ─────────────────────────
-    - name: 🌐  UI /health via CloudFront
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env:
-        CF_DOMAIN: ${{ secrets.DISTRIBUTION_DOMAIN_NAME }}
-      run: |
-        for n in {1..5}; do
-          echo "Ping https://$CF_DOMAIN/health (try $n)"
-          curl -fs "https://$CF_DOMAIN/health" && exit 0
-          sleep 15
-        done
-        echo "UI /health failed" >&2
-        exit 1
+      # ── 9) CloudFront /health smoke ─────────────────────────
+      - name: 🌐  UI /health via CloudFront
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        env:
+          CF_DOMAIN: ${{ secrets.DISTRIBUTION_DOMAIN_NAME }}
+        run: |
+          for n in {1..5}; do
+            echo "Ping https://$CF_DOMAIN/health (try $n)"
+            curl -fs "https://$CF_DOMAIN/health" && exit 0
+            sleep 15
+          done
+          echo "UI /health failed" >&2
+          exit 1

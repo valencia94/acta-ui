@@ -17,8 +17,6 @@ def lambda_handler(event, context):
 
     if path and path.startswith("/timeline/") and method == "GET":
         project_id = _get_path_param(event, "id")
-        if project_id == "health":
-            return {"statusCode": 200, "body": json.dumps({"status": "ok"})}
         return {
             "statusCode": 200,
             "body": json.dumps([
