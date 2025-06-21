@@ -1,3 +1,5 @@
+// tests/smoke.test.ts
+/* eslint-disable simple-import-sort/imports */
 import { describe, it, expect } from 'vitest';
 
 describe('CI smoke test', () => {
@@ -5,3 +7,4 @@ describe('CI smoke test', () => {
     expect(true).toBe(true);
   });
 });
+/* eslint-enable simple-import-sort/imports */
