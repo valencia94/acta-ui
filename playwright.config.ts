@@ -1,13 +1,16 @@
 import { defineConfig } from '@playwright/test';
 
-const PORT  = process.env.CI ? 4173 : 5173;
-const HOST  = `http://localhost:${PORT}`;
-const TIME  = 60_000;
+const PORT = process.env.CI ? 4173 : 5173;
+const HOST = `http://localhost:${PORT}`;
 
+/** @type {import('@playwright/test').PlaywrightTestConfig} */
 export default defineConfig({
-  globalSetup: './tests/setup-playwright.ts',  // ← new bootstrap
+  timeout: 60_000,
+  globalTimeout: 120_000,
+  globalSetup: './tests/playwright.setup.ts',
+
   testDir: './tests',
-  timeout: TIME,
+  testMatch: ['**/e2e.spec.ts'],
   expect: { timeout: 10_000 },
 
   webServer: {
@@ -16,7 +19,7 @@ export default defineConfig({
       : 'vite dev --port 5173 --strictPort',
     port: PORT,
     reuseExistingServer: !process.env.CI,
-    timeout: TIME,
+    timeout: 60_000,
     env: {
       VITE_API_BASE_URL:
         process.env.VITE_API_BASE_URL ?? 'http://localhost:9999',
