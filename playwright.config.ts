@@ -1,9 +1,9 @@
 import { defineConfig } from '@playwright/test';
 
 const PORT = process.env.CI ? 4173 : 5173;
-const HOST = `http://localhost:${PORT}`;   // ← keep this one
-const TIMEOUT = 60_000;                    // ← keep this one
-const EXPECT_TIMEOUT = 10_000;
+const HOST = `http://localhost:${PORT}`;
+const TIMEOUT = 60_000;           // overall test/action timeout
+const EXPECT_TIMEOUT = 10_000;    // per-expect timeout
 
 export default defineConfig({
   testDir: './tests',
