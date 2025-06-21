@@ -91,7 +91,32 @@ Resources:
             Path: /extract-project-place/{id}
             Method: POST
             RestApiId: !Ref ApplicationApi
-
+  # ────────────────────────────────────────────
+  #  Simple ‘ping’ endpoint for CI / uptime
+  #   GET /health   →  { "status": "ok" }
+  # ────────────────────────────────────────────
+  HealthCheck:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: |
+        import json
+        def lambda_handler(event, _):
+            return {
+                "statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
+                "body": json.dumps({"status": "ok"})
+            }
+      Handler: index.lambda_handler
+      Runtime: python3.12
+      MemorySize: 128   # tiny
+      Timeout: 3
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: get
+            RestApiId: !Ref ApplicationApi
             
   TimelineParamStore:
     Type: AWS::SSM::Parameter
@@ -127,7 +152,8 @@ Resources:
       Name: /acta-ui/api/ProjectPlaceDataExtractor
       Type: String
       Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/extract-project-place'
-
+      
+# ───── Outputs (unchanged except export names cleaned) ─────            
 Outputs:
   ApiUrl:
     Description: API endpoint URL
@@ -162,3 +188,6 @@ Outputs:
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/extract-project-place'
     Export:
       Name: ActaUiApiProjectPlaceDataExtractor
+
+
+
