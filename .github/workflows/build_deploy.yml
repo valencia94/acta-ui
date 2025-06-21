@@ -103,13 +103,7 @@ jobs:
         echo "API health endpoint failed after 5 attempts" >&2
         exit 1
 
-    # ───── 8) Playwright E2E tests ──────────────────────────────
-    - name: E2E tests
-      run: |
-        pnpm exec playwright install --with-deps
-        pnpm exec playwright test
-
-    # ───── 9) Deploy UI to S3 + invalidate CloudFront ───────────
+    # ───── 8) Deploy UI to S3 + invalidate CloudFront ───────────
     - name: 🚀 Deploy UI to S3 + CloudFront
       if: >-
         (github.ref == 'refs/heads/develop')
@@ -120,6 +114,12 @@ jobs:
       run: |
         chmod +x scripts/deploy-to-s3.sh
         ./scripts/deploy-to-s3.sh
+        
+    # ───── 9) Playwright E2E tests ──────────────────────────────
+    - name: E2E tests
+      run: |
+        pnpm exec playwright install --with-deps
+        pnpm exec playwright test
 
     # ───── 10) UI smoke test via CloudFront /health ─────────────
     - name: Smoke Test (UI /health)
