@@ -10,7 +10,8 @@ export default defineConfig({
 });
 
 test('CloudFront health endpoint returns ok', async ({ request }) => {
-  const res = await request.get('/health');
+  const base = process.env.LIVE_BASE_URL ?? 'http://localhost:4173';
+  const res = await request.get(`${base}/health`);
   expect(res.status()).toBe(200);
   await expect(res).toHaveJSON({ status: 'ok' });
 });
@@ -21,18 +22,20 @@ test('Dashboard happy path', async ({ page }) => {
 
   await Promise.all([
     page.waitForResponse(
-      (r) => r.url().includes('/project-summary/') && r.status() === 200,
+      (r) => r.url().includes('/project-summary/') && r.status() === 200
     ),
     page.getByRole('button', { name: /Retrieve/i }).click(),
   ]);
 
   await expect(
-    page.locator('h1', { hasText: 'Project Dashboard' }),
+    page.locator('h1', { hasText: 'Project Dashboard' })
   ).toBeVisible();
 
   await expect(page.getByRole('button', { name: /^PDF$/ })).toBeEnabled();
-  await expect(page.getByRole('button', { name: /Generate Acta/i })).toBeEnabled();
   await expect(
-    page.getByRole('button', { name: /Extract ProjectPlace Data/i }),
+    page.getByRole('button', { name: /Generate Acta/i })
+  ).toBeEnabled();
+  await expect(
+    page.getByRole('button', { name: /Extract ProjectPlace Data/i })
   ).toBeEnabled();
 });

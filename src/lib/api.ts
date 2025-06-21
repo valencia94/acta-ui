@@ -54,13 +54,13 @@ export async function getDownloadUrl(
 
 /* ---------- APPROVAL E-MAIL ---------- */
 export async function sendApprovalEmail(
-  projectId: string,
-  recipient: string
+  actaId: string,
+  clientEmail: string
 ): Promise<{ message: string; token: string }> {
   const r = await fetch(`${BASE}/send-approval-email`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ project_id: projectId, recipient }),
+    body: JSON.stringify({ actaId, clientEmail }),
   });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
