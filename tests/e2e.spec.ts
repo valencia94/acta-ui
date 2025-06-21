@@ -17,55 +17,72 @@ test('end-to-end workflow', async ({ page }) => {
     localStorage.setItem('ikusi.jwt', 'mock-token');
   });
 
+  // Auth is bypassed in CI (VITE_SKIP_AUTH=true); no JWT assertion needed.
+
   /* 2 ▸ stub outbound API calls */
-  await page.route(`${API}/project-summary/*`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        project_id: '123',
-        project_name: 'Demo Project',
+  await page.route(
+    `${API}/project-summary/*`,
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          project_id: '123',
+          project_name: 'Demo Project',
+        }),
       }),
-    })
+    { times: 1 }
   );
 
-  await page.route(`${API}/timeline/*`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          hito: 'Kickoff',
-          actividades: 'Setup',
-          desarrollo: 'Init',
-          fecha: '2024-01-01',
-        },
-      ]),
-    })
+  await page.route(
+    `${API}/timeline/*`,
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            hito: 'Kickoff',
+            actividades: 'Setup',
+            desarrollo: 'Init',
+            fecha: '2024-01-01',
+          },
+        ]),
+      }),
+    { times: 1 }
   );
 
-  await page.route(`${API}/send-approval-email`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ message: 'ok', token: 'abc' }),
-    })
+  await page.route(
+    `${API}/send-approval-email`,
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'ok', token: 'abc' }),
+      }),
+    { times: 1 }
   );
 
-  await page.route(`${API}/download-acta/*`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ url: `${API}/file.pdf` }),
-    })
+  await page.route(
+    `${API}/download-acta/*`,
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ url: `${API}/file.pdf` }),
+      }),
+    { times: 1 }
   );
 
-  await page.route(`${API}/extract-project-place/*`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: '{}',
-    })
+  await page.route(
+    `${API}/extract-project-place/*`,
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: '{}',
+      }),
+    { times: 1 }
   );
 
   /* 3 ▸ Dashboard workflow */
