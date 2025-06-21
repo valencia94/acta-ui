@@ -1,26 +1,45 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig } from "@playwright/test";
 
-const PORT = 4173;
+const PORT = process.env.CI ? 4173 : 5173;
 const HOST = `http://localhost:${PORT}`;
+const TIMEOUT = 60_000;
+const EXPECT_TIMEOUT = 10_000;
 
+/** @type {import('@playwright/test').PlaywrightTestConfig} */
 export default defineConfig({
-  testDir: './tests',
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
+  timeout: TIMEOUT,
+  globalTimeout: 2 * TIMEOUT,
+  globalSetup: "./tests/setup-playwright.ts",
 
+  testDir: "./tests",
+  testMatch: ["**/e2e.spec.ts"],
+
+  expect: { timeout: EXPECT_TIMEOUT },
+
+  /* ------------------------------------------
+     Local server for both dev (local runs) and
+     preview build (CI) — picked by NODE_ENV
+  ------------------------------------------ */
   webServer: {
-    command: 'pnpm exec vite preview --port 4173 --strictPort',
+    command: process.env.CI
+      ? "vite preview --port 4173 --strictPort"
+      : "vite dev --port 5173 --strictPort",
     port: PORT,
-    reuseExistingServer: true,
-    env: {
-      VITE_API_BASE_URL: process.env.VITE_API_BASE_URL ?? 'http://localhost:9999',
-    },
+    reuseExistingServer: !process.env.CI,
     timeout: 60_000,
+    env: {
+      VITE_API_BASE_URL:
+        process.env.VITE_API_BASE_URL ?? "http://localhost:9999",
+    },
+    ignoreHTTPSErrors: true,
   },
 
   use: {
     baseURL: `${HOST}/`,
     headless: true,
-    trace: 'on-first-retry',
+    actionTimeout: TIMEOUT,
+    navigationTimeout: TIMEOUT,
+    ignoreHTTPSErrors: true,
+    trace: "on-first-retry",
   },
 });
