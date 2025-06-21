@@ -3,139 +3,139 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [develop]          # auto-deploy only from develop
+    branches: [develop] # auto-deploy only from develop
   pull_request:
-    branches: [develop]          # PRs still lint / unit-test
-  workflow_dispatch: {}          # manual trigger
+    branches: [develop] # PRs still lint / unit-test
+  workflow_dispatch: {} # manual trigger
 
 jobs:
   build_deploy:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
-      id-token: write            # OIDC for AWS
+      id-token: write # OIDC for AWS
       contents: read
 
     steps:
-    # ───── 0) Checkout ──────────────────────────────────────────
-    - uses: actions/checkout@v4
+      # ───── 0) Checkout ──────────────────────────────────────────
+      - uses: actions/checkout@v4
 
-    # ───── 0.1) Ensure /health exists before build ─────────────
-    - name: 💚 add static /health
-      run: |
-        mkdir -p public
-        echo '{"status":"ok"}' > public/health
+      # ───── 0.1) Ensure /health exists before build ─────────────
+      - name: 💚 add static /health
+        run: |
+          mkdir -p public
+          echo '{"status":"ok"}' > public/health
 
-    # ───── 1) Install deps (pnpm → Node cache) ─────────────────
-    - uses: pnpm/action-setup@v2
-      with:
-        version: 9
-        run_install: |
-          args: [--no-frozen-lockfile]
+      # ───── 1) Install deps (pnpm → Node cache) ─────────────────
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: |
+            args: [--no-frozen-lockfile]
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: pnpm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
 
-    # ───── 1.1)  Install project deps (prettier lives here) ────
-    - run: pnpm install --no-frozen-lockfile
+      # ───── 1.1)  Install project deps (prettier lives here) ────
+      - run: pnpm install --no-frozen-lockfile
 
-    # ───── 1.2)  Prettier – auto-fix everything except workflows
-    - name: 🧼  format
-      run: |
-        pnpm exec prettier --write "**/*.{js,ts,tsx,css,md,yaml,yml,json}" \
-          "!.github/workflows/**/*.yml"
+      # ───── 1.2)  Prettier – auto-fix everything except workflows
+      - name: 🧼  format
+        run: |
+          pnpm exec prettier --write "**/*.{js,ts,tsx,css,md,yaml,yml,json}" \
+            "!.github/workflows/**/*.yml"
 
-    # ───── 2) Lint  &  unit tests ──────────────────────────────
-    - name: 🔍  ESLint & type check
-      run: pnpm lint
-    - name: 🧪  Vitest
-      run: pnpm run test:vitest
+      # ───── 2) Lint  &  unit tests ──────────────────────────────
+      - name: 🔍  ESLint & type check
+        run: pnpm lint
+      - name: 🧪  Vitest
+        run: pnpm run test:vitest
 
-    # ───── 3) Build UI (dist/) ─────────────────────────────────
-    - name: Inject API base URL
-      run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+      # ───── 3) Build UI (dist/) ─────────────────────────────────
+      - name: Inject API base URL
+        run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
 
-    - name: 🏗️  build (Vite)
-      run: pnpm run build                        # → dist/
+      - name: 🏗️  build (Vite)
+        run: pnpm run build # → dist/
 
-    # ───── 4) Local smoke check (HTML returns 200) ─────────────
-    - name: 🌐  local preview smoke
-      run: |
-        pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
-        sleep 4
-        curl -sf http://localhost:4173/           # 200 or curls exits 22
-        kill $SERVER
+      # ───── 4) Local smoke check (HTML returns 200) ─────────────
+      - name: 🌐  local preview smoke
+        run: |
+          pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
+          sleep 4
+          curl -sf http://localhost:4173/           # 200 or curls exits 22
+          kill $SERVER
 
-    # ───── 5) AWS creds (OIDC) ─────────────────────────────────
-    - uses: aws-actions/configure-aws-credentials@v4
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region:     ${{ secrets.AWS_REGION }}
+      # ───── 5) AWS creds (OIDC) ─────────────────────────────────
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    # ───── 6) SAM deploy (backend) ─────────────────────────────
-    - name: ☁️  SAM deploy
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env:
-        ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
-      run: |
-        pip install --quiet aws-sam-cli
-        sam package  \
-          --template-file infra/template.yaml \
-          --s3-bucket "$ARTIFACT_BUCKET" \
-          --output-template-file packaged.yaml
-        sam deploy   \
-          --template-file packaged.yaml \
-          --stack-name acta-backend-staging \
-          --capabilities CAPABILITY_IAM \
-          --no-fail-on-empty-changeset
+      # ───── 6) SAM deploy (backend) ─────────────────────────────
+      - name: ☁️  SAM deploy
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        env:
+          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
+        run: |
+          pip install --quiet aws-sam-cli
+          sam package  \
+            --template-file infra/template.yaml \
+            --s3-bucket "$ARTIFACT_BUCKET" \
+            --output-template-file packaged.yaml
+          sam deploy   \
+            --template-file packaged.yaml \
+            --stack-name acta-backend-staging \
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset
 
-    # ───── 7) Backend /health probe ────────────────────────────
-    - name: 🌡️  API /health
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      run: curl -sf "${{ secrets.VITE_API_BASE_URL }}/health"
+      # ───── 7) Backend /health probe ────────────────────────────
+      - name: 🌡️  API /health
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        run: curl -sf "${{ secrets.VITE_API_BASE_URL }}/health"
 
-    # ───── 8) Upload UI & fast-purge CF ────────────────────────
-    - name: 🚀  deploy UI (S3 + CF)
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env:
-        BUCKET:   ${{ secrets.S3_BUCKET_NAME }}
-        DIST_ID:  ${{ secrets.CLOUDFRONT_DIST_ID }}
-      run: |
-        set -eux
-        # 8.1 sync assets
-        aws s3 sync dist "s3://$BUCKET" --delete
-        # 8.2 overwrite /health with no-cache
-        aws s3 cp dist/health "s3://$BUCKET/health" \
-          --cache-control 'no-cache, no-store, must-revalidate' \
-          --content-type 'application/json'
-        # 8.3 purge only index.html (fast)
-        INV=$(aws cloudfront create-invalidation \
-          --distribution-id "$DIST_ID" --paths '/index.html' \
-          --query 'Invalidation.Id' --output text)
-        echo "🕒 waiting for invalidation $INV…"
-        aws cloudfront wait invalidation-completed \
-          --distribution-id "$DIST_ID" --id "$INV"
+      # ───── 8) Upload UI & fast-purge CF ────────────────────────
+      - name: 🚀  deploy UI (S3 + CF)
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          set -eux
+          # 8.1 sync assets
+          aws s3 sync dist "s3://$BUCKET" --delete
+          # 8.2 overwrite /health with no-cache
+          aws s3 cp dist/health "s3://$BUCKET/health" \
+            --cache-control 'no-cache, no-store, must-revalidate' \
+            --content-type 'application/json'
+          # 8.3 purge only index.html (fast)
+          INV=$(aws cloudfront create-invalidation \
+            --distribution-id "$DIST_ID" --paths '/index.html' \
+            --query 'Invalidation.Id' --output text)
+          echo "🕒 waiting for invalidation $INV…"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$DIST_ID" --id "$INV"
 
-    # ───── 9) CloudFront /health probe ─────────────────────────
-    - name: 🌐  UI /health via CF
-      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env:
-        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      run: |
-        set -e
-        CF_DOMAIN=$(aws cloudfront get-distribution \
-          --id "$DIST_ID" --query 'Distribution.DomainName' --output text)
-        echo "CloudFront domain: $CF_DOMAIN"
+      # ───── 9) CloudFront /health probe ─────────────────────────
+      - name: 🌐  UI /health via CF
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        env:
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          set -e
+          CF_DOMAIN=$(aws cloudfront get-distribution \
+            --id "$DIST_ID" --query 'Distribution.DomainName' --output text)
+          echo "CloudFront domain: $CF_DOMAIN"
 
-        delay=5
-        for n in {1..8}; do
-          echo "Ping https://$CF_DOMAIN/health (try $n)…"
-          curl -fs "https://$CF_DOMAIN/health" && exit 0
-          sleep $delay; delay=$((delay*2))
-        done
-        echo "UI /health failed ✖"
-        curl -v "https://$CF_DOMAIN/health" || true
-        exit 1
+          delay=5
+          for n in {1..8}; do
+            echo "Ping https://$CF_DOMAIN/health (try $n)…"
+            curl -fs "https://$CF_DOMAIN/health" && exit 0
+            sleep $delay; delay=$((delay*2))
+          done
+          echo "UI /health failed ✖"
+          curl -v "https://$CF_DOMAIN/health" || true
+          exit 1
