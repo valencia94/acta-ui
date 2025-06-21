@@ -1,13 +1,25 @@
-/**
- * tests/setup-playwright.ts
- * Global bootstrap for Playwright workers ­— runs **once** before any test.
- */
+// tests/setup-playwright.ts
+// Global bootstrap for Playwright workers (runs **once** before all tests).
 
 import type { FullConfig } from '@playwright/test';
 
-async function globalSetup(_config: FullConfig): Promise<void> {
-  // Mock Amplify Auth (or other globals) for the entire E2E run.
-  (globalThis as any).Auth = {
+declare global {
+  // Augment the global scope with our mocked Auth shaped as in Amplify.
+  // (You can refine types later if needed.)
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+  interface Global {
+    Auth: {
+      signIn: () => Promise<{ username: string }>;
+      currentSession: () => Promise<{
+        getIdToken: () => { getJwtToken: () => string };
+      }>;
+    };
+  }
+}
+
+async function globalSetup(_: FullConfig): Promise<void> {
+  /* Mock Amplify-like Auth once for the whole test run */
+  globalThis.Auth = {
     signIn: async () => {
       localStorage.setItem('ikusi.jwt', 'mock-token');
       return { username: 'mock-user' };
