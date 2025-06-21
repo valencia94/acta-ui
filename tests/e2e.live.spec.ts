@@ -8,7 +8,8 @@ test.use({
 });
 
 test('CloudFront health endpoint returns ok', async ({ request }) => {
-  const res = await request.get('/health');
+  const base = process.env.LIVE_BASE_URL ?? 'http://localhost:4173';
+  const res = await request.get(`${base}/health`);
   expect(res.status()).toBe(200);
   await expect(res).toHaveJSON({ status: 'ok' });
 });
