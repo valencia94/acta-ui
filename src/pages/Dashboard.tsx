@@ -78,6 +78,7 @@ export default function Dashboard() {
             placeholder="1000000061690051"
             className="input w-64"
             disabled={loading}
+            data-testid="project-id-input"
           />
         </div>
         <button
