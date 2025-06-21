@@ -29,10 +29,11 @@ jobs:
     # 0.2) Prettier – auto-fix (✖ excludes workflow files)
     - uses: pnpm/action-setup@v2
       with: { version: 9 }
+    
     - name: 🧼 format
-      run: pnpm exec prettier --write \
-           "**/*.{js,ts,tsx,css,md,yaml,yml,json}" \
-           "!.github/workflows/*.yml"
+      run: |
+        pnpm exec prettier --write "**/*.{js,ts,tsx,css,md,yaml,yml,json}" \
+          "!.github/workflows/*.yml"
 
     # ───────────────────────── 1) Install deps ──────────────────────
     - uses: actions/setup-node@v4
@@ -70,14 +71,15 @@ jobs:
         aws-region:     ${{ secrets.AWS_REGION }}
 
     # ───────── 6) Deploy SAM stack (backend) ───────────────────────
-    - name: ☁️ SAM deploy
+    - name: ☁️  SAM deploy
       if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env: { ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }} }
+      env:
+        ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
       run: |
-        pip install -q aws-sam-cli
+        pip install --quiet aws-sam-cli
         sam package \
           --template-file infra/template.yaml \
-          --s3-bucket   "$ARTIFACT_BUCKET" \
+          --s3-bucket "$ARTIFACT_BUCKET" \
           --output-template-file packaged.yaml
         sam deploy \
           --template-file packaged.yaml \
@@ -112,20 +114,22 @@ jobs:
           --distribution-id "$DIST_ID" --id "$INV"
 
     # ───────── 9) CloudFront /health probe ─────────────────────────
-    - name: 🌐 UI /health via CF
+    - name: 🌐  UI /health via CF
       if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-      env: { DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }} }
+      env:
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
       run: |
         set -e
         CF_DOMAIN=$(aws cloudfront get-distribution \
           --id "$DIST_ID" --query 'Distribution.DomainName' --output text)
         echo "CloudFront domain: $CF_DOMAIN"
-
+    
         delay=5
         for n in {1..8}; do
           echo "Ping https://$CF_DOMAIN/health (try $n)…"
           curl -fs "https://$CF_DOMAIN/health" && exit 0
           sleep $delay; delay=$((delay*2))
         done
-        echo "UI /health failed ✖"; curl -v "https://$CF_DOMAIN/health" || true
+        echo "UI /health failed ✖"
+        curl -v "https://$CF_DOMAIN/health" || true
         exit 1
