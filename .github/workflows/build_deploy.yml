@@ -96,12 +96,12 @@ jobs:
             --capabilities CAPABILITY_IAM \
             --no-fail-on-empty-changeset \
             --parameter-overrides \
-              GetTimelineArn="$GET_TIMELINE_ARN" \
-              GetDownloadActaArn="$GET_DOWNLOAD_ACTA_ARN" \
-              GetProjectSummaryArn="$GET_PROJECT_SUMMARY_ARN" \
-              SendApprovalEmailArn="$SEND_APPROVAL_EMAIL_ARN" \
-              ProjectPlaceDataExtractorArn="$PROJECT_PLACE_DATA_EXTRACTOR_ARN" \
-              HealthCheckArn="$HEALTH_CHECK_ARN"
+              GetTimelineArn=$GET_TIMELINE_ARN \
+              GetDownloadActaArn=$GET_DOWNLOAD_ACTA_ARN \
+              GetProjectSummaryArn=$GET_PROJECT_SUMMARY_ARN \
+              SendApprovalEmailArn=$SEND_APPROVAL_EMAIL_ARN \
+              ProjectPlaceDataExtractorArn=$PROJECT_PLACE_DATA_EXTRACTOR_ARN \
+              HealthCheckArn=$HEALTH_CHECK_ARN
 
       # ───── 7) Backend /health probe ────────────────────────────
       - name: 🌡️  API /health
