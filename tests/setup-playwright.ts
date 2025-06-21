@@ -1,11 +1,8 @@
 // tests/setup-playwright.ts
 // Global bootstrap for Playwright workers (runs **once** before all tests).
 
-import type { FullConfig } from '@playwright/test';
-
 declare global {
-  // Augment the global scope with our mocked Auth shaped as in Amplify.
-  // (You can refine types later if needed.)
+  /* Augment the runtime with a mocked Amplify-style Auth */
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Global {
     Auth: {
@@ -17,8 +14,8 @@ declare global {
   }
 }
 
-async function globalSetup(_: FullConfig): Promise<void> {
-  /* Mock Amplify-like Auth once for the whole test run */
+/** Playwright’s global setup (no config arg needed) */
+async function globalSetup(): Promise<void> {
   globalThis.Auth = {
     signIn: async () => {
       localStorage.setItem('ikusi.jwt', 'mock-token');
