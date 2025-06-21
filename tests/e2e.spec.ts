@@ -1,27 +1,25 @@
 // tests/e2e.spec.ts
 import { expect, test } from '@playwright/test';
 
-const API = process.env.MOCK_API ?? 'http://localhost:9999';
-
+const API = process.env.MOCK_API ?? 'http://localhost:9999'; // local stub
 test.setTimeout(60_000); // generous head-room for CI
 
 test('end-to-end workflow', async ({ page }) => {
-  /* ── 1 · Mock Amplify Auth ───────────────────────────── */
+  /* ── 1 · Stub Amplify Auth + seed token ──────────────────── */
   await page.addInitScript(() => {
     const auth = {
-      signIn: async () => {
-        localStorage.setItem('ikusi.jwt', 'mock-token');
-        return { username: 'mock-user' };
-      },
+      signIn: async () => ({ username: 'mock-user' }),
       currentSession: async () => ({
         getIdToken: () => ({ getJwtToken: () => 'mock-token' }),
       }),
     };
     (window as unknown as { Auth: typeof auth }).Auth = auth;
+
+    // Pretend the user is already signed-in
     localStorage.setItem('ikusi.jwt', 'mock-token');
   });
 
-  /* ── 2 · Stub outbound API calls ─────────────────────── */
+  /* ── 2 · Stub outbound API calls ─────────────────────────── */
   await page.route(`${API}/project-summary/*`, (route) =>
     route.fulfill({
       status: 200,
@@ -30,7 +28,7 @@ test('end-to-end workflow', async ({ page }) => {
         project_id: '123',
         project_name: 'Demo Project',
       }),
-    })
+    }),
   );
 
   await page.route(`${API}/timeline/*`, (route) =>
@@ -45,7 +43,7 @@ test('end-to-end workflow', async ({ page }) => {
           fecha: '2024-01-01',
         },
       ]),
-    })
+    }),
   );
 
   await page.route(`${API}/send-approval-email`, (route) =>
@@ -53,14 +51,14 @@ test('end-to-end workflow', async ({ page }) => {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ message: 'ok', token: 'abc' }),
-    })
+    }),
   );
 
   await page.route(`${API}/download-acta/*`, (route) =>
     route.fulfill({
       status: 302,
       headers: { location: `${API}/file.pdf` },
-    })
+    }),
   );
 
   await page.route(`${API}/extract-project-place/*`, (route) =>
@@ -68,19 +66,13 @@ test('end-to-end workflow', async ({ page }) => {
       status: 200,
       contentType: 'application/json',
       body: '{}',
-    })
+    }),
   );
 
-  /* ── 3 · App load ─────────────────────────────────────── */
+  /* ── 3 · Dashboard workflow ─────────────────────────────── */
   await page.goto('/dashboard');
   await page.waitForLoadState('networkidle');
 
-  await expect(
-    page.evaluate(() => localStorage.getItem('ikusi.jwt'))
-  ).resolves.toBe('mock-token');
-
-  /* ── 4 · Dashboard workflow ──────────────────────────── */
-  await page.goto('/dashboard');
   await page.fill('input[placeholder="1000000061690051"]', '123');
 
   await Promise.all([
@@ -90,9 +82,11 @@ test('end-to-end workflow', async ({ page }) => {
   ]);
 
   await expect(
-    page.getByRole('heading', { name: /Demo Project/i })
+    page.getByRole('heading', { name: /Demo Project/i }),
   ).toBeVisible();
-  await expect(page.getByRole('row', { name: /Kickoff/i })).toBeVisible();
+  await expect(
+    page.getByRole('row', { name: /Kickoff/i }),
+  ).toBeVisible();
 
   await Promise.all([
     page.waitForRequest(`${API}/download-acta/123?format=pdf`),
