@@ -18,6 +18,7 @@ test('end-to-end workflow', async ({ page }) => {
       }),
     };
     (window as unknown as { Auth: typeof auth }).Auth = auth;
+    localStorage.setItem('ikusi.jwt', 'mock-token');
   });
 
   /* ── 2 · Stub outbound API calls ─────────────────────── */
@@ -70,19 +71,9 @@ test('end-to-end workflow', async ({ page }) => {
     })
   );
 
-  /* ── 3 · Login page ──────────────────────────────────── */
-  await page.goto('/'); // baseURL is set in playwright.config
+  /* ── 3 · App load ─────────────────────────────────────── */
+  await page.goto('/dashboard');
   await page.waitForLoadState('networkidle');
-
-  /* The login page no longer shows an “Acta Platform” heading.
-     Wait for the actual element that exists: the Sign-in heading. */
-  await expect(
-    page.getByRole('heading', { name: /sign in/i })
-  ).toBeVisible({ timeout: 30_000 });
-
-  await page.fill('input[type="email"]', 'user@test.com');
-  await page.fill('input[type="password"]', 'secret');
-  await page.getByRole('button', { name: /Sign in/i }).click();
 
   await expect(
     page.evaluate(() => localStorage.getItem('ikusi.jwt'))

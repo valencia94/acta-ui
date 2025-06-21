@@ -16,7 +16,6 @@ export default function App() {
 
   useEffect(() => {
     if (skipAuth) {
-      localStorage.setItem('ikusi.jwt', 'dev-token');
       setIsAuthed(true);
       setChecked(true);
       return;
@@ -41,23 +40,29 @@ export default function App() {
 
   if (!checked) return null;
 
+  const routes = (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} />
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/dashboard"
+          element={
+            skipAuth || isAuthed ? <Dashboard /> : <Navigate to="/login" />
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+
   return (
     <ChakraProvider value={defaultSystem}>
-      <Authenticator>
-        <BrowserRouter>
-          <Routes>
-            <Route
-              path="/"
-              element={<Navigate to={isAuthed ? '/dashboard' : '/login'} />}
-            />
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/dashboard"
-              element={isAuthed ? <Dashboard /> : <Navigate to="/login" />}
-            />
-          </Routes>
-        </BrowserRouter>
-      </Authenticator>
+      {skipAuth ? routes : <Authenticator>{routes}</Authenticator>}
     </ChakraProvider>
   );
 }
