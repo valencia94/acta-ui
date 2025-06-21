@@ -86,22 +86,22 @@ jobs:
           --no-fail-on-empty-changeset
 
     # ───── 6) API smoke test ────────────────────────────────────
-- name: API smoke test
-  if: >-
-    (github.ref == 'refs/heads/develop')
-    && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-  env:
-    API_BASE: ${{ secrets.VITE_API_BASE_URL }}
-  run: |
-    n=0
-    until [ $n -ge 5 ]; do
-      echo "Ping $API_BASE/health (attempt $((n+1)))"
-      curl -f -s "$API_BASE/health" && exit 0
-      n=$((n+1))
-      sleep 5
-    done
-    echo "API health endpoint failed after 5 attempts" >&2
-    exit 1
+    - name: API smoke test
+      if: >-
+        (github.ref == 'refs/heads/develop')
+        && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      env:
+        API_BASE: ${{ secrets.VITE_API_BASE_URL }}
+      run: |
+        n=0
+        until [ $n -ge 5 ]; do
+          echo "Ping $API_BASE/health (attempt $((n+1)))"
+          curl -f -s "$API_BASE/health" && exit 0
+          n=$((n+1))
+          sleep 5
+        done
+        echo "API health endpoint failed after 5 attempts" >&2
+        exit 1
 
     # ───── 8) Playwright E2E tests ──────────────────────────────
     - name: E2E tests
