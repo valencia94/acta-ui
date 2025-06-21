@@ -6,6 +6,11 @@ module.exports = {
       colors: {
         cvdex: 'var(--cvdex)',
         'cvdex-dark': 'var(--cvdex-dark)',
+        ikusi: {
+          green: '#006b54',
+          teal: '#0094a8',
+          dark: '#002e24',
+        },
       },
     },
   },

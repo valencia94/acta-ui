@@ -44,7 +44,7 @@ export default function Login() {
     <Flex minH="100vh" align="center" justify="center" bg="white">
       <Stack gap={8} mx="auto" w="sm">
         <Image src="/ikusi-logo.svg" boxSize="72px" mx="auto" />
-        <Heading color="var(--ikusi-dark)">Acta Platform</Heading>
+        <Heading className="text-ikusi-dark">Acta Platform</Heading>
         <form onSubmit={handleSubmit(onSubmit)}>
           <FormControl isRequired>
             <FormLabel>Email</FormLabel>
@@ -57,8 +57,7 @@ export default function Login() {
           <Button
             mt={6}
             w="full"
-            bg="var(--ikusi-green)"
-            _hover={{ bg: 'var(--ikusi-teal)' }}
+            className="rounded bg-ikusi-green py-2 text-white hover:bg-ikusi-teal transition-colors"
             type="submit"
           >
             Sign in

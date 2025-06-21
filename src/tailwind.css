@@ -15,11 +15,3 @@ body {
   }
 }
 
-/* Ikusi green */
-:root {
-  --ikusi-green: #006b54;
-  --ikusi-teal: #0094a8;
-  --ikusi-dark: #002e24;
-  --cvdex: var(--ikusi-green);
-  --cvdex-dark: #004c38;
-}
