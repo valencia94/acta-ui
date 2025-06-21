@@ -1,121 +1,135 @@
 // tests/e2e.spec.ts
 import { expect, test } from '@playwright/test';
 
-const API = process.env.MOCK_API ?? 'http://localhost:9999';
+const API = process.env.MOCK_API ?? 'http://localhost:9999'; // local stub
 
-test.setTimeout(60_000); // generous head-room for CI
+test.setTimeout(60_000); // ample time on CI
 
 test('end-to-end workflow', async ({ page }) => {
-  /* ── 1 · Mock Amplify Auth ───────────────────────────── */
+  /* ────── 1. mock Amplify Auth ────── */
   await page.addInitScript(() => {
     const auth = {
-      signIn: async () => {
+      async signIn() {
+      /* eslint-disable-next-line no-undef */
         localStorage.setItem('ikusi.jwt', 'mock-token');
         return { username: 'mock-user' };
       },
-      currentSession: async () => ({
-        getIdToken: () => ({ getJwtToken: () => 'mock-token' })
-      })
+      async currentSession() {
+        return {
+          getIdToken: () => ({
+            /* eslint-disable-next-line @typescript-eslint/no-empty-function */
+            getJwtToken: () => 'mock-token',
+          }),
+        };
+      },
     };
     (window as unknown as { Auth: typeof auth }).Auth = auth;
   });
 
-  /* ── 2 · Stub outbound API calls ─────────────────────── */
+  /* ────── 2. stub API calls ────── */
   await page.route(`${API}/project-summary/*`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
-        project_id: '123',
-        project_name: 'Demo Project'
-      })
-    })
+      body: JSON.stringify(
+        {
+          project_id: '123',
+          project_name: 'Demo Project',
+        },
+        null,
+        2,
+      ),
+    }),
   );
 
   await page.route(`${API}/timeline/*`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          hito: 'Kickoff',
-          actividades: 'Setup',
-          desarrollo: 'Init',
-          fecha: '2024-01-01'
-        }
-      ])
-    })
+      body: JSON.stringify(
+        [
+          {
+            hito: 'Kickoff',
+            actividades: 'Setup',
+            desarrollo: 'Init',
+            fecha: '2024-01-01',
+          },
+        ],
+        null,
+        2,
+      ),
+    }),
   );
 
   await page.route(`${API}/send-approval-email`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ message: 'ok', token: 'abc' })
-    })
+      body: JSON.stringify({ message: 'ok', token: 'abc' }, null, 2),
+    }),
   );
 
   await page.route(`${API}/download-acta/*`, (route) =>
     route.fulfill({
       status: 302,
-      headers: { location: `${API}/file.pdf` }
-    })
+      headers: { location: `${API}/file.pdf` },
+    }),
   );
 
   await page.route(`${API}/extract-project-place/*`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: '{}'
-    })
+      body: '{}',
+    }),
   );
 
-  /* ── 3 · Login page ──────────────────────────────────── */
-  await page.goto('/'); // baseURL is set in playwright.config
+  /* ────── 3. Login page assertions ────── */
+  await page.goto('/'); // baseURL set in playwright.config.ts
   await page.waitForLoadState('networkidle');
 
-  // Accept either “Acta Platform” (old) or “Acta UI” (new) wording
   await expect(
-    page.getByRole('heading', { name: /Acta (Platform|UI)/i })
-  ).toBeVisible({ timeout: 30_000 });
+    page.getByRole('heading', { name: /Acta Platform/i }),
+  ).toBeVisible({ timeout: 10_000 });
 
   await page.fill('input[type="email"]', 'user@test.com');
   await page.fill('input[type="password"]', 'secret');
-  await page.getByRole('button', { name: /Sign in/i }).click();
+  await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(
-    page.evaluate(() => localStorage.getItem('ikusi.jwt'))
+    page.evaluate(() => localStorage.getItem('ikusi.jwt')),
   ).resolves.toBe('mock-token');
 
-  /* ── 4 · Dashboard workflow ──────────────────────────── */
+  /* ────── 4. Dashboard workflow ────── */
   await page.goto('/dashboard');
   await page.fill('input[placeholder="1000000061690051"]', '123');
 
   await Promise.all([
     page.waitForRequest(`${API}/project-summary/123`),
     page.waitForRequest(`${API}/timeline/123`),
-    page.getByRole('button', { name: /Retrieve/i }).click()
+    page.getByRole('button', { name: /Retrieve/i }).click(),
   ]);
 
   await expect(
-    page.getByRole('heading', { name: /Demo Project/i })
-  ).toBeVisible();
+    page.getByRole('heading', { name: /Demo Project/i }),
+  ).toBeVisible({ timeout: 10_000 });
+
   await expect(
-    page.getByRole('row', { name: /Kickoff/i })
-  ).toBeVisible();
+    page.getByRole('row', { name: /Kickoff/i }),
+  ).toBeVisible({ timeout: 10_000 });
 
   await Promise.all([
     page.waitForRequest(`${API}/download-acta/123?format=pdf`),
-    page.getByRole('button', { name: /PDF/i }).click()
+    page.getByRole('button', { name: /PDF/i }).click(),
   ]);
 
   await Promise.all([
     page.waitForRequest(`${API}/send-approval-email`),
-    page.getByRole('button', { name: /Generate Acta/i }).click()
+    page.getByRole('button', { name: /Generate Acta/i }).click(),
   ]);
 
   await Promise.all([
     page.waitForRequest(`${API}/extract-project-place/123`),
-    page.getByRole('button', { name: /Extract ProjectPlace Data/i }).click()
+    page.getByRole('button', { name: /Extract ProjectPlace Data/i }).click(),
   ]);
 });
