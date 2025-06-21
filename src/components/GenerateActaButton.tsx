@@ -4,17 +4,17 @@ import { toast } from 'sonner';
 import { sendApprovalEmail } from '../lib/api';
 
 interface Props {
-  projectId: string;
-  recipient: string;
+  actaId: string;
+  clientEmail: string;
 }
 
-export function GenerateActaButton({ projectId, recipient }: Props) {
+export function GenerateActaButton({ actaId, clientEmail }: Props) {
   const [busy, setBusy] = useState(false);
 
   async function handleClick() {
     try {
       setBusy(true);
-      await sendApprovalEmail(projectId, recipient);
+      await sendApprovalEmail(actaId, clientEmail);
       toast.success('Acta sent for approval');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error sending Acta';
