@@ -156,28 +156,28 @@ Outputs:
     Description: Timeline URL
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/timeline'
     Export:
-      Name: /acta-ui/api/getTimeline
-
+      Name: ActaUiApiGetTimeline
+      
   DownloadParam:
     Description: Download URL
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/download-acta'
     Export:
-      Name: /acta-ui/api/getDownloadActa
+      Name: ActaUiApiGetDownloadActa
 
   SummaryParam:
     Description: Summary URL
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/project-summary'
     Export:
-      Name: /acta-ui/api/getProjectSummary
+      Name: ActaUiApiGetProjectSummary
 
   SendEmailParam:
     Description: Send approval email URL
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/send-approval-email'
     Export:
-      Name: /acta-ui/api/sendApprovalEmail
+      Name: ActaUiApiSendApprovalEmail
 
   ExtractParam:
     Description: Extract ProjectPlace URL
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/extract-project-place'
     Export:
-      Name: /acta-ui/api/ProjectPlaceDataExtractor
+      Name: ActaUiApiProjectPlaceDataExtractor
