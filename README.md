@@ -66,7 +66,8 @@ FFMPEG binary:
 2. The `.env` file sets `FFMPEG_PATH=./bin/ffmpeg`. Export this variable in your
    shell if not using `pnpm run setup`.
 3. Verify the installation with `pnpm run ffmpeg:version`.
-4. Run tests with `pnpm run test`.
+4. Run unit tests with `pnpm test` (Vitest).
+5. Run end-to-end tests with `pnpm run test:e2e` (Playwright).
 
 ## API Endpoints
 
@@ -78,4 +79,3 @@ The UI interacts with a single REST API (acta-backend-staging) using these route
 - `POST /send-approval-email` – sendApprovalEmail
 - `POST /extract-project-place/{id}` – ProjectPlaceDataExtractor
 - `GET /health` – healthCheck
-
