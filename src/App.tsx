@@ -62,6 +62,7 @@ export default function App() {
 
   return (
     <ChakraProvider value={defaultSystem}>
+      {/* CI sets VITE_SKIP_AUTH so Authenticator is disabled during tests */}
       {skipAuth ? routes : <Authenticator>{routes}</Authenticator>}
     </ChakraProvider>
   );
