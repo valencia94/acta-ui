@@ -17,3 +17,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 import './tailwind.css';
+import './styles/variables.css';
