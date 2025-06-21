@@ -1,12 +1,10 @@
-import { defineConfig, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-export default defineConfig({
-  use: {
-    baseURL: process.env.LIVE_BASE_URL ?? 'http://localhost:4173',
-    trace: 'on',
-    screenshot: 'only-on-failure',
-    ignoreHTTPSErrors: true,
-  },
+test.use({
+  baseURL: process.env.LIVE_BASE_URL ?? 'http://localhost:4173',
+  trace: 'on',
+  screenshot: 'only-on-failure',
+  ignoreHTTPSErrors: true,
 });
 
 test('CloudFront health endpoint returns ok', async ({ request }) => {
