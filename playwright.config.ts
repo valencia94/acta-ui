@@ -1,14 +1,14 @@
 import { defineConfig } from '@playwright/test';
 
-const PORT = process.env.CI ? 4173 : 5173;
-const HOST = `http://localhost:${PORT}`;
-const TIMEOUT = 60_000; // overall test/action timeout
-const EXPECT_TIMEOUT = 10_000; // per-expect timeout
+const PORT  = process.env.CI ? 4173 : 5173;
+const HOST  = `http://localhost:${PORT}`;
+const TIME  = 60_000;
 
 export default defineConfig({
+  globalSetup: './tests/setup-playwright.ts',  // ← new bootstrap
   testDir: './tests',
-  timeout: TIMEOUT,
-  expect: { timeout: EXPECT_TIMEOUT },
+  timeout: TIME,
+  expect: { timeout: 10_000 },
 
   webServer: {
     command: process.env.CI
@@ -16,11 +16,11 @@ export default defineConfig({
       : 'vite dev --port 5173 --strictPort',
     port: PORT,
     reuseExistingServer: !process.env.CI,
+    timeout: TIME,
     env: {
       VITE_API_BASE_URL:
         process.env.VITE_API_BASE_URL ?? 'http://localhost:9999',
     },
-    timeout: 60_000,
   },
 
   use: {
