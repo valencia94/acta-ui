@@ -10,8 +10,6 @@ expect.extend({ toHaveNoViolations });
 
 async function globalSetup(): Promise<void> {
   // Mock Amplify Auth (or any other globals) for the entire test run
-  // so individual tests don’t need to repeat it.
-  // ———
   globalThis.Auth = {
     signIn: async () => {
       localStorage.setItem('ikusi.jwt', 'mock-token');
