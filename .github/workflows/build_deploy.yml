@@ -15,16 +15,10 @@ jobs:
       contents: read
 
     steps:
-    # ───── 0) Checkout ──────────────────────────────────────────
+    # 0) Checkout ───────────────────────────────────────────────
     - uses: actions/checkout@v4
 
-    # ───── 1) Node + pnpm ───────────────────────────────────────
-    - name: 🟢  Setup Node 20
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: pnpm
-
+    # 1) Install pnpm first ─────────────────────────────────────
     - name: ♻️  pnpm cache & install
       uses: pnpm/action-setup@v2
       with:
@@ -32,7 +26,14 @@ jobs:
         run_install: |
           args: [--no-frozen-lockfile]
       env:
-        CI: true                 # prevents scripts/prepare
+        CI: true
+
+    # 1.1) Then set up Node (and keep cache: pnpm) ───────────────
+    - name: 🟢  Setup Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
 
     # ───── 2) Lint / unit tests ─────────────────────────────────
     - name: 🔍 Lint & type-check
