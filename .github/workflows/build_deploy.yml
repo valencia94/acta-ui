@@ -42,13 +42,6 @@ jobs:
     - name: 🧪 Unit tests
       run: pnpm run test:vitest
 
-    # ───────── 2) Lint / unit tests ─
-    - name: 🔍  Lint & type-check
-      run: pnpm lint
-
-    - name: 🧪  Unit tests
-      run: pnpm run test:vitest
-
     # ───────── 3) Build UI (creates dist/) ─
     - name: 🏗️  Build UI
       run: pnpm run build            # ← dist/ now exists
