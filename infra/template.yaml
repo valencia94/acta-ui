@@ -11,6 +11,7 @@ Parameters:
     Description: S3 bucket name for generated documents
 
 Resources:
+  # ────────── REST API ──────────
   ApplicationApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -20,24 +21,19 @@ Resources:
         AllowHeaders: "'*'"
         AllowOrigin: "'*'"
 
-  InvokePolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: InvokeAll
-      Roles: []
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action: lambda:InvokeFunction
-            Resource: arn:aws:lambda:us-east-2:703671891952:function:*
-
+  # ────────── Functions ─────────
   GetTimeline:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ../src/
       Handler: handler.lambda_handler
       Runtime: python3.12
+      Policies:                 # ← inline policy - one per function
+        - PolicyName: InvokeAll
+          Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: arn:aws:lambda:us-east-2:703671891952:function:*
       Events:
         Api:
           Type: Api
@@ -45,8 +41,6 @@ Resources:
             Path: /timeline/{id}
             Method: get
             RestApiId: !Ref ApplicationApi
-      Policies:
-        - InvokePolicy
 
   GetDownloadActa:
     Type: AWS::Serverless::Function
@@ -54,6 +48,12 @@ Resources:
       CodeUri: ../src/
       Handler: handler.lambda_handler
       Runtime: python3.12
+      Policies:
+        - PolicyName: InvokeAll
+          Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: arn:aws:lambda:us-east-2:703671891952:function:*
       Events:
         Api:
           Type: Api
@@ -61,8 +61,6 @@ Resources:
             Path: /download-acta/{id}
             Method: get
             RestApiId: !Ref ApplicationApi
-      Policies:
-        - InvokePolicy
 
   GetProjectSummary:
     Type: AWS::Serverless::Function
@@ -70,6 +68,12 @@ Resources:
       CodeUri: ../src/
       Handler: handler.lambda_handler
       Runtime: python3.12
+      Policies:
+        - PolicyName: InvokeAll
+          Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: arn:aws:lambda:us-east-2:703671891952:function:*
       Events:
         Api:
           Type: Api
@@ -77,8 +81,6 @@ Resources:
             Path: /project-summary/{id}
             Method: get
             RestApiId: !Ref ApplicationApi
-      Policies:
-        - InvokePolicy
 
   SendApprovalEmail:
     Type: AWS::Serverless::Function
@@ -86,6 +88,12 @@ Resources:
       CodeUri: ../src/
       Handler: handler.lambda_handler
       Runtime: python3.12
+      Policies:
+        - PolicyName: InvokeAll
+          Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: arn:aws:lambda:us-east-2:703671891952:function:*
       Events:
         Api:
           Type: Api
@@ -93,8 +101,6 @@ Resources:
             Path: /send-approval-email
             Method: post
             RestApiId: !Ref ApplicationApi
-      Policies:
-        - InvokePolicy
 
   ProjectPlaceDataExtractor:
     Type: AWS::Serverless::Function
@@ -102,6 +108,12 @@ Resources:
       CodeUri: ../src/
       Handler: handler.lambda_handler
       Runtime: python3.12
+      Policies:
+        - PolicyName: InvokeAll
+          Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: arn:aws:lambda:us-east-2:703671891952:function:*
       Events:
         Api:
           Type: Api
@@ -109,9 +121,7 @@ Resources:
             Path: /extract-project-place/{id}
             Method: post
             RestApiId: !Ref ApplicationApi
-      Policies:
-        - InvokePolicy
-
+            
   TimelineParamStore:
     Type: AWS::SSM::Parameter
     Properties:
