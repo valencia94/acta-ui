@@ -173,7 +173,10 @@ export default function Dashboard() {
         </button>
         <button
           onClick={() =>
-            sendApprovalEmail({ projectId, clientEmail: 'demo@ikusi.com' })
+            sendApprovalEmail({
+              actaId: projectId,
+              clientEmail: 'demo@ikusi.com',
+            })
           }
           className="btn"
           disabled={loading || !projectId}

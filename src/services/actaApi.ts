@@ -13,7 +13,7 @@ export const getDownloadUrl = (id: string, fmt: 'pdf' | 'docx') =>
   api.get(`/download-acta/${id}`, { params: { format: fmt } });
 export const getSummary = (id: string) => api.get(`/project-summary/${id}`);
 export const sendApprovalEmail = (payload: {
-  projectId: string;
+  actaId: string;
   clientEmail: string;
 }) => api.post('/send-approval-email', payload);
 export const extractProjectData = (id: string) =>
