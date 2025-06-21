@@ -1,12 +1,13 @@
 // tests/e2e.spec.ts
 import { expect, test } from '@playwright/test';
 
-const API = process.env.MOCK_API ?? 'http://localhost:9999'; // local stub
+const API =
+  process.env.MOCK_API ?? 'http://localhost:9999'; // local stub for CI
 
-test.setTimeout(60_000); // allow plenty of time on CI
+test.setTimeout(60_000); // generous timeout on CI
 
 test('end-to-end workflow', async ({ page }) => {
-  /* ────── 1. mock Amplify Auth  ────── */
+  /* ────── 1. mock Amplify Auth ────── */
   await page.addInitScript(() => {
     const auth = {
       signIn: async () => {
@@ -14,22 +15,22 @@ test('end-to-end workflow', async ({ page }) => {
         return { username: 'mock-user' };
       },
       currentSession: async () => ({
-        getIdToken: () => ({ getJwtToken: () => 'mock-token' }),
-      }),
+        getIdToken: () => ({ getJwtToken: () => 'mock-token' })
+      })
     };
     (window as unknown as { Auth: typeof auth }).Auth = auth;
   });
 
-  /* ────── 2. route API calls to mocked endpoints ────── */
-  await page.route(`${API}/project-summary/*`, (route) =>
+  /* ────── 2. stub all API routes ────── */
+  await page.route(`${API}/project-summary/*`, route =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ project_id: '123', project_name: 'Demo Project' }),
+      body: JSON.stringify({ project_id: '123', project_name: 'Demo Project' })
     })
   );
 
-  await page.route(`${API}/timeline/*`, (route) =>
+  await page.route(`${API}/timeline/*`, route =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -38,33 +39,38 @@ test('end-to-end workflow', async ({ page }) => {
           hito: 'Kickoff',
           actividades: 'Setup',
           desarrollo: 'Init',
-          fecha: '2024-01-01',
-        },
-      ]),
+          fecha: '2024-01-01'
+        }
+      ])
     })
   );
 
-  await page.route(`${API}/send-approval-email`, (route) =>
+  await page.route(`${API}/send-approval-email`, route =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ message: 'ok', token: 'abc' }),
+      body: JSON.stringify({ message: 'ok', token: 'abc' })
     })
   );
 
-  await page.route(`${API}/download-acta/*`, (route) =>
-    route.fulfill({ status: 302, headers: { location: `${API}/file.pdf` } })
+  await page.route(`${API}/download-acta/*`, route =>
+    route.fulfill({
+      status: 302,
+      headers: { location: `${API}/file.pdf` }
+    })
   );
 
-  await page.route(`${API}/extract-project-place/*`, (route) =>
+  await page.route(`${API}/extract-project-place/*`, route =>
     route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   );
 
   /* ────── 3. Login page assertions ────── */
-  await page.goto('/'); // baseURL from config makes this absolute
+  await page.goto('/');              // baseURL injected by Playwright cfg
+  await page.waitForSelector('h1');  // ← ensures DOM has rendered
+
   await expect(
     page.getByRole('heading', { name: /Acta Platform/i })
-  ).toBeVisible({ timeout: 10_000 });
+  ).toBeVisible();
 
   await page.fill('input[type="email"]', 'user@test.com');
   await page.fill('input[type="password"]', 'secret');
@@ -82,7 +88,7 @@ test('end-to-end workflow', async ({ page }) => {
   await Promise.all([
     page.waitForRequest(`${API}/project-summary/123`),
     page.waitForRequest(`${API}/timeline/123`),
-    page.getByRole('button', { name: 'Retrieve' }).click(),
+    page.getByRole('button', { name: 'Retrieve' }).click()
   ]);
 
   await expect(
@@ -92,16 +98,16 @@ test('end-to-end workflow', async ({ page }) => {
 
   await Promise.all([
     page.waitForRequest(`${API}/download-acta/123?format=pdf`),
-    page.getByRole('button', { name: /PDF/ }).click(),
+    page.getByRole('button', { name: /PDF/ }).click()
   ]);
 
   await Promise.all([
     page.waitForRequest(`${API}/send-approval-email`),
-    page.getByRole('button', { name: /Generate Acta/i }).click(),
+    page.getByRole('button', { name: /Generate Acta/i }).click()
   ]);
 
   await Promise.all([
     page.waitForRequest(`${API}/extract-project-place/123`),
-    page.getByRole('button', { name: /Extract ProjectPlace Data/i }).click(),
+    page.getByRole('button', { name: /Extract ProjectPlace Data/i }).click()
   ]);
 });
