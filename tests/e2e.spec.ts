@@ -2,7 +2,6 @@
 import { expect, test } from '@playwright/test';
 
 const API = process.env.MOCK_API ?? 'http://localhost:9999'; // local stub
-
 test.setTimeout(60_000); // allow plenty of time on CI
 
 test('end-to-end workflow', async ({ page }) => {
@@ -20,8 +19,8 @@ test('end-to-end workflow', async ({ page }) => {
     (window as unknown as { Auth: typeof auth }).Auth = auth;
   });
 
-  /* ────── 2. route API calls to mocked endpoints ────── */
-  await page.route(`${API}/project-summary/*`, route =>
+  /* ────── 2. stub API calls ────── */
+  await page.route(`${API}/project-summary/*`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -29,10 +28,10 @@ test('end-to-end workflow', async ({ page }) => {
         project_id: '123',
         project_name: 'Demo Project',
       }),
-    }),
+    })
   );
 
-  await page.route(`${API}/timeline/*`, route =>
+  await page.route(`${API}/timeline/*`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -44,38 +43,37 @@ test('end-to-end workflow', async ({ page }) => {
           fecha: '2024-01-01',
         },
       ]),
-    }),
+    })
   );
 
-  await page.route(`${API}/send-approval-email`, route =>
+  await page.route(`${API}/send-approval-email`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ message: 'ok', token: 'abc' }),
-    }),
+    })
   );
 
-  await page.route(`${API}/download-acta/*`, route =>
+  await page.route(`${API}/download-acta/*`, (route) =>
     route.fulfill({
       status: 302,
       headers: { location: `${API}/file.pdf` },
-    }),
+    })
   );
 
-  await page.route(`${API}/extract-project-place/*`, route =>
+  await page.route(`${API}/extract-project-place/*`, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: '{}',
-    }),
+    })
   );
 
   /* ────── 3. Login page assertions ────── */
-  await page.goto('/');
+  await page.goto('/'); // baseURL from config
   await page.waitForLoadState('networkidle');
-
   await expect(
-    page.getByRole('heading', { name: /Acta Platform/i }),
+    page.getByRole('heading', { name: /Acta Platform/i })
   ).toBeVisible({ timeout: 10_000 });
 
   await page.fill('input[type="email"]', 'user@test.com');
@@ -83,7 +81,7 @@ test('end-to-end workflow', async ({ page }) => {
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(
-    page.evaluate(() => localStorage.getItem('ikusi.jwt')),
+    page.evaluate(() => localStorage.getItem('ikusi.jwt'))
   ).resolves.toBe('mock-token');
 
   /* ────── 4. Dashboard workflow ────── */
@@ -98,11 +96,9 @@ test('end-to-end workflow', async ({ page }) => {
   ]);
 
   await expect(
-    page.getByRole('heading', { name: /Demo Project/i }),
+    page.getByRole('heading', { name: /Demo Project/i })
   ).toBeVisible();
-  await expect(
-    page.getByRole('row', { name: /Kickoff/i }),
-  ).toBeVisible();
+  await expect(page.getByRole('row', { name: /Kickoff/i })).toBeVisible();
 
   await Promise.all([
     page.waitForRequest(`${API}/download-acta/123?format=pdf`),
