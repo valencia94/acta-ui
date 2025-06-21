@@ -2,23 +2,27 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [develop]          # auto-deploy from develop
+    branches: [develop]          # auto-deploy only from develop
   pull_request:                  # PRs still run lint/tests
   workflow_dispatch:
 
 jobs:
   build_deploy:
     runs-on: ubuntu-latest
-    environment: prod            # for OIDC
+    environment: prod            # OIDC permission boundary
     permissions:
-      id-token: write            # OIDC token
+      id-token: write            # needed for OIDC
       contents: read
 
     steps:
-    # ───── 0) Checkout ──────────────────────────────────────────
+    # ─────────────────────────────────────────────────────────────
+    # 0) Checkout
+    # ─────────────────────────────────────────────────────────────
     - uses: actions/checkout@v4
 
-    # ───── 1) Node + pnpm ───────────────────────────────────────
+    # ─────────────────────────────────────────────────────────────
+    # 1) Node + pnpm
+    # ─────────────────────────────────────────────────────────────
     - name: 🟢  Setup Node 20
       uses: actions/setup-node@v4
       with:
@@ -32,44 +36,46 @@ jobs:
         run_install: |
           args: [--no-frozen-lockfile]
       env:
-        CI: true                 # prevents scripts/prepare
+        CI: true                 # blocks scripts/prepare
 
-    # ───── 2) Lint / unit tests ─────────────────────────────────
-    - name: 🔍 Lint & type-check
+    # ─────────────────────────────────────────────────────────────
+    # 2) Lint / Unit tests
+    # ─────────────────────────────────────────────────────────────
+    - name: 🔍  Lint & type-check
       run: pnpm lint
 
-    - name: 🧪 Unit tests
+    - name: 🧪  Unit tests
       run: pnpm run test:vitest
 
-    # ───── 3) Configure AWS creds via OIDC ──────────────────────
-    - name: 🔑 Configure AWS credentials (OIDC)
-      if: >-
-        (github.ref == 'refs/heads/develop')
-        && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # ─────────────────────────────────────────────────────────────
+    # 3) AWS credentials via OIDC
+    # ─────────────────────────────────────────────────────────────
+    - name: 🔑  Configure AWS credentials (OIDC)
+      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         aws-region:     ${{ secrets.AWS_REGION }}
 
-    # ───── 4) Install SAM CLI ───────────────────────────────────
-    - name: 🔧 Install AWS SAM CLI
-      run: pip install aws-sam-cli --quiet
+    # ─────────────────────────────────────────────────────────────
+    # 4) SAM CLI (for backend)
+    # ─────────────────────────────────────────────────────────────
+    - name: 🔧  Install AWS SAM CLI
+      run: pip install --quiet aws-sam-cli
 
-    # ───── 4.1) Verify artifact bucket secret ───────────────────
-    - name: 🔒 Verify ARTIFACT_BUCKET is set
+    - name: 🔒  Verify ARTIFACT_BUCKET secret
       run: |
         if [ -z "$ARTIFACT_BUCKET" ]; then
-          echo "::error ::ARTIFACT_BUCKET secret is not defined"
-          exit 1
+          echo "::error ::ARTIFACT_BUCKET secret is not defined"; exit 1;
         fi
       env:
         ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
 
-    # ───── 5) Package & deploy API with SAM ─────────────────────
-    - name: ☁️ Package & deploy backend (SAM)
-      if: >-
-        (github.ref == 'refs/heads/develop')
-        && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # ─────────────────────────────────────────────────────────────
+    # 5) Package + Deploy backend (SAM)
+    # ─────────────────────────────────────────────────────────────
+    - name: ☁️  Package & deploy backend
+      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
       env:
         ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
       run: |
@@ -84,33 +90,37 @@ jobs:
           --capabilities CAPABILITY_IAM \
           --no-fail-on-empty-changeset
 
-    # ───── 6) API smoke test ────────────────────────────────────
-    - name: API smoke test
-      if: >-
-        (github.ref == 'refs/heads/develop')
-        && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # ─────────────────────────────────────────────────────────────
+    # 6) API smoke test
+    # ─────────────────────────────────────────────────────────────
+    - name: 🌐  API smoke test (/timeline/health)
+      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
       env:
         API_BASE: ${{ secrets.VITE_API_BASE_URL }}
       run: curl -sf "$API_BASE/timeline/health"
 
-    # ───── 7) Build UI bundle ───────────────────────────────────
+    # ─────────────────────────────────────────────────────────────
+    # 7) Build UI (Vite)
+    # ─────────────────────────────────────────────────────────────
     - name: Inject API base URL
       run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
 
-    - name: 🏗️ Build UI
+    - name: 🏗️  Build UI
       run: pnpm run build
 
-    # ───── 8) Playwright E2E tests ──────────────────────────────
-    - name: E2E tests
+    # ─────────────────────────────────────────────────────────────
+    # 8) Playwright E2E tests
+    # ─────────────────────────────────────────────────────────────
+    - name: 🧑‍💻  E2E tests (Playwright)
       run: |
         pnpm exec playwright install --with-deps
         pnpm exec playwright test
 
-    # ───── 9) Deploy UI to S3 + invalidate CloudFront ───────────
-    - name: 🚀 Deploy UI to S3 + CloudFront
-      if: >-
-        (github.ref == 'refs/heads/develop')
-        && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # ─────────────────────────────────────────────────────────────
+    # 9) Deploy UI (S3 + CloudFront)
+    # ─────────────────────────────────────────────────────────────
+    - name: 🚀  Deploy UI bundle
+      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
       env:
         S3_BUCKET_NAME:     ${{ secrets.S3_BUCKET_NAME }}
         CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
@@ -118,28 +128,27 @@ jobs:
         chmod +x scripts/deploy-to-s3.sh
         ./scripts/deploy-to-s3.sh
 
-    # ───── 10) UI smoke test via CloudFront /health ─────────────
-    - name: Smoke Test (UI /health)
-      if: >-
-        (github.ref == 'refs/heads/develop')
-        && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # ─────────────────────────────────────────────────────────────
+    # 10) CloudFront smoke test (/health)
+    # ─────────────────────────────────────────────────────────────
+    - name: 🌐  UI smoke test via CloudFront
+      if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
       env:
         CLOUDFRONT_DOMAIN: ${{ secrets.DISTRIBUTION_DOMAIN_NAME }}
       run: |
-        echo "🔧 Checking CloudFront health endpoint via /health"
-        n=0
-        until [ $n -ge 5 ]; do
-          echo "Attempt $((n+1))..."
+        echo "🔧 Checking CloudFront /health..."
+        for n in {1..5}; do
+          echo "Attempt $n…"
           curl -f -s "https://$CLOUDFRONT_DOMAIN/health" && { echo "UI live ✅"; exit 0; }
-          n=$((n+1))
-          echo "Still not healthy. Waiting 15s..."
-          sleep 15
+          echo "Not healthy yet, waiting 15 s…"; sleep 15
         done
         echo "UI health endpoint failed after multiple attempts." >&2
         exit 1
 
-    # ───── 11) Upload Playwright report ─────────────────────────
-    - name: 📦 Upload Playwright report
+    # ─────────────────────────────────────────────────────────────
+    # 11) Upload Playwright report (always)
+    # ─────────────────────────────────────────────────────────────
+    - name: 📦  Upload Playwright report
       if: always()
       uses: actions/upload-artifact@v4
       with:
