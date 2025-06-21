@@ -74,9 +74,10 @@ test('end-to-end workflow', async ({ page }) => {
   await page.goto('/'); // baseURL is set in playwright.config
   await page.waitForLoadState('networkidle');
 
-  // Accept either “Acta Platform” (old) or “Acta UI” (new) wording
+  /* The login page no longer shows an “Acta Platform” heading.
+     Wait for the actual element that exists: the Sign-in heading. */
   await expect(
-    page.getByRole('heading', { name: /Acta (Platform|UI)/i })
+    page.getByRole('heading', { name: /sign in/i })
   ).toBeVisible({ timeout: 30_000 });
 
   await page.fill('input[type="email"]', 'user@test.com');
