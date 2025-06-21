@@ -1,16 +1,13 @@
 /**
  * tests/setup-playwright.ts
- * Global bootstrap that runs ONCE before any Playwright worker.
+ * Global bootstrap for Playwright workers ­— runs **once** before any test.
  */
 
-import { expect } from '@playwright/test';
-import { toHaveNoViolations } from 'jest-axe';
+import type { FullConfig } from '@playwright/test';
 
-expect.extend({ toHaveNoViolations });
-
-async function globalSetup(): Promise<void> {
-  // Mock Amplify Auth (or any other globals) for the entire test run
-  globalThis.Auth = {
+async function globalSetup(_config: FullConfig): Promise<void> {
+  // Mock Amplify Auth (or other globals) for the entire E2E run.
+  (globalThis as any).Auth = {
     signIn: async () => {
       localStorage.setItem('ikusi.jwt', 'mock-token');
       return { username: 'mock-user' };
