@@ -2,9 +2,9 @@
 
 ## Final Checklist
 
-| Item | Configured |
-|------|-----------|
+| Item               | Configured |
+| ------------------ | ---------- |
 | API Gateway routes | Configured |
-| Dashboard buttons | Configured |
-| Login branding | Configured |
-| CI pipeline | Configured |
+| Dashboard buttons  | Configured |
+| Login branding     | Configured |
+| CI pipeline        | Configured |
