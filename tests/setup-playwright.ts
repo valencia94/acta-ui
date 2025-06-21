@@ -1,15 +1,17 @@
 /**
  * tests/setup-playwright.ts
- * Global bootstrap for Playwright workers (E2E).
- * NO jest-dom import here – Playwright already bundles its own expect.
+ * Global bootstrap that runs ONCE before any Playwright worker.
  */
 
-import type { FullConfig } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { toHaveNoViolations } from 'jest-axe';
 
-async function globalSetup(_config: FullConfig) {
-  // Mock Amplify Auth or any other globals **once** before the workers start.
-  // (If you previously used page.addInitScript in every test, you can keep that;
-  // but this single place is often cleaner.)
+expect.extend({ toHaveNoViolations });
+
+async function globalSetup(): Promise<void> {
+  // Mock Amplify Auth (or any other globals) for the entire test run
+  // so individual tests don’t need to repeat it.
+  // ———
   globalThis.Auth = {
     signIn: async () => {
       localStorage.setItem('ikusi.jwt', 'mock-token');
@@ -22,3 +24,4 @@ async function globalSetup(_config: FullConfig) {
 }
 
 export default globalSetup;
+
