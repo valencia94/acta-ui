@@ -16,24 +16,25 @@ jobs:
       - uses: actions/checkout@v4
 
       # ── 1) Node + pnpm (cached) ───────────────────
-      - uses: pnpm/action-setup@v2 # installs pnpm
-        with: { version: 9 }
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm # ↖ re-uses ~/.pnpm-store
+          cache: pnpm
 
       - name: 📦 Install deps
         run: pnpm install --frozen-lockfile
 
       # ── 2) TypeScript compile-only check ──────────
-      - name: 🔍  Type-check (tsc)
+      - name: 🔍 Type-check (tsc)
         run: pnpm exec tsc --noEmit
 
       # ── 3) Prettier “is everything formatted?” ────
-      - name: 🎨  Prettier check
+      - name: 🎨 Prettier check
         run: pnpm exec prettier --check .
 
       # ── 4) ESLint (no --fix, so CI fails on style) ─
-      - name: 🧹  ESLint
+      - name: 🧹 ESLint
         run: pnpm exec eslint .
