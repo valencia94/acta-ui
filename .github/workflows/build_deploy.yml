@@ -19,6 +19,11 @@ jobs:
     # ── 0) Checkout ──────────────────────────────────────────
     - uses: actions/checkout@v4
 
+    # 0.0) Ensure UI health file is present before build
+    - name: 💚  Add static /health object
+      run: |
+        echo '{"status":"ok"}' > public/health
+
     # ── 0.1) Prettier – auto-fix so ESLint passes quickly ───
     - name: 🧼  Run Prettier (write)
       run: npx prettier --write .
