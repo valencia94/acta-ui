@@ -108,7 +108,7 @@ Resources:
             }
       Handler: index.lambda_handler
       Runtime: python3.12
-      MemorySize: 128   # tiny
+      MemorySize: 128 # tiny
       Timeout: 3
       Events:
         Api:
@@ -117,7 +117,7 @@ Resources:
             Path: /health
             Method: get
             RestApiId: !Ref ApplicationApi
-            
+
   TimelineParamStore:
     Type: AWS::SSM::Parameter
     Properties:
@@ -152,8 +152,8 @@ Resources:
       Name: /acta-ui/api/ProjectPlaceDataExtractor
       Type: String
       Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/extract-project-place'
-      
-# ───── Outputs (unchanged except export names cleaned) ─────            
+
+# ───── Outputs (unchanged except export names cleaned) ─────
 Outputs:
   ApiUrl:
     Description: API endpoint URL
@@ -164,7 +164,7 @@ Outputs:
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/timeline'
     Export:
       Name: ActaUiApiGetTimeline
-      
+
   DownloadParam:
     Description: Download URL
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/download-acta'
@@ -188,6 +188,3 @@ Outputs:
     Value: !Sub 'https://${ApplicationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/extract-project-place'
     Export:
       Name: ActaUiApiProjectPlaceDataExtractor
-
-
-
