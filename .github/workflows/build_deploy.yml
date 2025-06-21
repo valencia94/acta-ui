@@ -19,8 +19,8 @@ jobs:
     - uses: actions/checkout@v4
 
     # 0.5) 🧼  Run Prettier once so lint passes
-    - name: Prettier auto-fix
-      run: pnpm exec prettier --write .
+    - name: Run Prettier (auto-fix)
+      run: npx prettier --write .
 
     # 1) pnpm first – then Node (cache = pnpm) ───────────────
     - name: ♻️  pnpm cache & install
