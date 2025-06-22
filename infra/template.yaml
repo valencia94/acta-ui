@@ -22,7 +22,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !GetAtt ApiRoot.RootResourceId
+      ParentId: !Ref ExistingApiRootId
       PathPart: timeline
 
   TimelineIdResource:
@@ -36,7 +36,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !GetAtt ApiRoot.RootResourceId
+      ParentId: !Ref ExistingApiRootId
       PathPart: download-acta
 
   DownloadActaIdResource:
@@ -50,7 +50,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !GetAtt ApiRoot.RootResourceId
+      ParentId: !Ref ExistingApiRootId
       PathPart: project-summary
 
   ProjectSummaryIdResource:
@@ -64,14 +64,14 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !GetAtt ApiRoot.RootResourceId
+      ParentId: !Ref ExistingApiRootId
       PathPart: send-approval-email
 
   ExtractProjectPlaceResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !GetAtt ApiRoot.RootResourceId
+      ParentId: !Ref ExistingApiRootId
       PathPart: extract-project-place
 
   ExtractProjectPlaceIdResource:
@@ -85,7 +85,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !GetAtt ApiRoot.RootResourceId
+      ParentId: !Ref ExistingApiRootId
       PathPart: health
 
   TimelineMethod:
