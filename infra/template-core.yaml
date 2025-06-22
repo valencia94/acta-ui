@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Acta Backend – API Gateway Creation
+
+Resources:
+  ActaApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: acta-backend-staging
+      Description: API Gateway for Acta Lambda integrations
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  ProdStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref ActaDeployment
+      RestApiId: !Ref ActaApi
+      StageName: prod
+
+  ActaDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: []
+    Properties:
+      RestApiId: !Ref ActaApi
+      Description: Initial deployment
+
+Outputs:
+  ActaApiId:
+    Description: API Gateway ID
+    Value: !Ref ActaApi
+
+  ActaApiRootResourceId:
+    Description: Root resource ID of the API Gateway
+    Value: !GetAtt ActaApi.RootResourceId
+
+  ActaApiInvokeURL:
+    Value: !Sub https://${ActaApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
+    Description: Invoke URL for the deployed API
