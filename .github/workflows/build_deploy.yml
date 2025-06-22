@@ -1,5 +1,5 @@
 # .github/workflows/build_deploy.yml
-name: Build and Deploy
+name: Build and Deploy 
 
 on:
   push:
@@ -78,17 +78,31 @@ jobs:
         if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
+          GET_TIMELINE_ARN: ${{ secrets.GET_TIMELINE_ARN }}
+          GET_DOWNLOAD_ACTA_ARN: ${{ secrets.GET_DOWNLOAD_ACTA_ARN }}
+          GET_PROJECT_SUMMARY_ARN: ${{ secrets.GET_PROJECT_SUMMARY_ARN }}
+          SEND_APPROVAL_EMAIL_ARN: ${{ secrets.SEND_APPROVAL_EMAIL_ARN }}
+          PROJECT_PLACE_DATA_EXTRACTOR_ARN: ${{ secrets.PROJECT_PLACE_DATA_EXTRACTOR_ARN }}
+          HEALTH_CHECK_ARN: ${{ secrets.HEALTH_CHECK_ARN }}
         run: |
+          set -euo pipefail
           pip install --quiet aws-sam-cli
-          sam package  \
+          sam package \
             --template-file infra/template.yaml \
             --s3-bucket "$ARTIFACT_BUCKET" \
             --output-template-file packaged.yaml
-          sam deploy   \
+          sam deploy \
             --template-file packaged.yaml \
             --stack-name acta-backend-staging \
             --capabilities CAPABILITY_IAM \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              ParameterKey=GetTimelineArn,ParameterValue="$GET_TIMELINE_ARN" \
+              ParameterKey=GetDownloadActaArn,ParameterValue="$GET_DOWNLOAD_ACTA_ARN" \
+              ParameterKey=GetProjectSummaryArn,ParameterValue="$GET_PROJECT_SUMMARY_ARN" \
+              ParameterKey=SendApprovalEmailArn,ParameterValue="$SEND_APPROVAL_EMAIL_ARN" \
+              ParameterKey=ProjectPlaceDataExtractorArn,ParameterValue="$PROJECT_PLACE_DATA_EXTRACTOR_ARN" \
+              ParameterKey=HealthCheckArn,ParameterValue="$HEALTH_CHECK_ARN"
 
       # ───── 7) Backend /health probe ────────────────────────────
       - name: 🌡️  API /health
