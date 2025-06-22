@@ -59,16 +59,26 @@ Resources:
         S3Key: extract-project-place.zip
 
   HealthCheckFunction:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
-      FunctionName: HealthCheckFunction
-      Handler: handler.health
-      Runtime: nodejs18.x
-      Role: arn:aws:iam::703671891952:role/lambda-role
-      Code:
-        S3Bucket: your-code-bucket
-        S3Key: health-check.zip
-
+      FunctionName: healthCheck
+      Runtime: python3.12
+      Handler: index.handler
+      InlineCode: |
+        def handler(event, context):
+            return {
+                "statusCode": 200,
+                "headers": { "Content-Type": "application/json" },
+                "body": '{"status": "ok"}'
+            }
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+      Description: Simple health check function for monitoring
+      
   # ─── API Gateway ──────────────────────────────────────────────────
   ActaBackendApi:
     Type: AWS::Serverless::Api
