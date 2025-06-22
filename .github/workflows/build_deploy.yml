@@ -73,8 +73,8 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ───── 6) SAM deploy (backend) ─────────────────────────────
-      - name: ☁️  SAM deploy
+      # ───── 6) SAM deploy (wiring only, using updated template) ───────
+      - name: ☁️  SAM deploy (wiring)
         if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
@@ -86,11 +86,10 @@ jobs:
           HEALTH_CHECK_ARN: ${{ secrets.HEALTH_CHECK_ARN }}
           ACTA_API_ID: ${{ secrets.ACTA_API_ID }}
           ACTA_API_ROOT_ID: ${{ secrets.ACTA_API_ROOT_ID }}
-
         run: |
           set -euo pipefail
           pip install --quiet aws-sam-cli
-          echo "Using API ID: $ACTA_API_ID"
+          echo "Using existing API ID: $ACTA_API_ID"
           sam package \
             --template-file infra/template-wiring.yaml \
             --s3-bucket "$ARTIFACT_BUCKET" \
