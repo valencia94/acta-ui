@@ -1,165 +1,230 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Acta Backend API Gateway Integration (stable self-referenced)
+Description: API Gateway wiring for existing Acta backend Lambdas
+
+Parameters:
+  GetTimelineArn:
+    Type: String
+  GetDownloadActaArn:
+    Type: String
+  GetProjectSummaryArn:
+    Type: String
+  SendApprovalEmailArn:
+    Type: String
+  ProjectPlaceDataExtractorArn:
+    Type: String
+  HealthCheckArn:
+    Type: String
 
 Resources:
-  # ─── Lambda Functions ─────────────────────────────────────────────
-  GetTimelineFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: GetTimelineFunction
-      Handler: handler.timeline
-      Runtime: nodejs18.x
-      Role: arn:aws:iam::703671891952:role/lambda-role
-      Code:
-        S3Bucket: your-code-bucket
-        S3Key: get-timeline.zip
-
-  GetDownloadActaFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: GetDownloadActaFunction
-      Handler: handler.download
-      Runtime: nodejs18.x
-      Role: arn:aws:iam::703671891952:role/lambda-role
-      Code:
-        S3Bucket: your-code-bucket
-        S3Key: download-acta.zip
-
-  GetProjectSummaryFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: GetProjectSummaryFunction
-      Handler: handler.summary
-      Runtime: nodejs18.x
-      Role: arn:aws:iam::703671891952:role/lambda-role
-      Code:
-        S3Bucket: your-code-bucket
-        S3Key: get-project-summary.zip
-
-  SendApprovalEmailFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: SendApprovalEmailFunction
-      Handler: handler.sendEmail
-      Runtime: nodejs18.x
-      Role: arn:aws:iam::703671891952:role/lambda-role
-      Code:
-        S3Bucket: your-code-bucket
-        S3Key: send-approval-email.zip
-
-  ProjectPlaceDataExtractorFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: ProjectPlaceDataExtractorFunction
-      Handler: handler.extract
-      Runtime: nodejs18.x
-      Role: arn:aws:iam::703671891952:role/lambda-role
-      Code:
-        S3Bucket: your-code-bucket
-        S3Key: extract-project-place.zip
-
-  HealthCheckFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: healthCheck
-      Runtime: python3.12
-      Handler: index.handler
-      InlineCode: |
-        def handler(event, context):
-            return {
-                "statusCode": 200,
-                "headers": { "Content-Type": "application/json" },
-                "body": '{"status": "ok"}'
-            }
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /health
-            Method: GET
-      Description: Simple health check function for monitoring
-      
-  # ─── API Gateway ──────────────────────────────────────────────────
-  ActaBackendApi:
-    Type: AWS::Serverless::Api
+  ActaApi:
+    Type: AWS::ApiGateway::RestApi
     Properties:
       Name: acta-backend-staging
+
+  TimelineResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !GetAtt ActaApi.RootResourceId
+      PathPart: timeline
+
+  TimelineIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !Ref TimelineResource
+      PathPart: '{id}'
+
+  DownloadActaResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !GetAtt ActaApi.RootResourceId
+      PathPart: download-acta
+
+  DownloadActaIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !Ref DownloadActaResource
+      PathPart: '{id}'
+
+  ProjectSummaryResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !GetAtt ActaApi.RootResourceId
+      PathPart: project-summary
+
+  ProjectSummaryIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !Ref ProjectSummaryResource
+      PathPart: '{id}'
+
+  SendApprovalEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !GetAtt ActaApi.RootResourceId
+      PathPart: send-approval-email
+
+  ExtractProjectPlaceResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !GetAtt ActaApi.RootResourceId
+      PathPart: extract-project-place
+
+  ExtractProjectPlaceIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !Ref ExtractProjectPlaceResource
+      PathPart: '{id}'
+
+  HealthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ActaApi
+      ParentId: !GetAtt ActaApi.RootResourceId
+      PathPart: health
+
+  TimelineMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ActaApi
+      ResourceId: !Ref TimelineIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetTimelineArn}/invocations
+
+  DownloadActaMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ActaApi
+      ResourceId: !Ref DownloadActaIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDownloadActaArn}/invocations
+
+  ProjectSummaryMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ActaApi
+      ResourceId: !Ref ProjectSummaryIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetProjectSummaryArn}/invocations
+
+  SendApprovalEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ActaApi
+      ResourceId: !Ref SendApprovalEmailResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendApprovalEmailArn}/invocations
+
+  ExtractProjectPlaceMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ActaApi
+      ResourceId: !Ref ExtractProjectPlaceIdResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectPlaceDataExtractorArn}/invocations
+
+  HealthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ActaApi
+      ResourceId: !Ref HealthResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HealthCheckArn}/invocations
+
+  TimelinePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetTimelineArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/GET/timeline/*
+
+  DownloadActaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetDownloadActaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/GET/download-acta/*
+
+  ProjectSummaryPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetProjectSummaryArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/GET/project-summary/*
+
+  SendApprovalEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SendApprovalEmailArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/POST/send-approval-email
+
+  ExtractProjectPlacePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ProjectPlaceDataExtractorArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/POST/extract-project-place/*
+
+  HealthPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HealthCheckArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/GET/health
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - TimelineMethod
+      - DownloadActaMethod
+      - ProjectSummaryMethod
+      - SendApprovalEmailMethod
+      - ExtractProjectPlaceMethod
+      - HealthMethod
+    Properties:
+      RestApiId: !Ref ActaApi
       StageName: prod
-      DefinitionBody:
-        swagger: 2.0
-        info:
-          title: Acta API
-          version: 1.0
-        paths:
-          /timeline/{id}:
-            get:
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetTimelineFunction.Arn}/invocations
-                httpMethod: POST
-                type: aws_proxy
-              responses: {}
-              parameters:
-                - name: id
-                  in: path
-                  required: true
-                  type: string
-
-          /download-acta/{id}:
-            get:
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDownloadActaFunction.Arn}/invocations
-                httpMethod: POST
-                type: aws_proxy
-              responses: {}
-              parameters:
-                - name: id
-                  in: path
-                  required: true
-                  type: string
-
-          /project-summary/{id}:
-            get:
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetProjectSummaryFunction.Arn}/invocations
-                httpMethod: POST
-                type: aws_proxy
-              responses: {}
-              parameters:
-                - name: id
-                  in: path
-                  required: true
-                  type: string
-
-          /send-approval-email:
-            post:
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendApprovalEmailFunction.Arn}/invocations
-                httpMethod: POST
-                type: aws_proxy
-              responses: {}
-
-          /extract-project-place/{id}:
-            post:
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectPlaceDataExtractorFunction.Arn}/invocations
-                httpMethod: POST
-                type: aws_proxy
-              responses: {}
-              parameters:
-                - name: id
-                  in: path
-                  required: true
-                  type: string
-
-          /health:
-            get:
-              x-amazon-apigateway-integration:
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HealthCheckFunction.Arn}/invocations
-                httpMethod: POST
-                type: aws_proxy
-              responses: {}
 
 Outputs:
-  ApiURL:
-    Description: Base URL for the Acta platform
-    Value: !Sub https://${ActaBackendApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
+  ActaApiInvokeURL:
+    Description: Base URL for invoking the API
+    Value: !Sub https://${ActaApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
