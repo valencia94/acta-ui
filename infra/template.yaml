@@ -4,6 +4,8 @@ Description: API Gateway wiring for existing Acta backend Lambdas (using existin
 Parameters:
   ExistingApiId:
     Type: String
+  ExistingApiRootResourceId:
+    Type: String
   GetTimelineArn:
     Type: String
   GetDownloadActaArn:
@@ -22,7 +24,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !Ref ExistingApiRootId
+      ParentId: !Ref ExistingApiRootResourceId
       PathPart: timeline
 
   TimelineIdResource:
@@ -36,7 +38,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !Ref ExistingApiRootId
+      ParentId: !Ref ExistingApiRootResourceId
       PathPart: download-acta
 
   DownloadActaIdResource:
@@ -50,7 +52,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !Ref ExistingApiRootId
+      ParentId: !Ref ExistingApiRootResourceId
       PathPart: project-summary
 
   ProjectSummaryIdResource:
@@ -64,14 +66,14 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !Ref ExistingApiRootId
+      ParentId: !Ref ExistingApiRootResourceId
       PathPart: send-approval-email
 
   ExtractProjectPlaceResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !Ref ExistingApiRootId
+      ParentId: !Ref ExistingApiRootResourceId
       PathPart: extract-project-place
 
   ExtractProjectPlaceIdResource:
@@ -85,8 +87,10 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !Ref ExistingApiRootId
+      ParentId: !Ref ExistingApiRootResourceId
       PathPart: health
+
+# ──────────── Methods ────────────
 
   TimelineMethod:
     Type: AWS::ApiGateway::Method
@@ -160,7 +164,8 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HealthCheckArn}/invocations
 
-  # Lambda Invoke Permissions
+# ──────────── Permissions ────────────
+
   TimelinePermission:
     Type: AWS::Lambda::Permission
     Properties:
