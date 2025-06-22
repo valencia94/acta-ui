@@ -90,6 +90,7 @@ jobs:
         run: |
           set -euo pipefail
           pip install --quiet aws-sam-cli
+          echo "Using API ID: $ACTA_API_ID"
           sam package \
             --template-file infra/template.yaml \
             --s3-bucket "$ARTIFACT_BUCKET" \
@@ -101,7 +102,6 @@ jobs:
             --no-fail-on-empty-changeset \
             --parameter-overrides \
               ExistingApiId=$ACTA_API_ID \
-              ExistingApiRootId=$ACTA_API_ROOT_ID \
               ParameterKey=GetTimelineArn,ParameterValue=$GET_TIMELINE_ARN \
               ParameterKey=GetDownloadActaArn,ParameterValue=$GET_DOWNLOAD_ACTA_ARN \
               ParameterKey=GetProjectSummaryArn,ParameterValue=$GET_PROJECT_SUMMARY_ARN \
