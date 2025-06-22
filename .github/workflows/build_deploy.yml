@@ -92,12 +92,12 @@ jobs:
           pip install --quiet aws-sam-cli
           echo "Using API ID: $ACTA_API_ID"
           sam package \
-            --template-file infra/template.yaml \
+            --template-file infra/template-wiring.yaml \
             --s3-bucket "$ARTIFACT_BUCKET" \
             --output-template-file packaged.yaml
           sam deploy \
             --template-file packaged.yaml \
-            --stack-name acta-backend-staging \
+            --stack-name acta-api-wiring-stack \
             --capabilities CAPABILITY_IAM \
             --no-fail-on-empty-changeset \
             --region us-east-2 \
