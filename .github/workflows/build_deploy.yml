@@ -30,8 +30,6 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 9
-          run_install: |
-            args: [--no-frozen-lockfile]
 
       - uses: actions/setup-node@v4
         with:
@@ -80,6 +78,12 @@ jobs:
         if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
+          GET_TIMELINE_ARN: ${{ secrets.GET_TIMELINE_ARN }}
+          GET_DOWNLOAD_ACTA_ARN: ${{ secrets.GET_DOWNLOAD_ACTA_ARN }}
+          GET_PROJECT_SUMMARY_ARN: ${{ secrets.GET_PROJECT_SUMMARY_ARN }}
+          SEND_APPROVAL_EMAIL_ARN: ${{ secrets.SEND_APPROVAL_EMAIL_ARN }}
+          PROJECT_PLACE_DATA_EXTRACTOR_ARN: ${{ secrets.PROJECT_PLACE_DATA_EXTRACTOR_ARN }}
+          HEALTH_CHECK_ARN: ${{ secrets.HEALTH_CHECK_ARN }}
         run: |
           pip install --quiet aws-sam-cli
           sam package  \
@@ -90,7 +94,14 @@ jobs:
             --template-file packaged.yaml \
             --stack-name acta-backend-staging \
             --capabilities CAPABILITY_IAM \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              ParameterKey=GetTimelineArn,ParameterValue=$GET_TIMELINE_ARN \
+              ParameterKey=GetDownloadActaArn,ParameterValue=$GET_DOWNLOAD_ACTA_ARN \
+              ParameterKey=GetProjectSummaryArn,ParameterValue=$GET_PROJECT_SUMMARY_ARN \
+              ParameterKey=SendApprovalEmailArn,ParameterValue=$SEND_APPROVAL_EMAIL_ARN \
+              ParameterKey=ProjectPlaceDataExtractorArn,ParameterValue=$PROJECT_PLACE_DATA_EXTRACTOR_ARN \
+              ParameterKey=HealthCheckArn,ParameterValue=$HEALTH_CHECK_ARN
 
       # ───── 7) Backend /health probe ────────────────────────────
       - name: 🌡️  API /health

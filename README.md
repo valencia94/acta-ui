@@ -67,3 +67,15 @@ FFMPEG binary:
    shell if not using `pnpm run setup`.
 3. Verify the installation with `pnpm run ffmpeg:version`.
 4. Run tests with `pnpm run test`.
+
+## API Endpoints
+
+The UI interacts with a single REST API (acta-backend-staging) using these routes:
+
+- `GET /timeline/{id}` – getTimeline
+- `GET /download-acta/{id}?format=pdf|docx` – getDownloadActa
+- `GET /project-summary/{id}` – getProjectSummary
+- `POST /send-approval-email` – sendApprovalEmail
+- `POST /extract-project-place/{id}` – ProjectPlaceDataExtractor
+- `GET /health` – healthCheck
+
