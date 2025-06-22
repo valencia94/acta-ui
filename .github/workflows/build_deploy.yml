@@ -97,8 +97,7 @@ jobs:
             --capabilities CAPABILITY_IAM \
             --no-fail-on-empty-changeset \
             --region us-east-2 \
-            --parameter-overrides 
-              ExistingApiId=${{ secrets.ACTA_API_ID }} \
+            --parameter-overrides ExistingApiId=${{ secrets.ACTA_API_ID }} \
               ParameterKey=GetTimelineArn,ParameterValue=$GET_TIMELINE_ARN \
               ParameterKey=GetDownloadActaArn,ParameterValue=$GET_DOWNLOAD_ACTA_ARN \
               ParameterKey=GetProjectSummaryArn,ParameterValue=$GET_PROJECT_SUMMARY_ARN \
