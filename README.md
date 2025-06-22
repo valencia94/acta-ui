@@ -49,6 +49,9 @@ For deployment to AWS the workflow expects these additional secrets:
 - `HEALTH_CHECK_ARN`
 
 These secrets supply the Lambda ARNs used by the CloudFormation template.
+Local admins can redeploy the API and route wiring by running
+`deploy-core.sh` and `deploy-wiring.sh` as described in
+[docs/SAM_DEPLOY.md](docs/SAM_DEPLOY.md).
 
 ## Environment variables
 
