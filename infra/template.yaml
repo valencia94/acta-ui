@@ -16,7 +16,7 @@ Parameters:
     Type: String
 
 Resources:
-  ActaApi:
+  ActaBackendApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: acta-backend-staging
@@ -24,77 +24,77 @@ Resources:
   TimelineResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
-      ParentId: !GetAtt ActaApi.RootResourceId
+      RestApiId: !Ref ActaBackendApi
+      ParentId: !GetAtt ActaBackendApi.RootResourceId
       PathPart: timeline
 
   TimelineIdResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ParentId: !Ref TimelineResource
       PathPart: '{id}'
 
   DownloadActaResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
-      ParentId: !GetAtt ActaApi.RootResourceId
+      RestApiId: !Ref ActaBackendApi
+      ParentId: !GetAtt ActaBackendApi.RootResourceId
       PathPart: download-acta
 
   DownloadActaIdResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ParentId: !Ref DownloadActaResource
       PathPart: '{id}'
 
   ProjectSummaryResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
-      ParentId: !GetAtt ActaApi.RootResourceId
+      RestApiId: !Ref ActaBackendApi
+      ParentId: !GetAtt ActaBackendApi.RootResourceId
       PathPart: project-summary
 
   ProjectSummaryIdResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ParentId: !Ref ProjectSummaryResource
       PathPart: '{id}'
 
   SendApprovalEmailResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
-      ParentId: !GetAtt ActaApi.RootResourceId
+      RestApiId: !Ref ActaBackendApi
+      ParentId: !GetAtt ActaBackendApi.RootResourceId
       PathPart: send-approval-email
 
   ExtractProjectPlaceResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
-      ParentId: !GetAtt ActaApi.RootResourceId
+      RestApiId: !Ref ActaBackendApi
+      ParentId: !GetAtt ActaBackendApi.RootResourceId
       PathPart: extract-project-place
 
   ExtractProjectPlaceIdResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ParentId: !Ref ExtractProjectPlaceResource
       PathPart: '{id}'
 
   HealthResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId: !Ref ActaApi
-      ParentId: !GetAtt ActaApi.RootResourceId
+      RestApiId: !Ref ActaBackendApi
+      ParentId: !GetAtt ActaBackendApi.RootResourceId
       PathPart: health
 
   TimelineMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ResourceId: !Ref TimelineIdResource
       HttpMethod: GET
       AuthorizationType: NONE
@@ -106,7 +106,7 @@ Resources:
   DownloadActaMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ResourceId: !Ref DownloadActaIdResource
       HttpMethod: GET
       AuthorizationType: NONE
@@ -118,7 +118,7 @@ Resources:
   ProjectSummaryMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ResourceId: !Ref ProjectSummaryIdResource
       HttpMethod: GET
       AuthorizationType: NONE
@@ -130,7 +130,7 @@ Resources:
   SendApprovalEmailMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ResourceId: !Ref SendApprovalEmailResource
       HttpMethod: POST
       AuthorizationType: NONE
@@ -142,7 +142,7 @@ Resources:
   ExtractProjectPlaceMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ResourceId: !Ref ExtractProjectPlaceIdResource
       HttpMethod: POST
       AuthorizationType: NONE
@@ -154,7 +154,7 @@ Resources:
   HealthMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       ResourceId: !Ref HealthResource
       HttpMethod: GET
       AuthorizationType: NONE
@@ -169,7 +169,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref GetTimelineArn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/GET/timeline/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaBackendApi}/*/GET/timeline/*
 
   DownloadActaPermission:
     Type: AWS::Lambda::Permission
@@ -177,7 +177,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref GetDownloadActaArn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/GET/download-acta/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaBackendApi}/*/GET/download-acta/*
 
   ProjectSummaryPermission:
     Type: AWS::Lambda::Permission
@@ -185,7 +185,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref GetProjectSummaryArn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/GET/project-summary/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaBackendApi}/*/GET/project-summary/*
 
   SendApprovalEmailPermission:
     Type: AWS::Lambda::Permission
@@ -193,7 +193,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref SendApprovalEmailArn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/POST/send-approval-email
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaBackendApi}/*/POST/send-approval-email
 
   ExtractProjectPlacePermission:
     Type: AWS::Lambda::Permission
@@ -201,7 +201,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref ProjectPlaceDataExtractorArn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/POST/extract-project-place/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaBackendApi}/*/POST/extract-project-place/*
 
   HealthPermission:
     Type: AWS::Lambda::Permission
@@ -209,7 +209,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref HealthCheckArn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaApi}/*/GET/health
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ActaBackendApi}/*/GET/health
 
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
@@ -221,10 +221,10 @@ Resources:
       - ExtractProjectPlaceMethod
       - HealthMethod
     Properties:
-      RestApiId: !Ref ActaApi
+      RestApiId: !Ref ActaBackendApi
       StageName: prod
 
 Outputs:
-  ActaApiInvokeURL:
+  ActaBackendApiInvokeURL:
     Description: Base URL for invoking the API
-    Value: !Sub https://${ActaApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
+    Value: !Sub https://${ActaBackendApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
