@@ -84,6 +84,9 @@ jobs:
           SEND_APPROVAL_EMAIL_ARN: ${{ secrets.SEND_APPROVAL_EMAIL_ARN }}
           PROJECT_PLACE_DATA_EXTRACTOR_ARN: ${{ secrets.PROJECT_PLACE_DATA_EXTRACTOR_ARN }}
           HEALTH_CHECK_ARN: ${{ secrets.HEALTH_CHECK_ARN }}
+          ACTA_API_ID: ${{ secrets.ACTA_API_ID }}
+          ACTA_API_ROOT_ID: ${{ secrets.ACTA_API_ROOT_ID }}
+
         run: |
           set -euo pipefail
           pip install --quiet aws-sam-cli
@@ -96,7 +99,6 @@ jobs:
             --stack-name acta-backend-staging \
             --capabilities CAPABILITY_IAM \
             --no-fail-on-empty-changeset \
-            --region us-east-2 \
             --parameter-overrides \
               ExistingApiId=$ACTA_API_ID \
               ExistingApiRootId=$ACTA_API_ROOT_ID \
