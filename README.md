@@ -41,6 +41,14 @@ For deployment to AWS the workflow expects these additional secrets:
 - `AWS_REGION` – the target AWS region
 - `S3_BUCKET_NAME` – destination S3 bucket
 - `CLOUDFRONT_DIST_ID` – CloudFront distribution to invalidate
+- `GET_TIMELINE_ARN`
+- `GET_DOWNLOAD_ACTA_ARN`
+- `GET_PROJECT_SUMMARY_ARN`
+- `SEND_APPROVAL_EMAIL_ARN`
+- `PROJECT_PLACE_DATA_EXTRACTOR_ARN`
+- `HEALTH_CHECK_ARN`
+
+These secrets supply the Lambda ARNs used by the CloudFormation template.
 
 ## Environment variables
 
