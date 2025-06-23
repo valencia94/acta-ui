@@ -1,5 +1,5 @@
 // ActaButtons.tsx (Functional Patch with Visual Styling)
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/Button";
 import { FileTextIcon, DownloadIcon, SendIcon } from "lucide-react";
 
 interface ActaButtonsProps {
