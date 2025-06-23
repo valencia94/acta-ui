@@ -2,6 +2,7 @@ import { FormControl, FormLabel } from '@chakra-ui/form-control';
 import { Input } from '@chakra-ui/input';
 import { Button, Flex, Heading, Image, Stack } from '@chakra-ui/react';
 import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
+import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -40,28 +41,52 @@ export default function Login() {
     }
   }
 
+  const MotionButton = motion(Button);
+
   return (
-    <Flex minH="100vh" align="center" justify="center" bg="white">
-      <Stack gap={8} mx="auto" w="sm">
-        <Image src="/ikusi-logo.svg" boxSize="72px" mx="auto" />
-        <Heading className="text-ikusi-dark">Acta Platform</Heading>
-        <form onSubmit={handleSubmit(onSubmit)}>
+    <Flex minH="100vh" align="center" justify="center" bg="gray.50" p={4}>
+      <Stack
+        gap={6}
+        w="full"
+        maxW="md"
+        bg="white"
+        rounded="xl"
+        shadow="lg"
+        py={12}
+        px={8}
+      >
+        <Image
+          src="/assets/ikusi-logo.png"
+          alt="Ikusi logo"
+          boxSize="72px"
+          mx="auto"
+        />
+        <Heading size="lg" className="text-center text-ikusi-dark">
+          Acta Platform
+        </Heading>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormControl isRequired>
             <FormLabel>Email</FormLabel>
-            <Input type="email" {...register('email')} />
+            <Input className="input" type="email" {...register('email')} />
           </FormControl>
-          <FormControl mt={4} isRequired>
+          <FormControl isRequired>
             <FormLabel>Password</FormLabel>
-            <Input type="password" {...register('password')} />
+            <Input
+              className="input"
+              type="password"
+              {...register('password')}
+            />
           </FormControl>
-          <Button
-            mt={6}
+          <MotionButton
+            mt={4}
             w="full"
-            className="rounded bg-ikusi-green py-2 text-white hover:bg-ikusi-teal transition-colors"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="rounded-md bg-[#4ac795] py-2 text-white hover:bg-[#3cb488]"
             type="submit"
           >
             Sign in
-          </Button>
+          </MotionButton>
         </form>
       </Stack>
     </Flex>

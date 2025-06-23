@@ -1,6 +1,7 @@
-import { Download } from 'lucide-react';
+import { Database, Download, Search, Send } from 'lucide-react';
 import { useState } from 'react';
 
+import { ActaButton } from '../components/ActaButtons';
 import type { ProjectSummary, TimelineEvent } from '../lib/api';
 import {
   extractProjectData,
@@ -66,10 +67,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Project Dashboard</h1>
+    <div className="max-w-5xl mx-auto p-8 space-y-8">
+      <h1 className="text-3xl font-bold text-ikusi-dark">Project Dashboard</h1>
 
-      <div className="flex gap-4 items-end">
+      <div className="flex flex-wrap gap-4 items-end bg-white p-4 rounded-lg shadow">
         <div>
           <label className="block text-sm font-medium mb-1">Project #</label>
           <input
@@ -80,13 +81,13 @@ export default function Dashboard() {
             disabled={loading}
           />
         </div>
-        <button
+        <ActaButton
           onClick={handleRetrieve}
-          className="btn"
           disabled={loading || !projectId}
+          className="flex items-center gap-2"
         >
-          {loading ? 'Loading…' : 'Retrieve'}
-        </button>
+          <Search size={16} /> {loading ? 'Loading…' : 'Retrieve'}
+        </ActaButton>
       </div>
 
       {error && (
@@ -156,40 +157,40 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="flex gap-4">
-        <button
+      <div className="flex flex-wrap gap-4">
+        <ActaButton
           onClick={() => download('pdf')}
-          className="btn flex items-center gap-2"
           disabled={loading || !projectId}
+          className="flex items-center gap-2"
         >
           <Download size={16} /> PDF
-        </button>
-        <button
+        </ActaButton>
+        <ActaButton
           onClick={() => download('docx')}
-          className="btn flex items-center gap-2"
           disabled={loading || !projectId}
+          className="flex items-center gap-2"
         >
           <Download size={16} /> Word
-        </button>
-        <button
+        </ActaButton>
+        <ActaButton
           onClick={() =>
             sendApprovalEmail({
               actaId: projectId,
               clientEmail: 'demo@ikusi.com',
             })
           }
-          className="btn"
           disabled={loading || !projectId}
+          className="flex items-center gap-2"
         >
-          Generate Acta
-        </button>
-        <button
+          <Send size={16} /> Generate Acta
+        </ActaButton>
+        <ActaButton
           onClick={handleExtractProjectData}
-          className="btn"
           disabled={loading || !projectId}
+          className="flex items-center gap-2"
         >
-          Extract ProjectPlace Data
-        </button>
+          <Database size={16} /> Extract ProjectPlace Data
+        </ActaButton>
       </div>
     </div>
   );
