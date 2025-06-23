@@ -1,5 +1,5 @@
-// src/components/ActaButtons.tsx
 import { DownloadIcon, FileTextIcon, SendIcon } from "lucide-react";
+import { ReactNode } from "react";
 import { Button } from "@/components/Button";
 
 interface ActaButtonsProps {
