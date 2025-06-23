@@ -1,28 +1,49 @@
-// Codex: Updated visual layout
-import { clsx } from 'clsx';
-import { type HTMLMotionProps, motion } from 'framer-motion';
+// ActaButtons.tsx (Functional Patch with Visual Styling)
+import { Button } from "@/components/ui/button";
+import { FileTextIcon, DownloadIcon, SendIcon } from "lucide-react";
 
-interface ActaButtonProps extends HTMLMotionProps<'button'> {
-  variant?: 'primary' | 'secondary';
+interface ActaButtonsProps {
+  onGenerate: () => void;
+  onDownloadWord: () => void;
+  onDownloadPdf: () => void;
+  onSendForApproval: () => void;
 }
 
-export function ActaButton({
-  variant = 'primary',
-  className,
-  ...props
-}: ActaButtonProps) {
+export default function ActaButtons({
+  onGenerate,
+  onDownloadWord,
+  onDownloadPdf,
+  onSendForApproval,
+}: ActaButtonsProps) {
   return (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.97 }}
-      className={clsx(
-        'inline-flex items-center gap-2 rounded-md px-4 py-2 font-medium shadow transition-colors disabled:opacity-50 disabled:pointer-events-none',
-        variant === 'primary'
-          ? 'bg-[#4ac795] text-white hover:bg-[#3cb488]'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
-        className
-      )}
-      {...props}
-    />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+      <Button
+        onClick={onGenerate}
+        className="bg-ikusi-green hover:bg-emerald-600 text-white rounded-lg flex gap-2 justify-center items-center"
+      >
+        <DownloadIcon className="w-4 h-4" /> Generate Acta
+      </Button>
+
+      <Button
+        onClick={onSendForApproval}
+        className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex gap-2 justify-center items-center"
+      >
+        <SendIcon className="w-4 h-4" /> Send for Approval
+      </Button>
+
+      <Button
+        onClick={onDownloadWord}
+        className="border border-gray-300 hover:bg-gray-50 rounded-lg flex gap-2 justify-center items-center"
+      >
+        <FileTextIcon className="w-4 h-4" /> Download (.docx)
+      </Button>
+
+      <Button
+        onClick={onDownloadPdf}
+        className="border border-gray-300 hover:bg-gray-50 rounded-lg flex gap-2 justify-center items-center"
+      >
+        <FileTextIcon className="w-4 h-4" /> Download (.pdf)
+      </Button>
+    </div>
   );
 }
