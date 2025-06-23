@@ -1,4 +1,3 @@
-// Dashboard.tsx — Build-safe version aligned with actaApi helpers
 import { useState } from "react";
 import ActaButtons from "../components/ActaButtons";
 import {
@@ -7,14 +6,13 @@ import {
   extractProjectData,
 } from "@/services/actaApi";
 
-const DEFAULT_PROJECT_ID = "1000000064013473";        // TODO: replace later
+const DEFAULT_PROJECT_ID = "1000000064013473"; // TODO: make dynamic
 
 export default function Dashboard() {
   const [projectId] = useState<string>(DEFAULT_PROJECT_ID);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* ───────── handlers ───────── */
   const handleGenerate = async () => {
     try {
       setSubmitting(true);
@@ -41,7 +39,7 @@ export default function Dashboard() {
     try {
       setSubmitting(true);
       const res = await getDownloadUrl(projectId, fmt);
-      window.location.href = res.data;       // triggers the download
+      window.location.href = res.data;
     } catch {
       setError("Download failed");
     } finally {
@@ -49,7 +47,6 @@ export default function Dashboard() {
     }
   };
 
-  /* ───────── render ───────── */
   if (error)
     return <div className="text-center py-16 text-red-600">{error}</div>;
 
@@ -59,7 +56,6 @@ export default function Dashboard() {
         <h1 className="text-3xl font-semibold text-ikusi-green">
           Project Dashboard
         </h1>
-
         <p className="text-gray-500">Project ID: {projectId}</p>
 
         <ActaButtons
