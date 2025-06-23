@@ -1,10 +1,12 @@
 import { useState } from "react";
-import ActaButtons from "../components/ActaButtons";
+
 import {
+  extractProjectData,
   getDownloadUrl,
   sendApprovalEmail,
-  extractProjectData,
 } from "@/services/actaApi";
+
+import ActaButtons from "../components/ActaButtons";
 
 const DEFAULT_PROJECT_ID = "1000000064013473"; // TODO: make dynamic
 
