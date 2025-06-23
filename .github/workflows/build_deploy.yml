@@ -131,11 +131,17 @@ jobs:
             --content-type 'application/json'
           # 8.3 purge only index.html (fast)
           INV=$(aws cloudfront create-invalidation \
-            --distribution-id "$DIST_ID" --paths '/index.html' \
+            --distribution-id "$DIST_ID" --paths '/index.html' '/login' '/dashboard' \
             --query 'Invalidation.Id' --output text)
           echo "🕒 waiting for invalidation $INV…"
           aws cloudfront wait invalidation-completed \
             --distribution-id "$DIST_ID" --id "$INV"
+
+      # ───── 8.1b) Copy index.html to client-side routes ────────────────
+      - name: "🔗  alias SPA routes to index.html"
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        run: |
+          ./scripts/push-spa-routes.sh
 
       # ───── 9) CloudFront /health probe ─────────────────────────
       - name: 🌐  UI /health via CF
