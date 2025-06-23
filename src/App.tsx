@@ -5,12 +5,15 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { skipAuth } from '@/env.variables';
+import { useIdleLogout } from '@/hooks/useIdleLogout';
 import { useThemedFavicon } from '@/hooks/useThemedFavicon';
+import Header from '@/components/Header';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 
 export default function App() {
   useThemedFavicon();
+  useIdleLogout(30);
   const [checked, setChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
 
@@ -42,6 +45,7 @@ export default function App() {
 
   const routes = (
     <BrowserRouter>
+      <Header />
       <Routes>
         <Route
           path="/"
