@@ -3,6 +3,6 @@ import { ButtonProps } from "./types";
 
 export const Button = ({ onClick, children, className }: ButtonProps) => (
   <ButtonMUI className={className} variant="contained" onClick={onClick}>
-    {children}            {/* ← removed “Click me!” */}
+    {children}
   </ButtonMUI>
 );
