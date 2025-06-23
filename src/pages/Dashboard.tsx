@@ -1,3 +1,4 @@
+// Codex: Updated visual layout
 import { Database, Download, Search, Send } from 'lucide-react';
 import { useState } from 'react';
 
@@ -67,7 +68,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-8 space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8 p-8">
       <h1 className="text-3xl font-bold text-ikusi-dark">Project Dashboard</h1>
 
       <div className="flex flex-wrap gap-4 items-end bg-white p-4 rounded-lg shadow">
@@ -81,11 +82,7 @@ export default function Dashboard() {
             disabled={loading}
           />
         </div>
-        <ActaButton
-          onClick={handleRetrieve}
-          disabled={loading || !projectId}
-          className="flex items-center gap-2"
-        >
+        <ActaButton onClick={handleRetrieve} disabled={loading || !projectId}>
           <Search size={16} /> {loading ? 'Loading…' : 'Retrieve'}
         </ActaButton>
       </div>
@@ -103,8 +100,8 @@ export default function Dashboard() {
       )}
 
       {summary && (
-        <div className="space-y-4">
-          <div className="rounded-lg border p-6 bg-white shadow-sm">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-lg bg-white p-6 shadow">
             <h2 className="text-xl font-semibold mb-2">
               {String(summary.project_name || summary.name)}
             </h2>
@@ -116,7 +113,7 @@ export default function Dashboard() {
           </div>
 
           {timeline && Array.isArray(timeline) && (
-            <div className="rounded-lg border p-4 bg-slate-50 text-sm">
+            <div className="md:col-span-2 rounded-lg bg-white p-4 shadow-sm text-sm">
               <h3 className="font-semibold mb-2">Timeline</h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -161,14 +158,12 @@ export default function Dashboard() {
         <ActaButton
           onClick={() => download('pdf')}
           disabled={loading || !projectId}
-          className="flex items-center gap-2"
         >
           <Download size={16} /> PDF
         </ActaButton>
         <ActaButton
           onClick={() => download('docx')}
           disabled={loading || !projectId}
-          className="flex items-center gap-2"
         >
           <Download size={16} /> Word
         </ActaButton>
@@ -180,14 +175,12 @@ export default function Dashboard() {
             })
           }
           disabled={loading || !projectId}
-          className="flex items-center gap-2"
         >
           <Send size={16} /> Generate Acta
         </ActaButton>
         <ActaButton
           onClick={handleExtractProjectData}
           disabled={loading || !projectId}
-          className="flex items-center gap-2"
         >
           <Database size={16} /> Extract ProjectPlace Data
         </ActaButton>

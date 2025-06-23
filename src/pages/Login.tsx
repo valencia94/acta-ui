@@ -1,6 +1,4 @@
-import { FormControl, FormLabel } from '@chakra-ui/form-control';
-import { Input } from '@chakra-ui/input';
-import { Button, Flex, Heading, Image, Stack } from '@chakra-ui/react';
+// Codex: Updated visual layout
 import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
@@ -41,54 +39,48 @@ export default function Login() {
     }
   }
 
-  const MotionButton = motion(Button);
+  const MotionButton = motion.button;
 
   return (
-    <Flex minH="100vh" align="center" justify="center" bg="gray.50" p={4}>
-      <Stack
-        gap={6}
-        w="full"
-        maxW="md"
-        bg="white"
-        rounded="xl"
-        shadow="lg"
-        py={12}
-        px={8}
-      >
-        <Image
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md space-y-6 rounded-xl bg-white px-8 py-12 shadow-lg">
+        <img
           src="/assets/ikusi-logo.png"
           alt="Ikusi logo"
-          boxSize="72px"
-          mx="auto"
+          className="mx-auto h-16 w-16"
         />
-        <Heading size="lg" className="text-center text-ikusi-dark">
+        <h1 className="text-center text-2xl font-bold text-ikusi-dark">
           Acta Platform
-        </Heading>
+        </h1>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <FormControl isRequired>
-            <FormLabel>Email</FormLabel>
-            <Input className="input" type="email" {...register('email')} />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>Password</FormLabel>
-            <Input
+          <div>
+            <label className="mb-1 block font-medium">Email</label>
+            <input
+              type="email"
               className="input"
+              required
+              {...register('email')}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block font-medium">Password</label>
+            <input
               type="password"
+              className="input"
+              required
               {...register('password')}
             />
-          </FormControl>
+          </div>
           <MotionButton
-            mt={4}
-            w="full"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="rounded-md bg-[#4ac795] py-2 text-white hover:bg-[#3cb488]"
+            className="w-full rounded-md bg-[#4ac795] py-2 text-white hover:bg-[#3cb488]"
             type="submit"
           >
             Sign in
           </MotionButton>
         </form>
-      </Stack>
-    </Flex>
+      </div>
+    </div>
   );
 }
