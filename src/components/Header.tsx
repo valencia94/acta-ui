@@ -1,12 +1,12 @@
-import { Menu } from 'lucide-react';
 import { signOut } from 'aws-amplify/auth';
-import { useState } from 'react';
 import clsx from 'clsx';
+import { Menu } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-ikusi-green text-white">
+    <header className="z-50 flex items-center justify-between px-6 py-4 bg-ikusi-green text-white">
       <h1 className="font-semibold">Ikusi · Acta</h1>
 
       <button onClick={() => setOpen(!open)} aria-label="menu">

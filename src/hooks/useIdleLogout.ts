@@ -1,5 +1,5 @@
-import { useIdleTimer } from 'react-idle-timer';
 import { signOut } from 'aws-amplify/auth';
+import { useIdleTimer } from 'react-idle-timer';
 
 export function useIdleLogout(minutes = 30) {
   useIdleTimer({
