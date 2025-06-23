@@ -1,7 +1,6 @@
 import axios from "axios";
 import { apiBaseUrl } from "../env.variables";
 
-
 const api = axios.create({
   baseURL: apiBaseUrl,
 });
