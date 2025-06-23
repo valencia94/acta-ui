@@ -1,7 +1,8 @@
+// src/components/Button/types.ts
 import { ReactNode } from "react";
 
 export interface ButtonProps {
   onClick?: () => void;
-  children?: ReactNode;
   className?: string;
+  children?: ReactNode;
 }
