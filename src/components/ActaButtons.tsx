@@ -1,5 +1,5 @@
 // ActaButtons.tsx (Corrected Type Compatibility + Functional)
-import { Button } from "@/components/button";
+import { Button } from "@/components/ActaButtons";
 import { FileTextIcon, DownloadIcon, SendIcon } from "lucide-react";
 import { ReactNode } from "react";
 
