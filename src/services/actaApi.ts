@@ -1,14 +1,12 @@
 import axios from "axios";
-import { apiBaseUrl } from "../env.variables";
-const api = axios.create({
-  baseURL: apiBaseUrl,
-});
 
+import { apiBaseUrl } from "../env.variables";
+
+const api = axios.create({ baseURL: apiBaseUrl });
 export { api };
 
-/* ───────── Core helpers (already in file) ───────── */
-export const getTimeline = (id: string) =>
-  api.get(`/timeline/${id}`);
+/* ───────── Core helpers ───────── */
+export const getTimeline = (id: string) => api.get(`/timeline/${id}`);
 
 export const getDownloadUrl = (
   id: string,
@@ -26,7 +24,7 @@ export const sendApprovalEmail = (payload: {
 export const extractProjectData = (id: string) =>
   api.post(`/extract-project-place/${id}`);
 
-/* ───────── Legacy / UI-compat aliases ──────────── */
-export const getProjectSummary = getSummary;       // matches Lambda ARN
-export const downloadActa = getDownloadUrl;        // older helper name
+/* ───────── Legacy aliases ───────── */
+export const getProjectSummary = getSummary;
+export const downloadActa = getDownloadUrl;
 export const extractProjectPlaceData = extractProjectData;
