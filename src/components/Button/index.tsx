@@ -1,6 +1,6 @@
-import { Button as ButtonMUI } from "@mui/material";
+import { Button as ButtonMUI } from '@mui/material';
 
-import { ButtonProps } from "./types";
+import { ButtonProps } from './types';
 
 export const Button = ({ onClick, children, className }: ButtonProps) => (
   <ButtonMUI className={className} variant="contained" onClick={onClick}>

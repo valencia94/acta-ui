@@ -1,7 +1,7 @@
 // src/components/ActaButtons.tsx
-import { DownloadIcon, FileTextIcon, SendIcon } from "lucide-react";
+import { DownloadIcon, FileTextIcon, SendIcon } from 'lucide-react';
 
-import { Button } from "@/components/Button";
+import { Button } from '@/components/Button';
 
 interface ActaButtonsProps {
   onGenerate: () => void;

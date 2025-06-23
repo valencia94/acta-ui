@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 import {
   extractProjectData,
   getDownloadUrl,
   sendApprovalEmail,
-} from "@/services/actaApi";
+} from '@/services/actaApi';
 
-import ActaButtons from "../components/ActaButtons";
+import ActaButtons from '../components/ActaButtons';
 
-const DEFAULT_PROJECT_ID = "1000000064013473"; // TODO: make dynamic
+const DEFAULT_PROJECT_ID = '1000000064013473'; // TODO: make dynamic
 
 export default function Dashboard() {
   const [projectId] = useState<string>(DEFAULT_PROJECT_ID);
@@ -20,7 +20,7 @@ export default function Dashboard() {
       setSubmitting(true);
       await extractProjectData(projectId);
     } catch {
-      setError("Failed to extract project data");
+      setError('Failed to extract project data');
     } finally {
       setSubmitting(false);
     }
@@ -29,21 +29,21 @@ export default function Dashboard() {
   const handleSendForApproval = async () => {
     try {
       setSubmitting(true);
-      await sendApprovalEmail({ actaId: projectId, clientEmail: "" });
+      await sendApprovalEmail({ actaId: projectId, clientEmail: '' });
     } catch {
-      setError("Failed to send approval email");
+      setError('Failed to send approval email');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const downloadFile = async (fmt: "pdf" | "docx") => {
+  const downloadFile = async (fmt: 'pdf' | 'docx') => {
     try {
       setSubmitting(true);
       const res = await getDownloadUrl(projectId, fmt);
       window.location.href = res.data;
     } catch {
-      setError("Download failed");
+      setError('Download failed');
     } finally {
       setSubmitting(false);
     }
@@ -63,13 +63,11 @@ export default function Dashboard() {
         <ActaButtons
           onGenerate={handleGenerate}
           onSendForApproval={handleSendForApproval}
-          onDownloadWord={() => downloadFile("docx")}
-          onDownloadPdf={() => downloadFile("pdf")}
+          onDownloadWord={() => downloadFile('docx')}
+          onDownloadPdf={() => downloadFile('pdf')}
         />
 
-        {submitting && (
-          <p className="text-sm text-gray-400">Processing…</p>
-        )}
+        {submitting && <p className="text-sm text-gray-400">Processing…</p>}
       </div>
     </div>
   );

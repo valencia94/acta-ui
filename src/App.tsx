@@ -4,10 +4,10 @@ import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
+import Header from '@/components/Header';
 import { skipAuth } from '@/env.variables';
 import { useIdleLogout } from '@/hooks/useIdleLogout';
 import { useThemedFavicon } from '@/hooks/useThemedFavicon';
-import Header from '@/components/Header';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 
