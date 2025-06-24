@@ -91,6 +91,7 @@ jobs:
           ACTA_API_ROOT_ID: ${{ secrets.ACTA_API_ROOT_ID }}
         run: |
           set -euo pipefail
+          aws cloudformation describe-stacks --stack-name acta-api-wiring-stack >/dev/null 2>&1 && echo "Stack exists – skipping" && exit 0 || true
           pip install --quiet aws-sam-cli
           echo "Using existing API ID: $ACTA_API_ID"
           sam package \
