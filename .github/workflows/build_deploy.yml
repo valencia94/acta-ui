@@ -84,5 +84,5 @@ jobs:
           set -eux
           aws s3 sync dist/ "s3://$DEPLOY_BUCKET" --delete
           bash scripts/push-spa-routes.sh
-          INV=$(aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths '/*' --query 'Invalidation.Id' --output text)
+          INV=$(aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths '/index.html' '/login' '/login/index.html' '/dashboard' '/dashboard/index.html' --query 'Invalidation.Id' --output text)
           aws cloudfront wait invalidation-completed --distribution-id "$CF_DIST_ID" --id "$INV"

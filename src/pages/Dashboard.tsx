@@ -9,10 +9,8 @@ import {
 
 import ActaButtons from '../components/ActaButtons';
 
-const DEFAULT_PROJECT_ID = 'TODO-PROJECT-ID'; // TODO: make dynamic
-
 export default function Dashboard() {
-  const [projectId] = useState<string>(DEFAULT_PROJECT_ID);
+  const [projectId, setProjectId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,13 +62,20 @@ export default function Dashboard() {
           <h1 className="text-3xl font-semibold text-emerald-700">
             Project Dashboard
           </h1>
-          <p className="text-gray-500">Project ID: {projectId}</p>
+          <input
+            type="text"
+            placeholder="Project ID…"
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2"
+          />
 
           <ActaButtons
             onGenerate={handleGenerate}
             onSendForApproval={handleSendForApproval}
             onDownloadWord={() => downloadFile('docx')}
             onDownloadPdf={() => downloadFile('pdf')}
+            disabled={!projectId}
           />
 
           {submitting && <p className="text-sm text-gray-400">Processing…</p>}

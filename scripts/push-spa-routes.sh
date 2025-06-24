@@ -7,6 +7,10 @@ set -euo pipefail
 for route in login dashboard; do
   mkdir -p "dist/$route"
   cp dist/index.html "dist/$route/index.html"
+  if [[ -n "${DEPLOY_BUCKET:-}" ]]; then
+    aws s3 cp dist/index.html "s3://$DEPLOY_BUCKET/$route"
+    aws s3 cp dist/index.html "s3://$DEPLOY_BUCKET/$route/index.html"
+  fi
 done
 
 if [ -f dist/health ]; then
