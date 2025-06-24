@@ -58,6 +58,9 @@ jobs:
       - name: 🏗️  build (Vite)
         run: pnpm run build # → dist/
 
+      - name: Copy SPA client routes
+        run: bash scripts/push-spa-routes.sh
+
       # ───── 4) Local smoke check (HTML returns 200) ─────────────
       - name: 🌐  local preview smoke
         run: |
@@ -136,12 +139,6 @@ jobs:
           echo "🕒 waiting for invalidation $INV…"
           aws cloudfront wait invalidation-completed \
             --distribution-id "$DIST_ID" --id "$INV"
-
-      # ───── 8.1b) Copy index.html to client-side routes ────────────────
-      - name: "🔗  alias SPA routes to index.html"
-        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-        run: |
-          ./scripts/push-spa-routes.sh
 
       # ───── 9) CloudFront /health probe ─────────────────────────
       - name: 🌐  UI /health via CF

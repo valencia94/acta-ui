@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
+# Copy SPA shell for client-side routes
 set -euo pipefail
-
-ROUTES=(login dashboard)          # ← add more routes here if needed
-BUCKET="${S3_BUCKET_NAME:?bucket env missing}"
-
-for path in "${ROUTES[@]}"; do
-  aws s3 cp dist/index.html "s3://$BUCKET/$path" \
-    --cache-control 'no-cache, no-store, must-revalidate' \
-    --content-type 'text/html'
+for route in login dashboard; do
+  mkdir -p "dist/$route"
+  cp dist/index.html "dist/$route/index.html"
 done
+echo "✓ copied index.html → /login & /dashboard"
