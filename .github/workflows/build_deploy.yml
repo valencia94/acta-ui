@@ -1,96 +1,134 @@
-name: Build and Deploy               # <— single source of truth
+name: Build and Deploy          # single source of truth
 
 on:
   push:
-    branches: [develop]              # automatic on develop
-  workflow_dispatch: {}              # manual button
+    branches: [develop]         # auto-deploy from develop
+  workflow_dispatch: {}         # manual button
 
 jobs:
   ci_deploy:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
-      id-token: write                # OIDC login
+      id-token: write           # OIDC login
       contents: read
 
     steps:
-      # 0) Checkout
-      - uses: actions/checkout@v4
+    # ────────────────────────────────────────────────────────────
+    # 0) Checkout + guarantee /health stub
+    # ────────────────────────────────────────────────────────────
+    - uses: actions/checkout@v4
 
-      # 1) Node & pnpm cache
-      - uses: pnpm/action-setup@v2
-        with: { version: 9 }
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
+    - name: 💚 add static /health
+      run: |
+        mkdir -p public
+        echo '{"status":"ok"}' > public/health
 
-      # 2) Install, lint, unit test
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm run test:vitest -- --run --passWithNoTests
+    # ────────────────────────────────────────────────────────────
+    # 1) Node + pnpm cache
+    # ────────────────────────────────────────────────────────────
+    - uses: pnpm/action-setup@v2
+      with: { version: 9 }
 
-      # 3) Build
-      - name: Build (Vite)
-        run: |
-          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
-          pnpm run build         # → dist/
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
 
-      # 4) Local smoke (HTML returns 200)
-      - run: |
-          pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
-          sleep 4 && curl -sf http://localhost:4173/
-          kill $SERVER
+    # ────────────────────────────────────────────────────────────
+    # 2) Install → lint → unit tests
+    # ────────────────────────────────────────────────────────────
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm lint
+    - run: pnpm run test:vitest -- --run --passWithNoTests
 
-      # 5) AWS creds (OIDC) for THIS job
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region:     ${{ secrets.AWS_REGION }}
+    # ────────────────────────────────────────────────────────────
+    # 3) Build (Vite → dist/)
+    # ────────────────────────────────────────────────────────────
+    - name: Build (Vite)
+      run: |
+        echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+        pnpm run build           # -> dist/
 
-      # 6) Upload UI
-      - name: S3 sync dist/
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-        run: |
-          aws s3 sync dist "s3://$BUCKET" --delete
-          bash scripts/push-spa-routes.sh
+    # ────────────────────────────────────────────────────────────
+    # 4) Local smoke – HTML 200
+    # ────────────────────────────────────────────────────────────
+    - run: |
+        pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
+        sleep 4 && curl -sf http://localhost:4173/
+        kill $SERVER
 
-      # 7) Ensure CloudFront OAC bucket policy
-      - name: Apply bucket policy
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-          REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-          cat > s3-oac-policy.json <<EOF
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Sid": "AllowCloudFrontOACAccess",
-                "Effect": "Allow",
-                "Principal": { "Service": "cloudfront.amazonaws.com" },
-                "Action": "s3:GetObject",
-                "Resource": "arn:aws:s3:::$BUCKET/*",
-                "Condition": {
-                  "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudfront::$ACCOUNT:distribution/$DIST_ID"
-                  }
+    # ────────────────────────────────────────────────────────────
+    # 5) AWS creds (OIDC) for THIS job
+    # ────────────────────────────────────────────────────────────
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region:     ${{ secrets.AWS_REGION }}
+
+    # ────────────────────────────────────────────────────────────
+    # 6) Upload UI + SPA-route copies
+    # ────────────────────────────────────────────────────────────
+    - name: S3 sync dist/
+      env:
+        BUCKET:        ${{ secrets.S3_BUCKET_NAME }}
+        DEPLOY_BUCKET: ${{ secrets.S3_BUCKET_NAME }}   # 👈 needed by helper
+      run: |
+        # full dist (index.html, assets/* …)
+        aws s3 sync dist "s3://$BUCKET" --delete
+
+        # ensure /health is *never* cached
+        aws s3 cp dist/health "s3://$BUCKET/health" \
+          --cache-control 'no-cache, no-store, must-revalidate' \
+          --content-type   'application/json'
+
+        # copy SPA shell to /login & /dashboard
+        bash scripts/push-spa-routes.sh
+
+    # ────────────────────────────────────────────────────────────
+    # 7) Make sure bucket policy allows CloudFront OAC
+    # ────────────────────────────────────────────────────────────
+    - name: Apply bucket policy
+      env:
+        BUCKET:  ${{ secrets.S3_BUCKET_NAME }}
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        REGION:  ${{ secrets.AWS_REGION }}
+      run: |
+        ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+        cat > s3-oac-policy.json <<EOF
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowCloudFrontOACAccess",
+              "Effect": "Allow",
+              "Principal": { "Service": "cloudfront.amazonaws.com" },
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::$BUCKET/*",
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": "arn:aws:cloudfront::$ACCOUNT:distribution/$DIST_ID"
                 }
               }
-            ]
-          }
-          EOF
-          aws s3api put-bucket-policy --bucket "$BUCKET" --policy file://s3-oac-policy.json --region "$REGION"
+            }
+          ]
+        }
+        EOF
+        aws s3api put-bucket-policy \
+          --bucket "$BUCKET" \
+          --policy file://s3-oac-policy.json \
+          --region "$REGION"
 
-      # 8) Invalidate whole CF cache (hashes don’t change yet)
-      - name: CloudFront invalidate
-        env:
-          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-        run: |
-          INV=$(aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths '/*' \
-                 --query 'Invalidation.Id' --output text)
-          echo "🕒 waiting for invalidation $INV…"
-          aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$INV"
+    # ────────────────────────────────────────────────────────────
+    # 8) Invalidate full CloudFront cache (until we hash bundles)
+    # ────────────────────────────────────────────────────────────
+    - name: CloudFront invalidate
+      env:
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        INV=$(aws cloudfront create-invalidation \
+                --distribution-id "$DIST_ID" --paths '/*' \
+                --query 'Invalidation.Id' --output text)
+        echo "🕒 waiting for invalidation $INV…"
+        aws cloudfront wait invalidation-completed \
+          --distribution-id "$DIST_ID" --id "$INV"
