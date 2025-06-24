@@ -1,3 +1,4 @@
+import { LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -8,7 +9,7 @@ import {
 
 import ActaButtons from '../components/ActaButtons';
 
-const DEFAULT_PROJECT_ID = '1000000064013473'; // TODO: make dynamic
+const DEFAULT_PROJECT_ID = 'TODO-PROJECT-ID'; // TODO: make dynamic
 
 export default function Dashboard() {
   const [projectId] = useState<string>(DEFAULT_PROJECT_ID);
@@ -50,25 +51,31 @@ export default function Dashboard() {
   };
 
   if (error)
-    return <div className="text-center py-16 text-red-600">{error}</div>;
+    return <div className="py-16 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-white px-6 py-12">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-3xl font-semibold text-ikusi-green">
-          Project Dashboard
-        </h1>
-        <p className="text-gray-500">Project ID: {projectId}</p>
+    <div className="flex min-h-screen">
+      <aside className="hidden w-20 flex-col items-center gap-6 bg-gradient-to-b from-emerald-800 to-emerald-600 p-4 text-white md:flex md:w-56">
+        <LayoutDashboard className="h-6 w-6" />
+      </aside>
 
-        <ActaButtons
-          onGenerate={handleGenerate}
-          onSendForApproval={handleSendForApproval}
-          onDownloadWord={() => downloadFile('docx')}
-          onDownloadPdf={() => downloadFile('pdf')}
-        />
+      <main className="flex-1 bg-white px-6 py-12">
+        <div className="mx-auto max-w-4xl space-y-8">
+          <h1 className="text-3xl font-semibold text-emerald-700">
+            Project Dashboard
+          </h1>
+          <p className="text-gray-500">Project ID: {projectId}</p>
 
-        {submitting && <p className="text-sm text-gray-400">Processing…</p>}
-      </div>
+          <ActaButtons
+            onGenerate={handleGenerate}
+            onSendForApproval={handleSendForApproval}
+            onDownloadWord={() => downloadFile('docx')}
+            onDownloadPdf={() => downloadFile('pdf')}
+          />
+
+          {submitting && <p className="text-sm text-gray-400">Processing…</p>}
+        </div>
+      </main>
     </div>
   );
 }
