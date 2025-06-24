@@ -10,7 +10,7 @@ import {
 import ActaButtons from '../components/ActaButtons';
 
 export default function Dashboard() {
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,13 +62,23 @@ export default function Dashboard() {
           <h1 className="text-3xl font-semibold text-emerald-700">
             Project Dashboard
           </h1>
-          <input
-            type="text"
-            placeholder="Project ID…"
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2"
-          />
+
+          <div className="mt-2">
+            <label
+              htmlFor="projectId"
+              className="mb-1 block text-sm font-medium text-emerald-700"
+            >
+              Project ID
+            </label>
+            <input
+              id="projectId"
+              type="text"
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+              placeholder="e.g. 1000000064013473"
+              className="w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
 
           <ActaButtons
             onGenerate={handleGenerate}
