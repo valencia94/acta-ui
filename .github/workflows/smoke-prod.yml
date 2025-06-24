@@ -1,3 +1,4 @@
+# .github/workflows/smoke-prod.yml
 name: Smoke – Prod
 
 on:
@@ -12,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ⇣  NEW ­– OIDC creds (same role you use for deploy, read access is fine)
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: 🌡️ /health via CloudFront
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
@@ -21,4 +28,3 @@ jobs:
             --id "$DIST_ID" --query 'Distribution.DomainName' --output text)
           echo "Domain: $CF_DOMAIN"
           curl -fs "https://$CF_DOMAIN/health"
-
