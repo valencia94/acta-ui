@@ -90,4 +90,3 @@ The UI interacts with a single REST API (acta-backend-staging) using these route
 - `POST /send-approval-email` – sendApprovalEmail
 - `POST /extract-project-place/{id}` – ProjectPlaceDataExtractor
 - `GET /health` – healthCheck
-
