@@ -56,7 +56,36 @@ jobs:
           aws s3 sync dist "s3://$BUCKET" --delete
           bash scripts/push-spa-routes.sh
 
-      # 7) Invalidate whole CF cache (hashes don’t change yet)
+      # 7) Ensure CloudFront OAC bucket policy
+      - name: Apply bucket policy
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+          REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          cat > s3-oac-policy.json <<EOF
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AllowCloudFrontOACAccess",
+                "Effect": "Allow",
+                "Principal": { "Service": "cloudfront.amazonaws.com" },
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::$BUCKET/*",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceArn": "arn:aws:cloudfront::$ACCOUNT:distribution/$DIST_ID"
+                  }
+                }
+              }
+            ]
+          }
+          EOF
+          aws s3api put-bucket-policy --bucket "$BUCKET" --policy file://s3-oac-policy.json --region "$REGION"
+
+      # 8) Invalidate whole CF cache (hashes don’t change yet)
       - name: CloudFront invalidate
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
