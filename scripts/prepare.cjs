@@ -5,5 +5,3 @@ if (!process.env.CI) {
   execSync('npx playwright install chromium', { stdio: 'inherit' });
   execSync('npx husky install', { stdio: 'inherit' });
 }
-
-// SPA route copies now happen post-build (see push-spa-routes.sh)
