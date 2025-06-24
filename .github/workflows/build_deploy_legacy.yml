@@ -75,7 +75,7 @@ jobs:
 
       # ───── 6) SAM deploy (wiring only, using updated template) ───────
       - name: ☁️  SAM deploy (wiring)
-        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[wiring]')
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
           GET_TIMELINE_ARN: ${{ secrets.GET_TIMELINE_ARN }}
