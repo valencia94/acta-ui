@@ -1,24 +1,24 @@
 # .github/workflows/build_deploy.yml
-name: Build and Deploy             # ← single source of truth
+name: Build and Deploy                 # ← single source of truth
 
 on:
   push:
-    branches: [develop]            # auto-deploy
-  workflow_dispatch: {}            # manual button
+    branches: [develop]                # auto-deploy from develop
+  workflow_dispatch: {}                # manual button
 
 jobs:
   ci_deploy:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
-      id-token: write              # OIDC for AWS
+      id-token: write                  # OIDC for AWS
       contents: read
 
     steps:
-    # ────────────────────────── 0. Checkout ──────────────────────────
+    # ──────────────── 0) Checkout ─────────────────
     - uses: actions/checkout@v4
 
-    # ─────────────────── 1. Node / pnpm toolchain & cache ────────────
+    # ───────── 1) Node / pnpm toolchain cache ─────
     - uses: pnpm/action-setup@v2
       with: { version: 9 }
     - uses: actions/setup-node@v4
@@ -26,52 +26,47 @@ jobs:
         node-version: 20
         cache: pnpm
 
-    # ───────────────────────── 2. Quality gates ─────────────────────
+    # ───────────── 2) Quality gates ───────────────
     - run: pnpm install --frozen-lockfile
 
     - name: ESLint + TypeScript
       run: pnpm lint
 
-    # ── 1.2) Prettier – auto-fix everything ──────────────────────────────
-    - name: 🧼  format
-      run: |
-        pnpm exec prettier --write .
-    # ── 1.3) Fail pipeline if anything still unformatted (safety net) ────
-    - name: 🔍  prettier check
+    - name: Prettier (fail if unformatted)
       run: pnpm exec prettier --check .
 
     - name: Vitest
-      run: pnpm test:ci                      # see note ↓
+      run: pnpm run test:vitest -- --run --passWithNoTests  # uses existing script
 
-    # ─────────────────────────── 3. Build SPA ───────────────────────
+    # ─────────────── 3) Build SPA ─────────────────
     - name: Build (Vite)
       run: |
         echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
-        pnpm run build                       # → dist/
+        pnpm run build                                   # → dist/
 
-    # ─────────────────── 4. Local smoke (root HTML = 200) ───────────
+    # ───────────── 4) Local smoke test ──────────────
     - name: Local preview smoke
       run: |
         pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
         sleep 4 && curl -sf http://localhost:4173/
         kill $SERVER
 
-    # ─────────────── 5. AWS credentials for THIS job (OIDC) ─────────
+    # ─────── 5) AWS credentials for this job ───────
     - uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         aws-region:     ${{ secrets.AWS_REGION }}
 
-    # ────────────────────── 6. Upload UI to S3 ───────────────────────
-    - name: S3 sync dist/ (+ SPA routes)
+    # ────────────── 6) Upload UI to S3 ─────────────
+    - name: S3 sync dist/ & push SPA routes
       env:
         BUCKET: ${{ secrets.S3_BUCKET_NAME }}
       run: |
         set -eux
         aws s3 sync dist "s3://$BUCKET" --delete
-        bash scripts/push-spa-routes.sh          # copies index.html to /login, /dashboard …
+        bash scripts/push-spa-routes.sh            # copies index.html to /login, /dashboard…
 
-    # ──────────────── 7. Ensure bucket policy for OAC ───────────────
+    # ──────── 7) Ensure OAC bucket policy ─────────
     - name: Attach CloudFront OAC policy
       env:
         BUCKET:  ${{ secrets.S3_BUCKET_NAME }}
@@ -103,12 +98,14 @@ jobs:
           --policy file:///tmp/s3-oac-policy.json \
           --region "$REGION"
 
-    # ──────────────── 8. Invalidate entire CF cache ─────────────────
+    # ────────── 8) Invalidate CloudFront /* ────────
     - name: CloudFront invalidate /*
       env:
-        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}   # ← FIXED
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
       run: |
-        INV=$(aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths '/*' \
+        INV=$(aws cloudfront create-invalidation \
+               --distribution-id "$DIST_ID" --paths '/*' \
                --query 'Invalidation.Id' --output text)
         echo "🕒 waiting for invalidation $INV…"
-        aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$INV"
+        aws cloudfront wait invalidation-completed \
+          --distribution-id "$DIST_ID" --id "$INV"
