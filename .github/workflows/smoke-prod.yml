@@ -1,29 +1,28 @@
-# .github/workflows/smoke-prod.yml
 name: Smoke – Prod
 
 on:
   workflow_run:
-    workflows: [UI Deploy]
+    workflows: ["Build and Deploy"]   # must match name above
     types: [completed]
-    branches: [develop]
 
 jobs:
-  smoke_prod:
+  probe_cf_health:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
-      # ⇣  NEW ­– OIDC creds (same role you use for deploy, read access is fine)
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region:     ${{ secrets.AWS_REGION }}
 
-      - name: 🌡️ /health via CloudFront
+      - name: Ping /health via CloudFront
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
-          set -e
           CF_DOMAIN=$(aws cloudfront get-distribution \
             --id "$DIST_ID" --query 'Distribution.DomainName' --output text)
           echo "Domain: $CF_DOMAIN"
