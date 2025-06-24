@@ -1,0 +1,36 @@
+name: Lint & Test (Quality - no deployment)
+
+on:
+  push:
+    branches: ['**']          # run on every branch
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  lint_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 0 Checkout
+      - uses: actions/checkout@v4
+
+      # 1 Node + pnpm (cached)
+      - uses: pnpm/action-setup@v2
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: 📦 Install
+        run: pnpm install --frozen-lockfile
+
+      # 2 Static checks
+      - name: 🔍 TypeScript
+        run: pnpm exec tsc --noEmit
+      - name: 🎨 Prettier
+        run: pnpm exec prettier --check .
+      - name: 🧹 ESLint
+        run: pnpm exec eslint .
+      - name: 🧪 Vitest
+        run: pnpm run test:vitest
