@@ -99,11 +99,11 @@ jobs:
           --region "$REGION"
 
     # ──────────────── 8. Invalidate entire CF cache ─────────────────
-    - name: CloudFront invalidate /*    # hashed files are static – but purge to be safe
-      env: { DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }} }
+    - name: CloudFront invalidate /*
+      env:
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}   # ← FIXED
       run: |
         INV=$(aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths '/*' \
                --query 'Invalidation.Id' --output text)
         echo "🕒 waiting for invalidation $INV…"
-        aws cloudfront wait invalidation-completed \
-             --distribution-id "$DIST_ID" --id "$INV"
+        aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$INV"
