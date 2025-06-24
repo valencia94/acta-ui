@@ -32,7 +32,10 @@ jobs:
     - name: ESLint + TypeScript
       run: pnpm lint
 
-    - name: Prettier (fail if unformatted)
+    - name: Prettier format (write)
+      run: pnpm exec prettier --write .
+    
+    - name: Prettier verify
       run: pnpm exec prettier --check .
 
     - name: Vitest
