@@ -32,7 +32,12 @@ jobs:
     - name: ESLint + TypeScript
       run: pnpm lint
 
-    - name: Prettier (fail on diff)
+    # ── 1.2) Prettier – auto-fix everything ──────────────────────────────
+    - name: 🧼  format
+      run: |
+        pnpm exec prettier --write .
+    # ── 1.3) Fail pipeline if anything still unformatted (safety net) ────
+    - name: 🔍  prettier check
       run: pnpm exec prettier --check .
 
     - name: Vitest
