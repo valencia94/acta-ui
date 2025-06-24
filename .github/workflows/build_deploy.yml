@@ -1,5 +1,5 @@
-# .github/workflows/build_deploy.yml 
-name: Build and Deploy 
+# .github/workflows/build_deploy.yml
+name: Build and Deploy
 
 on:
   push:
@@ -86,4 +86,3 @@ jobs:
           bash scripts/push-spa-routes.sh
           INV=$(aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths '/*' --query 'Invalidation.Id' --output text)
           aws cloudfront wait invalidation-completed --distribution-id "$CF_DIST_ID" --id "$INV"
-
