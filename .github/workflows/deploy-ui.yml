@@ -1,12 +1,14 @@
-name: Deploy UI → S3 + CloudFront
+name: UI Deploy
 
 on:
-  push:
-    branches: [develop]     # ⬅️ auto-deploy only from ♦ develop ♦
-  workflow_dispatch: {}     # manual trigger
+  workflow_run:
+    workflows: [Lint & Test]
+    types: [completed]
+    branches: [develop]
 
 jobs:
-  deploy:
+  deploy_ui:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: prod
     permissions:
@@ -14,53 +16,58 @@ jobs:
       contents: read
 
     steps:
-      # 0 Checkout
       - uses: actions/checkout@v4
 
-      # 0.1 Static /health stub
-      - name: 💚 add /health
-        run: mkdir -p public && echo '{"status":"ok"}' > public/health
-
-      # 1 Node + pnpm
+      # Node + pnpm
       - uses: pnpm/action-setup@v2
-        with: { version: 9 }
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
+
       - run: pnpm install --frozen-lockfile
 
-      # 2 Build
+      # Build
       - name: Inject API base URL
         run: echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
-      - name: 🏗️ Build (Vite)
-        run: pnpm run build
-      - name: Copy SPA client routes
-        run: bash scripts/push-spa-routes.sh        # ↖︎ keeps /login & /dashboard working
 
-      # 3 Local smoke-test
-      - name: 🌐 preview smoke
+      - name: 🏗️ Vite build
+        run: pnpm run build            # -> dist/
+
+      # Local smoke
+      - name: 🌐 Local preview smoke
         run: |
           pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
-          sleep 4 && curl -sf http://localhost:4173/ && kill $SERVER
+          sleep 4
+          curl -sf http://localhost:4173/
+          kill $SERVER
 
-      # 4 AWS cred-helper (OIDC)
+      # AWS creds
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 5 Upload + invalidate
-      - name: 🚀 Sync to S3 + purge CF
+      # Deploy
+      - name: 🚀 Sync to S3 + copy SPA routes
         env:
-          DEPLOY_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-          CF_DIST_ID:    ${{ secrets.CLOUDFRONT_DIST_ID }}
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
           set -eux
-          aws s3 sync dist/ "s3://$DEPLOY_BUCKET" --delete
+          aws s3 sync dist "s3://$BUCKET" --delete
           bash scripts/push-spa-routes.sh
-          INV=$(aws cloudfront create-invalidation \
-              --distribution-id "$CF_DIST_ID" --paths '/*' \
-              --query 'Invalidation.Id' --output text)
+
+      - name: 🚀 Invalidate whole CF distro
+        env:
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          set -e
+          INVALIDATION=$(aws cloudfront create-invalidation \
+            --distribution-id "$DIST_ID" --paths '/*' \
+            --query 'Invalidation.Id' --output text)
+          echo "Waiting for invalidation $INVALIDATION…"
           aws cloudfront wait invalidation-completed \
-              --distribution-id "$CF_DIST_ID" --id "$INV"
+            --distribution-id "$DIST_ID" --id "$INVALIDATION"
