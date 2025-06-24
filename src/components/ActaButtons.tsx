@@ -1,5 +1,5 @@
 // src/components/ActaButtons.tsx
-import { DownloadIcon, FileTextIcon, SendIcon } from 'lucide-react';
+import { Download, FileText, Send } from 'lucide-react';
 
 import { Button } from '@/components/Button';
 
@@ -17,33 +17,33 @@ export default function ActaButtons({
   onSendForApproval,
 }: ActaButtonsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
       <Button
         onClick={onGenerate}
-        className="bg-ikusi-green hover:bg-emerald-600 text-white rounded-lg flex gap-2 justify-center items-center"
+        className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2 text-white transition-transform hover:-translate-y-0.5"
       >
-        <DownloadIcon className="w-4 h-4" /> Generate Acta
+        <Download className="h-4 w-4" /> Generate Acta
       </Button>
 
       <Button
         onClick={onSendForApproval}
-        className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex gap-2 justify-center items-center"
+        className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2 text-white transition-transform hover:-translate-y-0.5"
       >
-        <SendIcon className="w-4 h-4" /> Send for Approval
+        <Send className="h-4 w-4" /> Send for Approval
       </Button>
 
       <Button
         onClick={onDownloadWord}
-        className="border border-gray-300 hover:bg-gray-50 rounded-lg flex gap-2 justify-center items-center"
+        className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 py-2 transition-transform hover:-translate-y-0.5"
       >
-        <FileTextIcon className="w-4 h-4" /> Download (.docx)
+        <FileText className="h-4 w-4" /> Download (.docx)
       </Button>
 
       <Button
         onClick={onDownloadPdf}
-        className="border border-gray-300 hover:bg-gray-50 rounded-lg flex gap-2 justify-center items-center"
+        className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 py-2 transition-transform hover:-translate-y-0.5"
       >
-        <FileTextIcon className="w-4 h-4" /> Download (.pdf)
+        <FileText className="h-4 w-4" /> Download (.pdf)
       </Button>
     </div>
   );

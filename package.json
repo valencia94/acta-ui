@@ -46,11 +46,11 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "7.58.1",
+    "react-idle-timer": "^5",
     "react-router-dom": "^6.30.1",
     "sonner": "^2.0.5",
     "styled-components": "^6.1.19",
-    "zod": "^3.25.67",
-    "react-idle-timer": "^5"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@chakra-ui/form-control": "^2.2.0",
@@ -72,6 +72,7 @@
     "@storybook/react": "^8.6.14",
     "@storybook/react-vite": "^8.6.14",
     "@storybook/test": "^8.6.14",
+    "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-table": "^8.21.3",
     "@testing-library/dom": "^10.4.0",

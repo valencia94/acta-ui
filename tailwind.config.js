@@ -1,6 +1,11 @@
 /** Tailwind 3 clean config */
 module.exports = {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  content: ['./index.html', './src/**/*.{ts,tsx,html}'],
+  safelist: [
+    'backdrop-blur-md',
+    'peer-placeholder-shown:top-4',
+    'peer-placeholder-shown:text-base',
+  ],
   theme: {
     extend: {
       colors: {
@@ -12,8 +17,9 @@ module.exports = {
           teal: '#0094a8',
           dark: '#002e24',
         },
+        emerald: { DEFAULT: '#4ac795' },
       },
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
 };

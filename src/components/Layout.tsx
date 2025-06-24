@@ -18,7 +18,11 @@ export default function Shell({ children }: { children: ReactNode }) {
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <img src="/assets/ikusi-logo.png" className="h-10 drop-shadow" />
+          <img
+            src="/assets/ikusi-logo.png"
+            alt="Ikusi logo"
+            className="h-10 drop-shadow"
+          />
         </motion.header>
         <section className="mt-8">{children}</section>
       </main>

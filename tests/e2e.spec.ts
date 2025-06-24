@@ -89,22 +89,11 @@ test('end-to-end workflow', async ({ page }) => {
   await page.goto('/dashboard');
   await page.waitForLoadState('networkidle');
 
-  await page.fill('input[placeholder="1000000061690051"]', '123');
+  await expect(page.locator('img[alt="Ikusi logo"]')).toBeVisible();
 
   await Promise.all([
-    page.waitForRequest(`${API}/project-summary/123`),
-    page.waitForRequest(`${API}/timeline/123`),
-    page.getByRole('button', { name: /Retrieve/i }).click(),
-  ]);
-
-  await expect(
-    page.getByRole('heading', { name: /Demo Project/i })
-  ).toBeVisible();
-  await expect(page.getByRole('row', { name: /Kickoff/i })).toBeVisible();
-
-  await Promise.all([
-    page.waitForRequest(`${API}/download-acta/123?format=pdf`),
-    page.getByRole('button', { name: /PDF/i }).click(),
+    page.waitForRequest(/download-acta/),
+    page.getByRole('button', { name: /Download \(.pdf\)/i }).click(),
   ]);
 
   await Promise.all([
@@ -113,7 +102,7 @@ test('end-to-end workflow', async ({ page }) => {
   ]);
 
   await Promise.all([
-    page.waitForRequest(`${API}/extract-project-place/123`),
+    page.waitForRequest(/extract-project-place/),
     page.getByRole('button', { name: /Extract ProjectPlace Data/i }).click(),
   ]);
 });

@@ -6,8 +6,16 @@ import { useState } from 'react';
 export default function Header() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="z-50 flex items-center justify-between px-6 py-4 bg-ikusi-green text-white">
-      <h1 className="font-semibold">Ikusi · Acta</h1>
+    <header className="z-50 flex items-center justify-between bg-white px-6 py-4 shadow">
+      <div className="flex items-center gap-3">
+        <img src="/assets/ikusi-logo.png" alt="Ikusi logo" className="h-8" />
+        <div className="leading-tight">
+          <h1 className="font-semibold">Acta Platform</h1>
+          <p className="text-xs text-gray-500">
+            invisible technology, visible transformation
+          </p>
+        </div>
+      </div>
 
       <button onClick={() => setOpen(!open)} aria-label="menu">
         <Menu className="h-6 w-6" />

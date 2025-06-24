@@ -41,7 +41,7 @@ export default function ProjectTable({ data }: { data: Project[] }) {
         </thead>
         <tbody className="bg-white divide-y divide-gray-100">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-ikusi-50">
+            <tr key={row.id} className="rounded-lg shadow hover:bg-gray-50">
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-6 py-4">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
