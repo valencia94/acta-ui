@@ -1,18 +1,24 @@
-name: Smoke Test Production
+name: Smoke – Prod
 
 on:
   workflow_run:
-    workflows: ['Deploy UI to S3 + CloudFront']
-    types:
-      - completed
+    workflows: [UI Deploy]
+    types: [completed]
+    branches: [develop]
 
 jobs:
-  smoke:
+  smoke_prod:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - run: chmod +x scripts/smoke_ui.sh
-      - run: ./scripts/smoke_ui.sh
+      - name: 🌡️ /health via CloudFront
         env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          set -e
+          CF_DOMAIN=$(aws cloudfront get-distribution \
+            --id "$DIST_ID" --query 'Distribution.DomainName' --output text)
+          echo "Domain: $CF_DOMAIN"
+          curl -fs "https://$CF_DOMAIN/health"
+
