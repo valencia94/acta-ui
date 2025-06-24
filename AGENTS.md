@@ -11,6 +11,7 @@ Each agent is a serverless function responsible for a single piece of the Acta w
 **Purpose:** Returns milestone and delivery history for a project
 **Input Path Param:** `id` = Project ID
 **Returns:**
+
 ```json
 [
   {
@@ -36,12 +37,14 @@ Each agent is a serverless function responsible for a single piece of the Acta w
 **Type:** Lambda
 **Trigger:** `POST /send-approval-email`
 **Payload:**
+
 ```json
 {
   "actaId": "abc123",
   "clientEmail": "client@example.com"
 }
 ```
+
 **Purpose:** Sends an Acta email with approve/reject buttons. Tracks the decision in DynamoDB for audit.
 
 ---
@@ -74,4 +77,3 @@ Each agent is a serverless function responsible for a single piece of the Acta w
 ### 🔄 Future Extensions
 
 This manifest can be extended with additional event triggers (e.g. S3 uploads, DynamoDB streams), retry/backoff policies, structured logging expectations, or internal Slack bot agents. Codex agents may also be added for AI-assisted workflows.
-
