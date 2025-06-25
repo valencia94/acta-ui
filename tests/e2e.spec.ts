@@ -90,19 +90,20 @@ test('end-to-end workflow', async ({ page }) => {
   await page.waitForLoadState('networkidle');
 
   await expect(page.locator('img[alt="Ikusi logo"]')).toBeVisible();
+  await page.fill('#projectId', '123');
 
   await Promise.all([
-    page.waitForRequest(/download-acta/),
-    page.getByRole('button', { name: /Download \(.pdf\)/i }).click(),
-  ]);
-
-  await Promise.all([
-    page.waitForRequest(`${API}/send-approval-email`),
+    page.waitForRequest(/extract-project-place/),
     page.getByRole('button', { name: /Generate Acta/i }).click(),
   ]);
 
   await Promise.all([
-    page.waitForRequest(/extract-project-place/),
-    page.getByRole('button', { name: /Extract ProjectPlace Data/i }).click(),
+    page.waitForRequest(`${API}/send-approval-email`),
+    page.getByRole('button', { name: /Send for Approval/i }).click(),
+  ]);
+
+  await Promise.all([
+    page.waitForRequest(/download-acta/),
+    page.getByRole('button', { name: /Download \(.pdf\)/i }).click(),
   ]);
 });
