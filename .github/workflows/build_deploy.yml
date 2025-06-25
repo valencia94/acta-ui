@@ -33,11 +33,11 @@ jobs:
       - name: 🧼 Prettier Format (Auto-Fix)
         run: pnpm exec prettier --write .
 
-      - name: 🔍 Prettier Check (Fail if unformatted)
-        run: pnpm exec prettier --check .
-        
-      - name: 🔧 Auto-fix linting issues
+      - name: 🧼 Lint auto-fix
         run: pnpm exec eslint . --fix
+      
+      - name: 🔍 Re-run lint to validate
+        run: pnpm exec eslint .
 
       - name: 🧪 Lint + TypeScript
         run: pnpm lint
