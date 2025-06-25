@@ -1,112 +1,107 @@
 name: Build and Deploy
 
-on:
-  push:
-    branches: [develop]
-  workflow_dispatch: {}
+on: push: branches: [develop]            # auto-deploy from develop workflow_dispatch: {}            # manual button
 
-jobs:
-  build_deploy:
-    runs-on: ubuntu-latest
-    environment: prod
-    permissions:
-      id-token: write
-      contents: read
+jobs: ci_deploy: runs-on: ubuntu-latest environment: prod permissions: id-token: write              # OIDC for AWS contents: read
 
-    steps:
-      # ───── 0. Checkout ─────
-      - uses: actions/checkout@v4
+steps:
+  # ───── 0) Checkout ────────────────────────────────
+  - uses: actions/checkout@v4
 
-      # ───── 1. Toolchain Setup ─────
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
+  # ───── 1) Setup Node + pnpm toolchain ─────────────
+  - uses: pnpm/action-setup@v2
+    with: { version: 9 }
 
-      # ───── 2. Install + Lint + Format + Test ─────
-      - run: pnpm install --frozen-lockfile
-      - name: 🔍 ESLint + TypeScript
-        run: pnpm lint
-      - name: 🧼 Prettier auto-fix
-        run: pnpm exec prettier --write .
-      - name: 🧪 Prettier check
-        run: pnpm exec prettier --check .
-      - name: ✅ Vitest
-        run: pnpm run test:vitest -- --run --passWithNoTests
+  - uses: actions/setup-node@v4
+    with:
+      node-version: 20
+      cache: pnpm
 
-      # ───── 3. Build ─────
-      - name: Build (Vite)
-        run: |
-          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
-          pnpm run build
+  # ───── 2) Quality gates ───────────────────────────
+  - run: pnpm install --frozen-lockfile
 
-      # ───── 4. Local smoke test ─────
-      - name: Local preview smoke
-        run: |
-          pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
-          sleep 4 && curl -sf http://localhost:4173/
-          kill $SERVER
+  - name: ESLint + TypeScript
+    run: pnpm lint
 
-      # ───── 5. AWS OIDC credentials ─────
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+  - name: Prettier format (write)
+    run: pnpm exec prettier --write .
 
-      # ─────── 6) Upload UI to S3 ──────────────────────────────
-    - name: Log dist/ before S3 sync
-      run: |
-        echo "📂 Local dist/ contents:"
-        find dist -type f
+  - name: Prettier verify
+    run: pnpm exec prettier --check .
 
-    - name: S3 sync dist/ & push SPA routes
-      env:
-        BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-      run: |
-        set -eux
-        echo "🟢 Syncing dist/ to s3://$BUCKET"
-        aws s3 sync dist "s3://$BUCKET" --delete
+  - name: Vitest
+    run: pnpm run test:vitest -- --run --passWithNoTests
 
-        echo "📂 Verifying S3 files after sync:"
-        aws s3 ls "s3://$BUCKET/" --recursive
+  # ───── 3) Build SPA ───────────────────────────────
+  - name: Build (Vite)
+    run: |
+      echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+      pnpm run build
 
-        echo "🧪 Pushing SPA routes (/login, /dashboard)"
-        bash scripts/push-spa-routes.sh
+  # ───── 4) Local smoke test ────────────────────────
+  - name: Local preview smoke
+    run: |
+      pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
+      sleep 4 && curl -sf http://localhost:4173/
+      kill $SERVER
 
-        echo "📂 Verifying SPA route files in S3:"
-        aws s3 ls "s3://$BUCKET/login/"
-        aws s3 ls "s3://$BUCKET/dashboard/"
+  # ───── 5) AWS Credentials (OIDC) ──────────────────
+  - uses: aws-actions/configure-aws-credentials@v4
+    with:
+      role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      aws-region:     ${{ secrets.AWS_REGION }}
 
-    # ─────── 7) CloudFront root check + logging ──────────────
-    - name: Ensure CF root object = index.html
-      env:
-        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      run: |
-        echo "🔍 Checking CF root object"
-        tmp=$(mktemp)
-        aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
-        jq '.DistributionConfig.DefaultRootObject' "$tmp"
+  # ───── 6) Upload dist/ to S3 and verify ───────────
+  - name: Log dist/ before sync
+    run: |
+      echo "📂 Local dist/ contents:" && find dist -type f
 
-    # ─────── 8) Invalidate CF cache ──────────────────────────
-    - name: CloudFront invalidate /*
-      env:
-        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      run: |
-        INV=$(aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths '/*' \
-               --query 'Invalidation.Id' --output text)
-        echo "🕒 waiting for invalidation $INV…"
-        aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$INV"
+  - name: S3 sync dist/ & push SPA routes
+    env:
+      BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+    run: |
+      set -eux
+      aws s3 sync dist "s3://$BUCKET" --delete
+      bash scripts/push-spa-routes.sh
 
-    # ─────── 9) Print CloudFront URL ─────────────────────────
-    - name: Show CF URL and /login health
-      env:
-        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      run: |
-        DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" \
-                  --query 'Distribution.DomainName' --output text)
-        echo "🌐 UI is deployed to: https://$DOMAIN/"
-        echo "👀 Probing /login:"
-        curl -I "https://$DOMAIN/login"
+      echo "📂 S3 contents (post-sync):"
+      aws s3 ls "s3://$BUCKET/" --recursive
+      echo "🔍 /login/ and /dashboard/ routes:"
+      aws s3 ls "s3://$BUCKET/login/"
+      aws s3 ls "s3://$BUCKET/dashboard/"
+
+  # ───── 7) Ensure CF root object ───────────────────
+  - name: Ensure CF root object = index.html
+    env:
+      DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+    run: |
+      set -euo pipefail
+      tmp=$(mktemp)
+      aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
+      jq '.DistributionConfig.DefaultRootObject' "$tmp"
+
+  # ───── 8) Invalidate CF cache ─────────────────────
+  - name: CloudFront invalidate /*
+    env:
+      DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+    run: |
+      INV=$(aws cloudfront create-invalidation \
+             --distribution-id "$DIST_ID" --paths '/*' \
+             --query 'Invalidation.Id' --output text)
+      echo "🕒 waiting for invalidation $INV…"
+      aws cloudfront wait invalidation-completed \
+        --distribution-id "$DIST_ID" --id "$INV"
+
+  # ───── 9) Log CloudFront UI URL & test /login ─────
+  - name: Show CF URL and verify /login
+    env:
+      DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+    run: |
+      DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" \
+                --query 'Distribution.DomainName' --output text)
+      echo "🌐 UI deployed to: https://$DOMAIN/"
+      echo "👀 Verifying /login:"
+      curl -I "https://$DOMAIN/login"
+      echo "👀 Verifying /dashboard:"
+      curl -I "https://$DOMAIN/dashboard"
+
