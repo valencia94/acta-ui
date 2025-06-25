@@ -56,76 +56,57 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ───── 6. Upload UI to S3 ─────
-      - name: S3 sync dist/ & push SPA routes
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-        run: |
-          set -eux
-          aws s3 sync dist "s3://$BUCKET" --delete
-          bash scripts/push-spa-routes.sh
+      # ─────── 6) Upload UI to S3 ──────────────────────────────
+    - name: Log dist/ before S3 sync
+      run: |
+        echo "📂 Local dist/ contents:"
+        find dist -type f
 
-      # ───── 7. Patch CF default root object ─────
-      - name: Ensure CF root object = index.html
-        env:
-          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-        run: |
-          tmp=$(mktemp)
-          aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
-          jq '
-            .DistributionConfig as $cfg
-            | if $cfg.DefaultRootObject != "index.html"
-              then ($cfg.DefaultRootObject = "index.html") | $cfg
-              else $cfg end
-          ' "$tmp" > /tmp/cf_patch.json || true
-          if [ -s /tmp/cf_patch.json ]; then
-            etag=$(jq -r .ETag "$tmp")
-            aws cloudfront update-distribution \
-              --id "$DIST_ID" \
-              --if-match "$etag" \
-              --distribution-config file:///tmp/cf_patch.json
-            echo "🔄 DefaultRootObject set to index.html"
-          else
-            echo "✅ DefaultRootObject already index.html"
-          fi
+    - name: S3 sync dist/ & push SPA routes
+      env:
+        BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      run: |
+        set -eux
+        echo "🟢 Syncing dist/ to s3://$BUCKET"
+        aws s3 sync dist "s3://$BUCKET" --delete
 
-      # ───── 8. Ensure bucket policy for OAC ─────
-      - name: Attach CloudFront OAC policy
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-          REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-          cat > /tmp/s3-oac-policy.json <<EOF
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Sid": "AllowCloudFrontOACAccess",
-                "Effect": "Allow",
-                "Principal": { "Service": "cloudfront.amazonaws.com" },
-                "Action": "s3:GetObject",
-                "Resource": "arn:aws:s3:::$BUCKET/*",
-                "Condition": {
-                  "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudfront::$ACCOUNT:distribution/$DIST_ID"
-                  }
-                }
-              }
-            ]
-          }
-EOF
-          aws s3api put-bucket-policy --bucket "$BUCKET" --policy file:///tmp/s3-oac-policy.json --region "$REGION"
+        echo "📂 Verifying S3 files after sync:"
+        aws s3 ls "s3://$BUCKET/" --recursive
 
-      # ───── 9. Invalidate CloudFront Cache ─────
-      - name: CloudFront invalidate /* routes
-        env:
-          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-        run: |
-          INV=$(aws cloudfront create-invalidation \
-                 --distribution-id "$DIST_ID" --paths '/*' \
-                 --query 'Invalidation.Id' --output text)
-          echo "🕒 waiting for invalidation $INV…"
-          aws cloudfront wait invalidation-completed \
-            --distribution-id "$DIST_ID" --id "$INV"
+        echo "🧪 Pushing SPA routes (/login, /dashboard)"
+        bash scripts/push-spa-routes.sh
+
+        echo "📂 Verifying SPA route files in S3:"
+        aws s3 ls "s3://$BUCKET/login/"
+        aws s3 ls "s3://$BUCKET/dashboard/"
+
+    # ─────── 7) CloudFront root check + logging ──────────────
+    - name: Ensure CF root object = index.html
+      env:
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        echo "🔍 Checking CF root object"
+        tmp=$(mktemp)
+        aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
+        jq '.DistributionConfig.DefaultRootObject' "$tmp"
+
+    # ─────── 8) Invalidate CF cache ──────────────────────────
+    - name: CloudFront invalidate /*
+      env:
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        INV=$(aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths '/*' \
+               --query 'Invalidation.Id' --output text)
+        echo "🕒 waiting for invalidation $INV…"
+        aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$INV"
+
+    # ─────── 9) Print CloudFront URL ─────────────────────────
+    - name: Show CF URL and /login health
+      env:
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" \
+                  --query 'Distribution.DomainName' --output text)
+        echo "🌐 UI is deployed to: https://$DOMAIN/"
+        echo "👀 Probing /login:"
+        curl -I "https://$DOMAIN/login"
