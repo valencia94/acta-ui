@@ -1,114 +1,141 @@
 # .github/workflows/build_deploy.yml
-name: Build and Deploy                 # ← single source of truth
+name: Build and Deploy # ← single source of truth
 
 on:
   push:
-    branches: [develop]                # auto-deploy from develop
-  workflow_dispatch: {}                # manual button
+    branches: [develop] # auto-deploy from develop
+  workflow_dispatch: {} # manual button
 
 jobs:
   ci_deploy:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
-      id-token: write                  # OIDC for AWS
+      id-token: write # OIDC for AWS
       contents: read
 
     steps:
-    # ──────────────── 0) Checkout ─────────────────
-    - uses: actions/checkout@v4
+      # ──────────────── 0) Checkout ─────────────────
+      - uses: actions/checkout@v4
 
-    # ───────── 1) Node / pnpm toolchain cache ─────
-    - uses: pnpm/action-setup@v2
-      with: { version: 9 }
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: pnpm
+      # ───────── 1) Node / pnpm toolchain cache ─────
+      - uses: pnpm/action-setup@v2
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
 
-    # ───────────── 2) Quality gates ───────────────
-    - run: pnpm install --frozen-lockfile
+      # ───────────── 2) Quality gates ───────────────
+      - run: pnpm install --frozen-lockfile
 
-    - name: ESLint + TypeScript
-      run: pnpm lint
+      - name: ESLint + TypeScript
+        run: pnpm lint
 
-    - name: Prettier format (write)
-      run: pnpm exec prettier --write .
-    
-    - name: Prettier verify
-      run: pnpm exec prettier --check .
+      - name: Prettier format (write)
+        run: pnpm exec prettier --write .
 
-    - name: Vitest
-      run: pnpm run test:vitest -- --run --passWithNoTests  # uses existing script
+      - name: Prettier verify
+        run: pnpm exec prettier --check .
 
-    # ─────────────── 3) Build SPA ─────────────────
-    - name: Build (Vite)
-      run: |
-        echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
-        pnpm run build                                   # → dist/
+      - name: Vitest
+        run: pnpm run test:vitest -- --run --passWithNoTests # uses existing script
 
-    # ───────────── 4) Local smoke test ──────────────
-    - name: Local preview smoke
-      run: |
-        pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
-        sleep 4 && curl -sf http://localhost:4173/
-        kill $SERVER
+      # ─────────────── 3) Build SPA ─────────────────
+      - name: Build (Vite)
+        run: |
+          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+          pnpm run build                                   # → dist/
 
-    # ─────── 5) AWS credentials for this job ───────
-    - uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region:     ${{ secrets.AWS_REGION }}
+      # ───────────── 4) Local smoke test ──────────────
+      - name: Local preview smoke
+        run: |
+          pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
+          sleep 4 && curl -sf http://localhost:4173/
+          kill $SERVER
 
-    # ────────────── 6) Upload UI to S3 ─────────────
-    - name: S3 sync dist/ & push SPA routes
-      env:
-        BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-      run: |
-        set -eux
-        aws s3 sync dist "s3://$BUCKET" --delete
-        bash scripts/push-spa-routes.sh            # copies index.html to /login, /dashboard…
+      # ─────── 5) AWS credentials for this job ───────
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    # ──────── 7) Ensure OAC bucket policy ─────────
-    - name: Attach CloudFront OAC policy
-      env:
-        BUCKET:  ${{ secrets.S3_BUCKET_NAME }}
-        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-        REGION:  ${{ secrets.AWS_REGION }}
-      run: |
-        ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-        cat > /tmp/s3-oac-policy.json <<EOF
-        {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "AllowCloudFrontOACAccess",
-              "Effect": "Allow",
-              "Principal": { "Service": "cloudfront.amazonaws.com" },
-              "Action": "s3:GetObject",
-              "Resource": "arn:aws:s3:::$BUCKET/*",
-              "Condition": {
-                "StringEquals": {
-                  "AWS:SourceArn": "arn:aws:cloudfront::$ACCOUNT:distribution/$DIST_ID"
+      # ────────────── 6) Upload UI to S3 ─────────────
+      - name: S3 sync dist/ & push SPA routes
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+        run: |
+          set -eux
+          aws s3 sync dist "s3://$BUCKET" --delete
+          bash scripts/push-spa-routes.sh            # copies index.html to /login, /dashboard…
+
+      # ──────── 7) Ensure CF root object = index.html ────────
+      - name: Ensure CF root object = index.html
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+        env:
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp)
+          aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
+          jq '
+            .DistributionConfig as $cfg
+            | if $cfg.DefaultRootObject != "index.html"
+              then ($cfg.DefaultRootObject = "index.html") | $cfg
+              else $cfg end
+          ' "$tmp" > /tmp/cf_patch.json || true
+          if [ -s /tmp/cf_patch.json ]; then
+            etag=$(jq -r .ETag "$tmp")
+            aws cloudfront update-distribution \
+              --id "$DIST_ID" \
+              --if-match "$etag" \
+              --distribution-config file:///tmp/cf_patch.json
+            echo "🔄 DefaultRootObject set to index.html"
+          else
+            echo "✅ DefaultRootObject already index.html"
+          fi
+          rm -f "$tmp"
+
+      # ──────── 8) Ensure OAC bucket policy ─────────
+      - name: Attach CloudFront OAC policy
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+          REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          cat > /tmp/s3-oac-policy.json <<EOF
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AllowCloudFrontOACAccess",
+                "Effect": "Allow",
+                "Principal": { "Service": "cloudfront.amazonaws.com" },
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::$BUCKET/*",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceArn": "arn:aws:cloudfront::$ACCOUNT:distribution/$DIST_ID"
+                  }
                 }
               }
-            }
-          ]
-        }
-        EOF
-        aws s3api put-bucket-policy \
-          --bucket "$BUCKET" \
-          --policy file:///tmp/s3-oac-policy.json \
-          --region "$REGION"
+            ]
+          }
+          EOF
+          aws s3api put-bucket-policy \
+            --bucket "$BUCKET" \
+            --policy file:///tmp/s3-oac-policy.json \
+            --region "$REGION"
 
-    # ────────── 8) Invalidate CloudFront /* ────────
-    - name: CloudFront invalidate /*
-      env:
-        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      run: |
-        INV=$(aws cloudfront create-invalidation \
-               --distribution-id "$DIST_ID" --paths '/*' \
-               --query 'Invalidation.Id' --output text)
-        echo "🕒 waiting for invalidation $INV…"
-        aws cloudfront wait invalidation-completed \
-          --distribution-id "$DIST_ID" --id "$INV"
+      # ────────── 9) Invalidate CloudFront /* ────────
+      - name: CloudFront invalidate /*
+        env:
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          INV=$(aws cloudfront create-invalidation \
+                 --distribution-id "$DIST_ID" --paths '/*' \
+                 --query 'Invalidation.Id' --output text)
+          echo "🕒 waiting for invalidation $INV…"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$DIST_ID" --id "$INV"
