@@ -7,7 +7,7 @@
 
 ## Template's core:
 
-- [Node.js](https://nodejs.org/en/) (How to switch to [Bun](./docs/BUN.md)?)
+- [Node.js](https://nodejs.org/en/) (How to switch to [Bun](./docs/BUN.md)?) – requires **Node >=20 <23**
 - [pnpm](https://pnpm.io/)
 - [Vite](https://vitejs.dev/)
 - [Vitest](https://vitest.dev/)
@@ -27,11 +27,11 @@
   - pre-commit: lint and test
   - commit-msg: conventional commit message
 - [Storybook](https://storybook.js.org/)
-- Deployment to S3 and CloudFront via [`deploy_ui.yml`](.github/workflows/deploy_ui.yml)
+- Deployment to S3 and CloudFront via [`build_deploy.yml`](.github/workflows/build_deploy.yml)
 
 ## Deployment
 
-The GitHub Actions workflow `deploy_ui.yml` requires the repository secret
+The GitHub Actions workflow `build_deploy.yml` requires the repository secret
 `VITE_API_BASE_URL` during the build step. Make sure this secret is configured for
 both the **staging** and **production** environments.
 
@@ -90,3 +90,6 @@ The UI interacts with a single REST API (acta-backend-staging) using these route
 - `POST /send-approval-email` – sendApprovalEmail
 - `POST /extract-project-place/{id}` – ProjectPlaceDataExtractor
 - `GET /health` – healthCheck
+
+For a full map of UI components and their corresponding routes, see
+[docs/cross-impact-map.md](docs/cross-impact-map.md).
