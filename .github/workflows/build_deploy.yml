@@ -85,23 +85,24 @@ jobs:
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
+          set -euo pipefail
           tmp=$(mktemp)
           aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
+          etag=$(jq -r .ETag "$tmp")
           jq '
             .DistributionConfig as $cfg
             | if $cfg.DefaultRootObject != "index.html"
-              then ($cfg.DefaultRootObject = "index.html") | $cfg
-              else $cfg end
-          ' "$tmp" > /tmp/cf_patch.json || true
+              then $cfg.DefaultRootObject = "index.html" | $cfg
+              else empty end
+          ' "$tmp" > /tmp/cf_patch.json
           if [ -s /tmp/cf_patch.json ]; then
-            etag=$(jq -r .ETag "$tmp")
             aws cloudfront update-distribution \
               --id "$DIST_ID" \
               --if-match "$etag" \
               --distribution-config file:///tmp/cf_patch.json
             echo "🔄 CF root object set to index.html"
           else
-            echo "✅ CF root object already set"
+            echo "✅ CF root object already index.html"
           fi
           rm -f "$tmp"
 
