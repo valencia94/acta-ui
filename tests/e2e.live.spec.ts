@@ -20,6 +20,8 @@ test('Dashboard happy path', async ({ page }) => {
   await page.goto('/dashboard');
 
   await expect(page.locator('img[alt="Ikusi logo"]')).toBeVisible();
+  await page.fill('#projectId', '123');
+
   await expect(
     page.getByRole('button', { name: /Generate Acta/i })
   ).toBeEnabled();
