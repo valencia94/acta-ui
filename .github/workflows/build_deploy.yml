@@ -35,6 +35,9 @@ jobs:
 
       - name: 🔍 Prettier Check (Fail if unformatted)
         run: pnpm exec prettier --check .
+        
+      - name: 🔧 Auto-fix linting issues
+        run: pnpm exec eslint . --fix
 
       - name: 🧪 Lint + TypeScript
         run: pnpm lint
