@@ -1,5 +1,6 @@
 import { LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import {
   extractProjectData,
@@ -40,6 +41,7 @@ export default function Dashboard() {
     try {
       setSubmitting(true);
       const res = await getDownloadUrl(projectId, fmt);
+      toast.success(`Download ready: ${fmt.toUpperCase()}`);
       window.location.href = res.data;
     } catch {
       setError('Download failed');
