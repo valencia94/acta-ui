@@ -1,81 +1,75 @@
-# .github/workflows/build_deploy.yml
-name: Build and Deploy # ← single source of truth
+name: Build and Deploy
 
 on:
   push:
-    branches: [develop] # auto-deploy from develop
-  workflow_dispatch: {} # manual button
+    branches: [develop]
+  workflow_dispatch: {}
 
 jobs:
-  ci_deploy:
+  build_deploy:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
-      id-token: write # OIDC for AWS
+      id-token: write
       contents: read
 
     steps:
-      # ──────────────── 0) Checkout ─────────────────
+      # ───── 0. Checkout ─────
       - uses: actions/checkout@v4
 
-      # ───────── 1) Node / pnpm toolchain cache ─────
+      # ───── 1. Toolchain Setup ─────
       - uses: pnpm/action-setup@v2
-        with: { version: 9 }
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
-      # ───────────── 2) Quality gates ───────────────
+      # ───── 2. Install + Lint + Format + Test ─────
       - run: pnpm install --frozen-lockfile
-
-      - name: ESLint + TypeScript
+      - name: 🔍 ESLint + TypeScript
         run: pnpm lint
-
-      - name: Prettier format (write)
+      - name: 🧼 Prettier auto-fix
         run: pnpm exec prettier --write .
-
-      - name: Prettier verify
+      - name: 🧪 Prettier check
         run: pnpm exec prettier --check .
+      - name: ✅ Vitest
+        run: pnpm run test:vitest -- --run --passWithNoTests
 
-      - name: Vitest
-        run: pnpm run test:vitest -- --run --passWithNoTests # uses existing script
-
-      # ─────────────── 3) Build SPA ─────────────────
+      # ───── 3. Build ─────
       - name: Build (Vite)
         run: |
           echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
-          pnpm run build                                   # → dist/
+          pnpm run build
 
-      # ───────────── 4) Local smoke test ──────────────
+      # ───── 4. Local smoke test ─────
       - name: Local preview smoke
         run: |
           pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
           sleep 4 && curl -sf http://localhost:4173/
           kill $SERVER
 
-      # ─────── 5) AWS credentials for this job ───────
+      # ───── 5. AWS OIDC credentials ─────
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ────────────── 6) Upload UI to S3 ─────────────
+      # ───── 6. Upload UI to S3 ─────
       - name: S3 sync dist/ & push SPA routes
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
           set -eux
           aws s3 sync dist "s3://$BUCKET" --delete
-          bash scripts/push-spa-routes.sh            # copies index.html to /login, /dashboard…
+          bash scripts/push-spa-routes.sh
 
-      # ──────── 7) Ensure CF root object = index.html ────────
+      # ───── 7. Patch CF default root object ─────
       - name: Ensure CF root object = index.html
-        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
-          set -euo pipefail
           tmp=$(mktemp)
           aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
           jq '
@@ -94,9 +88,8 @@ jobs:
           else
             echo "✅ DefaultRootObject already index.html"
           fi
-          rm -f "$tmp"
 
-      # ──────── 8) Ensure OAC bucket policy ─────────
+      # ───── 8. Ensure bucket policy for OAC ─────
       - name: Attach CloudFront OAC policy
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
@@ -122,14 +115,11 @@ jobs:
               }
             ]
           }
-          EOF
-          aws s3api put-bucket-policy \
-            --bucket "$BUCKET" \
-            --policy file:///tmp/s3-oac-policy.json \
-            --region "$REGION"
+EOF
+          aws s3api put-bucket-policy --bucket "$BUCKET" --policy file:///tmp/s3-oac-policy.json --region "$REGION"
 
-      # ────────── 9) Invalidate CloudFront /* ────────
-      - name: CloudFront invalidate /*
+      # ───── 9. Invalidate CloudFront Cache ─────
+      - name: CloudFront invalidate /* routes
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
