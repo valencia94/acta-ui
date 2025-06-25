@@ -53,6 +53,33 @@ Local admins can redeploy the API and route wiring by running
 `deploy-core.sh` and `deploy-wiring.sh` as described in
 [docs/SAM_DEPLOY.md](docs/SAM_DEPLOY.md).
 
+### CloudFront Access Errors
+
+If `https://d7t9x3j66yd8k.cloudfront.net/` responds with **Access Denied** or
+`503` errors, the S3 bucket may not allow reads from the CloudFront Origin
+Access Control. Apply the policy located in
+`scripts/s3-oac-policy.json` using the GitHub Action
+`apply_oac_policy.yml` or run:
+
+```bash
+aws s3api put-bucket-policy \
+  --bucket acta-ui-frontend-prod \
+  --policy file://scripts/s3-oac-policy.json \
+  --region us-east-2
+```
+
+After building the UI (`pnpm run build`), deploy the files and invalidate the
+distribution:
+
+```bash
+AWS_REGION=us-east-2 \
+S3_BUCKET_NAME=acta-ui-frontend-prod \
+CLOUDFRONT_DIST_ID=EPQU7PVDLQXUA \
+bash scripts/deploy-to-s3.sh
+```
+
+Once complete, the CloudFront domain should serve the UI correctly.
+
 ## Environment variables
 
 Copy `.env.example` to `.env` (e.g. `cp .env.example .env`) and set
