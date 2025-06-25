@@ -1,9 +1,9 @@
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig({
-  root: '.', // root of the project
+  root: '.',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
