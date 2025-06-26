@@ -6,6 +6,7 @@ const api = axios.create({ baseURL: apiBaseUrl });
 export { api };
 
 /* ───────── Core helpers ───────── */
+export const listProjects = () => api.get<ProjectMeta[]>("/projects"); 
 export const getTimeline = (id: string) => api.get(`/timeline/${id}`);
 
 export const getDownloadUrl = (id: string, fmt: 'pdf' | 'docx') =>
