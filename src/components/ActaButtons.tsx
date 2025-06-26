@@ -1,6 +1,5 @@
 // src/components/ActaButtons.tsx
 import { Download, FileText, Send } from 'lucide-react';
-
 import { Button } from '@/components/Button';
 
 interface ActaButtonsProps {
@@ -20,36 +19,72 @@ export default function ActaButtons({
 }: ActaButtonsProps) {
   return (
     <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+      {/* Generate Acta */}
       <Button
         onClick={onGenerate}
-        className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2 text-white transition-transform hover:-translate-y-0.5"
-        {...({ disabled } as Record<string, unknown>)}
+        disabled={disabled}
+        className="
+          flex items-center justify-center gap-2
+          bg-primary hover:bg-accent focus:ring-primary
+          rounded-xl
+          transition-transform
+          py-2 text-white
+          focus:outline-none focus:ring-2 focus:ring-offset-2
+        "
       >
-        <Download className="h-4 w-4" /> Generate Acta
+        <Download className="h-5 w-5" />
+        Generate Acta
       </Button>
 
+      {/* Send for Approval */}
       <Button
         onClick={onSendForApproval}
-        className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2 text-white transition-transform hover:-translate-y-0.5"
-        {...({ disabled } as Record<string, unknown>)}
+        disabled={disabled}
+        className="
+          flex items-center justify-center gap-2
+          bg-primary hover:bg-accent focus:ring-primary
+          rounded-xl
+          transition-transform
+          py-2 text-white
+          focus:outline-none focus:ring-2 focus:ring-offset-2
+        "
       >
-        <Send className="h-4 w-4" /> Send for Approval
+        <Send className="h-5 w-5" />
+        Send for Approval
       </Button>
 
+      {/* Download (.docx) */}
       <Button
         onClick={onDownloadWord}
-        className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 py-2 transition-transform hover:-translate-y-0.5"
-        {...({ disabled } as Record<string, unknown>)}
+        disabled={disabled}
+        className="
+          flex items-center justify-center gap-2
+          border border-secondary hover:border-accent focus:ring-secondary
+          rounded-xl
+          transition-transform
+          py-2
+          focus:outline-none focus:ring-2 focus:ring-offset-2
+        "
       >
-        <FileText className="h-4 w-4" /> Download (.docx)
+        <FileText className="h-5 w-5" />
+        Download (.docx)
       </Button>
 
+      {/* Download (.pdf) */}
       <Button
         onClick={onDownloadPdf}
-        className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 py-2 transition-transform hover:-translate-y-0.5"
-        {...({ disabled } as Record<string, unknown>)}
+        disabled={disabled}
+        className="
+          flex items-center justify-center gap-2
+          border border-secondary hover:border-accent focus:ring-secondary
+          rounded-xl
+          transition-transform
+          py-2
+          focus:outline-none focus:ring-2 focus:ring-offset-2
+        "
       >
-        <FileText className="h-4 w-4" /> Download (.pdf)
+        <FileText className="h-5 w-5" />
+        Download (.pdf)
       </Button>
     </div>
   );
