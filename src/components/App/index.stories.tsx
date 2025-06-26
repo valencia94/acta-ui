@@ -1,38 +1,12 @@
-// src/components/App/index.tsx
-import { CssBaseline } from '@mui/material';
-import { useCallback, useState } from 'react';
-import { AppContainer } from '@/components/App/styles';
-import { Button } from '@/components/Button';
-import { Counter } from '@/components/Counter';
-import { counterDefaultValue } from '@/env.variables';
-import { LoadingMessage } from '@/components/LoadingMessage';
+// src/components/App/index.stories.tsx
+import { Meta, Story } from '@storybook/react';
+import { App } from './';
 
-export function App() {
-  const [counterValue, setCounterValue] = useState<number>(counterDefaultValue);
-  const [loading, setLoading] = useState(false);
+export default {
+  title: 'Components/App',
+  component: App,
+} as Meta;
 
-  const handleOnClick = useCallback(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setCounterValue((v) => v + 1);
-      setLoading(false);
-    }, 500);
-  }, []);
+const Template: Story = () => <App />;
 
-  return (
-    <AppContainer id="app">
-      <CssBaseline />
-
-      {loading ? (
-        <LoadingMessage message="Updating counter…" />
-      ) : (
-        <>
-          <Counter value={counterValue} />
-          <Button onClick={handleOnClick} className="mt-4">
-            Increment
-          </Button>
-        </>
-      )}
-    </AppContainer>
-  );
-}
+export const Primary = Template.bind({});
