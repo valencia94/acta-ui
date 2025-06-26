@@ -1,94 +1,98 @@
-import { useEffect, useState } from "react";
+import { LayoutDashboard } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
 import {
-  Card,
-  CardBody,
-  Button,
-  Stack,
-  Heading,
-  Text,
-} from "@chakra-ui/react";
-import {
-  listProjects,
   extractProjectData,
   getDownloadUrl,
   sendApprovalEmail,
-} from "@/services/actaApi";
+} from '@/services/actaApi';
 
-interface ProjectMeta {
-  id: string;
-  name: string;
-  description?: string;
-}
+import ActaButtons from '../components/ActaButtons';
 
 export default function Dashboard() {
-  const [projects, setProjects] = useState<ProjectMeta[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const res = await listProjects();
-      setProjects(res.data);
-    })();
-  }, []);
+  const [projectId, setProjectId] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
-    if (!activeId) return;
-    setBusy(true);
-    await extractProjectData(activeId);
-    setBusy(false);
+    try {
+      setSubmitting(true);
+      await extractProjectData(projectId);
+    } catch {
+      setError('Failed to extract project data');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleDownload = async () => {
-    if (!activeId) return;
-    window.open(await getDownloadUrl(activeId, "pdf"), "_blank");
+  const handleSendForApproval = async () => {
+    try {
+      setSubmitting(true);
+      await sendApprovalEmail({ actaId: projectId, clientEmail: '' });
+    } catch {
+      setError('Failed to send approval email');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleSend = async () => {
-    if (!activeId) return;
-    setBusy(true);
-    await sendApprovalEmail({
-      actaId: activeId,
-      clientEmail: "client@example.com",
-    });
-    setBusy(false);
+  const downloadFile = async (fmt: 'pdf' | 'docx') => {
+    try {
+      setSubmitting(true);
+      const res = await getDownloadUrl(projectId, fmt);
+      toast.success(`Download ready: ${fmt.toUpperCase()}`);
+      window.location.href = res.data;
+    } catch {
+      setError('Download failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (error)
+    return <div className="py-16 text-center text-red-600">{error}</div>;
 
   return (
-    <Stack p={8} spacing={8}>
-      <Heading bgGradient="linear(to-r, #1b6738, #4ac795)" bgClip="text">
-        Project dashboard
-      </Heading>
+    <div className="flex min-h-screen">
+      <aside className="hidden w-20 flex-col items-center gap-6 bg-gradient-to-b from-emerald-800 to-emerald-600 p-4 text-white md:flex md:w-56">
+        <LayoutDashboard className="h-6 w-6" />
+      </aside>
 
-      <Stack direction="row" flexWrap="wrap" spacing={4}>
-        {projects.map((p) => (
-          <Card
-            key={p.id}
-            borderWidth={activeId === p.id ? 2 : 1}
-            borderColor={activeId === p.id ? "#4ac795" : "gray.200"}
-            onClick={() => setActiveId(p.id)}
-            cursor="pointer"
-            w="300px"
-          >
-            <CardBody>
-              <Heading size="md">{p.name}</Heading>
-              <Text opacity={0.7}>{p.description}</Text>
-            </CardBody>
-          </Card>
-        ))}
-      </Stack>
+      <main className="flex-1 bg-white px-6 py-12">
+        <div className="mx-auto max-w-4xl space-y-8">
+          <h1 className="text-3xl font-semibold text-emerald-700">
+            Project Dashboard
+          </h1>
 
-      <Stack direction="row" spacing={4}>
-        <Button colorScheme="green" isDisabled={!activeId || busy} onClick={handleGenerate}>
-          Generate Acta
-        </Button>
-        <Button variant="outline" isDisabled={!activeId || busy} onClick={handleDownload}>
-          Download
-        </Button>
-        <Button variant="ghost" isDisabled={!activeId || busy} onClick={handleSend}>
-          Send for approval
-        </Button>
-      </Stack>
-    </Stack>
+          <div className="mt-2">
+            <label
+              htmlFor="projectId"
+              className="mb-1 block text-sm font-medium text-emerald-700"
+            >
+              Project ID
+            </label>
+            <input
+              id="projectId"
+              type="text"
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+              placeholder="e.g. 1000000064013473"
+              className="w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <ActaButtons
+            onGenerate={handleGenerate}
+            onSendForApproval={handleSendForApproval}
+            onDownloadWord={() => downloadFile('docx')}
+            onDownloadPdf={() => downloadFile('pdf')}
+            disabled={!projectId}
+          />
+
+          {submitting && <p className="text-sm text-gray-400">Processing…</p>}
+        </div>
+      </main>
+    </div>
   );
 }
