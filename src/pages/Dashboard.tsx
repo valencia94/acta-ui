@@ -1,98 +1,105 @@
-import { LayoutDashboard } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-
+cat > src/pages/Dashboard.tsx <<'EOF'
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
+  listProjects,
   extractProjectData,
   getDownloadUrl,
   sendApprovalEmail,
-} from '@/services/actaApi';
-
-import ActaButtons from '../components/ActaButtons';
+} from "@/services/actaApi";
+import toast from "react-hot-toast";
 
 export default function Dashboard() {
-  const [projectId, setProjectId] = useState<string>('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [projects, setProjects] = useState<ProjectMeta[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setProjects(await listProjects());
+      } catch {
+        toast.error("API unreachable – check backend health");
+      }
+    })();
+  }, []);
 
   const handleGenerate = async () => {
+    if (!activeId) return;
+    setBusy(true);
     try {
-      setSubmitting(true);
-      await extractProjectData(projectId);
+      await extractProjectData(activeId);
+      toast.success("Acta generated ✓");
     } catch {
-      setError('Failed to extract project data');
+      toast.error("Generation failed – see logs");
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
-  const handleSendForApproval = async () => {
-    try {
-      setSubmitting(true);
-      await sendApprovalEmail({ actaId: projectId, clientEmail: '' });
-    } catch {
-      setError('Failed to send approval email');
-    } finally {
-      setSubmitting(false);
-    }
+  const handleDownload = async () => {
+    if (!activeId) return;
+    window.open(await getDownloadUrl(activeId), "_blank");
   };
 
-  const downloadFile = async (fmt: 'pdf' | 'docx') => {
+  const handleSend = async () => {
+    if (!activeId) return;
+    setBusy(true);
     try {
-      setSubmitting(true);
-      const res = await getDownloadUrl(projectId, fmt);
-      toast.success(`Download ready: ${fmt.toUpperCase()}`);
-      window.location.href = res.data;
+      await sendApprovalEmail(activeId);
+      toast.success("Approval email queued ✓");
     } catch {
-      setError('Download failed');
+      toast.error("Email failed – retry later");
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
-
-  if (error)
-    return <div className="py-16 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-20 flex-col items-center gap-6 bg-gradient-to-b from-emerald-800 to-emerald-600 p-4 text-white md:flex md:w-56">
-        <LayoutDashboard className="h-6 w-6" />
-      </aside>
+    <div className="p-6 space-y-6">
+      <header className="rounded-2xl bg-gradient-to-r from-[#1b6738] to-[#4ac795] p-8 text-white">
+        <h1 className="text-3xl font-semibold">Project dashboard</h1>
+        <p className="opacity-80">Select a project to generate or send an Acta</p>
+      </header>
 
-      <main className="flex-1 bg-white px-6 py-12">
-        <div className="mx-auto max-w-4xl space-y-8">
-          <h1 className="text-3xl font-semibold text-emerald-700">
-            Project Dashboard
-          </h1>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {projects.map((p) => (
+          <Card
+            key={p.id}
+            onClick={() => setActiveId(p.id)}
+            className={`cursor-pointer ${
+              activeId === p.id ? "ring-2 ring-[#4ac795]" : ""
+            }`}
+          >
+            <CardContent className="p-4">
+              <h2 className="font-medium">{p.name}</h2>
+              <p className="text-sm opacity-70">{p.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
 
-          <div className="mt-2">
-            <label
-              htmlFor="projectId"
-              className="mb-1 block text-sm font-medium text-emerald-700"
-            >
-              Project ID
-            </label>
-            <input
-              id="projectId"
-              type="text"
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              placeholder="e.g. 1000000064013473"
-              className="w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          <ActaButtons
-            onGenerate={handleGenerate}
-            onSendForApproval={handleSendForApproval}
-            onDownloadWord={() => downloadFile('docx')}
-            onDownloadPdf={() => downloadFile('pdf')}
-            disabled={!projectId}
-          />
-
-          {submitting && <p className="text-sm text-gray-400">Processing…</p>}
-        </div>
-      </main>
+      <div className="flex flex-wrap gap-3">
+        <Button disabled={!activeId || busy} onClick={handleGenerate}>
+          Generate Acta
+        </Button>
+        <Button
+          variant="secondary"
+          disabled={!activeId || busy}
+          onClick={handleDownload}
+        >
+          Download
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!activeId || busy}
+          onClick={handleSend}
+        >
+          Send for approval
+        </Button>
+      </div>
     </div>
   );
 }
+EOF
