@@ -1,0 +1,7 @@
+/* override Amplify UI tokens */
+:root {
+  --amplify-primary-color: var(--color-primary);
+  --amplify-primary-tint: var(--color-primary-light);
+  --amplify-primary-shade: var(--color-primary-dark);
+  /* ...and so on */
+}
