@@ -1,7 +1,12 @@
 // src/pages/Dashboard.tsx
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { extractProjectPlaceData, getDownloadUrl, sendApprovalEmail } from '@/lib/api';
+import {
+  extractProjectPlaceData,
+  getDownloadUrl,
+  sendApprovalEmail,
+} from '@/lib/api';           // ← correct path
+
 import ActaButtons from '@/components/ActaButtons';
 import ProjectTable, { Project } from '@/components/ProjectTable';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,11 +15,12 @@ import { RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState<string>('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Fetch projects for this PM
   useEffect(() => {
     if (user?.email) loadProjects();
   }, [user]);
@@ -36,6 +42,7 @@ export default function Dashboard() {
     }
   }
 
+  // Generate Acta
   async function handleGenerate() {
     setActionLoading(true);
     try {
@@ -49,6 +56,7 @@ export default function Dashboard() {
     }
   }
 
+  // Send approval email
   async function handleSendForApproval() {
     setActionLoading(true);
     try {
@@ -61,6 +69,7 @@ export default function Dashboard() {
     }
   }
 
+  // Download .pdf or .docx
   async function handleDownload(fmt: 'pdf' | 'docx') {
     setActionLoading(true);
     try {
@@ -79,6 +88,7 @@ export default function Dashboard() {
   return (
     <Shell>
       <div className="space-y-8">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-white">
             Welcome, {user?.email}
@@ -94,8 +104,11 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* Acta Controls */}
         <div className="bg-white p-6 rounded-2xl shadow-md">
-          <h2 className="text-xl font-semibold text-primary mb-4">Acta Actions</h2>
+          <h2 className="text-xl font-semibold text-primary mb-4">
+            Acta Actions
+          </h2>
           <div className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1">
               <label
@@ -123,9 +136,12 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Projects Table */}
         <div className="bg-white p-6 rounded-2xl shadow-md">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-primary">Your Projects</h2>
+            <h2 className="text-xl font-semibold text-primary">
+              Your Projects
+            </h2>
             {loadingProjects && (
               <span className="text-sm text-secondary">Loading…</span>
             )}
