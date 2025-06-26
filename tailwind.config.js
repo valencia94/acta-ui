@@ -1,28 +1,34 @@
-/** Tailwind 3+ Configuration for Acta UI Platform */
 module.exports = {
-  content: ['./index.html', './src/**/*.{ts,tsx,html}'], // Tailwind scans these paths
-  safelist: [
-    'backdrop-blur-md',
-    'peer-placeholder-shown:top-4',
-    'peer-placeholder-shown:text-base',
-  ],
+  content: ['./index.html', './src/**/*.{ts,tsx,html}'],
   theme: {
     extend: {
       colors: {
-        primary: '#4ac795',    // Ikusi green
-        secondary: '#6b7280',  // Gray-500 for borders/text
-        accent: '#10b981',     // maybe for hover states
+        primary: 'var(--color-primary)',
+        secondary: 'var(--color-secondary)',
+        accent: 'var(--color-accent)',
+        neutral: 'var(--color-neutral)',
+        'bg-default': 'var(--color-bg-default)',
+        'text-default': 'var(--color-text-default)',
+      },
+      spacing: {
+        1: 'var(--space-1)',
+        2: 'var(--space-2)',
+        3: 'var(--space-3)',
+        4: 'var(--space-4)',
+        5: 'var(--space-5)',
+        6: 'var(--space-6)',
       },
       borderRadius: {
-        xl: '1rem',
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
       },
-      transitionProperty: {
-        transform: 'transform',
+      transitionDuration: {
+        fast: 'var(--transition-fast)',
+        normal: 'var(--transition-normal)',
+        slow: 'var(--transition-slow)',
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [],
 };
