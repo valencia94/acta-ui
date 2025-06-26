@@ -6,6 +6,6 @@
 
   // Auto-installs AWS CLI v2 every time a Codespace is created
   "features": {
-    "ghcr.io/devcontainers/features/aws-cli:1.1.2": {}
+    "ghcr.io/devcontainers-contrib/features/aws-cli:2": {}
   }
 }
