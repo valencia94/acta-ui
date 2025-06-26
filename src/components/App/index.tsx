@@ -1,25 +1,38 @@
-// src/components/LoadingMessage/index.tsx
-import { Typography } from '@mui/material';
-import clsx from 'clsx';
+// src/components/App/index.tsx
+import { CssBaseline } from '@mui/material';
+import { useCallback, useState } from 'react';
+import { AppContainer } from '@/components/App/styles';
+import { Button } from '@/components/Button';
+import { Counter } from '@/components/Counter';
+import { counterDefaultValue } from '@/env.variables';
+import { LoadingMessage } from '@/components/LoadingMessage';
 
-export interface LoadingMessageProps {
-  /** The message to display while loading */
-  message?: string;
-  /** Optional CSS classes (tailwind or MUI) */
-  className?: string;
-}
+export function App() {
+  const [counterValue, setCounterValue] = useState<number>(counterDefaultValue);
+  const [loading, setLoading] = useState(false);
 
-export function LoadingMessage({
-  message = 'Loading…',
-  className = '',
-}: LoadingMessageProps) {
+  const handleOnClick = useCallback(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setCounterValue((v) => v + 1);
+      setLoading(false);
+    }, 500);
+  }, []);
+
   return (
-    <Typography
-      variant="body1"
-      className={clsx('italic text-secondary', className)}
-      id="loading-message"
-    >
-      {message}
-    </Typography>
+    <AppContainer id="app">
+      <CssBaseline />
+
+      {loading ? (
+        <LoadingMessage message="Updating counter…" />
+      ) : (
+        <>
+          <Counter value={counterValue} />
+          <Button onClick={handleOnClick} className="mt-4">
+            Increment
+          </Button>
+        </>
+      )}
+    </AppContainer>
   );
 }
