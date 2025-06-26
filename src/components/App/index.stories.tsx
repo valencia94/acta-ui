@@ -1,19 +1,38 @@
-// src/components/LoadingMessage/index.stories.tsx
-import { Meta, Story } from '@storybook/react';
-import { LoadingMessage, LoadingMessageProps } from './';
+// src/components/App/index.tsx
+import { CssBaseline } from '@mui/material';
+import { useCallback, useState } from 'react';
+import { AppContainer } from '@/components/App/styles';
+import { Button } from '@/components/Button';
+import { Counter } from '@/components/Counter';
+import { counterDefaultValue } from '@/env.variables';
+import { LoadingMessage } from '@/components/LoadingMessage';
 
-export default {
-  title: 'Components/LoadingMessage',
-  component: LoadingMessage,
-} as Meta<LoadingMessageProps>;
+export function App() {
+  const [counterValue, setCounterValue] = useState<number>(counterDefaultValue);
+  const [loading, setLoading] = useState(false);
 
-const Template: Story<LoadingMessageProps> = (args) => (
-  <div style={{ padding: '1rem', background: '#f9f9f9' }}>
-    <LoadingMessage {...args} />
-  </div>
-);
+  const handleOnClick = useCallback(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setCounterValue((v) => v + 1);
+      setLoading(false);
+    }, 500);
+  }, []);
 
-export const Default = Template.bind({});
-Default.args = {
-  message: 'Loading projects...',
-};
+  return (
+    <AppContainer id="app">
+      <CssBaseline />
+
+      {loading ? (
+        <LoadingMessage message="Updating counter…" />
+      ) : (
+        <>
+          <Counter value={counterValue} />
+          <Button onClick={handleOnClick} className="mt-4">
+            Increment
+          </Button>
+        </>
+      )}
+    </AppContainer>
+  );
+}
