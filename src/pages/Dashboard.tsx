@@ -1,14 +1,24 @@
-cat > src/pages/Dashboard.tsx <<'EOF'
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardBody,
+  Button,
+  Stack,
+  Heading,
+  Text,
+} from "@chakra-ui/react";
 import {
   listProjects,
   extractProjectData,
   getDownloadUrl,
   sendApprovalEmail,
 } from "@/services/actaApi";
-import toast from "react-hot-toast";
+
+interface ProjectMeta {
+  id: string;
+  name: string;
+  description?: string;
+}
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<ProjectMeta[]>([]);
@@ -17,89 +27,68 @@ export default function Dashboard() {
 
   useEffect(() => {
     (async () => {
-      try {
-        setProjects(await listProjects());
-      } catch {
-        toast.error("API unreachable – check backend health");
-      }
+      const res = await listProjects();
+      setProjects(res.data);
     })();
   }, []);
 
   const handleGenerate = async () => {
     if (!activeId) return;
     setBusy(true);
-    try {
-      await extractProjectData(activeId);
-      toast.success("Acta generated ✓");
-    } catch {
-      toast.error("Generation failed – see logs");
-    } finally {
-      setBusy(false);
-    }
+    await extractProjectData(activeId);
+    setBusy(false);
   };
 
   const handleDownload = async () => {
     if (!activeId) return;
-    window.open(await getDownloadUrl(activeId), "_blank");
+    window.open(await getDownloadUrl(activeId, "pdf"), "_blank");
   };
 
   const handleSend = async () => {
     if (!activeId) return;
     setBusy(true);
-    try {
-      await sendApprovalEmail(activeId);
-      toast.success("Approval email queued ✓");
-    } catch {
-      toast.error("Email failed – retry later");
-    } finally {
-      setBusy(false);
-    }
+    await sendApprovalEmail({
+      actaId: activeId,
+      clientEmail: "client@example.com",
+    });
+    setBusy(false);
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <header className="rounded-2xl bg-gradient-to-r from-[#1b6738] to-[#4ac795] p-8 text-white">
-        <h1 className="text-3xl font-semibold">Project dashboard</h1>
-        <p className="opacity-80">Select a project to generate or send an Acta</p>
-      </header>
+    <Stack p={8} spacing={8}>
+      <Heading bgGradient="linear(to-r, #1b6738, #4ac795)" bgClip="text">
+        Project dashboard
+      </Heading>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <Stack direction="row" flexWrap="wrap" spacing={4}>
         {projects.map((p) => (
           <Card
             key={p.id}
+            borderWidth={activeId === p.id ? 2 : 1}
+            borderColor={activeId === p.id ? "#4ac795" : "gray.200"}
             onClick={() => setActiveId(p.id)}
-            className={`cursor-pointer ${
-              activeId === p.id ? "ring-2 ring-[#4ac795]" : ""
-            }`}
+            cursor="pointer"
+            w="300px"
           >
-            <CardContent className="p-4">
-              <h2 className="font-medium">{p.name}</h2>
-              <p className="text-sm opacity-70">{p.description}</p>
-            </CardContent>
+            <CardBody>
+              <Heading size="md">{p.name}</Heading>
+              <Text opacity={0.7}>{p.description}</Text>
+            </CardBody>
           </Card>
         ))}
-      </section>
+      </Stack>
 
-      <div className="flex flex-wrap gap-3">
-        <Button disabled={!activeId || busy} onClick={handleGenerate}>
+      <Stack direction="row" spacing={4}>
+        <Button colorScheme="green" isDisabled={!activeId || busy} onClick={handleGenerate}>
           Generate Acta
         </Button>
-        <Button
-          variant="secondary"
-          disabled={!activeId || busy}
-          onClick={handleDownload}
-        >
+        <Button variant="outline" isDisabled={!activeId || busy} onClick={handleDownload}>
           Download
         </Button>
-        <Button
-          variant="outline"
-          disabled={!activeId || busy}
-          onClick={handleSend}
-        >
+        <Button variant="ghost" isDisabled={!activeId || busy} onClick={handleSend}>
           Send for approval
         </Button>
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }
-EOF
