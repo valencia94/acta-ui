@@ -8,9 +8,9 @@ import { useAuth } from '@/hooks/useAuth'; // example hook to get current user
 
 export default function Dashboard() {
   const { user } = useAuth();                  // { email: string, ... }
-  const [projectId, setProjectId] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [projectId, _setProjectId] = useState<string>('');
+  const [submitting, _setSubmitting] = useState(false);
+  const [error, _setError] = useState<string | null>(null);
 
   // ← NEW: state for all PM’s projects
   const [projects, setProjects] = useState<Project[]>([]);
