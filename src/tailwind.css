@@ -1,25 +1,18 @@
-/** Tailwind 3 clean config */
-module.exports = {
-  content: ['./index.html', './src/**/*.{ts,tsx,html}'],
-  safelist: [
-    'backdrop-blur-md',
-    'peer-placeholder-shown:top-4',
-    'peer-placeholder-shown:text-base',
-  ],
-  theme: {
-    extend: {
-      colors: {
-        cvdex: 'var(--cvdex)',
-        'cvdex-dark': 'var(--cvdex-dark)',
-        'ikusi-green': '#4ac795',
-        ikusi: {
-          green: '#006b54',
-          teal: '#0094a8',
-          dark: '#002e24',
-        },
-        emerald: { DEFAULT: '#4ac795' },
-      },
-    },
-  },
-  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
-};
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles */
+body {
+  @apply bg-white text-slate-900 antialiased;
+}
+
+@layer components {
+  .input {
+    @apply w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cvdex focus:ring-opacity-70;
+  }
+
+  .btn {
+    @apply bg-cvdex text-white font-semibold px-4 py-2 rounded hover:bg-cvdex-dark transition;
+  }
+}
