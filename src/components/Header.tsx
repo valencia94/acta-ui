@@ -1,9 +1,10 @@
 // src/components/Header.tsx
-import { Auth } from 'aws-amplify';
+import { Auth } from '@aws-amplify/auth';
 import clsx from 'clsx';
 import { Menu, Grid } from 'lucide-react';
 import { useState } from 'react';
-import logoSrc from '@assets/ikusi-logo.png';
+
+const logoSrc = '/assets/ikusi-logo.png';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -15,16 +16,17 @@ export default function Header() {
         <img src={logoSrc} alt="Ikusi logo" className="h-8 w-auto" />
         <div className="leading-tight text-white">
           <h1 className="text-lg font-semibold">Acta Platform</h1>
-          <p className="text-xs opacity-75">invisible technology, visible transformation</p>
+          <p className="text-xs opacity-75">
+            invisible technology, visible transformation
+          </p>
         </div>
       </div>
 
-      {/* Center / optional: some nav icon/button */}
+      {/* Center nav (hidden on mobile) */}
       <nav className="hidden md:flex items-center gap-6 text-white">
         <a href="/dashboard" className="hover:underline">
           Dashboard
         </a>
-        {/* example grid icon */}
         <button aria-label="All Projects">
           <Grid className="h-5 w-5" />
         </button>
@@ -33,14 +35,13 @@ export default function Header() {
       {/* Right: mobile menu toggle */}
       <div className="relative">
         <button
-          onClick={() => setOpen(o => !o)}
+          onClick={() => setOpen((o) => !o)}
           aria-label="Toggle menu"
           className="text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
         >
           <Menu className="h-6 w-6" />
         </button>
 
-        {/* Dropdown */}
         {open && (
           <div
             className={clsx(
@@ -54,7 +55,6 @@ export default function Header() {
             >
               Log out
             </button>
-            {/* you can add more items here, e.g.: */}
             <a
               href="/profile"
               className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
