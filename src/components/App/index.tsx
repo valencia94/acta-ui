@@ -1,24 +1,25 @@
-import { CssBaseline } from '@mui/material';
-import { useCallback, useState } from 'react';
+// src/components/LoadingMessage/index.tsx
+import { Typography } from '@mui/material';
+import clsx from 'clsx';
 
-import { AppContainer } from '~/components/App/styles';
-import { Button } from '~/components/Button';
-import { Counter } from '~/components/Counter';
-import { counterDefaultValue } from '~/env.variables';
+export interface LoadingMessageProps {
+  /** The message to display while loading */
+  message?: string;
+  /** Optional CSS classes (tailwind or MUI) */
+  className?: string;
+}
 
-export const App = () => {
-  const [counterValue, setCounterValue] = useState<number>(counterDefaultValue);
-
-  const handleOnClick = useCallback(
-    () => setCounterValue((value) => value + 1),
-    []
-  );
-
+export function LoadingMessage({
+  message = 'Loading…',
+  className = '',
+}: LoadingMessageProps) {
   return (
-    <AppContainer id="app">
-      <CssBaseline />
-      <Counter value={counterValue} />
-      <Button onClick={handleOnClick} />
-    </AppContainer>
+    <Typography
+      variant="body1"
+      className={clsx('italic text-secondary', className)}
+      id="loading-message"
+    >
+      {message}
+    </Typography>
   );
-};
+}
