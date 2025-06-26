@@ -1,27 +1,78 @@
-import axios from 'axios';
-
 import { apiBaseUrl } from '../env.variables';
 
-const api = axios.create({ baseURL: apiBaseUrl });
-export { api };
+const BASE = apiBaseUrl;
 
-/* ───────── Core helpers ───────── */
-export const getTimeline = (id: string) => api.get(`/timeline/${id}`);
+export interface ProjectSummary {
+  project_id: string;
+  project_name: string;
+  pm?: string;
+  project_manager?: string;
+  [key: string]: unknown;
+}
 
-export const getDownloadUrl = (id: string, fmt: 'pdf' | 'docx') =>
-  api.get(`/download-acta/${id}`, { params: { format: fmt } });
+export interface TimelineEvent {
+  hito: string;
+  actividades: string;
+  desarrollo: string;
+  fecha: string;
+}
 
-export const getSummary = (id: string) => api.get(`/project-summary/${id}`);
+/* ---------- SUMMARY ---------- */
+export async function getSummary(id: string): Promise<ProjectSummary> {
+  const r = await fetch(`${BASE}/project-summary/${id}`);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
 
-export const sendApprovalEmail = (payload: {
-  actaId: string;
-  clientEmail: string;
-}) => api.post('/send-approval-email', payload);
+/* ---------- TIMELINE ---------- */
+export async function getTimeline(id: string): Promise<TimelineEvent[]> {
+  const r = await fetch(`${BASE}/timeline/${id}`);
+  if (!r.ok) throw new Error(await r.text());
+  const data = await r.json();
+  // Validate structure a bit for safety
+  if (!Array.isArray(data))
+    throw new Error('Timeline response is not an array');
+  // Optionally, you could validate each event's keys here if you want
+  return data as TimelineEvent[];
+}
 
-export const extractProjectData = (id: string) =>
-  api.post(`/extract-project-place/${id}`);
+/* ---------- ACTA DOWNLOAD ---------- */
+export async function getDownloadUrl(
+  id: string,
+  format: 'pdf' | 'docx'
+): Promise<string> {
+  const r = await fetch(`${BASE}/download-acta/${id}?format=${format}`, {
+    redirect: 'manual',
+  });
+  if (r.status !== 302) {
+    throw new Error(`Download endpoint returned ${r.status}`);
+  }
+  const url = r.headers.get('Location');
+  if (!url) throw new Error('Missing Location header');
+  return url;
+}
 
-/* ───────── Legacy aliases ───────── */
-export const getProjectSummary = getSummary;
-export const downloadActa = getDownloadUrl;
-export const extractProjectPlaceData = extractProjectData;
+/* ---------- APPROVAL E-MAIL ---------- */
+export async function sendApprovalEmail(
+  actaId: string,
+  clientEmail: string
+): Promise<{ message: string; token: string }> {
+  const r = await fetch(`${BASE}/send-approval-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ actaId, clientEmail }),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/* ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
+export async function extractProjectPlaceData(
+  projectId: string
+): Promise<unknown> {
+  const r = await fetch(`${BASE}/extract-project-place/${projectId}`, {
+    method: 'POST',
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
