@@ -1,10 +1,21 @@
+import { getSummary } from '@/lib/api';
+import ActaButtons from '@components/ActaButtons';
+import { fetcher } from '@utils/fetchWrapper';
+
 {
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "~/*": ["./src/*"],
-      "@mui/styled-engine": ["./node_modules/@mui/styled-engine-sc"]
+      "~/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@services/*": ["src/services/*"],
+      "@lib/*": ["src/lib/*"],
+      "@utils/*": ["src/utils/*"],
+      "@types/*": ["src/types/*"],
+      "@assets/*": ["src/assets/*"],
+      "@styles/*": ["src/styles/*"],
+      "@mui/styled-engine": ["node_modules/@mui/styled-engine-sc"]
     },
     "target": "ESNext",
     "useDefineForClassFields": true,
@@ -23,6 +34,6 @@
     "jsx": "react-jsx",
     "types": ["vitest/globals", "vite/client"]
   },
-  "include": ["./src"],
-  "exclude": ["./coverage", "./dist", "./node_modules"]
+  "include": ["src"],
+  "exclude": ["coverage", "dist", "node_modules"]
 }
