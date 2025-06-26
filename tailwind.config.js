@@ -1,3 +1,4 @@
+// tailwind.config.js
 module.exports = {
   content: ['./index.html', './src/**/*.{ts,tsx,html}'],
   theme: {
@@ -30,5 +31,8 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+  ],
 };
