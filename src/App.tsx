@@ -1,50 +1,85 @@
 // src/App.tsx
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { Authenticator } from '@aws-amplify/ui-react';
-import '@aws-amplify/ui-react/styles.css';
+import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
-import Shell from '@/components/Shell';
+import Header from '@/components/Header';
 import { skipAuth } from '@/env.variables';
+import { useIdleLogout } from '@/hooks/useIdleLogout';
+import { useThemedFavicon } from '@/hooks/useThemedFavicon';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 
 export default function App() {
-  // If skipAuth=true (dev mode), skip the hosted UI
-  if (skipAuth) {
-    return (
-      <BrowserRouter>
-        <Shell>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/login" element={<Login />} />
-          </Routes>
-        </Shell>
-      </BrowserRouter>
-    );
-  }
+  useThemedFavicon();
+  useIdleLogout(30);
+
+  const [checked, setChecked] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
+
+  useEffect(() => {
+    if (skipAuth) {
+      setIsAuthed(true);
+      setChecked(true);
+      return;
+    }
+
+    const verify = async () => {
+      try {
+        const { tokens } = await fetchAuthSession();
+        const token = tokens?.idToken?.toString() ?? '';
+        localStorage.setItem('ikusi.jwt', token);
+        setIsAuthed(true);
+      } catch {
+        localStorage.removeItem('ikusi.jwt');
+        setIsAuthed(false);
+      } finally {
+        setChecked(true);
+      }
+    };
+
+    verify();
+  }, []);
+
+  if (!checked) return null;
+
+  const routes = (
+    <BrowserRouter>
+      <Header />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Navigate
+              to={skipAuth || isAuthed ? '/dashboard' : '/login'}
+            />
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/dashboard"
+          element={
+            skipAuth || isAuthed ? (
+              <Dashboard />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 
   return (
-    <Authenticator>
-      {({ signOut, user }) => (
-        <BrowserRouter>
-          <Shell>
-            <Routes>
-              {/* Root → dashboard */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
-              {/* Dashboard only if signed in */}
-              <Route
-                path="/dashboard"
-                element={<Dashboard />}
-              />
-
-              {/* Fallback to Amplify's signin UI */}
-              <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </Shell>
-        </BrowserRouter>
-      )}
-    </Authenticator>
+    <ChakraProvider value={defaultSystem}>
+      {skipAuth ? routes : <Authenticator>{routes}</Authenticator>}
+    </ChakraProvider>
   );
 }
