@@ -1,30 +1,38 @@
 // src/pages/Login.tsx
-import { Auth } from 'aws-amplify';
+import { Auth } from '@aws-amplify/auth';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import logoSrc from '@assets/ikusi-logo.png';
+import { skipAuth } from '@/env.variables';
 
 interface FormData {
   email: string;
   password: string;
 }
 
+const logoSrc = '/assets/ikusi-logo.png';
+
 export default function Login() {
   const nav = useNavigate();
   const { register, handleSubmit } = useForm<FormData>();
 
   useEffect(() => {
-    Auth.signOut().catch(() => {});
+    if (!skipAuth) {
+      Auth.signOut().catch(() => {});
+    }
   }, []);
 
   async function onSubmit({ email, password }: FormData) {
     try {
-      await Auth.signIn({ username: email, password });
-      const session = await Auth.currentSession();
-      const token = session.getIdToken().getJwtToken();
-      localStorage.setItem('ikusi.jwt', token);
+      if (skipAuth) {
+        localStorage.setItem('ikusi.jwt', 'dev-token');
+      } else {
+        await Auth.signIn({ username: email, password });
+        const session = await Auth.currentSession();
+        const token = session.getIdToken().getJwtToken();
+        localStorage.setItem('ikusi.jwt', token);
+      }
       nav('/dashboard');
     } catch (err) {
       console.error(err);
@@ -32,7 +40,7 @@ export default function Login() {
     }
   }
 
-  const MotionButton = motion(motion.button);
+  const MotionButton = motion.button;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-primary/5 p-6">
@@ -55,8 +63,8 @@ export default function Login() {
               required
               {...register('email')}
               className="
-                peer h-10 w-full 
-                border-b-2 border-secondary 
+                peer h-10 w-full
+                border-b-2 border-secondary
                 bg-transparent placeholder-transparent
                 focus:border-primary focus:outline-none focus:ring-0
               "
@@ -64,9 +72,9 @@ export default function Login() {
             <label
               htmlFor="email"
               className="
-                absolute left-0 -top-3.5 text-sm text-secondary 
-                transition-all 
-                peer-placeholder-shown:top-2 peer-placeholder-shown:text-base 
+                absolute left-0 -top-3.5 text-sm text-secondary
+                transition-all
+                peer-placeholder-shown:top-2 peer-placeholder-shown:text-base
                 peer-focus:-top-3.5 peer-focus:text-sm
               "
             >
@@ -82,8 +90,8 @@ export default function Login() {
               required
               {...register('password')}
               className="
-                peer h-10 w-full 
-                border-b-2 border-secondary 
+                peer h-10 w-full
+                border-b-2 border-secondary
                 bg-transparent placeholder-transparent
                 focus:border-primary focus:outline-none focus:ring-0
               "
@@ -91,9 +99,9 @@ export default function Login() {
             <label
               htmlFor="password"
               className="
-                absolute left-0 -top-3.5 text-sm text-secondary 
-                transition-all 
-                peer-placeholder-shown:top-2 peer-placeholder-shown:text-base 
+                absolute left-0 -top-3.5 text-sm text-secondary
+                transition-all
+                peer-placeholder-shown:top-2 peer-placeholder-shown:text-base
                 peer-focus:-top-3.5 peer-focus:text-sm
               "
             >
@@ -106,9 +114,9 @@ export default function Login() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             className="
-              w-full rounded-md 
-              bg-primary hover:bg-accent 
-              py-2 text-white 
+              w-full rounded-md
+              bg-primary hover:bg-accent
+              py-2 text-white
               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent
               transition
             "
