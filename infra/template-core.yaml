@@ -5,7 +5,7 @@ Resources:
   ActaApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: acta-backend-staging
+      Name: acta-backend-manual
       Description: API Gateway for Acta Lambda integrations
       EndpointConfiguration:
         Types:
