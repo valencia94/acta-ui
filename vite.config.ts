@@ -1,16 +1,20 @@
 // vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { validateEnvPlugin } from '@julr/vite-plugin-validate-env';
+import { ValidateEnv } from '@julr/vite-plugin-validate-env';
 import svgr from 'vite-plugin-svgr';
 import path from 'path';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
+
 import { envSchema } from './src/env.schema';
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [
     react(),
     svgr(),
-    validateEnvPlugin({
+    ValidateEnv({
+      validator: 'standard',      // use our Zod-based schema
       schema: envSchema,
       prefix: 'VITE_',
       env: process.env,
@@ -26,16 +30,17 @@ export default defineConfig(({ mode }) => ({
   css: {
     postcss: {
       plugins: [
-        require('tailwindcss')('./tailwind.config.js'),
-        require('autoprefixer'),
+        tailwindcss('./tailwind.config.js'),
+        autoprefixer(),
       ],
     },
   },
   server: {
+    host: true,
     port: 3000,
     open: true,
   },
   preview: {
     port: 5000,
   },
-}));
+});
