@@ -1,8 +1,8 @@
-import { Authenticator } from '@aws-amplify/ui-react';
-import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
-import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { fetchAuthSession, signOut } from 'aws-amplify/auth';
+import { Authenticator } from '@aws-amplify/ui-react';
+import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 
 import Header from '@/components/Header';
 import { skipAuth } from '@/env.variables';
@@ -14,6 +14,7 @@ import Login from '@/pages/Login';
 export default function App() {
   useThemedFavicon();
   useIdleLogout(30);
+
   const [checked, setChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
 
@@ -38,6 +39,7 @@ export default function App() {
         setChecked(true);
       }
     };
+
     verify();
   }, []);
 
@@ -49,16 +51,12 @@ export default function App() {
       <Routes>
         <Route
           path="/"
-          element={
-            <Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} />
-          }
+          element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} />}
         />
         <Route path="/login" element={<Login />} />
         <Route
           path="/dashboard"
-          element={
-            skipAuth || isAuthed ? <Dashboard /> : <Navigate to="/login" />
-          }
+          element={skipAuth || isAuthed ? <Dashboard /> : <Navigate to="/login" />}
         />
       </Routes>
     </BrowserRouter>
@@ -66,7 +64,6 @@ export default function App() {
 
   return (
     <ChakraProvider value={defaultSystem}>
-      {/* CI sets VITE_SKIP_AUTH so Authenticator is disabled during tests */}
       {skipAuth ? routes : <Authenticator>{routes}</Authenticator>}
     </ChakraProvider>
   );

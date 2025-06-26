@@ -1,6 +1,6 @@
-/** Tailwind 3 clean config */
+/** Tailwind 3+ Configuration for Acta UI Platform */
 module.exports = {
-  content: ['./index.html', './src/**/*.{ts,tsx,html}'],
+  content: ['./index.html', './src/**/*.{ts,tsx,html}'], // Tailwind scans these paths
   safelist: [
     'backdrop-blur-md',
     'peer-placeholder-shown:top-4',
@@ -9,17 +9,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        cvdex: 'var(--cvdex)',
-        'cvdex-dark': 'var(--cvdex-dark)',
-        'ikusi-green': '#4ac795',
-        ikusi: {
-          green: '#006b54',
-          teal: '#0094a8',
-          dark: '#002e24',
-        },
-        emerald: { DEFAULT: '#4ac795' },
+        primary: '#4ac795',    // Ikusi green
+        secondary: '#6b7280',  // Gray-500 for borders/text
+        accent: '#10b981',     // maybe for hover states
+      },
+      borderRadius: {
+        xl: '1rem',
+      },
+      transitionProperty: {
+        transform: 'transform',
       },
     },
   },
-  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+  ],
 };

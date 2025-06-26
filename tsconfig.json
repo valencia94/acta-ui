@@ -1,41 +1,42 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "~/*": ["./src/*"],
-      "@mui/styled-engine": ["./node_modules/@mui/styled-engine-sc"],
-      "@components/*": ["src/components/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@assets/*": ["src/assets/*"],
-      "@lib/*": ["src/lib/*"],
-      "@services/*": ["src/services/*"],
-      "@pages/*": ["src/pages/*"],
-      "@styles/*": ["src/styles/*"]
-    },
     "target": "ESNext",
-    "useDefineForClassFields": true,
+    "module": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": true,
-    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "strict": false,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
-    "strict": false,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "types": ["vitest/globals", "vite/client"]
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*":           ["src/*"],
+      "~/*":           ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*":      ["src/hooks/*"],
+      "@assets/*":     ["src/assets/*"],
+      "@lib/*":        ["src/lib/*"],
+      "@utils/*":      ["src/utils/*"],
+      "@pages/*":      ["src/pages/*"],
+      "@styles/*":     ["src/styles/*"],
+      "@mui/styled-engine": ["node_modules/@mui/styled-engine-sc"]
+    },
+
+    "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["./src"],
+
+  "include": ["src"],
   "exclude": [
-    "./coverage",
-    "./dist",
-    "./node_modules",
+    "node_modules",
+    "dist",
+    // Exclude any server/lambda code from your UI build:
     "src/sendProjectsForPM.ts",
-    "src/**/*.lambda.ts"
+    "src/handler.py"
   ]
 }

@@ -1,6 +1,6 @@
 # 🤖 Agents Manifest – Acta Platform
 
-Each agent is a serverless function responsible for a single piece of the Acta workflow. These lambdas are wired up to API Gateway endpoints defined in `infra/template.yaml`.
+Each agent is a serverless function responsible for a single piece of the Acta workflow. These lambdas are wired up to API Gateway endpoints defined in `infra/template-core.yaml` and `infra/template-wiring.yaml`.
 
 ---
 

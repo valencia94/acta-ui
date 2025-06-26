@@ -1,96 +1,144 @@
-import { LayoutDashboard } from 'lucide-react';
-import { useState } from 'react';
-
-import {
-  extractProjectData,
-  getDownloadUrl,
-  sendApprovalEmail,
-} from '@/services/actaApi';
-
-import ActaButtons from '../components/ActaButtons';
+// src/pages/Dashboard.tsx
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { extractProjectPlaceData, getDownloadUrl, sendApprovalEmail } from '@/lib/api';
+import ActaButtons from '@/components/ActaButtons';
+import ProjectTable, { Project } from '@/components/ProjectTable';
+import { useAuth } from '@/hooks/useAuth';
+import Shell from '@/layout';
+import logoSrc from '@assets/ikusi-logo.png';
+import { RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
+  const { user } = useAuth();  
   const [projectId, setProjectId] = useState<string>('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
+  // Fetch all projects for this PM
+  const fetchProjects = async () => {
+    if (!user?.email) return;
+    setLoadingProjects(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/projects-by-pm?pm_email=${encodeURIComponent(user.email)}`
+      );
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as Project[];
+      setProjects(data);
+    } catch (err) {
+      console.error(err);
+      toast.error('Could not load your projects');
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, [user]);
+
+  // Generate Acta
   const handleGenerate = async () => {
+    setActionLoading(true);
     try {
-      setSubmitting(true);
-      await extractProjectData(projectId);
-    } catch {
-      setError('Failed to extract project data');
+      await extractProjectPlaceData(projectId);
+      toast.success('Acta generated');
+      fetchProjects();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate Acta');
     } finally {
-      setSubmitting(false);
+      setActionLoading(false);
     }
   };
 
+  // Send approval email
   const handleSendForApproval = async () => {
+    setActionLoading(true);
     try {
-      setSubmitting(true);
-      await sendApprovalEmail({ actaId: projectId, clientEmail: '' });
-    } catch {
-      setError('Failed to send approval email');
+      await sendApprovalEmail(projectId, user?.email ?? '');
+      toast.success('Approval email sent');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to send approval email');
     } finally {
-      setSubmitting(false);
+      setActionLoading(false);
     }
   };
 
-  const downloadFile = async (fmt: 'pdf' | 'docx') => {
+  // Download .pdf or .docx
+  const handleDownload = async (fmt: 'pdf' | 'docx') => {
+    setActionLoading(true);
     try {
-      setSubmitting(true);
-      const res = await getDownloadUrl(projectId, fmt);
-      window.location.href = res.data;
-    } catch {
-      setError('Download failed');
+      const url = await getDownloadUrl(projectId, fmt);
+      toast.success(`Download ready: ${fmt.toUpperCase()}`);
+      window.open(url, '_blank');
+    } catch (err) {
+      console.error(err);
+      toast.error('Download failed');
     } finally {
-      setSubmitting(false);
+      setActionLoading(false);
     }
   };
-
-  if (error)
-    return <div className="py-16 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-20 flex-col items-center gap-6 bg-gradient-to-b from-emerald-800 to-emerald-600 p-4 text-white md:flex md:w-56">
-        <LayoutDashboard className="h-6 w-6" />
-      </aside>
+    <Shell>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img src={logoSrc} alt="Ikusi logo" className="h-10 w-auto" />
+            <h1 className="text-2xl font-semibold text-white">
+              Welcome, {user?.email}
+            </h1>
+          </div>
+          <button
+            onClick={fetchProjects}
+            disabled={loadingProjects}
+            className="text-white hover:text-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+          >
+            <RefreshCw className={`h-6 w-6 ${loadingProjects ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
 
-      <main className="flex-1 bg-white px-6 py-12">
-        <div className="mx-auto max-w-4xl space-y-8">
-          <h1 className="text-3xl font-semibold text-emerald-700">
-            Project Dashboard
-          </h1>
-
-          <div className="mt-2">
-            <label
-              htmlFor="projectId"
-              className="mb-1 block text-sm font-medium text-emerald-700"
-            >
-              Project ID
-            </label>
-            <input
-              id="projectId"
-              type="text"
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              placeholder="e.g. 1000000064013473"
-              className="w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+        {/* Acta Controls */}
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-xl font-semibold text-primary mb-4">Acta Actions</h2>
+          <div className="flex flex-col gap-4 md:flex-row md:items-end">
+            <div className="flex-1">
+              <label htmlFor="projectId" className="block text-sm font-medium text-secondary">
+                Project ID
+              </label>
+              <input
+                id="projectId"
+                type="text"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                placeholder="e.g. 1000000064013473"
+                className="mt-1 w-full rounded-md border border-secondary px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <ActaButtons
+              onGenerate={handleGenerate}
+              onSendForApproval={handleSendForApproval}
+              onDownloadWord={() => handleDownload('docx')}
+              onDownloadPdf={() => handleDownload('pdf')}
+              disabled={!projectId || actionLoading}
             />
           </div>
-
-          <ActaButtons
-            onGenerate={handleGenerate}
-            onSendForApproval={handleSendForApproval}
-            onDownloadWord={() => downloadFile('docx')}
-            onDownloadPdf={() => downloadFile('pdf')}
-            disabled={!projectId}
-          />
-
-          {submitting && <p className="text-sm text-gray-400">Processing…</p>}
         </div>
-      </main>
-    </div>
+
+        {/* Projects Table */}
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-primary">Your Projects</h2>
+            {loadingProjects && <span className="text-sm text-secondary">Loading…</span>}
+          </div>
+          <ProjectTable data={projects} />
+        </div>
+      </div>
+    </Shell>
   );
 }
