@@ -1,12 +1,11 @@
-import { Typography } from '@mui/material';
+// src/components/Counter/types.ts
 
-import { CounterProps } from './types';
-
-export const Counter = (props: CounterProps) => {
-  const { value } = props;
-  return (
-    <Typography variant="h3" id="counter">
-      Counter: {value}
-    </Typography>
-  );
-};
+/** Props for the Counter component */
+export interface CounterProps {
+  /** The numeric value to display */
+  value: number;
+  /** Optional HTML id attribute (defaults to "counter") */
+  id?: string;
+  /** Additional CSS class names */
+  className?: string;
+}
