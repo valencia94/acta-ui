@@ -4,7 +4,14 @@
     "paths": {
       "@/*": ["src/*"],
       "~/*": ["./src/*"],
-      "@mui/styled-engine": ["./node_modules/@mui/styled-engine-sc"]
+      "@mui/styled-engine": ["./node_modules/@mui/styled-engine-sc"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@assets/*": ["src/assets/*"],
+      "@lib/*": ["src/lib/*"],
+      "@services/*": ["src/services/*"],
+      "@pages/*": ["src/pages/*"],
+      "@styles/*": ["src/styles/*"]
     },
     "target": "ESNext",
     "useDefineForClassFields": true,
@@ -24,5 +31,11 @@
     "types": ["vitest/globals", "vite/client"]
   },
   "include": ["./src"],
-  "exclude": ["./coverage", "./dist", "./node_modules"]
+  "exclude": [
+    "./coverage",
+    "./dist",
+    "./node_modules",
+    "src/sendProjectsForPM.ts",
+    "src/**/*.lambda.ts"
+  ]
 }

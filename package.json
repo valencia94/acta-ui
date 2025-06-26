@@ -36,6 +36,7 @@
     "check:env": "node scripts/check-env.cjs"
   },
   "dependencies": {
+    "@aws-amplify/auth": "^6",
     "@aws-amplify/ui-react": "^6",
     "@headlessui/react": "^1.7.19",
     "@mui/material": "^6.4.12",
