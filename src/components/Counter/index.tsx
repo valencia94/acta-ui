@@ -1,11 +1,20 @@
-// src/components/Counter/types.ts
+// src/components/Counter/index.tsx
+import { Typography } from '@mui/material';
+import { CounterProps } from './types';
 
-/** Props for the Counter component */
-export interface CounterProps {
-  /** The numeric value to display */
-  value: number;
-  /** Optional HTML id attribute (defaults to "counter") */
-  id?: string;
-  /** Additional CSS class names */
-  className?: string;
+export function Counter({
+  value,
+  id = 'counter',
+  className = '',
+}: CounterProps) {
+  return (
+    <Typography
+      variant="h3"
+      id={id}
+      className={className}
+      color="textPrimary"  // uses your theme’s primary text color
+    >
+      Counter: {value}
+    </Typography>
+  );
 }
