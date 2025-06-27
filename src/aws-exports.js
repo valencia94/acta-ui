@@ -10,8 +10,8 @@ const awsmobile = {
     // NO https://  and NO trailing slash on the domain line
     domain: 'us-east-2-fyhltohiy.auth.us-east-2.amazoncognito.com',
     scope: ['email', 'openid'],
-    redirectSignIn: 'https://d1pdn8jj8kyfw8.cloudfront.net/',
-    redirectSignOut: 'https://d1pdn8jj8kyfw8.cloudfront.net/',
+    redirectSignIn: 'https://d7t9x3j66yd8k.cloudfront.net/',
+    redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/',
     responseType: 'code',
   },
 };
