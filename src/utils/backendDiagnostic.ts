@@ -5,14 +5,15 @@ export async function quickBackendDiagnostic() {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   console.log(`🌐 API Base URL: ${apiBaseUrl}`);
 
-  if (
-    !apiBaseUrl ||
-    apiBaseUrl === 'undefined' ||
-    apiBaseUrl.includes('localhost')
-  ) {
+  if (!apiBaseUrl || apiBaseUrl === 'undefined') {
     console.error('❌ CRITICAL: API Base URL is not properly configured!');
     console.log('💡 Backend buttons will not work until API is configured');
     return false;
+  }
+
+  // Allow localhost for development, but warn about it
+  if (apiBaseUrl.includes('localhost')) {
+    console.warn('⚠️ Using localhost API - this is OK for development');
   }
 
   // Test basic connectivity
