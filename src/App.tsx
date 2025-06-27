@@ -6,6 +6,7 @@ import '@/utils/dashboardTesting'; // Import dashboard button testing
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import AuthDebugger from '@/components/AuthDebugger';
@@ -153,6 +154,30 @@ export default function App() {
   return (
     <ChakraProvider value={defaultSystem}>
       {routes}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 5000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <AuthDebugger />
       <DashboardTester />
     </ChakraProvider>
