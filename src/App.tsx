@@ -32,29 +32,40 @@ export default function App() {
     }
 
     const verify = async () => {
+      console.log('🔍 App: Verifying auth status...');
       try {
         // First check if we have a token in localStorage
         const localToken = localStorage.getItem('ikusi.jwt');
+        console.log('🔍 App: Local token exists:', !!localToken);
+
         if (!localToken) {
+          console.log('🔍 App: No local token, setting auth to false');
           setIsAuthed(false);
           setChecked(true);
           return;
         }
 
+        console.log('🔍 App: Fetching AWS session...');
         // If we have a local token, verify with AWS
         const { tokens } = await fetchAuthSession();
         const token = tokens?.idToken?.toString() ?? '';
+        console.log('🔍 App: AWS token exists:', !!token);
+
         if (token) {
           localStorage.setItem('ikusi.jwt', token);
+          console.log('✅ App: Setting auth to true');
           setIsAuthed(true);
         } else {
+          console.log('❌ App: No AWS token, clearing auth');
           localStorage.removeItem('ikusi.jwt');
           setIsAuthed(false);
         }
-      } catch {
+      } catch (error) {
+        console.log('❌ App: Auth verification failed:', error);
         localStorage.removeItem('ikusi.jwt');
         setIsAuthed(false);
       } finally {
+        console.log('🔍 App: Auth check complete, setting checked to true');
         setChecked(true);
       }
     };
@@ -69,10 +80,18 @@ export default function App() {
       }
     };
 
+    // Listen for successful authentication
+    const handleAuthSuccess = () => {
+      console.log('📢 App: Received auth-success event, re-verifying...');
+      verify(); // Re-check auth status
+    };
+
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('auth-success', handleAuthSuccess);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-success', handleAuthSuccess);
     };
   }, []); // Only run on mount
 

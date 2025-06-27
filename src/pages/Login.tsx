@@ -90,12 +90,29 @@ export default function Login() {
   }
 
   async function handleSignIn({ email, password }: FormData) {
+    console.log('🔐 Starting sign-in process...');
     const result = await signIn({ username: email, password });
+    console.log('🔐 Sign-in result:', result);
+
     if (result.isSignedIn) {
+      console.log('✅ User is signed in, fetching session...');
       const session = await fetchAuthSession();
+      console.log('🎫 Session:', session);
+
       const token = session.tokens?.idToken?.toString() ?? '';
+      console.log('🎫 Token length:', token.length);
+
       localStorage.setItem('ikusi.jwt', token);
+      console.log('💾 Token saved to localStorage');
+
+      // Dispatch a custom event to notify App component
+      window.dispatchEvent(new Event('auth-success'));
+      console.log('📢 Auth success event dispatched');
+
+      console.log('🔄 Navigating to dashboard...');
       nav('/dashboard');
+    } else {
+      console.log('❌ Sign-in failed or incomplete');
     }
   }
 
