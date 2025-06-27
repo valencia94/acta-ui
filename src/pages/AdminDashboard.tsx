@@ -35,7 +35,18 @@ export default function AdminDashboard() {
     user?.email?.endsWith('@ikusi.com') ||
     user?.email?.endsWith('@company.com');
 
+  // Debug admin access
+  console.log('AdminDashboard - Debug info:', {
+    user: user?.email,
+    authLoading,
+    isAdmin,
+    userObj: user,
+  });
+
   useEffect(() => {
+    // Don't redirect while auth is still loading
+    if (authLoading) return;
+
     if (!isAdmin) {
       toast.error('Access denied. Admin privileges required.');
       window.location.href = '/dashboard';
@@ -54,7 +65,7 @@ export default function AdminDashboard() {
     };
 
     runDiagnostic();
-  }, [isAdmin]);
+  }, [isAdmin, authLoading]);
 
   // Mock stats - in real implementation, fetch from API
   useEffect(() => {
