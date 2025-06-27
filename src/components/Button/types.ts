@@ -1,8 +1,8 @@
 // src/components/Button/types.ts
-import { ReactNode, ButtonHTMLAttributes } from 'react';
+import { ReactNode } from 'react';
 
-/** Props for our wrapper around MUI’s Button */
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+/** Props for our wrapper around MUI's Button */
+export interface ButtonProps {
   /** Click handler */
   onClick: () => void;
   /** Button contents (icon + label) */
@@ -11,4 +11,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
   /** Disabled state */
   disabled?: boolean;
+  /** Button color */
+  color?:
+    | 'primary'
+    | 'secondary'
+    | 'error'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'inherit';
+  /** Button variant */
+  variant?: 'text' | 'outlined' | 'contained';
+  /** Button type */
+  type?: 'button' | 'submit' | 'reset';
 }

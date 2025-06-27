@@ -5,6 +5,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+
 import StatusChip from './StatusChip';
 
 export type Project = { id: number; name: string; pm: string; status: string };
@@ -34,10 +35,7 @@ export default function ProjectTable({ data }: { data: Project[] }) {
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((h) => (
-                <th
-                  key={h.id}
-                  className="px-6 py-3 text-left font-semibold"
-                >
+                <th key={h.id} className="px-6 py-3 text-left font-semibold">
                   {flexRender(h.column.columnDef.header, h.getContext())}
                 </th>
               ))}
@@ -46,10 +44,7 @@ export default function ProjectTable({ data }: { data: Project[] }) {
         </thead>
         <tbody className="bg-white divide-y divide-neutral-light">
           {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className="rounded-lg shadow hover:bg-gray-50"
-            >
+            <tr key={row.id} className="rounded-lg shadow hover:bg-gray-50">
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-6 py-4">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

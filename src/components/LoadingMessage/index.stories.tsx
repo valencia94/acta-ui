@@ -1,5 +1,6 @@
 // src/components/LoadingMessage/index.stories.tsx
-import { Meta, Story } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
+
 import { LoadingMessage, LoadingMessageProps } from './';
 
 export default {
@@ -7,7 +8,7 @@ export default {
   component: LoadingMessage,
 } as Meta<LoadingMessageProps>;
 
-const Template: Story<LoadingMessageProps> = (args) => (
+const Template: StoryFn<LoadingMessageProps> = (args) => (
   <div style={{ padding: '1rem', background: '#f9f9f9' }}>
     <LoadingMessage {...args} />
   </div>

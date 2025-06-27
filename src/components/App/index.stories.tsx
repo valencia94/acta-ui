@@ -1,5 +1,6 @@
 // src/components/App/index.stories.tsx
-import { Meta, Story } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
+
 import { App } from './';
 
 export default {
@@ -7,6 +8,6 @@ export default {
   component: App,
 } as Meta;
 
-const Template: Story = () => <App />;
+const Template: StoryFn = () => <App />;
 
 export const Primary = Template.bind({});

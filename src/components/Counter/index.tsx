@@ -1,5 +1,6 @@
 // src/components/Counter/index.tsx
 import { Typography } from '@mui/material';
+
 import { CounterProps } from './types';
 
 export function Counter({
@@ -12,7 +13,7 @@ export function Counter({
       variant="h3"
       id={id}
       className={className}
-      color="textPrimary"  // uses your theme’s primary text color
+      color="textPrimary" // uses your theme’s primary text color
     >
       Counter: {value}
     </Typography>

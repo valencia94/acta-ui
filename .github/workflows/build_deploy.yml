@@ -35,7 +35,7 @@ jobs:
 
       - name: 🧼 Lint auto-fix
         run: pnpm exec eslint . --fix
-      
+
       - name: 🔍 Re-run lint to validate
         run: pnpm exec eslint .
 
@@ -65,7 +65,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region:     ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # ─── 6. Sync to S3 + Push SPA Routes ─────────────────────
       - name: 🚀 Sync dist/ to S3
@@ -114,7 +114,7 @@ jobs:
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-          REGION:  ${{ secrets.AWS_REGION }}
+          REGION: ${{ secrets.AWS_REGION }}
         run: |
           ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
           cat > /tmp/s3-oac-policy.json <<EOF

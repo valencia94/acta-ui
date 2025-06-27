@@ -1,7 +1,7 @@
 // src/lib/api.ts
 
 import { apiBaseUrl } from '@/env.variables';
-import { get, post, fetcher } from '@/utils/fetchWrapper';
+import { get, post } from '@/utils/fetchWrapper';
 
 const BASE = apiBaseUrl;
 
@@ -64,8 +64,6 @@ export function sendApprovalEmail(
 }
 
 /** ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
-export function extractProjectPlaceData(
-  projectId: string
-): Promise<unknown> {
+export function extractProjectPlaceData(projectId: string): Promise<unknown> {
   return post<unknown>(`${BASE}/extract-project-place/${projectId}`);
 }

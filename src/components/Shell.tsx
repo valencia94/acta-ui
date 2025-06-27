@@ -13,10 +13,10 @@ export default function Shell({ children }: ShellProps) {
   return (
     <div className="min-h-screen flex">
       {/* ── Sidebar */}
-      <aside className="w-20 xl:w-56 bg-primary/90 backdrop-blur-sm text-white p-4 flex flex-col">
+      <aside className="w-20 xl:w-56 bg-green-500/90 backdrop-blur-sm text-white p-4 flex flex-col">
         <button
           aria-label="Toggle menu"
-          className="mx-auto mb-8 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+          className="mx-auto mb-8 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300"
         >
           <MenuIcon className="h-6 w-6" />
         </button>
@@ -24,7 +24,7 @@ export default function Shell({ children }: ShellProps) {
         <nav className="flex-1 flex flex-col items-center gap-6">
           <button
             aria-label="Dashboard"
-            className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+            className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300"
           >
             <LayoutDashboard className="h-6 w-6" />
           </button>
@@ -32,17 +32,13 @@ export default function Shell({ children }: ShellProps) {
       </aside>
 
       {/* ── Main Content */}
-      <main className="flex-1 bg-gradient-to-b from-primary via-accent to-secondary p-6 md:p-10 overflow-auto">
+      <main className="flex-1 bg-gradient-to-b from-green-500 via-emerald-500 to-teal-500 p-6 md:p-10 overflow-auto">
         <motion.header
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-start mb-8"
         >
-          <img
-            src={logoSrc}
-            alt="Ikusi logo"
-            className="h-10 drop-shadow-md"
-          />
+          <img src={logoSrc} alt="Ikusi logo" className="h-10 drop-shadow-md" />
         </motion.header>
 
         <section>{children}</section>

@@ -9,10 +9,10 @@ body {
 
 @layer components {
   .input {
-    @apply w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cvdex focus:ring-opacity-70;
+    @apply w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-70;
   }
 
   .btn {
-    @apply bg-cvdex text-white font-semibold px-4 py-2 rounded hover:bg-cvdex-dark transition;
+    @apply bg-primary text-white font-semibold px-4 py-2 rounded hover:bg-primary-dark transition;
   }
 }

@@ -1,16 +1,13 @@
 // vite.config.ts
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import svgr from 'vite-plugin-svgr';
+import autoprefixer from 'autoprefixer';
 import path from 'path';
 import tailwindcss from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
+import { defineConfig } from 'vite';
+import svgr from 'vite-plugin-svgr';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    svgr()
-  ],
+  plugins: [react(), svgr()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -18,10 +15,7 @@ export default defineConfig({
   },
   css: {
     postcss: {
-      plugins: [
-        tailwindcss(),
-        autoprefixer(),
-      ],
+      plugins: [tailwindcss(), autoprefixer()],
     },
   },
   server: {

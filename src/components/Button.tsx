@@ -1,8 +1,8 @@
-// src/components/Button.tsx 
+// src/components/Button.tsx
 import { Button as MUIButton } from '@mui/material';
-import { ReactNode, ButtonHTMLAttributes } from 'react';
+import { ReactNode } from 'react';
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps {
   /** Click handler */
   onClick: () => void;
   /** Button contents (icon + label) */
@@ -11,6 +11,19 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
   /** Disabled state */
   disabled?: boolean;
+  /** Button color */
+  color?:
+    | 'primary'
+    | 'secondary'
+    | 'error'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'inherit';
+  /** Button variant */
+  variant?: 'text' | 'outlined' | 'contained';
+  /** Button type */
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export default function Button({
@@ -18,15 +31,34 @@ export default function Button({
   children,
   className,
   disabled,
-  ...rest
+  color = 'primary',
+  variant = 'contained',
+  type = 'button',
 }: ButtonProps) {
   return (
     <MUIButton
       onClick={onClick}
       className={className}
       disabled={disabled}
-      variant="contained"
-      {...rest}
+      variant={variant}
+      color={color}
+      type={type}
+      sx={{
+        textTransform: 'none', // Prevent uppercase transformation
+        borderRadius: '8px', // Rounded corners
+        padding: '8px 16px', // Better padding
+        fontSize: '14px', // Good font size
+        fontWeight: 500, // Medium weight
+        boxShadow:
+          variant === 'contained' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+        '&:hover': {
+          boxShadow:
+            variant === 'contained' ? '0 4px 8px rgba(0,0,0,0.15)' : 'none',
+        },
+        '&:disabled': {
+          opacity: 0.6,
+        },
+      }}
     >
       {children}
     </MUIButton>

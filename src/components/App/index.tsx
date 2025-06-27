@@ -1,11 +1,12 @@
 // src/components/App/index.tsx
 import { CssBaseline } from '@mui/material';
 import { useCallback, useState } from 'react';
+
 import { AppContainer } from '@/components/App/styles';
-import { Button } from '@/components/Button';
+import Button from '@/components/Button';
 import { Counter } from '@/components/Counter';
-import { counterDefaultValue } from '@/env.variables';
 import { LoadingMessage } from '@/components/LoadingMessage';
+import { counterDefaultValue } from '@/env.variables';
 
 export function App() {
   const [counterValue, setCounterValue] = useState<number>(counterDefaultValue);

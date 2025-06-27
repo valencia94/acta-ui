@@ -1,17 +1,26 @@
 // src/pages/Dashboard.tsx
-import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+  Download,
+  FileText,
+  Filter,
+  Plus,
+  RefreshCw,
+  Search,
+  Send,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+import ActaButtons from '@/components/ActaButtons/ActaButtons';
+import Header from '@/components/Header';
+import ProjectTable, { Project } from '@/components/ProjectTable';
+import { useAuth } from '@/hooks/useAuth';
 import {
   extractProjectPlaceData,
   getDownloadUrl,
   sendApprovalEmail,
-} from '@/lib/api';           // ← correct path
-
-import ActaButtons from '@/components/ActaButtons';
-import ProjectTable, { Project } from '@/components/ProjectTable';
-import { useAuth } from '@/hooks/useAuth';
-import Shell from '@/components/Shell';
-import { RefreshCw } from 'lucide-react';
+} from '@/lib/api';
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -44,13 +53,21 @@ export default function Dashboard() {
 
   // Generate Acta
   async function handleGenerate() {
+    if (!projectId.trim()) {
+      toast.error('Please enter a Project ID');
+      return;
+    }
+
     setActionLoading(true);
     try {
       await extractProjectPlaceData(projectId);
-      toast.success('Acta generated');
+      toast.success('Acta generated successfully!');
       loadProjects();
-    } catch {
-      toast.error('Failed to generate Acta');
+    } catch (error) {
+      console.error('Generate Acta error:', error);
+      toast.error(
+        'Failed to generate Acta. Please check if the API server is running and the Project ID is valid.'
+      );
     } finally {
       setActionLoading(false);
     }
@@ -58,12 +75,20 @@ export default function Dashboard() {
 
   // Send approval email
   async function handleSendForApproval() {
+    if (!projectId.trim()) {
+      toast.error('Please enter a Project ID');
+      return;
+    }
+
     setActionLoading(true);
     try {
       await sendApprovalEmail(projectId, user!.email);
-      toast.success('Approval email sent');
-    } catch {
-      toast.error('Failed to send approval email');
+      toast.success('Approval email sent successfully!');
+    } catch (error) {
+      console.error('Send approval error:', error);
+      toast.error(
+        'Failed to send approval email. Please check if the API server is running.'
+      );
     } finally {
       setActionLoading(false);
     }
@@ -71,84 +96,248 @@ export default function Dashboard() {
 
   // Download .pdf or .docx
   async function handleDownload(fmt: 'pdf' | 'docx') {
+    if (!projectId.trim()) {
+      toast.error('Please enter a Project ID');
+      return;
+    }
+
     setActionLoading(true);
     try {
       const url = await getDownloadUrl(projectId, fmt);
-      toast.success(`Download ready: ${fmt.toUpperCase()}`);
+      toast.success(`${fmt.toUpperCase()} download ready!`);
       window.open(url, '_blank');
-    } catch {
-      toast.error('Download failed');
+    } catch (error) {
+      console.error(`Download ${fmt} error:`, error);
+      toast.error(
+        `Failed to download ${fmt.toUpperCase()}. Please check if the API server is running and the Project ID is valid.`
+      );
     } finally {
       setActionLoading(false);
     }
   }
 
-  if (authLoading) return null;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-green-600 font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Shell>
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-white">
-            Welcome, {user?.email}
-          </h1>
-          <button
-            onClick={loadProjects}
-            disabled={loadingProjects}
-            className="text-white hover:text-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
-          >
-            <RefreshCw
-              className={`h-6 w-6 ${loadingProjects ? 'animate-spin' : ''}`}
-            />
-          </button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
+      <Header />
 
-        {/* Acta Controls */}
-        <div className="bg-white p-6 rounded-2xl shadow-md">
-          <h2 className="text-xl font-semibold text-primary mb-4">
-            Acta Actions
-          </h2>
-          <div className="flex flex-col gap-4 md:flex-row md:items-end">
-            <div className="flex-1">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Development Mode Notice */}
+        {import.meta.env.DEV && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <div className="flex items-center">
+                <div className="p-2 bg-amber-100 rounded-lg mr-3">
+                  <span className="text-amber-600 text-sm">⚠️</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-amber-800">
+                    Development Mode
+                  </h3>
+                  <p className="text-xs text-amber-700">
+                    API server must be running on{' '}
+                    {import.meta.env.VITE_API_BASE_URL} for Acta actions to
+                    work.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Welcome back! 👋
+                </h1>
+                <p className="text-teal-600 font-medium">
+                  {user?.email} • Ready to manage your projects
+                </p>
+              </div>
+              <button
+                onClick={loadProjects}
+                disabled={loadingProjects}
+                className="p-3 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2"
+              >
+                <RefreshCw
+                  className={`h-5 w-5 ${loadingProjects ? 'animate-spin' : ''}`}
+                />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+        >
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-xl">
+                <FileText className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">
+                  Total Projects
+                </p>
+                <p className="text-2xl font-bold text-green-600">
+                  {projects.length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-3 bg-teal-100 rounded-xl">
+                <Send className="h-6 w-6 text-teal-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">
+                  Pending Approval
+                </p>
+                <p className="text-2xl font-bold text-teal-600">
+                  {projects.filter((p) => p.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-3 bg-emerald-100 rounded-xl">
+                <Download className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-emerald-600">
+                  {projects.filter((p) => p.status === 'completed').length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Acta Generation Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 mb-8"
+        >
+          <div className="flex items-center mb-6">
+            <div className="p-3 bg-green-100 rounded-xl mr-4">
+              <Plus className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Generate Acta
+              </h2>
+              <p className="text-gray-600">
+                Create and manage project documentation
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
+            <div className="lg:col-span-2">
               <label
                 htmlFor="projectId"
-                className="block text-sm font-medium text-secondary"
+                className="block text-sm font-semibold text-gray-700 mb-2"
               >
                 Project ID
               </label>
-              <input
-                id="projectId"
-                type="text"
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                placeholder="e.g. 1000000064013473"
-                className="mt-1 w-full rounded-md border border-secondary px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
+              <div className="relative">
+                <input
+                  id="projectId"
+                  type="text"
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
+                  placeholder="Enter project ID (e.g. 1000000064013473)"
+                  className="w-full h-12 px-4 border-2 border-gray-300 rounded-xl bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 text-gray-900"
+                />
+                <Search className="absolute right-3 top-3 h-6 w-6 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <ActaButtons
+                onGenerate={handleGenerate}
+                onSendForApproval={handleSendForApproval}
+                onDownloadWord={() => handleDownload('docx')}
+                onDownloadPdf={() => handleDownload('pdf')}
+                disabled={!projectId || actionLoading}
               />
             </div>
-            <ActaButtons
-              onGenerate={handleGenerate}
-              onSendForApproval={handleSendForApproval}
-              onDownloadWord={() => handleDownload('docx')}
-              onDownloadPdf={() => handleDownload('pdf')}
-              disabled={!projectId || actionLoading}
-            />
           </div>
-        </div>
+        </motion.div>
 
-        {/* Projects Table */}
-        <div className="bg-white p-6 rounded-2xl shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-primary">
-              Your Projects
-            </h2>
-            {loadingProjects && (
-              <span className="text-sm text-secondary">Loading…</span>
-            )}
+        {/* Projects Table Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden"
+        >
+          <div className="p-8 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 bg-teal-100 rounded-xl mr-4">
+                  <FileText className="h-6 w-6 text-teal-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Your Projects
+                  </h2>
+                  <p className="text-gray-600">
+                    Manage and track all your projects
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {loadingProjects && (
+                  <div className="flex items-center text-teal-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600 mr-2"></div>
+                    <span className="text-sm font-medium">Loading...</span>
+                  </div>
+                )}
+                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Filter className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </div>
-          <ProjectTable data={projects} />
-        </div>
-      </div>
-    </Shell>
+
+          <div className="p-8">
+            <ProjectTable data={projects} />
+          </div>
+        </motion.div>
+      </main>
+    </div>
   );
 }
