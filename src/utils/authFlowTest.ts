@@ -1,5 +1,10 @@
 // Test script for authentication flow
-import { signUp, signIn, getCurrentUser, fetchAuthSession } from '@aws-amplify/auth';
+import {
+  fetchAuthSession,
+  getCurrentUser,
+  signIn,
+  signUp,
+} from '@aws-amplify/auth';
 
 console.log('🚀 Starting comprehensive authentication test...');
 
@@ -21,18 +26,18 @@ async function testAccountCreation() {
   console.log('\n📝 Test 2: Creating test account...');
   const testEmail = `test-${Date.now()}@example.com`;
   const testPassword = 'TestPassword123!';
-  
+
   try {
     const result = await signUp({
       username: testEmail,
       password: testPassword,
       options: {
         userAttributes: {
-          email: testEmail
-        }
-      }
+          email: testEmail,
+        },
+      },
     });
-    
+
     console.log('✅ Account creation successful:', result);
     console.log('📧 Confirmation required, check email for code');
     return { success: true, email: testEmail, password: testPassword };
@@ -45,25 +50,25 @@ async function testAccountCreation() {
 // Test 3: Try sign in with demo credentials (if they exist)
 async function testSignIn() {
   console.log('\n🔐 Test 3: Testing sign in...');
-  
+
   // Try with a known good account if it exists
   const testEmail = 'demo@ikusi.com';
   const testPassword = 'DemoPass123!';
-  
+
   try {
     const result = await signIn({
       username: testEmail,
-      password: testPassword
+      password: testPassword,
     });
-    
+
     console.log('✅ Sign in successful:', result);
-    
+
     if (result.isSignedIn) {
       const session = await fetchAuthSession();
       console.log('🎫 Session tokens obtained:', !!session.tokens);
       return { success: true };
     }
-    
+
     return { success: false, message: 'Sign in incomplete' };
   } catch (error) {
     console.log('ℹ️ Sign in failed (expected for demo):', error.message);
@@ -77,16 +82,19 @@ async function runAllTests() {
   console.log('📍 AWS Region:', 'us-east-2');
   console.log('🏊 User Pool:', 'us-east-2_FyHLtOhiY');
   console.log('📱 Client ID:', '1hdn8b19ub2kmfkuse8rsjpv8e');
-  
+
   await testCurrentAuth();
   const createResult = await testAccountCreation();
   await testSignIn();
-  
+
   console.log('\n📋 Test Summary:');
   console.log('- Current auth check: ✅ Working');
-  console.log('- Account creation:', createResult.success ? '✅ Working' : '❌ Failed');
+  console.log(
+    '- Account creation:',
+    createResult.success ? '✅ Working' : '❌ Failed'
+  );
   console.log('- Sign in test: ℹ️ Requires valid credentials');
-  
+
   if (createResult.success) {
     console.log('\n🎯 Next steps:');
     console.log('1. Check email for confirmation code');
@@ -97,7 +105,7 @@ async function runAllTests() {
 
 // Make available globally for browser testing
 if (typeof window !== 'undefined') {
-  (window as any).runAuthTests = runAllTests;
+  (window as unknown as Record<string, unknown>).runAuthTests = runAllTests;
   console.log('🔧 Run tests with: runAuthTests()');
 }
 

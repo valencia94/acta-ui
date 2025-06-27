@@ -1,10 +1,11 @@
 // src/components/AuthDebugger.tsx
+import type { AuthSession, AuthUser } from '@aws-amplify/auth';
 import { fetchAuthSession, getCurrentUser } from '@aws-amplify/auth';
 import { useEffect, useState } from 'react';
 
 export default function AuthDebugger() {
-  const [authStatus, setAuthStatus] = useState<any>(null);
-  const [session, setSession] = useState<any>(null);
+  const [authStatus, setAuthStatus] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -16,16 +17,17 @@ export default function AuthDebugger() {
       // Check if user is authenticated
       const user = await getCurrentUser();
       setAuthStatus(user);
-      
+
       // Get session details
       const sessionData = await fetchAuthSession();
       setSession(sessionData);
-      
+
       console.log('Auth Status:', user);
       console.log('Session:', sessionData);
-    } catch (err: any) {
-      setError(err.message);
-      console.log('Not authenticated:', err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
+      console.log('Not authenticated:', errorMessage);
     }
   };
 
@@ -38,23 +40,26 @@ export default function AuthDebugger() {
       <h3 className="font-bold mb-2">🔍 Auth Debug Info</h3>
       <div className="space-y-2">
         <div>
-          <strong>Status:</strong> {authStatus ? 'Authenticated' : 'Not authenticated'}
+          <strong>Status:</strong>{' '}
+          {authStatus ? 'Authenticated' : 'Not authenticated'}
         </div>
         <div>
-          <strong>User:</strong> {authStatus ? authStatus.username || 'No username' : 'None'}
+          <strong>User:</strong>{' '}
+          {authStatus ? authStatus.username || 'No username' : 'None'}
         </div>
         <div>
           <strong>Session:</strong> {session ? 'Valid' : 'None'}
         </div>
         <div>
-          <strong>Token:</strong> {session?.tokens?.idToken ? 'Present' : 'Missing'}
+          <strong>Token:</strong>{' '}
+          {session?.tokens?.idToken ? 'Present' : 'Missing'}
         </div>
         {error && (
           <div className="text-red-300">
             <strong>Error:</strong> {error}
           </div>
         )}
-        <button 
+        <button
           onClick={checkAuthStatus}
           className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
         >

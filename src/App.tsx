@@ -1,18 +1,21 @@
 // src/App.tsx
+import '@/utils/authTesting'; // Import auth testing utilities
+import '@/utils/authFlowTest'; // Import comprehensive auth flow tests
+import '@/utils/dashboardTesting'; // Import dashboard button testing
+
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import AuthDebugger from '@/components/AuthDebugger';
+import DashboardTester from '@/components/DashboardTester';
 import Header from '@/components/Header';
 import { skipAuth } from '@/env.variables';
 import { useIdleLogout } from '@/hooks/useIdleLogout';
 import { useThemedFavicon } from '@/hooks/useThemedFavicon';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
-import '@/utils/authTesting'; // Import auth testing utilities
-import '@/utils/authFlowTest'; // Import comprehensive auth flow tests
 
 export default function App() {
   useThemedFavicon();
@@ -132,6 +135,7 @@ export default function App() {
     <ChakraProvider value={defaultSystem}>
       {routes}
       <AuthDebugger />
+      <DashboardTester />
     </ChakraProvider>
   );
 }
