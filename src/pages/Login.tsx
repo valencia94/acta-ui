@@ -512,7 +512,7 @@ export default function Login() {
                     : authMode === 'confirm'
                       ? '📧 Check your email for the confirmation code'
                       : authMode === 'forgot'
-                        ? '🔑 We\'ll send you a password reset code'
+                        ? "🔑 We'll send you a password reset code"
                         : '🛡️ Enter your new password'}
             </p>
           </div>
