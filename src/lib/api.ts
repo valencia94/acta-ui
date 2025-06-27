@@ -68,7 +68,7 @@ export function extractProjectPlaceData(projectId: string): Promise<unknown> {
   return post<unknown>(`${BASE}/extract-project-place/${projectId}`);
 }
 
-/** ---------- PM PROJECT MANAGEMENT ---------- */
+/** ---------- PM PROJECT MANAGEMENT (via Metadata Enricher) ---------- */
 export interface PMProject {
   project_id: string;
   project_name: string;
@@ -77,12 +77,47 @@ export interface PMProject {
   last_updated?: string;
   has_acta_document?: boolean;
   acta_last_generated?: string;
+  // Enhanced metadata from enricher
+  external_project_data?: {
+    timeline_events?: number;
+    completion_percentage?: number;
+    budget_status?: string;
+  };
+  timeline_summary?: {
+    total_milestones?: number;
+    completed?: number;
+    upcoming?: number;
+  };
+  days_since_update?: number;
+  acta_status?: 'current' | 'outdated' | 'missing';
+  priority_level?: 'low' | 'medium' | 'high';
 }
 
-// Get all projects assigned to a PM by email
+export interface PMProjectsResponse {
+  pm_email: string;
+  total_projects: number;
+  projects: PMProject[];
+  summary: {
+    with_acta: number;
+    without_acta: number;
+    recently_updated: number;
+  };
+}
+
+// Get all projects assigned to a PM by email (via metadata enricher)
 export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
-  return get<PMProject[]>(
-    `${BASE}/projects-by-pm/${encodeURIComponent(pmEmail)}`
+  const response = await get<PMProjectsResponse>(
+    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
+  );
+  return response.projects;
+}
+
+// Get enhanced PM projects with summary data
+export async function getPMProjectsWithSummary(
+  pmEmail: string
+): Promise<PMProjectsResponse> {
+  return get<PMProjectsResponse>(
+    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
   );
 }
 

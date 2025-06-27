@@ -11,6 +11,7 @@ This document specifies the backend API endpoints needed to integrate with the D
 **ARN**: `arn:aws:dynamodb:us-east-2:703671891952:table/ProjectPlace_DataExtrator_landing_table_v2`
 
 ### Required Fields
+
 - `pm_email` (String) - Primary key for PM identification
 - `project_id` (String) - Unique project identifier
 - `project_name` (String) - Human readable project name
@@ -28,9 +29,11 @@ This document specifies the backend API endpoints needed to integrate with the D
 **Description**: Retrieve all projects assigned to a specific PM from DynamoDB.
 
 **Parameters**:
+
 - `pm_email` (path) - URL-encoded email address of the PM
 
 **Response**:
+
 ```json
 [
   {
@@ -46,6 +49,7 @@ This document specifies the backend API endpoints needed to integrate with the D
 ```
 
 **DynamoDB Query**:
+
 ```python
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -66,20 +70,22 @@ return response['Items']
 **Description**: Get project summary with PM context from DynamoDB.
 
 **Parameters**:
+
 - `project_id` (path) - Project identifier
 - `pm_email` (query) - PM email for context lookup
 
 **Response**:
+
 ```json
 {
   "project_id": "1000000064013473",
-  "project_name": "Customer Portal Upgrade", 
+  "project_name": "Customer Portal Upgrade",
   "pm": "John Smith",
   "project_manager": "john.pm@company.com",
   "pm_context": {
     "project_id": "1000000064013473",
     "project_name": "Customer Portal Upgrade",
-    "pm_email": "john.pm@company.com", 
+    "pm_email": "john.pm@company.com",
     "project_status": "active",
     "last_updated": "2025-06-27T10:30:00Z",
     "has_acta_document": true,
@@ -95,6 +101,7 @@ return response['Items']
 **Description**: Generate Acta documents for all projects assigned to a PM.
 
 **Request Body**:
+
 ```json
 {
   "pm_email": "john.pm@company.com"
@@ -102,6 +109,7 @@ return response['Items']
 ```
 
 **Response**:
+
 ```json
 {
   "success": ["1000000064013473", "1000000064013474"],
@@ -114,6 +122,7 @@ return response['Items']
 ```
 
 **Implementation Notes**:
+
 1. Query DynamoDB for all projects by PM email
 2. For each project, trigger the existing `extract-project-place/{project_id}` logic
 3. Update DynamoDB records with generation status and timestamps
@@ -126,6 +135,7 @@ return response['Items']
 **Description**: Update project status and Acta document availability.
 
 **Request Body**:
+
 ```json
 {
   "project_status": "completed",
@@ -135,11 +145,16 @@ return response['Items']
 ```
 
 **Response**:
+
 ```json
 {
   "message": "Project status updated successfully",
   "project_id": "1000000064013473",
-  "updated_fields": ["project_status", "has_acta_document", "acta_last_generated"]
+  "updated_fields": [
+    "project_status",
+    "has_acta_document",
+    "acta_last_generated"
+  ]
 }
 ```
 
@@ -155,26 +170,26 @@ from decimal import Decimal
 
 def lambda_handler(event, context):
     """Get projects by PM email"""
-    
+
     # Extract PM email from path parameters
     pm_email = event['pathParameters']['pm_email']
-    
+
     # Initialize DynamoDB
     dynamodb = boto3.resource('dynamodb', region_name='us-east-2')
     table = dynamodb.Table('ProjectPlace_DataExtrator_landing_table_v2')
-    
+
     try:
         # Query projects by PM email
         response = table.query(
             KeyConditionExpression=Key('pm_email').eq(pm_email)
         )
-        
+
         # Convert Decimal types to standard types for JSON serialization
         items = []
         for item in response['Items']:
             converted_item = convert_decimals(item)
             items.append(converted_item)
-        
+
         return {
             'statusCode': 200,
             'headers': {
@@ -183,7 +198,7 @@ def lambda_handler(event, context):
             },
             'body': json.dumps(items)
         }
-        
+
     except Exception as e:
         return {
             'statusCode': 500,
@@ -235,7 +250,7 @@ BulkGenerateFunction:
     CodeUri: src/
     Handler: bulk_generate.lambda_handler
     Runtime: python3.9
-    Timeout: 900  # 15 minutes for bulk operations
+    Timeout: 900 # 15 minutes for bulk operations
     Policies:
       - DynamoDBCrudPolicy:
           TableName: ProjectPlace_DataExtrator_landing_table_v2
@@ -266,13 +281,13 @@ Use the enhanced testing utilities:
 
 ```javascript
 // Test PM project loading
-testPMProjectManager()
+testPMProjectManager();
 
 // Test DynamoDB connectivity
-testDynamoDBIntegration()
+testDynamoDBIntegration();
 
 // Test complete PM workflow
-testCompleteWorkflow()
+testCompleteWorkflow();
 ```
 
 ## Security Considerations

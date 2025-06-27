@@ -724,6 +724,408 @@ function testCompleteWorkflow() {
   }, 1000);
 }
 
+// ============================================
+// METADATA ENRICHER INTEGRATION TESTS
+// ============================================
+
+/** Test PM project manager functionality via API */
+async function testPMProjectManagerAPI(
+  pmEmail: string = 'test.pm@company.com'
+) {
+  console.log('🔍 Testing PM Project Manager API...');
+
+  try {
+    // Import API functions dynamically
+    const {
+      getProjectsByPM,
+      getPMProjectsWithSummary,
+      getProjectSummaryForPM,
+    } = await import('@/lib/api');
+
+    // Test project loading
+    console.log(`📡 Loading projects for PM: ${pmEmail}`);
+    const projects = await getProjectsByPM(pmEmail);
+    console.log(`✅ Loaded ${projects.length} projects for PM:`, pmEmail);
+    console.log('Projects:', projects);
+
+    // Test summary data
+    console.log('📊 Loading PM projects summary...');
+    const summary = await getPMProjectsWithSummary(pmEmail);
+    console.log('✅ PM Projects Summary:', summary);
+
+    // Test individual project details
+    if (projects.length > 0) {
+      console.log('🔍 Loading individual project details...');
+      const firstProject = projects[0];
+      const projectDetails = await getProjectSummaryForPM(
+        firstProject.project_id,
+        pmEmail
+      );
+      console.log(
+        `✅ Project details for ${firstProject.project_id}:`,
+        projectDetails
+      );
+    }
+
+    return { success: true, projects, summary };
+  } catch (error) {
+    console.error('❌ PM Project Manager API test failed:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/** Test bulk operations for PM projects */
+async function testBulkOperationsAPI(pmEmail: string = 'test.pm@company.com') {
+  console.log('🔄 Testing Bulk Operations API...');
+
+  try {
+    const { generateSummariesForPM } = await import('@/lib/api');
+
+    console.log(`📡 Initiating bulk generation for PM: ${pmEmail}`);
+    const result = await generateSummariesForPM(pmEmail);
+    console.log('✅ Bulk generation result:', result);
+    return { success: true, result };
+  } catch (error) {
+    console.error('❌ Bulk operations API test failed:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/** Test metadata enricher integration directly */
+async function testMetadataEnricherIntegration(
+  pmEmail: string = 'test.pm@company.com'
+) {
+  console.log('🧬 Testing Metadata Enricher Integration...');
+
+  const tests = {
+    pmProjectsEndpoint: false,
+    bulkEnrichEndpoint: false,
+    dataStructure: false,
+    enrichedFields: false,
+  };
+
+  try {
+    const { apiBaseUrl } = await import('@/env.variables');
+
+    // Test 1: PM projects endpoint (calls metadata enricher)
+    console.log('1️⃣ Testing GET /pm-projects/{pm_email}...');
+    console.log(
+      `📡 Calling: ${apiBaseUrl}/pm-projects/${encodeURIComponent(pmEmail)}`
+    );
+
+    const pmProjectsResponse = await fetch(
+      `${apiBaseUrl}/pm-projects/${encodeURIComponent(pmEmail)}`
+    );
+    console.log(`📊 Status: ${pmProjectsResponse.status}`);
+    console.log(`📊 Status Text: ${pmProjectsResponse.statusText}`);
+
+    if (pmProjectsResponse.ok) {
+      const data = await pmProjectsResponse.json();
+      console.log('✅ PM Projects endpoint works:', data);
+      tests.pmProjectsEndpoint = true;
+
+      // Test data structure
+      if (data.pm_email && Array.isArray(data.projects) && data.summary) {
+        console.log('✅ Data structure is correct');
+        tests.dataStructure = true;
+
+        // Test enriched fields
+        if (data.projects.length > 0) {
+          const project = data.projects[0];
+          console.log(
+            '🔍 Checking enriched fields in first project:',
+            Object.keys(project)
+          );
+
+          const hasEnrichedFields =
+            project.has_acta_document !== undefined &&
+            project.acta_status !== undefined &&
+            project.priority_level !== undefined;
+
+          if (hasEnrichedFields) {
+            console.log('✅ Enriched fields present');
+            tests.enrichedFields = true;
+          } else {
+            console.log(
+              '⚠️ Some enriched fields missing. Available fields:',
+              Object.keys(project)
+            );
+          }
+        } else {
+          console.log('⚠️ No projects returned to test enriched fields');
+        }
+      } else {
+        console.log(
+          '❌ Data structure invalid. Available keys:',
+          Object.keys(data)
+        );
+      }
+    } else {
+      const errorText = await pmProjectsResponse.text();
+      console.log('❌ PM Projects endpoint failed:', errorText);
+    }
+
+    // Test 2: Bulk enrich endpoint
+    console.log('\n2️⃣ Testing POST /bulk-enrich-projects...');
+    console.log(`📡 Calling: ${apiBaseUrl}/bulk-enrich-projects`);
+
+    const bulkResponse = await fetch(`${apiBaseUrl}/bulk-enrich-projects`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pm_email: pmEmail }),
+    });
+
+    console.log(`📊 Bulk enrich status: ${bulkResponse.status}`);
+    console.log(`📊 Bulk enrich status text: ${bulkResponse.statusText}`);
+
+    if (bulkResponse.ok) {
+      const bulkData = await bulkResponse.json();
+      console.log('✅ Bulk enrich endpoint works:', bulkData);
+      tests.bulkEnrichEndpoint = true;
+    } else {
+      const errorText = await bulkResponse.text();
+      console.log('❌ Bulk enrich endpoint failed:', errorText);
+    }
+  } catch (error) {
+    console.error('❌ Metadata enricher integration test failed:', error);
+  }
+
+  // Summary
+  console.log('\n📋 Metadata Enricher Integration Test Results:');
+  Object.entries(tests).forEach(([test, passed]) => {
+    console.log(`${passed ? '✅' : '❌'} ${test}: ${passed ? 'PASS' : 'FAIL'}`);
+  });
+
+  const allPassed = Object.values(tests).every(Boolean);
+  console.log(
+    `\n${allPassed ? '🎉' : '⚠️'} Overall: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}`
+  );
+
+  return tests;
+}
+
+/** Test the metadata enricher Lambda function directly (if accessible) */
+function testMetadataEnricherLambda(pmEmail: string = 'test.pm@company.com') {
+  console.log('⚡ Testing Metadata Enricher Lambda Function...');
+
+  // Note: This would require AWS SDK and proper credentials
+  console.log('🔧 To test the Lambda function directly, you would need:');
+  console.log('1. AWS SDK configured');
+  console.log('2. Proper IAM permissions');
+  console.log('3. Lambda invoke permissions');
+
+  console.log('\n📝 Expected Lambda payload for PM projects:');
+  const expectedPayload = {
+    pm_email: pmEmail,
+    include_metadata: true,
+    include_acta_status: true,
+  };
+  console.log(JSON.stringify(expectedPayload, null, 2));
+
+  console.log('\n📝 Expected Lambda response structure:');
+  const expectedResponse = {
+    statusCode: 200,
+    body: {
+      pm_email: pmEmail,
+      total_projects: 0,
+      projects: [],
+      summary: {
+        with_acta: 0,
+        without_acta: 0,
+        recently_updated: 0,
+      },
+    },
+  };
+  console.log(JSON.stringify(expectedResponse, null, 2));
+
+  return {
+    note: 'Lambda testing requires AWS SDK and proper permissions',
+    expectedPayload,
+    expectedResponse,
+  };
+}
+
+/** Comprehensive test for the complete PM workflow with metadata enricher */
+async function testCompleteWorkflowWithEnricher(
+  pmEmail: string = 'test.pm@company.com'
+) {
+  console.log('🔄 Testing Complete PM Workflow with Metadata Enricher...');
+  console.log(`👤 Testing with PM email: ${pmEmail}`);
+
+  const results = {
+    metadataEnricher: null,
+    pmProjectsAPI: null,
+    bulkOperationsAPI: null,
+    apiConnectivity: null,
+    uiComponents: null,
+  };
+
+  try {
+    // 1. Test metadata enricher integration
+    console.log('\n1️⃣ Testing Metadata Enricher Integration...');
+    results.metadataEnricher = await testMetadataEnricherIntegration(pmEmail);
+
+    // 2. Test PM project API loading
+    console.log('\n2️⃣ Testing PM Project API Loading...');
+    results.pmProjectsAPI = await testPMProjectManagerAPI(pmEmail);
+
+    // 3. Test bulk operations API
+    console.log('\n3️⃣ Testing Bulk Operations API...');
+    results.bulkOperationsAPI = await testBulkOperationsAPI(pmEmail);
+
+    // 4. Test API connectivity
+    console.log('\n4️⃣ Testing API Connectivity...');
+    results.apiConnectivity = await testAPIConnectivity();
+
+    // 5. Test UI components
+    console.log('\n5️⃣ Testing UI Components...');
+    results.uiComponents = testReactEventHandlers();
+
+    // Summary
+    console.log('\n📊 Complete Workflow Test Results:');
+    Object.entries(results).forEach(([test, result]) => {
+      if (result && typeof result === 'object') {
+        const status =
+          result.success !== undefined
+            ? result.success
+            : Object.values(result).some(Boolean);
+        console.log(
+          `${status ? '✅' : '❌'} ${test}: ${status ? 'PASS' : 'FAIL'}`
+        );
+
+        if (!status && result.error) {
+          console.log(`  └─ Error: ${result.error}`);
+        }
+      } else {
+        console.log(`❓ ${test}: UNKNOWN`);
+      }
+    });
+
+    // Overall assessment
+    const successfulTests = Object.values(results).filter(
+      (result) =>
+        result &&
+        (result.success === true ||
+          (typeof result === 'object' && Object.values(result).some(Boolean)))
+    ).length;
+
+    const totalTests = Object.keys(results).length;
+    console.log(`\n🎯 Summary: ${successfulTests}/${totalTests} tests passed`);
+
+    if (successfulTests === totalTests) {
+      console.log('🎉 All systems are working correctly!');
+    } else if (successfulTests > totalTests / 2) {
+      console.log('⚠️ Most systems working, but some issues detected');
+    } else {
+      console.log('❌ Multiple systems have issues that need attention');
+    }
+
+    return results;
+  } catch (error) {
+    console.error('❌ Complete workflow test failed:', error);
+    return { error: error.message, results };
+  }
+}
+
+/** Test backend API requirements for metadata enricher */
+async function testBackendAPIRequirements() {
+  console.log('🔧 Testing Backend API Requirements for Metadata Enricher...');
+
+  try {
+    const { apiBaseUrl } = await import('@/env.variables');
+    console.log(`🌐 API Base URL: ${apiBaseUrl}`);
+
+    // Check if API base URL is properly configured
+    if (
+      !apiBaseUrl ||
+      apiBaseUrl.includes('undefined') ||
+      apiBaseUrl.includes('localhost')
+    ) {
+      console.log(
+        '⚠️ API Base URL may not be properly configured for production'
+      );
+      console.log(
+        '💡 Make sure VITE_API_BASE_URL environment variable is set correctly'
+      );
+    }
+
+    // Test required endpoints
+    const requiredEndpoints = [
+      {
+        path: '/pm-projects/test@company.com',
+        method: 'GET',
+        description: 'PM Projects endpoint',
+      },
+      {
+        path: '/bulk-enrich-projects',
+        method: 'POST',
+        description: 'Bulk enrich endpoint',
+      },
+      {
+        path: '/project-summary/1000000064013473',
+        method: 'GET',
+        description: 'Project summary endpoint',
+      },
+    ];
+
+    console.log('\n📋 Testing required endpoints...');
+
+    for (const endpoint of requiredEndpoints) {
+      console.log(`\n🔍 Testing ${endpoint.description}:`);
+      console.log(`   ${endpoint.method} ${apiBaseUrl}${endpoint.path}`);
+
+      try {
+        const options =
+          endpoint.method === 'POST'
+            ? {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pm_email: 'test@company.com' }),
+              }
+            : { method: 'GET' };
+
+        const response = await fetch(`${apiBaseUrl}${endpoint.path}`, options);
+        console.log(`   Status: ${response.status} ${response.statusText}`);
+
+        if (response.status === 404) {
+          console.log('   ❌ Endpoint not implemented yet');
+        } else if (response.status >= 200 && response.status < 300) {
+          console.log('   ✅ Endpoint available');
+        } else if (response.status >= 500) {
+          console.log('   ⚠️ Server error - endpoint exists but has issues');
+        } else {
+          console.log('   ⚠️ Unexpected response');
+        }
+      } catch (error) {
+        console.log(`   ❌ Connection failed: ${error.message}`);
+      }
+    }
+
+    // Check Lambda function information
+    console.log('\n⚡ Required Lambda Function:');
+    console.log('   Function: projectMetadataEnricher');
+    console.log(
+      '   ARN: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher'
+    );
+    console.log('   Enhancement needed: Add PM email filtering capability');
+
+    console.log('\n📝 Backend Implementation Checklist:');
+    console.log(
+      '   □ Enhance projectMetadataEnricher Lambda to accept pm_email parameter'
+    );
+    console.log('   □ Add DynamoDB queries by PM email');
+    console.log(
+      '   □ Add enriched metadata fields (acta_status, priority_level, etc.)'
+    );
+    console.log('   □ Create GET /pm-projects/{pm_email} API endpoint');
+    console.log('   □ Create POST /bulk-enrich-projects API endpoint');
+    console.log('   □ Ensure CORS headers are properly configured');
+    console.log('   □ Set up proper error handling and logging');
+  } catch (error) {
+    console.error('❌ Backend API requirements test failed:', error);
+  }
+}
+
 // Make functions available globally
 if (typeof window !== 'undefined') {
   (window as unknown as Record<string, unknown>).testDashboardButtons =
@@ -747,6 +1149,31 @@ if (typeof window !== 'undefined') {
   (window as unknown as Record<string, unknown>).testCompleteWorkflow =
     testCompleteWorkflow;
 
+  // ============================================
+  // METADATA ENRICHER INTEGRATION TESTS
+  // ============================================
+
+  /** Test PM project manager functionality via API */
+  (window as unknown as Record<string, unknown>).testPMProjectManagerAPI =
+    testPMProjectManagerAPI;
+  /** Test bulk operations for PM projects */
+  (window as unknown as Record<string, unknown>).testBulkOperationsAPI =
+    testBulkOperationsAPI;
+  /** Test metadata enricher integration directly */
+  (
+    window as unknown as Record<string, unknown>
+  ).testMetadataEnricherIntegration = testMetadataEnricherIntegration;
+  /** Test the metadata enricher Lambda function directly (if accessible) */
+  (window as unknown as Record<string, unknown>).testMetadataEnricherLambda =
+    testMetadataEnricherLambda;
+  /** Comprehensive test for the complete PM workflow with metadata enricher */
+  (
+    window as unknown as Record<string, unknown>
+  ).testCompleteWorkflowWithEnricher = testCompleteWorkflowWithEnricher;
+  /** Test backend API requirements for metadata enricher */
+  (window as unknown as Record<string, unknown>).testBackendAPIRequirements =
+    testBackendAPIRequirements;
+
   console.log('🧪 Dashboard testing functions available:');
   console.log('- testDashboardButtons() - Check all buttons');
   console.log('- simulateButtonClicks() - Auto-click all buttons');
@@ -762,4 +1189,33 @@ if (typeof window !== 'undefined') {
   console.log('- testPMProjectManager() - Test PM project manager');
   console.log('- testDynamoDBIntegration() - Test DynamoDB integration');
   console.log('- testCompleteWorkflow() - Test complete PM workflow');
+
+  // Update the help function
+  const originalShowTestingHelp = (window as unknown as Record<string, unknown>)
+    .showTestingHelp;
+  (window as unknown as Record<string, unknown>).showTestingHelp = function () {
+    if (originalShowTestingHelp) {
+      (originalShowTestingHelp as () => void)();
+    }
+
+    console.log('\n🧬 Metadata Enricher Integration Tests:');
+    console.log(
+      '- testMetadataEnricherIntegration() - Test enricher endpoints'
+    );
+    console.log('- testPMProjectManagerAPI() - Test PM project API calls');
+    console.log('- testBulkOperationsAPI() - Test bulk operations API');
+    console.log(
+      '- testCompleteWorkflowWithEnricher() - Complete enricher workflow test'
+    );
+    console.log('- testMetadataEnricherLambda() - Show Lambda testing info');
+    console.log('- testBackendAPIRequirements() - Check backend requirements');
+
+    console.log('\n💡 Quick Start for Backend Testing:');
+    console.log(
+      'testBackendAPIRequirements() - Check what needs to be implemented'
+    );
+    console.log(
+      'testMetadataEnricherIntegration() - Test when backend is ready'
+    );
+  };
 }
