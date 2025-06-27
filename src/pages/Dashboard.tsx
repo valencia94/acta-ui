@@ -10,10 +10,11 @@ import {
   Send,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
 import Header from '@/components/Header';
+import PMProjectManager from '@/components/PMProjectManager';
 import ProjectTable, { Project } from '@/components/ProjectTable';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -28,11 +29,12 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'manual' | 'pm'>('pm'); // Default to PM mode
 
-  // Fetch projects for this PM
+  // Fetch projects for this PM (legacy table structure)
   useEffect(() => {
-    if (user?.email) loadProjects();
-  }, [user]);
+    if (user?.email && viewMode === 'manual') loadProjects();
+  }, [user, viewMode]);
 
   async function loadProjects() {
     setLoadingProjects(true);
@@ -59,15 +61,57 @@ export default function Dashboard() {
     }
 
     setActionLoading(true);
+
+    // Show initial progress message
+    toast(
+      'Starting Acta generation... This may take a few minutes while we fetch the latest project data.',
+      {
+        duration: 4000,
+        icon: '⏳',
+      }
+    );
+
     try {
+      console.log(`Generating Acta for project: ${projectId}`);
       await extractProjectPlaceData(projectId);
-      toast.success('Acta generated successfully!');
+
+      toast.success(
+        'Acta generated successfully! The document is now ready for download.',
+        {
+          duration: 6000,
+        }
+      );
+
+      // Refresh projects list to show the newly generated document
       loadProjects();
     } catch (error) {
       console.error('Generate Acta error:', error);
-      toast.error(
-        'Failed to generate Acta. Please check if the API server is running and the Project ID is valid.'
-      );
+
+      // More specific error handling
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        toast.error(
+          `Project ID "${projectId}" not found. Please verify the Project ID is correct.`
+        );
+      } else if (
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('502') ||
+        errorMessage.includes('503')
+      ) {
+        toast.error(
+          'The external data source is temporarily unavailable. Please try again in a few minutes.'
+        );
+      } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        toast.error(
+          'Authentication failed. Please check your permissions or sign in again.'
+        );
+      } else {
+        toast.error(
+          `Failed to generate Acta: ${errorMessage}. Please check if the API server is running.`
+        );
+      }
     } finally {
       setActionLoading(false);
     }
@@ -102,15 +146,46 @@ export default function Dashboard() {
     }
 
     setActionLoading(true);
+
+    // Show loading message
+    const loadingToast = toast.loading(
+      `Preparing ${fmt.toUpperCase()} download...`
+    );
+
     try {
+      console.log(`Downloading ${fmt} for project: ${projectId}`);
       const url = await getDownloadUrl(projectId, fmt);
-      toast.success(`${fmt.toUpperCase()} download ready!`);
+
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
+      toast.success(
+        `${fmt.toUpperCase()} download ready! Opening in new tab...`
+      );
+
+      // Open the download URL
       window.open(url, '_blank');
     } catch (error) {
       console.error(`Download ${fmt} error:`, error);
-      toast.error(
-        `Failed to download ${fmt.toUpperCase()}. Please check if the API server is running and the Project ID is valid.`
-      );
+
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
+      // More specific error handling
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        toast.error(
+          `No ${fmt.toUpperCase()} document found for Project ID "${projectId}". Please generate the Acta first.`
+        );
+      } else if (errorMessage.includes('403') || errorMessage.includes('401')) {
+        toast.error(
+          'Access denied. Please check your permissions or sign in again.'
+        );
+      } else {
+        toast.error(`Failed to download ${fmt.toUpperCase()}: ${errorMessage}`);
+      }
     } finally {
       setActionLoading(false);
     }
@@ -293,14 +368,177 @@ export default function Dashboard() {
                 disabled={!projectId || actionLoading}
               />
             </div>
+
+            {/* Document Status Section - Uncomment when API supports check-document endpoint */}
+            {/* 
+            {projectId && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Document Status</h3>
+                <div className="flex flex-wrap gap-4">
+                  <DocumentStatus projectId={projectId} format="docx" />
+                  <DocumentStatus projectId={projectId} format="pdf" />
+                </div>
+              </div>
+            )}
+            */}
           </div>
         </motion.div>
+
+        {/* Mode Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Filter className="h-5 w-5 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">
+                  Dashboard Mode:
+                </span>
+              </div>
+              <div className="flex bg-gray-100 rounded-xl p-1">
+                <button
+                  onClick={() => setViewMode('pm')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    viewMode === 'pm'
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  PM Projects
+                </button>
+                <button
+                  onClick={() => setViewMode('manual')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    viewMode === 'manual'
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Manual Entry
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* PM Project Manager */}
+        {viewMode === 'pm' && user?.email && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <PMProjectManager
+              pmEmail={user.email}
+              onProjectSelect={setProjectId}
+              selectedProjectId={projectId}
+            />
+          </motion.div>
+        )}
+
+        {/* Manual Acta Generation Section */}
+        {viewMode === 'manual' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 mb-8"
+          >
+            <div className="flex items-center mb-6">
+              <div className="p-3 bg-green-100 rounded-xl mr-4">
+                <Plus className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">
+                  Manual Project Entry
+                </h2>
+                <p className="text-gray-600">
+                  Enter a specific Project ID to generate or download Acta
+                  documents
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label
+                  htmlFor="projectId"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Project ID
+                </label>
+                <div className="relative">
+                  <input
+                    id="projectId"
+                    type="text"
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    placeholder="Enter project ID (e.g. 1000000064013473)"
+                    className="w-full h-12 px-4 border-2 border-gray-300 rounded-xl bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 text-gray-900"
+                  />
+                  <Search className="absolute right-3 top-3 h-6 w-6 text-gray-400" />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <ActaButtons
+                  onGenerate={handleGenerate}
+                  onSendForApproval={handleSendForApproval}
+                  onDownloadWord={() => handleDownload('docx')}
+                  onDownloadPdf={() => handleDownload('pdf')}
+                  disabled={!projectId || actionLoading}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Acta Generation Section for PM Mode */}
+        {viewMode === 'pm' && projectId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 mb-8"
+          >
+            <div className="flex items-center mb-6">
+              <div className="p-3 bg-green-100 rounded-xl mr-4">
+                <Plus className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Acta Generation for PM
+                </h2>
+                <p className="text-gray-600">
+                  Generate Acta documents for your projects
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex flex-wrap gap-3">
+                <ActaButtons
+                  onGenerate={handleGenerate}
+                  onSendForApproval={handleSendForApproval}
+                  onDownloadWord={() => handleDownload('docx')}
+                  onDownloadPdf={() => handleDownload('pdf')}
+                  disabled={!projectId || actionLoading}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Projects Table Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4 }}
           className="bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden"
         >
           <div className="p-8 border-b border-gray-200">

@@ -67,3 +67,70 @@ export function sendApprovalEmail(
 export function extractProjectPlaceData(projectId: string): Promise<unknown> {
   return post<unknown>(`${BASE}/extract-project-place/${projectId}`);
 }
+
+/** ---------- PM PROJECT MANAGEMENT ---------- */
+export interface PMProject {
+  project_id: string;
+  project_name: string;
+  pm_email: string;
+  project_status?: string;
+  last_updated?: string;
+  has_acta_document?: boolean;
+  acta_last_generated?: string;
+}
+
+// Get all projects assigned to a PM by email
+export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
+  return get<PMProject[]>(
+    `${BASE}/projects-by-pm/${encodeURIComponent(pmEmail)}`
+  );
+}
+
+// Get project summary (enhanced with PM context)
+export async function getProjectSummaryForPM(
+  projectId: string,
+  pmEmail: string
+): Promise<ProjectSummary & { pm_context?: PMProject }> {
+  return get<ProjectSummary & { pm_context?: PMProject }>(
+    `${BASE}/project-summary/${projectId}?pm_email=${encodeURIComponent(pmEmail)}`
+  );
+}
+
+// Bulk generate summaries for all PM projects
+export async function generateSummariesForPM(pmEmail: string): Promise<{
+  success: string[];
+  failed: string[];
+  total: number;
+}> {
+  return post<{ success: string[]; failed: string[]; total: number }>(
+    `${BASE}/bulk-generate-summaries`,
+    { pm_email: pmEmail }
+  );
+}
+
+/** ---------- CHECK DOCUMENT AVAILABILITY ---------- */
+export async function checkDocumentAvailability(
+  id: string,
+  format: 'pdf' | 'docx'
+): Promise<{ available: boolean; lastModified?: string }> {
+  try {
+    const response = await fetch(
+      `${BASE}/check-document/${id}?format=${format}`,
+      {
+        method: 'HEAD',
+      }
+    );
+
+    if (response.ok) {
+      return {
+        available: true,
+        lastModified: response.headers.get('Last-Modified') || undefined,
+      };
+    }
+
+    return { available: false };
+  } catch (error) {
+    console.warn('Error checking document availability:', error);
+    return { available: false };
+  }
+}
