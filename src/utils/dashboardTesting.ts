@@ -298,6 +298,59 @@ function testReactEventHandlers() {
   }, 500);
 }
 
+// Function to debug environment variables and API configuration
+function debugEnvironment() {
+  console.log('🔧 Environment Debug Information:');
+  console.log('='.repeat(50));
+
+  // Check all environment variables
+  console.log('📊 Environment Variables:');
+  console.log('- NODE_ENV:', import.meta.env.MODE);
+  console.log('- PROD:', import.meta.env.PROD);
+  console.log('- DEV:', import.meta.env.DEV);
+  console.log('- VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+  console.log('- VITE_SKIP_AUTH:', import.meta.env.VITE_SKIP_AUTH);
+  console.log('- VITE_COGNITO_REGION:', import.meta.env.VITE_COGNITO_REGION);
+
+  // Check current domain
+  console.log('\n🌐 Current Domain Info:');
+  console.log('- Window location:', window.location.href);
+  console.log('- Protocol:', window.location.protocol);
+  console.log('- Host:', window.location.host);
+  console.log('- Pathname:', window.location.pathname);
+
+  // Check computed API URL
+  console.log('\n📡 API Configuration:');
+  const computedApiUrl =
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:9999';
+  console.log('- Computed API URL:', computedApiUrl);
+  console.log(
+    '- API URL source:',
+    import.meta.env.VITE_API_BASE_URL ? 'Environment variable' : 'Fallback'
+  );
+
+  // Check if we're in a CloudFront environment
+  const isCloudFront = window.location.host.includes('cloudfront.net');
+  console.log('- CloudFront detected:', isCloudFront);
+
+  if (isCloudFront) {
+    console.log('\n⚠️ CloudFront Environment Detected:');
+    console.log('- Frontend URL:', window.location.origin);
+    console.log('- API calls should NOT go to CloudFront');
+    console.log('- Need separate API Gateway endpoint');
+  }
+
+  // Suggest fixes
+  console.log('\n💡 Suggested API Endpoints:');
+  console.log('- For development: http://localhost:9999');
+  console.log(
+    '- For production: https://{api-gateway-id}.execute-api.{region}.amazonaws.com/prod'
+  );
+  console.log('- Current setting:', computedApiUrl);
+
+  console.log('\n🔍 Test API connectivity with: testAPIConnectivity()');
+}
+
 // Make functions available globally
 if (typeof window !== 'undefined') {
   (window as unknown as Record<string, unknown>).testDashboardButtons =
@@ -308,10 +361,15 @@ if (typeof window !== 'undefined') {
     testAPIConnectivity;
   (window as unknown as Record<string, unknown>).testReactEventHandlers =
     testReactEventHandlers;
+  (window as unknown as Record<string, unknown>).debugEnvironment =
+    debugEnvironment;
 
   console.log('🧪 Dashboard testing functions available:');
   console.log('- testDashboardButtons() - Check all buttons');
   console.log('- simulateButtonClicks() - Auto-click all buttons');
   console.log('- testAPIConnectivity() - Check API server status');
   console.log('- testReactEventHandlers() - Check React event handlers');
+  console.log(
+    '- debugEnvironment() - Debug environment variables and API config'
+  );
 }
