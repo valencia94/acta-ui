@@ -27,13 +27,23 @@ export default function PMProjectManager({
   const [bulkGenerating, setBulkGenerating] = useState(false);
 
   useEffect(() => {
+    console.log('PMProjectManager effect triggered:', {
+      pmEmail,
+      isAdminView,
+      isAdminMode,
+      shouldLoadAll: isAdminView || isAdminMode,
+    });
+
     if (isAdminView) {
       // In admin view, load all projects instead of PM-specific
+      loadAllProjects();
+    } else if (isAdminMode) {
+      // In main dashboard with admin access, also load all projects
       loadAllProjects();
     } else if (pmEmail) {
       loadPMProjects();
     }
-  }, [pmEmail, isAdminView]);
+  }, [pmEmail, isAdminView, isAdminMode]);
 
   async function loadPMProjects() {
     if (!pmEmail) return;
@@ -104,7 +114,8 @@ export default function PMProjectManager({
       ];
 
       setProjects(mockProjects);
-      toast.success(`Loaded ${mockProjects.length} projects (admin view)`);
+      const adminLabel = isAdminView ? '(admin dashboard)' : '(admin access)';
+      toast.success(`Loaded ${mockProjects.length} projects ${adminLabel}`);
     } catch (error) {
       console.error('Error loading all projects:', error);
       toast.error(

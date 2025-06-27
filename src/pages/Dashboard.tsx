@@ -32,6 +32,13 @@ export default function Dashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'manual' | 'pm'>('pm'); // Default to PM mode
 
+  // Check if user has admin access
+  const isAdmin =
+    user?.email?.includes('admin') ||
+    user?.email?.includes('valencia94') ||
+    user?.email?.endsWith('@ikusi.com') ||
+    user?.email?.endsWith('@company.com');
+
   // Backend diagnostic check
   useEffect(() => {
     const runDiagnostic = async () => {
@@ -375,7 +382,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="w-full">
               <ActaButtons
                 onGenerate={handleGenerate}
                 onSendForApproval={handleSendForApproval}
@@ -453,7 +460,7 @@ export default function Dashboard() {
               pmEmail={user.email}
               onProjectSelect={setProjectId}
               selectedProjectId={projectId}
-              isAdminMode={false}
+              isAdminMode={isAdmin}
             />
           </motion.div>
         )}
