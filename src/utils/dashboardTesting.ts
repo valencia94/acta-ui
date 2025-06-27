@@ -28,6 +28,7 @@ function testDashboardButtons() {
   const testProjectId = '1000000064013473';
   projectIdInput.value = testProjectId;
   projectIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+  projectIdInput.dispatchEvent(new Event('change', { bubbles: true }));
   console.log(`✅ Set test project ID: ${testProjectId}`);
 
   // Wait a moment for state to update
@@ -36,7 +37,7 @@ function testDashboardButtons() {
     const buttons = document.querySelectorAll('button');
     console.log(`✅ Found ${buttons.length} buttons on page`);
 
-    // Find specific ACTA buttons
+    // Find specific ACTA buttons with more detailed searching
     const generateBtn = Array.from(buttons).find((btn) =>
       btn.textContent?.includes('Generate')
     );
@@ -69,11 +70,19 @@ function testDashboardButtons() {
         '- Generate Acta:',
         generateBtn.disabled ? '🔒 Disabled' : '🟢 Enabled'
       );
+      console.log(
+        '  - onClick handler:',
+        generateBtn.onclick ? 'Present' : 'Missing'
+      );
     }
     if (approvalBtn) {
       console.log(
         '- Send Approval:',
         approvalBtn.disabled ? '🔒 Disabled' : '🟢 Enabled'
+      );
+      console.log(
+        '  - onClick handler:',
+        approvalBtn.onclick ? 'Present' : 'Missing'
       );
     }
     if (wordBtn) {
@@ -81,57 +90,56 @@ function testDashboardButtons() {
         '- Download Word:',
         wordBtn.disabled ? '🔒 Disabled' : '🟢 Enabled'
       );
+      console.log(
+        '  - onClick handler:',
+        wordBtn.onclick ? 'Present' : 'Missing'
+      );
     }
     if (pdfBtn) {
       console.log(
         '- Download PDF:',
         pdfBtn.disabled ? '🔒 Disabled' : '🟢 Enabled'
       );
+      console.log(
+        '  - onClick handler:',
+        pdfBtn.onclick ? 'Present' : 'Missing'
+      );
     }
 
-    // Test 6: Test button clicks (without actually triggering actions)
-    console.log('\n🖱️ Testing Button Clicks:');
+    // Test 6: Try to trigger buttons with different methods
+    console.log('\n🖱️ Testing Button Interactions:');
 
-    // Add click listeners to see if events are working
     if (generateBtn) {
-      const originalClick = generateBtn.onclick;
-      generateBtn.onclick = (e) => {
-        console.log('✅ Generate Acta button clicked!');
-        if (originalClick) originalClick.call(generateBtn, e);
-      };
-    }
+      console.log('🔥 Testing Generate Acta button...');
 
-    if (approvalBtn) {
-      const originalClick = approvalBtn.onclick;
-      approvalBtn.onclick = (e) => {
-        console.log('✅ Send Approval button clicked!');
-        if (originalClick) originalClick.call(approvalBtn, e);
-      };
-    }
+      // Add a test event listener
+      generateBtn.addEventListener('click', () => {
+        console.log('✅ Generate button click event fired!');
+      });
 
-    if (wordBtn) {
-      const originalClick = wordBtn.onclick;
-      wordBtn.onclick = (e) => {
-        console.log('✅ Download Word button clicked!');
-        if (originalClick) originalClick.call(wordBtn, e);
-      };
-    }
+      // Try multiple ways to trigger the button
+      console.log('  - Trying .click() method...');
+      generateBtn.click();
 
-    if (pdfBtn) {
-      const originalClick = pdfBtn.onclick;
-      pdfBtn.onclick = (e) => {
-        console.log('✅ Download PDF button clicked!');
-        if (originalClick) originalClick.call(pdfBtn, e);
-      };
+      console.log('  - Trying manual event dispatch...');
+      generateBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      console.log('  - Checking if button prevents default...');
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      });
+      const wasDefaultPrevented = !generateBtn.dispatchEvent(clickEvent);
+      console.log('  - Default prevented:', wasDefaultPrevented);
     }
 
     console.log(
-      '\n🎯 Ready for testing! Try clicking the buttons to see console output.'
+      '\n🎯 Button testing complete! Check console for click events.'
     );
     console.log(
-      '📝 Note: API calls may fail if backend server is not running.'
+      '📝 Note: If no click events appear, the button handlers may not be properly attached.'
     );
-  }, 500);
+  }, 1000); // Increased timeout to ensure state updates
 }
 
 // Function to simulate button clicks for testing
@@ -217,6 +225,79 @@ async function testAPIConnectivity() {
   }
 }
 
+// Function to test React event handlers specifically
+function testReactEventHandlers() {
+  console.log('⚛️ Testing React Event Handlers...');
+
+  // Check if project ID is set
+  const projectIdInput = document.querySelector(
+    '#projectId'
+  ) as HTMLInputElement;
+  if (projectIdInput && !projectIdInput.value) {
+    projectIdInput.value = '1000000064013473';
+    projectIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+    projectIdInput.dispatchEvent(new Event('change', { bubbles: true }));
+    console.log('✅ Set project ID for testing');
+  }
+
+  setTimeout(() => {
+    const buttons = document.querySelectorAll('button');
+    console.log(`Found ${buttons.length} buttons`);
+
+    // Try to find buttons by their text content
+    const buttonTests = [
+      { name: 'Generate', text: 'Generate' },
+      { name: 'Send Approval', text: 'Send Approval' },
+      { name: 'Download Word', text: 'Word' },
+      { name: 'Download PDF', text: 'PDF' },
+    ];
+
+    buttonTests.forEach(({ name, text }) => {
+      const button = Array.from(buttons).find((btn) =>
+        btn.textContent?.includes(text)
+      ) as HTMLButtonElement;
+
+      if (button) {
+        console.log(`\n🔍 Testing ${name} button:`);
+        console.log(`  - Disabled: ${button.disabled}`);
+        console.log(`  - Class list: ${button.className}`);
+
+        // Check if button has React fiber
+        const reactFiber =
+          (button as unknown as Record<string, unknown>)._reactInternalFiber ||
+          (button as unknown as Record<string, unknown>)
+            .__reactInternalInstance ||
+          Object.keys(button).find((key) =>
+            key.startsWith('__reactInternalInstance')
+          );
+        console.log(`  - React fiber: ${reactFiber ? 'Present' : 'Missing'}`);
+
+        // Add a test listener and try clicking
+        let clickDetected = false;
+        const testListener = () => {
+          clickDetected = true;
+          console.log(`  ✅ ${name} button click detected!`);
+        };
+
+        button.addEventListener('click', testListener);
+
+        // Try clicking
+        console.log('  - Attempting click...');
+        button.click();
+
+        setTimeout(() => {
+          if (!clickDetected) {
+            console.log(`  ❌ ${name} button click not detected`);
+          }
+          button.removeEventListener('click', testListener);
+        }, 100);
+      } else {
+        console.log(`❌ ${name} button not found`);
+      }
+    });
+  }, 500);
+}
+
 // Make functions available globally
 if (typeof window !== 'undefined') {
   (window as unknown as Record<string, unknown>).testDashboardButtons =
@@ -225,9 +306,12 @@ if (typeof window !== 'undefined') {
     simulateButtonClicks;
   (window as unknown as Record<string, unknown>).testAPIConnectivity =
     testAPIConnectivity;
+  (window as unknown as Record<string, unknown>).testReactEventHandlers =
+    testReactEventHandlers;
 
   console.log('🧪 Dashboard testing functions available:');
   console.log('- testDashboardButtons() - Check all buttons');
   console.log('- simulateButtonClicks() - Auto-click all buttons');
   console.log('- testAPIConnectivity() - Check API server status');
+  console.log('- testReactEventHandlers() - Check React event handlers');
 }
