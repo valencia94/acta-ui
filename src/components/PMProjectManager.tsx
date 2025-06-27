@@ -8,10 +8,11 @@ import { generateSummariesForPM, getProjectsByPM, PMProject } from '@/lib/api';
 import Button from './Button';
 
 interface PMProjectManagerProps {
-  pmEmail: string;
-  onProjectSelect: (projectId: string) => void;
+  pmEmail?: string;
+  onProjectSelect?: (projectId: string) => void;
   selectedProjectId?: string;
   isAdminMode?: boolean;
+  isAdminView?: boolean; // New prop for admin dashboard view
 }
 
 export default function PMProjectManager({
@@ -19,14 +20,20 @@ export default function PMProjectManager({
   onProjectSelect,
   selectedProjectId,
   isAdminMode = false,
+  isAdminView = false,
 }: PMProjectManagerProps) {
   const [projects, setProjects] = useState<PMProject[]>([]);
   const [loading, setLoading] = useState(false);
   const [bulkGenerating, setBulkGenerating] = useState(false);
 
   useEffect(() => {
-    loadPMProjects();
-  }, [pmEmail]);
+    if (isAdminView) {
+      // In admin view, load all projects instead of PM-specific
+      loadAllProjects();
+    } else if (pmEmail) {
+      loadPMProjects();
+    }
+  }, [pmEmail, isAdminView]);
 
   async function loadPMProjects() {
     if (!pmEmail) return;
@@ -58,6 +65,51 @@ export default function PMProjectManager({
         : 'Could not load your assigned projects. You can still enter Project IDs manually.';
 
       toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadAllProjects() {
+    setLoading(true);
+    try {
+      console.log('Loading all projects for admin view');
+      // For now, mock some data since the "all projects" endpoint isn't implemented
+      // In production, this would call something like getAllProjects()
+      const mockProjects: PMProject[] = [
+        {
+          project_id: '1000000064013473',
+          project_name: 'Infrastructure Upgrade Phase 1',
+          pm_email: 'pm1@ikusi.com',
+          project_status: 'active',
+          has_acta_document: true,
+          last_updated: new Date().toISOString(),
+        },
+        {
+          project_id: '1000000049842296',
+          project_name: 'Network Security Enhancement',
+          pm_email: 'pm2@ikusi.com',
+          project_status: 'pending',
+          has_acta_document: false,
+          last_updated: new Date().toISOString(),
+        },
+        {
+          project_id: '1000000055667788',
+          project_name: 'Digital Transformation Initiative',
+          pm_email: 'pm3@ikusi.com',
+          project_status: 'active',
+          has_acta_document: true,
+          last_updated: new Date().toISOString(),
+        },
+      ];
+
+      setProjects(mockProjects);
+      toast.success(`Loaded ${mockProjects.length} projects (admin view)`);
+    } catch (error) {
+      console.error('Error loading all projects:', error);
+      toast.error(
+        'Could not load projects. Backend endpoints may not be implemented yet.'
+      );
     } finally {
       setLoading(false);
     }
@@ -127,7 +179,9 @@ export default function PMProjectManager({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Users className="h-6 w-6 text-blue-500" />
-          <h2 className="text-xl font-bold text-gray-800">Your Projects</h2>
+          <h2 className="text-xl font-bold text-gray-800">
+            {isAdminView ? 'All Projects' : 'Your Projects'}
+          </h2>
           {projects.length > 0 && (
             <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded-full">
               {projects.length} projects
@@ -137,7 +191,7 @@ export default function PMProjectManager({
 
         <div className="flex gap-2">
           <Button
-            onClick={loadPMProjects}
+            onClick={isAdminView ? loadAllProjects : loadPMProjects}
             disabled={loading}
             className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
           >
@@ -195,7 +249,7 @@ export default function PMProjectManager({
                     : 'border-gray-200 hover:border-blue-300'
                 }
               `}
-              onClick={() => onProjectSelect(project.project_id)}
+              onClick={() => onProjectSelect?.(project.project_id)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">

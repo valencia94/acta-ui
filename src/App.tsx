@@ -15,6 +15,7 @@ import Header from '@/components/Header';
 import { skipAuth } from '@/env.variables';
 import { useIdleLogout } from '@/hooks/useIdleLogout';
 import { useThemedFavicon } from '@/hooks/useThemedFavicon';
+import AdminDashboard from '@/pages/AdminDashboard';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 
@@ -117,6 +118,12 @@ export default function App() {
           path="/dashboard"
           element={
             skipAuth || isAuthed ? <Dashboard /> : <Navigate to="/login" />
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            skipAuth || isAuthed ? <AdminDashboard /> : <Navigate to="/login" />
           }
         />
         <Route

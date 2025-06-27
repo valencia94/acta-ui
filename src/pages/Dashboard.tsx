@@ -32,13 +32,6 @@ export default function Dashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'manual' | 'pm'>('pm'); // Default to PM mode
 
-  // Role-based access control
-  const isAdmin =
-    user?.email?.includes('admin') ||
-    user?.email?.includes('valencia94') ||
-    user?.email?.endsWith('@ikusi.com') ||
-    user?.email?.endsWith('@company.com'); // Add your admin domains
-
   // Backend diagnostic check
   useEffect(() => {
     const runDiagnostic = async () => {
@@ -420,11 +413,6 @@ export default function Dashboard() {
                 <Filter className="h-5 w-5 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">
                   Dashboard Mode:
-                  {isAdmin && (
-                    <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
-                      🔑 Admin Access
-                    </span>
-                  )}
                 </span>
               </div>
               <div className="flex bg-gray-100 rounded-xl p-1">
@@ -436,7 +424,7 @@ export default function Dashboard() {
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
-                  {isAdmin ? 'All Projects' : 'PM Projects'}
+                  PM Projects
                 </button>
                 <button
                   onClick={() => setViewMode('manual')}
@@ -462,10 +450,10 @@ export default function Dashboard() {
             className="mb-8"
           >
             <PMProjectManager
-              pmEmail={isAdmin ? 'admin-all-access' : user.email}
+              pmEmail={user.email}
               onProjectSelect={setProjectId}
               selectedProjectId={projectId}
-              isAdminMode={isAdmin}
+              isAdminMode={false}
             />
           </motion.div>
         )}
