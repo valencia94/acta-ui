@@ -11,12 +11,14 @@ interface PMProjectManagerProps {
   pmEmail: string;
   onProjectSelect: (projectId: string) => void;
   selectedProjectId?: string;
+  isAdminMode?: boolean;
 }
 
 export default function PMProjectManager({
   pmEmail,
   onProjectSelect,
   selectedProjectId,
+  isAdminMode = false,
 }: PMProjectManagerProps) {
   const [projects, setProjects] = useState<PMProject[]>([]);
   const [loading, setLoading] = useState(false);
@@ -36,21 +38,26 @@ export default function PMProjectManager({
       setProjects(pmProjects);
 
       if (pmProjects.length > 0) {
-        toast.success(`Found ${pmProjects.length} projects assigned to you`);
-      } else {
-        toast(
-          'No projects found for your email. You can still enter Project IDs manually.',
-          {
-            icon: '💡',
-            duration: 5000,
-          }
+        toast.success(
+          `Found ${pmProjects.length} projects${isAdminMode ? ' (admin access)' : ' assigned to you'}`
         );
+      } else {
+        const message = isAdminMode
+          ? 'No projects found in the system. Backend may not be configured yet.'
+          : 'No projects found for your email. You can still enter Project IDs manually.';
+
+        toast(message, {
+          icon: isAdminMode ? '⚠️' : '💡',
+          duration: 5000,
+        });
       }
     } catch (error) {
       console.error('Error loading PM projects:', error);
-      toast.error(
-        'Could not load your assigned projects. You can still enter Project IDs manually.'
-      );
+      const message = isAdminMode
+        ? 'Could not load projects. Backend endpoints may not be implemented yet.'
+        : 'Could not load your assigned projects. You can still enter Project IDs manually.';
+
+      toast.error(message);
     } finally {
       setLoading(false);
     }

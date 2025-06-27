@@ -22,6 +22,7 @@ import {
   getDownloadUrl,
   sendApprovalEmail,
 } from '@/lib/api';
+import { quickBackendDiagnostic } from '@/utils/backendDiagnostic';
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -30,6 +31,28 @@ export default function Dashboard() {
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'manual' | 'pm'>('pm'); // Default to PM mode
+
+  // Role-based access control
+  const isAdmin =
+    user?.email?.includes('admin') ||
+    user?.email?.includes('valencia94') ||
+    user?.email?.endsWith('@ikusi.com') ||
+    user?.email?.endsWith('@company.com'); // Add your admin domains
+
+  // Backend diagnostic check
+  useEffect(() => {
+    const runDiagnostic = async () => {
+      const isBackendWorking = await quickBackendDiagnostic();
+      if (!isBackendWorking) {
+        toast.error(
+          'Backend API is not properly configured. Some buttons may not work.',
+          { duration: 8000 }
+        );
+      }
+    };
+
+    runDiagnostic();
+  }, []);
 
   // Fetch projects for this PM (legacy table structure)
   useEffect(() => {
@@ -397,6 +420,11 @@ export default function Dashboard() {
                 <Filter className="h-5 w-5 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">
                   Dashboard Mode:
+                  {isAdmin && (
+                    <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+                      🔑 Admin Access
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="flex bg-gray-100 rounded-xl p-1">
@@ -408,7 +436,7 @@ export default function Dashboard() {
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
-                  PM Projects
+                  {isAdmin ? 'All Projects' : 'PM Projects'}
                 </button>
                 <button
                   onClick={() => setViewMode('manual')}
@@ -434,9 +462,10 @@ export default function Dashboard() {
             className="mb-8"
           >
             <PMProjectManager
-              pmEmail={user.email}
+              pmEmail={isAdmin ? 'admin-all-access' : user.email}
               onProjectSelect={setProjectId}
               selectedProjectId={projectId}
+              isAdminMode={isAdmin}
             />
           </motion.div>
         )}
@@ -482,6 +511,39 @@ export default function Dashboard() {
                     className="w-full h-12 px-4 border-2 border-gray-300 rounded-xl bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 text-gray-900"
                   />
                   <Search className="absolute right-3 top-3 h-6 w-6 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Backend Status Testing */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-gray-800">
+                      Backend Status
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      If buttons aren't working, test backend connectivity
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      console.log('🧪 Running backend diagnostic...');
+                      // Run diagnostic functions if available
+                      const w = window as unknown as Record<string, unknown>;
+                      if (w.quickBackendDiagnostic) {
+                        (w.quickBackendDiagnostic as () => void)();
+                      }
+                      if (w.testMetadataEnricherIntegration) {
+                        (w.testMetadataEnricherIntegration as () => void)();
+                      }
+                      if (w.checkBackendImplementationStatus) {
+                        (w.checkBackendImplementationStatus as () => void)();
+                      }
+                    }}
+                    className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
+                  >
+                    Test Backend
+                  </button>
                 </div>
               </div>
 

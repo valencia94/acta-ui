@@ -106,6 +106,14 @@ export interface PMProjectsResponse {
 
 // Get all projects assigned to a PM by email (via metadata enricher)
 export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
+  // Handle admin access - get all projects
+  if (pmEmail === 'admin-all-access') {
+    const response = await get<PMProjectsResponse>(
+      `${BASE}/pm-projects/all-projects`
+    );
+    return response.projects;
+  }
+
   const response = await get<PMProjectsResponse>(
     `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
   );
@@ -116,6 +124,11 @@ export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
 export async function getPMProjectsWithSummary(
   pmEmail: string
 ): Promise<PMProjectsResponse> {
+  // Handle admin access
+  if (pmEmail === 'admin-all-access') {
+    return get<PMProjectsResponse>(`${BASE}/pm-projects/all-projects`);
+  }
+
   return get<PMProjectsResponse>(
     `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
   );
