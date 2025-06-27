@@ -127,8 +127,18 @@ export default function PMProjectManager({
   }
 
   async function handleBulkGenerate() {
-    if (!pmEmail || projects.length === 0) {
-      toast.error('No projects available for bulk generation');
+    if (!pmEmail) {
+      toast.error('Email address required for bulk generation');
+      return;
+    }
+
+    if (projects.length === 0) {
+      toast.error(
+        'No projects available for bulk generation. Please load projects first or use manual entry.',
+        {
+          duration: 6000,
+        }
+      );
       return;
     }
 
@@ -157,11 +167,16 @@ export default function PMProjectManager({
       }
 
       // Refresh project list
-      loadPMProjects();
+      if (isAdminView || isAdminMode) {
+        loadAllProjects();
+      } else {
+        loadPMProjects();
+      }
     } catch (error) {
       console.error('Bulk generation error:', error);
       toast.error(
-        'Bulk generation failed. Please try individual project generation.'
+        'Bulk generation failed. Backend API may not be available. You can still generate Actas individually using manual entry.',
+        { duration: 8000 }
       );
     } finally {
       setBulkGenerating(false);

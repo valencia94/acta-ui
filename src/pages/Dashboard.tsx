@@ -44,10 +44,22 @@ export default function Dashboard() {
     const runDiagnostic = async () => {
       const isBackendWorking = await quickBackendDiagnostic();
       if (!isBackendWorking) {
-        toast.error(
-          'Backend API is not properly configured. Some buttons may not work.',
-          { duration: 8000 }
+        toast(
+          'Backend API is not available. Manual entry and individual Acta generation will still work.',
+          {
+            icon: '⚠️',
+            duration: 6000,
+            style: {
+              background: '#fef3c7',
+              color: '#92400e',
+              border: '1px solid #f59e0b',
+            },
+          }
         );
+      } else {
+        toast.success('Backend API is connected and ready!', {
+          duration: 3000,
+        });
       }
     };
 
@@ -153,9 +165,25 @@ export default function Dashboard() {
       toast.success('Approval email sent successfully!');
     } catch (error) {
       console.error('Send approval error:', error);
-      toast.error(
-        'Failed to send approval email. Please check if the API server is running.'
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        toast.error(
+          `Project ID "${projectId}" not found. Please generate the Acta first.`
+        );
+      } else if (
+        errorMessage.includes('API') ||
+        errorMessage.includes('backend')
+      ) {
+        toast.error(
+          'Email service is currently unavailable. Please try again later or contact support.'
+        );
+      } else {
+        toast.error(
+          'Failed to send approval email. Please check your connection and try again.'
+        );
+      }
     } finally {
       setActionLoading(false);
     }
