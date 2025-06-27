@@ -37,18 +37,34 @@ export async function getDownloadUrl(
   id: string,
   format: 'pdf' | 'docx'
 ): Promise<string> {
-  const res = await fetch(`${BASE}/download-acta/${id}?format=${format}`, {
+  const endpoint = `${BASE}/download-acta/${id}?format=${format}`;
+  console.log(`🌐 Requesting download URL: ${endpoint}`);
+
+  const res = await fetch(endpoint, {
     method: 'GET',
     redirect: 'manual',
   });
+
+  console.log(`📡 Download API response: ${res.status} ${res.statusText}`);
+  console.log(
+    '📋 Response headers:',
+    Object.fromEntries(res.headers.entries())
+  );
+
   if (res.status !== 302) {
     const errText = await res.text().catch(() => res.statusText);
+    console.error(`❌ Download API error: ${res.status} - ${errText}`);
     throw new Error(`Download endpoint returned ${res.status}: ${errText}`);
   }
+
   const url = res.headers.get('Location');
+  console.log('📍 Location header:', url);
+
   if (!url) {
+    console.error('❌ Missing Location header in 302 response');
     throw new Error('Download endpoint missing Location header');
   }
+
   return url;
 }
 
@@ -66,6 +82,262 @@ export function sendApprovalEmail(
 /** ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
 export function extractProjectPlaceData(projectId: string): Promise<unknown> {
   return post<unknown>(`${BASE}/extract-project-place/${projectId}`);
+}
+
+/** ---------- ENHANCED S3 INTEGRATION FOR LAMBDA WORKFLOW ---------- */
+
+// S3 bucket configuration
+const S3_BUCKET = 'projectplace-dv-2025-x9a7b';
+
+/**
+ * Generate ACTA document via Lambda
+ * This triggers the Lambda function that:
+ * 1. Fetches external project data
+ * 2. Generates DOCX document
+ * 3. Stores in S3 bucket projectplace-dv-2025-x9a7b
+ */
+export async function generateActaDocument(projectId: string): Promise<{
+  success: boolean;
+  message: string;
+  s3Location?: string;
+  documentId?: string;
+}> {
+  console.log(`🔄 Generating ACTA document for project: ${projectId}`);
+  console.log(`📦 Target S3 bucket: ${S3_BUCKET}`);
+
+  try {
+    const response = await post<{
+      success: boolean;
+      message: string;
+      s3_location?: string;
+      document_id?: string;
+      bucket?: string;
+      key?: string;
+    }>(`${BASE}/extract-project-place/${projectId}`, {});
+
+    console.log('✅ Document generation response:', response);
+
+    // Check if the response indicates successful S3 storage
+    if (response.s3_location || response.bucket) {
+      console.log(
+        `📁 Document stored in S3: ${response.s3_location || `s3://${response.bucket}/${response.key}`}`
+      );
+    }
+
+    return {
+      success: response.success || true,
+      message: response.message || 'Document generation completed',
+      s3Location:
+        response.s3_location ||
+        (response.bucket && response.key
+          ? `s3://${response.bucket}/${response.key}`
+          : undefined),
+      documentId: response.document_id || projectId,
+    };
+  } catch (error) {
+    console.error('❌ Document generation failed:', error);
+
+    // Enhanced error messages based on common issues
+    let errorMessage = 'Document generation failed';
+    if (error instanceof Error) {
+      if (error.message.includes('fetch')) {
+        errorMessage += ' - Network or API Gateway issue';
+      } else if (error.message.includes('500')) {
+        errorMessage +=
+          ' - Lambda function error or external data source unavailable';
+      } else if (error.message.includes('403')) {
+        errorMessage +=
+          ' - Insufficient permissions for S3 or external data access';
+      } else {
+        errorMessage += ` - ${error.message}`;
+      }
+    }
+
+    return {
+      success: false,
+      message: errorMessage,
+    };
+  }
+}
+
+/**
+ * Enhanced document availability check with S3-specific logic
+ */
+export async function checkDocumentInS3(
+  projectId: string,
+  format: 'pdf' | 'docx'
+): Promise<{
+  available: boolean;
+  lastModified?: string;
+  size?: number;
+  s3Key?: string;
+}> {
+  console.log(
+    `🔍 Checking document availability in S3: ${projectId}.${format}`
+  );
+
+  try {
+    const response = await fetch(
+      `${BASE}/check-document/${projectId}?format=${format}`,
+      {
+        method: 'HEAD',
+      }
+    );
+
+    console.log(
+      `📊 S3 check response: ${response.status} ${response.statusText}`
+    );
+
+    if (response.ok) {
+      const lastModified = response.headers.get('Last-Modified');
+      const contentLength = response.headers.get('Content-Length');
+      const size = contentLength ? parseInt(contentLength, 10) : undefined;
+
+      console.log(
+        `✅ Document found in S3 - Size: ${size} bytes, Modified: ${lastModified}`
+      );
+
+      return {
+        available: true,
+        lastModified: lastModified || undefined,
+        size,
+        s3Key: `acta/${projectId}.${format}`,
+      };
+    }
+
+    if (response.status === 404) {
+      console.log(`📄 Document not found in S3: ${projectId}.${format}`);
+    } else {
+      console.warn(
+        `⚠️ S3 check failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    return { available: false };
+  } catch (error) {
+    console.warn('❌ Error checking document availability in S3:', error);
+    return { available: false };
+  }
+}
+
+/**
+ * Enhanced download URL with S3 signed URL handling
+ */
+export async function getS3DownloadUrl(
+  projectId: string,
+  format: 'pdf' | 'docx'
+): Promise<{
+  success: boolean;
+  downloadUrl?: string;
+  error?: string;
+  s3Info?: {
+    bucket: string;
+    key: string;
+    signedUrl: string;
+  };
+}> {
+  console.log(`📥 Getting S3 download URL for: ${projectId}.${format}`);
+  console.log(
+    `📦 Expected S3 path: s3://${S3_BUCKET}/acta/${projectId}.${format}`
+  );
+
+  try {
+    const endpoint = `${BASE}/download-acta/${projectId}?format=${format}`;
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      redirect: 'manual',
+    });
+
+    console.log(
+      `📊 Download API response: ${response.status} ${response.statusText}`
+    );
+    console.log(
+      '📋 Response headers:',
+      Object.fromEntries(response.headers.entries())
+    );
+
+    if (response.status === 302) {
+      const signedUrl = response.headers.get('Location');
+
+      if (signedUrl) {
+        console.log(`🔗 Got S3 signed URL: ${signedUrl.substring(0, 100)}...`);
+
+        // Verify the signed URL is accessible
+        try {
+          const urlTest = await fetch(signedUrl, { method: 'HEAD' });
+
+          if (urlTest.ok) {
+            console.log('✅ S3 signed URL is accessible');
+            console.log(
+              `📂 Content-Type: ${urlTest.headers.get('Content-Type')}`
+            );
+            console.log(
+              `📏 Size: ${urlTest.headers.get('Content-Length')} bytes`
+            );
+
+            return {
+              success: true,
+              downloadUrl: signedUrl,
+              s3Info: {
+                bucket: S3_BUCKET,
+                key: `acta/${projectId}.${format}`,
+                signedUrl,
+              },
+            };
+          } else {
+            console.error(
+              `❌ S3 signed URL not accessible: ${urlTest.status} ${urlTest.statusText}`
+            );
+            return {
+              success: false,
+              error: `S3 signed URL not accessible (${urlTest.status})`,
+              downloadUrl: signedUrl, // Return it anyway for debugging
+            };
+          }
+        } catch (urlError) {
+          console.error('❌ Error testing S3 signed URL:', urlError);
+          return {
+            success: false,
+            error: 'Failed to verify S3 signed URL',
+            downloadUrl: signedUrl, // Return it anyway for debugging
+          };
+        }
+      } else {
+        console.error('❌ Missing Location header in 302 response');
+        return {
+          success: false,
+          error: 'Missing S3 signed URL in response',
+        };
+      }
+    } else if (response.status === 404) {
+      console.log('📄 Document not found in S3 - may need to generate first');
+      return {
+        success: false,
+        error: 'Document not found in S3 bucket',
+      };
+    } else {
+      const errorText = await response.text().catch(() => response.statusText);
+      console.error(`❌ Download API error: ${response.status} - ${errorText}`);
+
+      let errorMessage = `Download failed (${response.status})`;
+      if (response.status === 500) {
+        errorMessage += ' - Lambda or S3 access error';
+      } else if (response.status === 403) {
+        errorMessage += ' - Insufficient permissions for S3 access';
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  } catch (error) {
+    console.error('❌ Network error getting S3 download URL:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error',
+    };
+  }
 }
 
 /** ---------- PM PROJECT MANAGEMENT (via Metadata Enricher) ---------- */

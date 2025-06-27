@@ -2,7 +2,7 @@
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { checkDocumentAvailability } from '@/lib/api';
+import { checkDocumentInS3 } from '@/lib/api';
 
 interface DocumentStatusProps {
   projectId: string;
@@ -13,7 +13,9 @@ interface DocumentStatusProps {
 interface DocumentInfo {
   available: boolean;
   lastModified?: string;
+  size?: number;
   checking: boolean;
+  s3Key?: string;
 }
 
 export default function DocumentStatus({
@@ -36,14 +38,16 @@ export default function DocumentStatus({
       setDocInfo((prev) => ({ ...prev, checking: true }));
 
       try {
-        const result = await checkDocumentAvailability(projectId, format);
+        const result = await checkDocumentInS3(projectId, format);
         setDocInfo({
           available: result.available,
           lastModified: result.lastModified,
+          size: result.size,
+          s3Key: result.s3Key,
           checking: false,
         });
       } catch (error) {
-        console.warn('Error checking document status:', error);
+        console.warn('Error checking document status in S3:', error);
         setDocInfo({ available: false, checking: false });
       }
     };
@@ -65,17 +69,31 @@ export default function DocumentStatus({
 
   const getStatusText = () => {
     if (docInfo.checking) {
-      return 'Checking...';
+      return 'Checking S3...';
     }
 
     if (docInfo.available) {
-      const date = docInfo.lastModified
-        ? new Date(docInfo.lastModified).toLocaleDateString()
-        : 'Available';
-      return `Available${docInfo.lastModified ? ` (${date})` : ''}`;
+      const parts = [];
+
+      if (docInfo.size) {
+        const sizeStr =
+          docInfo.size < 1024
+            ? `${docInfo.size} B`
+            : docInfo.size < 1024 * 1024
+              ? `${(docInfo.size / 1024).toFixed(1)} KB`
+              : `${(docInfo.size / (1024 * 1024)).toFixed(1)} MB`;
+        parts.push(sizeStr);
+      }
+
+      if (docInfo.lastModified) {
+        const date = new Date(docInfo.lastModified).toLocaleDateString();
+        parts.push(date);
+      }
+
+      return `Available in S3${parts.length ? ' (' + parts.join(', ') + ')' : ''}`;
     }
 
-    return 'Not available';
+    return 'Not found in S3';
   };
 
   const getStatusColor = () => {
@@ -86,12 +104,19 @@ export default function DocumentStatus({
 
   return (
     <div
-      className={`flex items-center gap-2 text-sm ${getStatusColor()} ${className}`}
+      className={`flex flex-col gap-1 text-sm ${getStatusColor()} ${className}`}
     >
-      {getStatusIcon()}
-      <span>
-        {format.toUpperCase()}: {getStatusText()}
-      </span>
+      <div className="flex items-center gap-2">
+        {getStatusIcon()}
+        <span>
+          {format.toUpperCase()}: {getStatusText()}
+        </span>
+      </div>
+      {docInfo.available && docInfo.s3Key && (
+        <div className="text-xs text-gray-500 ml-6">
+          S3: projectplace-dv-2025-x9a7b/{docInfo.s3Key}
+        </div>
+      )}
     </div>
   );
 }

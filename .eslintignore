@@ -8,3 +8,6 @@ node_modules
 coverage
 storybook-static
 test-results
+public/*.js
+test-api*.js
+api-connectivity*.js

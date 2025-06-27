@@ -13,13 +13,15 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
+import DocumentStatus from '@/components/DocumentStatus';
 import Header from '@/components/Header';
 import PMProjectManager from '@/components/PMProjectManager';
 import ProjectTable, { Project } from '@/components/ProjectTable';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  extractProjectPlaceData,
-  getDownloadUrl,
+  checkDocumentInS3,
+  generateActaDocument,
+  getS3DownloadUrl,
   sendApprovalEmail,
 } from '@/lib/api';
 import { quickBackendDiagnostic } from '@/utils/backendDiagnostic';
@@ -88,7 +90,7 @@ export default function Dashboard() {
     }
   }
 
-  // Generate Acta
+  // Generate Acta with enhanced S3 integration
   async function handleGenerate() {
     if (!projectId.trim()) {
       toast.error('Please enter a Project ID');
@@ -97,38 +99,71 @@ export default function Dashboard() {
 
     setActionLoading(true);
 
-    // Show initial progress message
-    toast(
-      'Starting Acta generation... This may take a few minutes while we fetch the latest project data.',
-      {
-        duration: 4000,
-        icon: '⏳',
-      }
+    // Show initial progress message with S3 details
+    const loadingToast = toast.loading(
+      'Starting Acta generation... This may take a few minutes while we fetch project data and store the document in S3.'
     );
 
     try {
-      console.log(`Generating Acta for project: ${projectId}`);
-      await extractProjectPlaceData(projectId);
+      console.log(`🚀 Generating Acta for project: ${projectId}`);
+      console.log('📦 Target S3 bucket: projectplace-dv-2025-x9a7b');
 
-      toast.success(
-        'Acta generated successfully! The document is now ready for download.',
-        {
-          duration: 6000,
+      // Use the enhanced generation function
+      const result = await generateActaDocument(projectId);
+      console.log('✅ Acta generation result:', result);
+
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
+      if (result.success) {
+        console.log('📄 Acta generation completed successfully');
+
+        // Enhanced success message with S3 info
+        let successMessage =
+          'Acta generated successfully! The document is now stored in S3 and ready for download.';
+        if (result.s3Location) {
+          console.log(`📁 Document stored at: ${result.s3Location}`);
+          successMessage += ` Document location: ${result.s3Location}`;
         }
-      );
+
+        toast.success(successMessage, {
+          duration: 8000,
+          icon: '✅',
+        });
+
+        // Additional success feedback
+        setTimeout(() => {
+          toast(
+            '💡 You can now download the Word or PDF version using the buttons below.',
+            {
+              duration: 5000,
+              icon: '💡',
+            }
+          );
+        }, 2000);
+      } else {
+        console.warn('⚠️ Generation completed with warnings:', result.message);
+        toast.error(result.message || 'Document generation failed', {
+          duration: 8000,
+        });
+      }
 
       // Refresh projects list to show the newly generated document
       loadProjects();
     } catch (error) {
-      console.error('Generate Acta error:', error);
+      console.error('❌ Generate Acta error:', error);
 
-      // More specific error handling
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
+      // Enhanced error handling with S3-specific messages
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
 
       if (errorMessage.includes('404') || errorMessage.includes('not found')) {
         toast.error(
-          `Project ID "${projectId}" not found. Please verify the Project ID is correct.`
+          `Project ID "${projectId}" not found. Please verify the Project ID is correct.`,
+          { duration: 8000 }
         );
       } else if (
         errorMessage.includes('timeout') ||
@@ -136,15 +171,34 @@ export default function Dashboard() {
         errorMessage.includes('503')
       ) {
         toast.error(
-          'The external data source is temporarily unavailable. Please try again in a few minutes.'
+          'The external data source is temporarily unavailable. Please try again in a few minutes.',
+          { duration: 8000 }
         );
       } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
         toast.error(
-          'Authentication failed. Please check your permissions or sign in again.'
+          'Authentication failed. This could be due to insufficient S3 permissions or expired credentials.',
+          { duration: 8000 }
+        );
+      } else if (
+        errorMessage.includes('Lambda') ||
+        errorMessage.includes('function')
+      ) {
+        toast.error(
+          'Document generation service is temporarily unavailable. Please try again later.',
+          { duration: 8000 }
+        );
+      } else if (
+        errorMessage.includes('S3') ||
+        errorMessage.includes('storage')
+      ) {
+        toast.error(
+          'Document storage failed. Please contact support if this issue persists.',
+          { duration: 10000 }
         );
       } else {
         toast.error(
-          `Failed to generate Acta: ${errorMessage}. Please check if the API server is running.`
+          `Failed to generate Acta: ${errorMessage}. Please check the console for more details.`,
+          { duration: 10000 }
         );
       }
     } finally {
@@ -189,7 +243,7 @@ export default function Dashboard() {
     }
   }
 
-  // Download .pdf or .docx
+  // Download .pdf or .docx with enhanced S3 integration
   async function handleDownload(fmt: 'pdf' | 'docx') {
     if (!projectId.trim()) {
       toast.error('Please enter a Project ID');
@@ -198,44 +252,162 @@ export default function Dashboard() {
 
     setActionLoading(true);
 
-    // Show loading message
+    // Show loading message with S3 context
     const loadingToast = toast.loading(
-      `Preparing ${fmt.toUpperCase()} download...`
+      `Preparing ${fmt.toUpperCase()} download from S3 bucket...`
     );
 
     try {
-      console.log(`Downloading ${fmt} for project: ${projectId}`);
-      const url = await getDownloadUrl(projectId, fmt);
-
-      // Dismiss loading toast
-      toast.dismiss(loadingToast);
-
-      toast.success(
-        `${fmt.toUpperCase()} download ready! Opening in new tab...`
+      console.log(`🔽 Downloading ${fmt} for project: ${projectId}`);
+      console.log(
+        `📦 Expected S3 path: s3://projectplace-dv-2025-x9a7b/acta/${projectId}.${fmt}`
       );
 
-      // Open the download URL
-      window.open(url, '_blank');
-    } catch (error) {
-      console.error(`Download ${fmt} error:`, error);
+      // Step 1: Check if document exists in S3
+      console.log('🔍 Checking document availability in S3...');
+      const availability = await checkDocumentInS3(projectId, fmt);
+
+      if (!availability.available) {
+        toast.dismiss(loadingToast);
+        toast.error(
+          `No ${fmt.toUpperCase()} document found in S3 for project "${projectId}". Please generate the Acta first.`,
+          { duration: 8000 }
+        );
+        return;
+      }
+
+      console.log(`✅ Document found in S3 - Size: ${availability.size} bytes`);
+
+      // Step 2: Get S3 signed URL
+      console.log('📤 Getting S3 signed URL...');
+      const downloadResult = await getS3DownloadUrl(projectId, fmt);
 
       // Dismiss loading toast
       toast.dismiss(loadingToast);
 
-      // More specific error handling
+      if (!downloadResult.success || !downloadResult.downloadUrl) {
+        console.error(
+          '❌ Failed to get S3 download URL:',
+          downloadResult.error
+        );
+        toast.error(
+          downloadResult.error ||
+            `Failed to get download URL for ${fmt.toUpperCase()}. Please try again.`,
+          { duration: 8000 }
+        );
+        return;
+      }
+
+      const s3SignedUrl = downloadResult.downloadUrl;
+      console.log(`🔗 Got S3 signed URL: ${s3SignedUrl.substring(0, 100)}...`);
+
+      // Enhanced success message with S3 info
+      toast.success(
+        `${fmt.toUpperCase()} ready for download! Document retrieved from S3 bucket.`,
+        { duration: 5000 }
+      );
+
+      // Step 3: Open the S3 signed URL
+      console.log('🌐 Opening S3 signed URL...');
+      const newWindow = window.open(
+        s3SignedUrl,
+        '_blank',
+        'noopener,noreferrer'
+      );
+
+      if (!newWindow) {
+        console.warn('⚠️ Popup blocked - trying alternative method');
+        // Fallback: create a temporary link and click it
+        const link = document.createElement('a');
+        link.href = s3SignedUrl;
+        link.download = `project-${projectId}-acta.${fmt}`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        toast(
+          // eslint-disable-next-line quotes
+          "Download started! If it didn't work, please check your browser's popup blocker.",
+          {
+            icon: '💡',
+            duration: 5000,
+          }
+        );
+      } else {
+        console.log('✅ S3 download window opened successfully');
+
+        // Additional verification and user feedback
+        setTimeout(() => {
+          toast(
+            `📄 ${fmt.toUpperCase()} download should have started from S3.`,
+            {
+              icon: '📄',
+              duration: 3000,
+            }
+          );
+        }, 1000);
+
+        // Log S3 info for debugging
+        if (downloadResult.s3Info) {
+          console.log('📁 S3 Details:', {
+            bucket: downloadResult.s3Info.bucket,
+            key: downloadResult.s3Info.key,
+            size: availability.size,
+            lastModified: availability.lastModified,
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`Download ${fmt} error:`, error);
+      console.error('Error details:', {
+        projectId,
+        format: fmt,
+        bucket: 'projectplace-dv-2025-x9a7b',
+        expectedKey: `acta/${projectId}.${fmt}`,
+        errorType:
+          error instanceof Error ? error.constructor.name : typeof error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
+      // Enhanced error handling with S3-specific messages
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
 
       if (errorMessage.includes('404') || errorMessage.includes('not found')) {
         toast.error(
-          `No ${fmt.toUpperCase()} document found for Project ID "${projectId}". Please generate the Acta first.`
+          `No ${fmt.toUpperCase()} document found in S3 bucket for project "${projectId}". Please generate the Acta first.`,
+          { duration: 8000 }
         );
       } else if (errorMessage.includes('403') || errorMessage.includes('401')) {
         toast.error(
-          'Access denied. Please check your permissions or sign in again.'
+          'Access denied to S3 bucket. Please check your permissions or contact support.',
+          { duration: 8000 }
+        );
+      } else if (
+        errorMessage.includes('S3') ||
+        errorMessage.includes('bucket')
+      ) {
+        toast.error(
+          `S3 storage error: ${errorMessage}. Please contact support if this persists.`,
+          { duration: 10000 }
+        );
+      } else if (
+        errorMessage.includes('signed URL') ||
+        errorMessage.includes('Location header')
+      ) {
+        toast.error(
+          `Failed to generate S3 signed URL for ${fmt.toUpperCase()}. Please try again or contact support.`,
+          { duration: 10000 }
         );
       } else {
-        toast.error(`Failed to download ${fmt.toUpperCase()}: ${errorMessage}`);
+        toast.error(
+          `Failed to download ${fmt.toUpperCase()}: ${errorMessage}. Check console for S3 details.`,
+          { duration: 10000 }
+        );
       }
     } finally {
       setActionLoading(false);
@@ -420,18 +592,24 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Document Status Section - Uncomment when API supports check-document endpoint */}
-            {/* 
+            {/* Document Status Section for S3 monitoring */}
             {projectId && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-xl">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Document Status</h3>
+              <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  📁 Document Status in S3
+                  <span className="text-xs font-normal text-gray-500">
+                    (projectplace-dv-2025-x9a7b)
+                  </span>
+                </h3>
                 <div className="flex flex-wrap gap-4">
                   <DocumentStatus projectId={projectId} format="docx" />
                   <DocumentStatus projectId={projectId} format="pdf" />
                 </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  💡 Generate documents first if they're not available in S3
+                </div>
               </div>
             )}
-            */}
           </div>
         </motion.div>
 

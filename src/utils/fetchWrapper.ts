@@ -1,7 +1,22 @@
 // src/utils/fetchWrapper.ts
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+/**
+ * Get the current authentication token
+ */
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const session = await fetchAuthSession();
+    return session.tokens?.idToken?.toString() || null;
+  } catch (error) {
+    console.warn('No authentication session found:', error);
+    return null;
+  }
+}
 
 /**
  * Core fetch wrapper that throws on non-OK and parses JSON.
+ * Automatically includes authentication headers when available.
  * @param input  URL or RequestInfo
  * @param init   Fetch options
  * @returns      Parsed JSON of type T
@@ -10,13 +25,74 @@ export async function fetcher<T>(
   input: RequestInfo,
   init?: RequestInit
 ): Promise<T> {
-  const res = await fetch(input, init);
-  if (!res.ok) {
-    // Try to extract error message, fall back to status text
-    const msg = await res.text().catch(() => res.statusText);
-    throw new Error(msg || `Fetch error: ${res.status}`);
+  // Get authentication token
+  const token = await getAuthToken();
+
+  // Prepare headers
+  const headers = new Headers(init?.headers);
+
+  // Add authentication header if token is available
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
-  return (await res.json()) as T;
+
+  // Add default headers
+  if (!headers.has('Content-Type') && init?.method !== 'GET') {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const enhancedInit: RequestInit = {
+    ...init,
+    headers,
+    credentials: 'include', // Include cookies for session management
+  };
+
+  console.log(`🌐 Fetching: ${input}`, {
+    method: enhancedInit.method || 'GET',
+    hasAuth: !!token,
+    headers: Object.fromEntries(headers.entries()),
+  });
+
+  const res = await fetch(input, enhancedInit);
+
+  console.log(`📡 Response: ${res.status} ${res.statusText}`);
+
+  if (!res.ok) {
+    // Enhanced error handling with more context
+    let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+
+    try {
+      const errorText = await res.text();
+      if (errorText) {
+        errorMessage += ` - ${errorText}`;
+      }
+    } catch (e) {
+      // If we can't read the error text, just use the status
+    }
+
+    // Add context for common error scenarios
+    if (res.status === 403) {
+      errorMessage += ' (Authentication required or insufficient permissions)';
+    } else if (res.status === 502) {
+      errorMessage +=
+        ' (Backend Lambda function error - check CloudWatch logs)';
+    } else if (res.status === 404) {
+      errorMessage += ' (Endpoint not found - check API Gateway routes)';
+    }
+
+    console.error('❌ Fetch error:', errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  // Parse JSON response
+  try {
+    const data = await res.json();
+    console.log('✅ Response data:', data);
+    return data as T;
+  } catch (error) {
+    console.error('❌ Failed to parse JSON response:', error);
+    throw new Error('Invalid JSON response from server');
+  }
 }
 
 /**
