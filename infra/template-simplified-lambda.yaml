@@ -11,36 +11,30 @@ Parameters:
     Type: String
     Default: kw8f8zihjg
     Description: Existing API Gateway root resource ID
-  
-  # Use projectMetadataEnricher - the correct Lambda for PM/Admin data operations
+
   ProjectMetadataEnricherArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
-    Description: Lambda function for all project metadata and PM queries (handles data enrichment and storage)
-  
-  # Lambda Function Name (extracted from ARN for permissions)
+    Description: Lambda function for project metadata enrichment
+
   ProjectMetadataEnricherFunctionName:
     Type: String
     Default: projectMetadataEnricher
     Description: Function name only (for Lambda permissions)
 
-  # Add a deployment timestamp to force new deployment
   DeploymentTimestamp:
     Type: String
     Default: "20250628-030500"
     Description: Deployment timestamp to force API Gateway redeployment
 
 Resources:
-  # ═══════════════════════════════════════════════════════════════
-  # PM PROJECTS RESOURCES - Route to Lambda (with unique names)
-  # ═══════════════════════════════════════════════════════════════
-  
+
   SimplifiedPMProjectsResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ExistingApiRootResourceId
-      PathPart: pm-projects
+      PathPart: pm-projects-simplified
 
   SimplifiedPMProjectsAllResource:
     Type: AWS::ApiGateway::Resource
@@ -56,16 +50,12 @@ Resources:
       ParentId: !Ref SimplifiedPMProjectsResource
       PathPart: '{pmEmail}'
 
-  # ═══════════════════════════════════════════════════════════════
-  # DOCUMENT STATUS RESOURCES - Route to Lambda (with unique names)
-  # ═══════════════════════════════════════════════════════════════
-  
   SimplifiedCheckDocumentResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ExistingApiRootResourceId
-      PathPart: check-document
+      PathPart: check-document-simplified
 
   SimplifiedCheckDocumentIdResource:
     Type: AWS::ApiGateway::Resource
@@ -74,22 +64,13 @@ Resources:
       ParentId: !Ref SimplifiedCheckDocumentResource
       PathPart: '{projectId}'
 
-  # ═══════════════════════════════════════════════════════════════
-  # PROJECTS RESOURCE - Route to Lambda (with unique names)
-  # ═══════════════════════════════════════════════════════════════
-  
   SimplifiedProjectsResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ExistingApiRootResourceId
-      PathPart: projects
+      PathPart: projects-simplified
 
-  # ═══════════════════════════════════════════════════════════════
-  # METHODS - All route to Lambda function (updated references)
-  # ═══════════════════════════════════════════════════════════════
-
-  # PM Projects All Method
   SimplifiedPMProjectsAllMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -102,7 +83,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # PM Projects by Email Method
   SimplifiedPMProjectsEmailMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -115,7 +95,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # Projects List Method
   SimplifiedProjectsListMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -128,7 +107,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # Document Status GET Method
   SimplifiedCheckDocumentMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -141,7 +119,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # Document Status HEAD Method
   SimplifiedCheckDocumentHeadMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -154,17 +131,13 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # ═══════════════════════════════════════════════════════════════
-  # LAMBDA PERMISSIONS - Allow API Gateway to invoke Lambda function
-  # ═══════════════════════════════════════════════════════════════
-
   SimplifiedPMProjectsAllPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/all-projects
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects-simplified/all-projects
 
   SimplifiedPMProjectsEmailPermission:
     Type: AWS::Lambda::Permission
@@ -172,7 +145,7 @@ Resources:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects-simplified/*
 
   SimplifiedProjectsListPermission:
     Type: AWS::Lambda::Permission
@@ -180,7 +153,7 @@ Resources:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects-simplified
 
   SimplifiedCheckDocumentGetPermission:
     Type: AWS::Lambda::Permission
@@ -188,7 +161,7 @@ Resources:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/check-document/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/check-document-simplified/*
 
   SimplifiedCheckDocumentHeadPermission:
     Type: AWS::Lambda::Permission
@@ -196,11 +169,7 @@ Resources:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/check-document/*
-
-  # ═══════════════════════════════════════════════════════════════
-  # API GATEWAY DEPLOYMENT - Force redeployment with dependencies
-  # ═══════════════════════════════════════════════════════════════
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/check-document-simplified/*
 
   SimplifiedApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
@@ -217,31 +186,8 @@ Resources:
 
 Outputs:
   APIGatewayId:
-    Description: API Gateway ID
     Value: !Ref ExistingApiId
-    Export:
-      Name: !Sub "${AWS::StackName}-APIGatewayId"
-
   DeploymentId:
-    Description: API Gateway Deployment ID
     Value: !Ref SimplifiedApiGatewayDeployment
-    Export:
-      Name: !Sub "${AWS::StackName}-DeploymentId"
-
-  PMProjectsEndpoints:
-    Description: PM Projects Endpoints
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-projects/"
-    Export:
-      Name: !Sub "${AWS::StackName}-PMProjectsEndpoints"
-
-  DocumentStatusEndpoints:
-    Description: Document Status Endpoints  
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/"
-    Export:
-      Name: !Sub "${AWS::StackName}-DocumentStatusEndpoints"
-
   DeploymentTimestamp:
-    Description: Deployment timestamp for tracking
     Value: !Ref DeploymentTimestamp
-    Export:
-      Name: !Sub "${AWS::StackName}-DeploymentTimestamp"
