@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CONFLICT-FREE API Gateway wiring - Route PM endpoints to projectMetadataEnricher (unique paths)
+Description: CONFLICT-FREE API Gateway wiring – routes PM endpoints to projectMetadataEnricher (unique paths, no naming collisions)
 
 Parameters:
   ExistingApiId:
     Type: String
     Default: q2b9avfwv5
     Description: Existing API Gateway ID
-  
+
   ExistingApiRootResourceId:
     Type: String
     Default: kw8f8zihjg
@@ -28,11 +28,9 @@ Parameters:
     Description: Deployment timestamp to force API Gateway redeployment
 
 Resources:
-
-  # ═══════════════════════════════════════════════════════════════
-  # UNIQUE PM PROJECTS RESOURCES - No conflicts
-  # ═══════════════════════════════════════════════════════════════
-  
+  # ────────────────────────────────────────────────────────────
+  # API Gateway resources (unique paths)
+  # ────────────────────────────────────────────────────────────
   PMManagerResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -75,10 +73,9 @@ Resources:
       ParentId: !Ref ExistingApiRootResourceId
       PathPart: projects-manager
 
-  # ═══════════════════════════════════════════════════════════════
-  # API GATEWAY METHODS - All routed to projectMetadataEnricher
-  # ═══════════════════════════════════════════════════════════════
-
+  # ────────────────────────────────────────────────────────────
+  # Methods (all Lambda‑proxy)
+  # ────────────────────────────────────────────────────────────
   PMManagerAllProjectsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -139,10 +136,9 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # ═══════════════════════════════════════════════════════════════
-  # LAMBDA PERMISSIONS - API Gateway invoke permissions
-  # ═══════════════════════════════════════════════════════════════
-
+  # ────────────────────────────────────────────────────────────
+  # Lambda invoke permissions
+  # ────────────────────────────────────────────────────────────
   PMManagerAllProjectsPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -183,10 +179,9 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/document-validator/*
 
-  # ═══════════════════════════════════════════════════════════════
-  # API GATEWAY DEPLOYMENT - WITH CORRECT DEPENDENCIES
-  # ═══════════════════════════════════════════════════════════════
-
+  # ────────────────────────────────────────────────────────────
+  # Deployment & Stage
+  # ────────────────────────────────────────────────────────────
   ConflictFreeApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
@@ -198,12 +193,11 @@ Resources:
       - PMManagerResource
       - PMManagerAllProjectsResource
       - PMManagerByEmailResource
-      # Removed DocumentValidatorResource (no direct methods)
       - DocumentValidatorIdResource
       - ProjectsManagerResource
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub "Conflict-free backend deployment ${DeploymentTimestamp}"
+      Description: !Sub "Conflict‑free backend deployment ${DeploymentTimestamp}"
 
   ConflictFreeProdStage:
     Type: AWS::ApiGateway::Stage
@@ -211,7 +205,7 @@ Resources:
       DeploymentId: !Ref ConflictFreeApiGatewayDeployment
       RestApiId: !Ref ExistingApiId
       StageName: prod
-      Description: !Sub "Production stage for conflict-free backend ${DeploymentTimestamp}"
+      Description: !Sub "Production stage for conflict‑free backend ${DeploymentTimestamp}"
 
 Outputs:
   APIGatewayId:
@@ -235,11 +229,5 @@ Outputs:
   PMManagerEndpoints:
     Description: PM Manager Endpoints
     Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/"
-    Export:
-      Name: !Sub "${AWS::StackName}-PMManagerEndpoints"
-
-  DocumentValidatorEndpoints:
-    Description: Document Validator Endpoints  
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/document-validator/"
     Export:
       Name: !Sub "${AWS::
