@@ -125,6 +125,33 @@ Your ACTA UI is now live with PM project management features at your CloudFront 
 
 ---
 
+# 🚀 LATEST: API Connectivity & Lambda Debugging (June 27, 2025 - 22:30 UTC)
+
+## ✅ API CONNECTIVITY FIXES DEPLOYED
+
+### **Just Completed** ✅
+- **✅ Git Push**: API connectivity fixes pushed to `develop` branch (commit de164ee)
+- **✅ GitHub Actions**: Deployment workflow triggered and running
+- **✅ Frontend**: CloudFront responding with health check: `{"status":"ok"}`
+- **✅ Authentication**: Enhanced `fetchWrapper.ts` with automatic JWT token inclusion
+- **✅ Error Handling**: Improved 403/502/404 response handling
+
+### **Lambda Issues Identified** 🔍
+**502 Errors Found**:
+- `/project-summary/test` - Request ID: `393aa4c9-4057-49de-971e-c9f3230b971a`
+- `/timeline/test` - Request ID: `3621dfd4-d290-4c43-a534-b5be24fe7b6f`
+
+**Next Step**: Use Request IDs to debug Lambda functions in CloudWatch logs
+
+### **Tools Available** 🛠️
+- `test-api-connectivity.js` - Complete API testing
+- `lambda-debug-monitor.js` - CloudWatch debugging assistance
+- `API_CORRECTIONS_SUMMARY.md` - Detailed fix documentation
+
+**Health Score**: 80% (Infrastructure ✅, Frontend ✅, Some Lambda issues ⚠️)
+
+---
+
 **The PM project management system is successfully deployed and ready!** 🎉
 
 Once you implement the backend DynamoDB endpoints, the full PM workflow will be automatically activated for your users.

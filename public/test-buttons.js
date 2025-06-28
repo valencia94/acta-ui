@@ -11,7 +11,7 @@ function testButtons() {
   // Test API connectivity first
   console.log('1. Testing API connectivity...');
   const apiUrl = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
-  
+
   fetch(`${apiUrl}/health`)
     .then((response) => {
       console.log(`✅ API Health: ${response.status}`);
@@ -29,7 +29,7 @@ function testButtons() {
   const projectInput = document.querySelector(
     'input[placeholder*="Project"], input[placeholder*="project"]'
   );
-  
+
   if (projectInput) {
     const testProjectId = '1000000064013473';
     projectInput.value = testProjectId;
@@ -51,11 +51,11 @@ function testButtons() {
     if (generateBtn) {
       console.log('Found Generate button:', generateBtn.textContent);
       console.log('Button disabled:', generateBtn.disabled);
-      
+
       if (!generateBtn.disabled) {
         console.log('🔘 Clicking Generate button...');
         generateBtn.click();
-        
+
         // Monitor for toast notifications
         setTimeout(() => {
           const toasts = document.querySelectorAll('[data-hot-toast]');
@@ -64,7 +64,6 @@ function testButtons() {
             console.log(`Toast ${index + 1}:`, toast.textContent);
           });
         }, 1000);
-        
       } else {
         console.log('❌ Generate button is disabled');
       }
@@ -76,19 +75,19 @@ function testButtons() {
   // Test other buttons after a delay
   setTimeout(() => {
     console.log('\n4. Testing other buttons...');
-    
+
     const buttons = [
       { name: 'Download PDF', text: 'PDF' },
       { name: 'Download Word', text: 'Word' },
       { name: 'Send Approval', text: 'Send' },
-      { name: 'Refresh', text: 'Refresh' }
+      { name: 'Refresh', text: 'Refresh' },
     ];
 
     buttons.forEach((btnInfo) => {
-      const btn = Array.from(document.querySelectorAll('button')).find(
-        (b) => b.textContent?.includes(btnInfo.text)
+      const btn = Array.from(document.querySelectorAll('button')).find((b) =>
+        b.textContent?.includes(btnInfo.text)
       );
-      
+
       if (btn && !btn.disabled) {
         console.log(`🔘 Testing ${btnInfo.name} button...`);
         btn.click();
@@ -111,25 +110,36 @@ function testApiEndpoints() {
 
   const endpoints = [
     { name: 'Health Check', url: `${apiUrl}/health` },
-    { name: 'Project Summary', url: `${apiUrl}/project-summary/${testProjectId}` },
-    { name: 'Extract Project Data', url: `${apiUrl}/extract-project-place/${testProjectId}` }
+    {
+      name: 'Project Summary',
+      url: `${apiUrl}/project-summary/${testProjectId}`,
+    },
+    {
+      name: 'Extract Project Data',
+      url: `${apiUrl}/extract-project-place/${testProjectId}`,
+    },
   ];
 
   endpoints.forEach((endpoint) => {
     console.log(`\nTesting ${endpoint.name}...`);
     fetch(endpoint.url, {
       method: endpoint.name === 'Extract Project Data' ? 'POST' : 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     })
       .then((response) => {
-        console.log(`${endpoint.name}: ${response.status} ${response.statusText}`);
+        console.log(
+          `${endpoint.name}: ${response.status} ${response.statusText}`
+        );
         if (response.ok) {
           return response.json();
         }
         return response.text();
       })
       .then((data) => {
-        console.log(`${endpoint.name} Response:`, typeof data === 'string' ? data.substring(0, 200) : data);
+        console.log(
+          `${endpoint.name} Response:`,
+          typeof data === 'string' ? data.substring(0, 200) : data
+        );
       })
       .catch((error) => {
         console.log(`${endpoint.name} Error:`, error.message);

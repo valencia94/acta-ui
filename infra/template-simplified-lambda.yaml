@@ -1,0 +1,195 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SIMPLIFIED API Gateway wiring - Route all PM endpoints to projectMetadataEnricher
+
+Parameters:
+  ExistingApiId:
+    Type: String
+    Default: q2b9avfwv5
+  ExistingApiRootResourceId:
+    Type: String
+    Default: kw8f8zihjg
+  
+  # EXISTING Lambda ARN (projectMetadataEnricher handles everything)
+  ProjectMetadataEnricherArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
+    Description: Enhanced Lambda function for all project metadata and PM queries
+
+Resources:
+  # ═══════════════════════════════════════════════════════════════
+  # PM PROJECTS RESOURCES - Route to projectMetadataEnricher
+  # ═══════════════════════════════════════════════════════════════
+  
+  PMProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: pm-projects
+
+  PMProjectsAllResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMProjectsResource
+      PathPart: all-projects
+
+  PMProjectsEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMProjectsResource
+      PathPart: '{pmEmail}'
+
+  # ═══════════════════════════════════════════════════════════════
+  # DOCUMENT STATUS RESOURCES - Route to projectMetadataEnricher
+  # ═══════════════════════════════════════════════════════════════
+  
+  CheckDocumentResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: check-document
+
+  CheckDocumentIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref CheckDocumentResource
+      PathPart: '{projectId}'
+
+  # ═══════════════════════════════════════════════════════════════
+  # PROJECTS RESOURCE - Route to projectMetadataEnricher
+  # ═══════════════════════════════════════════════════════════════
+  
+  ProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: projects
+
+  # ═══════════════════════════════════════════════════════════════
+  # METHODS - All route to projectMetadataEnricher
+  # ═══════════════════════════════════════════════════════════════
+
+  # PM Projects All Method
+  PMProjectsAllMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsAllResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  # PM Projects by Email Method
+  PMProjectsEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsEmailResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  # Projects List Method
+  ProjectsListMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  # Document Status GET Method
+  CheckDocumentMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocumentIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  # Document Status HEAD Method
+  CheckDocumentHeadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocumentIdResource
+      HttpMethod: HEAD
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  # ═══════════════════════════════════════════════════════════════
+  # LAMBDA PERMISSIONS - Allow API Gateway to invoke projectMetadataEnricher
+  # ═══════════════════════════════════════════════════════════════
+
+  PMProjectsAllPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/all-projects
+
+  PMProjectsEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
+
+  ProjectsListPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects
+
+  CheckDocumentPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*/check-document/*
+
+Outputs:
+  APIGatewayId:
+    Description: API Gateway ID
+    Value: !Ref ExistingApiId
+    Export:
+      Name: !Sub "${AWS::StackName}-APIGatewayId"
+
+  PMProjectsEndpoints:
+    Description: PM Projects Endpoints
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-projects/"
+    Export:
+      Name: !Sub "${AWS::StackName}-PMProjectsEndpoints"
+
+  DocumentStatusEndpoints:
+    Description: Document Status Endpoints  
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/"
+    Export:
+      Name: !Sub "${AWS::StackName}-DocumentStatusEndpoints"

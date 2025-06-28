@@ -1,0 +1,416 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CORRECTED API Gateway wiring - matches REAL Lambda functions + adds critical missing ones
+
+Parameters:
+  ExistingApiId:
+    Type: String
+  ExistingApiRootResourceId:
+    Type: String
+  
+  # EXISTING Lambda ARNs (these are deployed and working)
+  GetTimelineArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:GetTimeline
+    Description: Existing Lambda function for timeline
+  GetDownloadActaArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:GetDownloadActa
+    Description: Existing Lambda function for downloads
+  GetProjectSummaryArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
+    Description: Existing Lambda function for project summary (uses projectMetadataEnricher)
+  SendApprovalEmailArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:SendApprovalEmail
+    Description: Existing Lambda function for approval emails
+  ProjectPlaceDataExtractorArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:ProjectPlaceDataExtractor
+    Description: Existing Lambda function for data extraction
+  HealthCheckArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:HealthCheck
+    Description: Existing Lambda function for health checks
+  
+  # NEW Lambda ARNs (need to be created)
+  ProjectsManagerArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:ProjectsManager
+    Description: NEW Lambda function for projects management
+  DocumentStatusArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:DocumentStatus
+    Description: NEW Lambda function for document status checking
+
+Resources:
+  # ═══════════════════════════════════════════════════════════════
+  # EXISTING RESOURCES (fix the ones that have issues)
+  # ═══════════════════════════════════════════════════════════════
+  
+  # Health Resource (WORKING - keep as is)
+  HealthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: health
+
+  HealthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref HealthResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HealthCheckArn}/invocations
+
+  # Timeline Resources (FIX 502 ERROR)
+  TimelineResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: timeline
+
+  TimelineIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref TimelineResource
+      PathPart: '{id}'
+
+  TimelineMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref TimelineIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetTimelineArn}/invocations
+        TimeoutInMillis: 29000  # Increase timeout to 29 seconds
+
+  # Project Summary Resources (FIX 502 ERROR)
+  ProjectSummaryResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: project-summary
+
+  ProjectSummaryIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ProjectSummaryResource
+      PathPart: '{id}'
+
+  ProjectSummaryMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectSummaryIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetProjectSummaryArn}/invocations
+        TimeoutInMillis: 29000  # Increase timeout
+
+  # Download Acta Resources (FIX 404 ERROR)
+  DownloadActaResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: download-acta
+
+  DownloadActaIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref DownloadActaResource
+      PathPart: '{id}'
+
+  DownloadActaMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref DownloadActaIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDownloadActaArn}/invocations
+
+  # Extract Project Place Resources (FIX TIMEOUT)
+  ExtractProjectPlaceResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: extract-project-place
+
+  ExtractProjectPlaceIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExtractProjectPlaceResource
+      PathPart: '{id}'
+
+  ExtractProjectPlaceMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ExtractProjectPlaceIdResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectPlaceDataExtractorArn}/invocations
+        TimeoutInMillis: 29000  # Increase timeout for long operations
+
+  # Send Approval Email Resource
+  SendApprovalEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: send-approval-email
+
+  SendApprovalEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref SendApprovalEmailResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendApprovalEmailArn}/invocations
+
+  # ═══════════════════════════════════════════════════════════════
+  # NEW RESOURCES (add missing critical functionality)
+  # ═══════════════════════════════════════════════════════════════
+
+  # Projects List Resource (for /projects endpoint)
+  ProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: projects
+
+  ProjectsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsManagerArn}/invocations
+
+  # PM Projects Resource Structure
+  PMProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: pm-projects
+
+  PMProjectsAllResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMProjectsResource
+      PathPart: all-projects
+
+  PMProjectsAllMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsAllResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsManagerArn}/invocations
+
+  PMProjectsEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMProjectsResource
+      PathPart: '{pmEmail}'
+
+  PMProjectsEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsEmailResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsManagerArn}/invocations
+
+  # Document Status Check Resource
+  CheckDocumentResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: check-document
+
+  CheckDocumentIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref CheckDocumentResource
+      PathPart: '{projectId}'
+
+  CheckDocumentMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocumentIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DocumentStatusArn}/invocations
+
+  CheckDocumentHeadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocumentIdResource
+      HttpMethod: HEAD
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DocumentStatusArn}/invocations
+
+  # ═══════════════════════════════════════════════════════════════
+  # LAMBDA PERMISSIONS
+  # ═══════════════════════════════════════════════════════════════
+
+  # Existing function permissions
+  HealthPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HealthCheckArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/health
+
+  TimelinePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetTimelineArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/timeline/*
+
+  ProjectSummaryPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetProjectSummaryArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/project-summary/*
+
+  DownloadActaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetDownloadActaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/download-acta/*
+
+  ExtractProjectPlacePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ProjectPlaceDataExtractorArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/POST/extract-project-place/*
+
+  SendApprovalEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SendApprovalEmailArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/POST/send-approval-email
+
+  # New function permissions
+  ProjectsManagerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ProjectsManagerArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/*
+
+  DocumentStatusPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DocumentStatusArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*/check-document/*
+
+  # API Gateway Deployment (IMPORTANT - triggers route updates)
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - HealthMethod
+      - TimelineMethod
+      - ProjectSummaryMethod
+      - DownloadActaMethod
+      - ExtractProjectPlaceMethod
+      - SendApprovalEmailMethod
+      - ProjectsMethod
+      - PMProjectsAllMethod
+      - PMProjectsEmailMethod
+      - CheckDocumentMethod
+      - CheckDocumentHeadMethod
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      Description: !Sub "Corrected API deployment - ${AWS::StackName}"
+      StageName: prod
+
+Outputs:
+  ActaApiInvokeURL:
+    Description: Base URL for invoking the corrected API
+    Value: !Sub https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/
+    
+  ExistingEndpoints:
+    Description: Existing endpoints that should work after fixes
+    Value: "health, timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email"
+    
+  NewEndpoints:
+    Description: New endpoints added for missing functionality
+    Value: "projects, pm-projects/all-projects, pm-projects/{email}, check-document/{id}"
+    
+  RequiredNewLambdas:
+    Description: Lambda functions that need to be created
+    Value: "ProjectsManager, DocumentStatus"

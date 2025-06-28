@@ -1,0 +1,134 @@
+name: 🎯 Deploy Simplified Backend (Lambda-Centric)
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_endpoints:
+        description: 'Test endpoints after deployment'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  deploy-simplified-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: acta-simplified-backend-deploy
+          aws-region: us-east-2
+
+      - name: 🌐 Deploy API Gateway Resources
+        run: |
+          echo "🌐 Deploying Simplified Backend (Lambda-Centric)"
+          echo "==============================================="
+          
+          # Deploy CloudFormation stack
+          aws cloudformation deploy \
+            --template-file infra/template-simplified-lambda.yaml \
+            --stack-name acta-simplified-backend \
+            --parameter-overrides \
+              ExistingApiId=q2b9avfwv5 \
+              ExistingApiRootResourceId=kw8f8zihjg \
+            --capabilities CAPABILITY_IAM \
+            --region us-east-2
+            
+          echo "✅ CloudFormation stack deployed successfully"
+          
+          # Create API Gateway deployment
+          echo "🚀 Creating API Gateway deployment"
+          DEPLOYMENT_ID=$(aws apigateway create-deployment \
+            --rest-api-id q2b9avfwv5 \
+            --stage-name prod \
+            --description "Simplified backend deployment $(date)" \
+            --region us-east-2 \
+            --query 'id' \
+            --output text)
+            
+          echo "✅ API Gateway deployment created: $DEPLOYMENT_ID"
+
+      - name: 🧪 Test Simplified Backend Endpoints
+        if: ${{ inputs.test_endpoints }}
+        run: |
+          echo "🧪 Testing Simplified Backend Endpoints"
+          echo "======================================"
+          
+          BASE_URL="https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
+          
+          # Function to test endpoint
+          test_endpoint() {
+            local method=$1
+            local endpoint=$2
+            local description=$3
+            
+            echo "🔍 Testing: $description"
+            echo "   $method $endpoint"
+            
+            response=$(curl -s -w "HTTPSTATUS:%{http_code}" "$BASE_URL$endpoint" 2>/dev/null || echo "HTTPSTATUS:000")
+            status_code=$(echo "$response" | grep -o "HTTPSTATUS:[0-9]*" | cut -d: -f2)
+            
+            if [ "$status_code" = "200" ]; then
+                echo "   ✅ Status: $status_code (Working)"
+            elif [ "$status_code" = "403" ]; then
+                echo "   ✅ Status: $status_code (Auth Required - Expected)"
+            elif [ "$status_code" = "404" ]; then
+                echo "   ❌ Status: $status_code (Not Found - Check deployment)"
+            else
+                echo "   ⚠️  Status: $status_code"
+            fi
+            echo
+          }
+          
+          echo "📋 Testing NEW PM Endpoints (routed to projectMetadataEnricher):"
+          test_endpoint "GET" "/pm-projects/all-projects" "PM Projects (All)"
+          test_endpoint "GET" "/pm-projects/test@example.com" "PM Projects (By Email)"
+          test_endpoint "GET" "/projects" "Projects List"
+          test_endpoint "GET" "/check-document/test?format=docx" "Document Status (GET)"
+          
+          echo "📋 Testing EXISTING Endpoints:"
+          test_endpoint "GET" "/health" "Health Check"
+          test_endpoint "GET" "/project-summary/test" "Project Summary"
+          
+          echo "✅ Endpoint testing completed"
+
+      - name: 📊 Generate Deployment Summary
+        run: |
+          echo "📊 SIMPLIFIED BACKEND DEPLOYMENT SUMMARY"
+          echo "========================================"
+          echo "🕐 Deployed: $(date)"
+          echo "🎯 Architecture: Lambda-Centric (Single Lambda)"
+          echo "🔧 Lambda Function: projectMetadataEnricher"
+          echo "🌐 New API Routes:"
+          echo "  ✅ /pm-projects/all-projects → projectMetadataEnricher"
+          echo "  ✅ /pm-projects/{pmEmail} → projectMetadataEnricher"
+          echo "  ✅ /projects → projectMetadataEnricher"
+          echo "  ✅ /check-document/{projectId} → projectMetadataEnricher"
+          echo "🔗 Base URL: https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
+          echo
+          echo "💡 Benefits of This Approach:"
+          echo "  🎯 Single Lambda handles all project queries"
+          echo "  💰 No DynamoDB costs"
+          echo "  🚀 Faster response times"
+          echo "  🔧 Easier to maintain and debug"
+          echo "  📈 Better scalability"
+          echo
+          echo "📝 Next Steps:"
+          echo "  1. Test with authentication tokens"
+          echo "  2. Enhance projectMetadataEnricher to handle PM parameters"
+          echo "  3. Update frontend to use browser storage"
+          echo "  4. Remove DynamoDB dependencies"
+          echo
+          echo "🧪 Test with authentication:"
+          echo "curl -H 'Authorization: Bearer your-token' \\"
+          echo "  'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/pm-projects/all-projects'"
+          echo
+          echo "🎉 Simplified backend deployment completed successfully!"

@@ -26,6 +26,7 @@ The ACTA UI has been enhanced with comprehensive S3 integration to properly hand
 - Specific error messages for Lambda and S3 failures
 
 **Key Improvements:**
+
 - Logs target S3 bucket (`projectplace-dv-2025-x9a7b`)
 - Provides S3 location in response when available
 - Enhanced error messages for Lambda, S3, and external data source issues
@@ -40,6 +41,7 @@ The ACTA UI has been enhanced with comprehensive S3 integration to properly hand
 - Returns detailed S3 information (bucket, key, signed URL)
 
 **Workflow:**
+
 1. Check if document exists in S3 bucket
 2. Request signed URL from API Gateway
 3. Validate signed URL accessibility
@@ -55,6 +57,7 @@ The ACTA UI has been enhanced with comprehensive S3 integration to properly hand
 - Specific S3 bucket and key information display
 
 **Features:**
+
 - ✅ Document available in S3 (with size and date)
 - ❌ Document not found in S3
 - 🔄 Checking S3 status
@@ -70,6 +73,7 @@ The ACTA UI has been enhanced with comprehensive S3 integration to properly hand
 - Document status section showing S3 availability
 
 **User Feedback Improvements:**
+
 - "Starting Acta generation... storing document in S3"
 - "Document stored at: s3://projectplace-dv-2025-x9a7b/acta/..."
 - "Preparing DOCX download from S3 bucket..."
@@ -90,16 +94,19 @@ projectplace-dv-2025-x9a7b/
 ## API Endpoints Enhanced
 
 ### 1. Document Generation
+
 - **Endpoint:** `POST /extract-project-place/{projectId}`
 - **Process:** Lambda → External Data → DOCX Creation → S3 Storage
 - **Response:** Includes S3 location information
 
 ### 2. Document Availability Check
+
 - **Endpoint:** `HEAD /check-document/{projectId}?format={format}`
 - **Purpose:** Check if document exists in S3 before download
 - **Response:** Document size, last modified, availability status
 
 ### 3. Document Download
+
 - **Endpoint:** `GET /download-acta/{projectId}?format={format}`
 - **Process:** API → S3 Signed URL → 302 Redirect
 - **Response:** 302 redirect to S3 signed URL
@@ -107,12 +114,14 @@ projectplace-dv-2025-x9a7b/
 ## Error Handling Enhancements
 
 ### Generation Errors
+
 - **404:** Project not found in external system
 - **500:** Lambda function error or S3 storage failure
 - **403:** Insufficient S3 permissions
 - **Timeout:** External data source unavailable
 
 ### Download Errors
+
 - **404:** Document not found in S3 bucket
 - **403:** S3 access denied or signed URL expired
 - **500:** S3 signed URL generation failed
@@ -121,24 +130,27 @@ projectplace-dv-2025-x9a7b/
 ## Testing and Diagnostics
 
 ### 1. Built-in Diagnostic Scripts
+
 - **File:** `public/acta-diagnostic.js`
 - **Usage:** `actaDiagnostic.diagnoseWorkflow()`
 - **Features:** Complete S3 workflow testing
 
 ### 2. Manual Testing Commands
+
 ```javascript
 // Test document generation
-actaDiagnostic.testGeneration('PROJECT_123')
+actaDiagnostic.testGeneration('PROJECT_123');
 
 // Test S3 downloads
-actaDiagnostic.testDocx('PROJECT_123')
-actaDiagnostic.testPdf('PROJECT_123')
+actaDiagnostic.testDocx('PROJECT_123');
+actaDiagnostic.testPdf('PROJECT_123');
 
 // Complete workflow test
-actaDiagnostic.diagnoseWorkflow('PROJECT_123')
+actaDiagnostic.diagnoseWorkflow('PROJECT_123');
 ```
 
 ### 3. S3 Workflow Verification
+
 - Document generation → S3 storage confirmation
 - S3 availability checking → Document status display
 - S3 signed URL → Download process verification
@@ -146,11 +158,13 @@ actaDiagnostic.diagnoseWorkflow('PROJECT_123')
 ## Configuration
 
 ### S3 Bucket
+
 - **Name:** `projectplace-dv-2025-x9a7b`
 - **Region:** Configured in Lambda environment
 - **Path Structure:** `acta/{projectId}.{format}`
 
 ### Environment Variables
+
 - **VITE_API_BASE_URL:** API Gateway endpoint
 - **S3 permissions:** Handled by Lambda execution role
 
@@ -172,6 +186,7 @@ actaDiagnostic.diagnoseWorkflow('PROJECT_123')
 ## File Summary
 
 ### Modified Files
+
 - `src/lib/api.ts` - Enhanced S3 integration functions
 - `src/pages/Dashboard.tsx` - S3-aware UI and error handling
 - `src/components/DocumentStatus.tsx` - Real-time S3 status checking
@@ -179,6 +194,7 @@ actaDiagnostic.diagnoseWorkflow('PROJECT_123')
 - `public/index.html` - Diagnostic script loading
 
 ### Key Functions
+
 - `generateActaDocument()` - S3-aware document generation
 - `getS3DownloadUrl()` - S3 signed URL handling
 - `checkDocumentInS3()` - S3 availability checking
