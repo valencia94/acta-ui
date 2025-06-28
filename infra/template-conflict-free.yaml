@@ -74,7 +74,7 @@ Resources:
       PathPart: projects-manager
 
   # ────────────────────────────────────────────────────────────
-  # Methods (all Lambda‑proxy)
+  # Methods (all Lambda-proxy)
   # ────────────────────────────────────────────────────────────
   PMManagerAllProjectsMethod:
     Type: AWS::ApiGateway::Method
@@ -197,7 +197,7 @@ Resources:
       - ProjectsManagerResource
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub "Conflict‑free backend deployment ${DeploymentTimestamp}"
+      Description: !Sub "Conflict-free backend deployment ${DeploymentTimestamp}"
 
   ConflictFreeProdStage:
     Type: AWS::ApiGateway::Stage
@@ -205,7 +205,7 @@ Resources:
       DeploymentId: !Ref ConflictFreeApiGatewayDeployment
       RestApiId: !Ref ExistingApiId
       StageName: prod
-      Description: !Sub "Production stage for conflict‑free backend ${DeploymentTimestamp}"
+      Description: !Sub "Production stage for conflict-free backend ${DeploymentTimestamp}"
 
 Outputs:
   APIGatewayId:
@@ -229,5 +229,3 @@ Outputs:
   PMManagerEndpoints:
     Description: PM Manager Endpoints
     Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/"
-    Export:
-      Name: !Sub "${AWS::
