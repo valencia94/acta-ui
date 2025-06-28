@@ -6,7 +6,7 @@ Parameters:
     Type: String
     Default: q2b9avfwv5
     Description: Existing API Gateway ID
-    
+  
   ExistingApiRootResourceId:
     Type: String
     Default: kw8f8zihjg
@@ -184,7 +184,7 @@ Resources:
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/document-validator/*
 
   # ═══════════════════════════════════════════════════════════════
-  # API GATEWAY DEPLOYMENT - WITH ALL DEPENDENCIES
+  # API GATEWAY DEPLOYMENT - WITH CORRECT DEPENDENCIES
   # ═══════════════════════════════════════════════════════════════
 
   ConflictFreeApiGatewayDeployment:
@@ -198,14 +198,13 @@ Resources:
       - PMManagerResource
       - PMManagerAllProjectsResource
       - PMManagerByEmailResource
-      - DocumentValidatorResource
+      # Removed DocumentValidatorResource (no direct methods)
       - DocumentValidatorIdResource
       - ProjectsManagerResource
     Properties:
       RestApiId: !Ref ExistingApiId
       Description: !Sub "Conflict-free backend deployment ${DeploymentTimestamp}"
 
-  # Explicit Stage resource (ensures /prod stage is created)
   ConflictFreeProdStage:
     Type: AWS::ApiGateway::Stage
     Properties:
@@ -243,16 +242,4 @@ Outputs:
     Description: Document Validator Endpoints  
     Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/document-validator/"
     Export:
-      Name: !Sub "${AWS::StackName}-DocumentValidatorEndpoints"
-
-  ProjectsManagerEndpoint:
-    Description: Projects Manager Endpoint
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects-manager"
-    Export:
-      Name: !Sub "${AWS::StackName}-ProjectsManagerEndpoint"
-
-  DeploymentTimestamp:
-    Description: Deployment timestamp for tracking
-    Value: !Ref DeploymentTimestamp
-    Export:
-      Name: !Sub "${AWS::StackName}-DeploymentTimestamp"
+      Name: !Sub "${AWS::
