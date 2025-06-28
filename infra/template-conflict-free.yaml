@@ -228,4 +228,4 @@ Outputs:
 
   PMManagerEndpoints:
     Description: PM Manager Endpoints
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/"
+    Value: !Sub https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/
