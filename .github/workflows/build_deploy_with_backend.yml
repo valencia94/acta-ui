@@ -78,6 +78,13 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # ─── 5.1. Proactive Backend Testing ─────────────────────
+      - name: 🧪 Proactive Backend Testing
+        run: |
+          echo "🧪 Running proactive backend tests..."
+          chmod +x test-backend-proactive.sh
+          ./test-backend-proactive.sh
+
       # ─── 5.5. ENHANCED: Deploy Simplified Backend ───────────
       - name: 🎯 Deploy Simplified Backend (Lambda-Centric)
         if: ${{ inputs.deploy_backend || github.event_name == 'push' }}
@@ -124,48 +131,9 @@ jobs:
       - name: 🧪 Test Backend Endpoints
         if: ${{ inputs.test_backend_endpoints || github.event_name == 'push' }}
         run: |
-          echo "🧪 Testing Backend Endpoints"
-          echo "============================"
-          
-          BASE_URL="https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
-          echo "🔗 Base URL: $BASE_URL"
-          echo
-          
-          # Function to test endpoint
-          test_endpoint() {
-            local method=$1
-            local endpoint=$2
-            local description=$3
-            
-            echo "🔍 Testing: $description"
-            echo "   $method $endpoint"
-            
-            response=$(curl -s -w "HTTPSTATUS:%{http_code}" "$BASE_URL$endpoint" 2>/dev/null || echo "HTTPSTATUS:000")
-            status_code=$(echo "$response" | grep -o "HTTPSTATUS:[0-9]*" | cut -d: -f2)
-            
-            if [ "$status_code" = "200" ]; then
-                echo "   ✅ Status: $status_code (Working)"
-            elif [ "$status_code" = "403" ]; then
-                echo "   ✅ Status: $status_code (Auth Required - Expected for PM endpoints)"
-            elif [ "$status_code" = "404" ]; then
-                echo "   ❌ Status: $status_code (Not Found - Check deployment)"
-            else
-                echo "   ⚠️  Status: $status_code"
-            fi
-            echo
-          }
-          
-          echo "📋 Testing NEW PM Endpoints (routed to projectMetadataEnricher):"
-          test_endpoint "GET" "/pm-projects/all-projects" "PM Projects (All)"
-          test_endpoint "GET" "/pm-projects/test@example.com" "PM Projects (By Email)"
-          test_endpoint "GET" "/projects" "Projects List"
-          test_endpoint "GET" "/check-document/test?format=docx" "Document Status (GET)"
-          
-          echo "📋 Testing EXISTING Endpoints:"
-          test_endpoint "GET" "/health" "Health Check"
-          test_endpoint "GET" "/project-summary/test" "Project Summary"
-          
-          echo "✅ Backend endpoint testing completed"
+          echo "🧪 Running comprehensive post-deployment tests..."
+          chmod +x test-backend-postdeploy.sh
+          ./test-backend-postdeploy.sh q2b9avfwv5 us-east-2 prod
 
       # ─── 6. Sync to S3 + Push SPA Routes ─────────────────────
       - name: 🚀 Sync dist/ to S3
