@@ -89,7 +89,7 @@ jobs:
       # ───────────────────────────────────────────────────────────────
       - name: ⏳ Ensure stack not busy
         env:
-          STACK_NAME: acta-simplified-backend
+          STACK_NAME: acta-api-wiring-stack-manual
           REGION: ${{ secrets.AWS_REGION }}
         run: |
           set -euo pipefail
