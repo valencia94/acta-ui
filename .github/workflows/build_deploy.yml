@@ -1,4 +1,3 @@
-# .github/workflows/build_deploy.yml
 name: Build and Deploy
 
 on:
@@ -11,41 +10,54 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
-      id-token: write
+      id-token: write      # OIDC for AWS
       contents: read
 
     steps:
-      # ─── 0. Checkout ─────────────────────────────────────────
-      - uses: actions/checkout@v4
+      # ───────────────────────────────────────────────────────────────
+      # 0. Checkout the repository
+      # ───────────────────────────────────────────────────────────────
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
 
-      # ─── 1. Node & pnpm toolchain ───────────────────────────
-      - uses: pnpm/action-setup@v2
-        with: { version: 9 }
+      # ───────────────────────────────────────────────────────────────
+      # 1. Set up Node.js + pnpm toolchain
+      # ───────────────────────────────────────────────────────────────
+      - name: 🛠️ Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
 
-      - uses: actions/setup-node@v4
+      - name: 🛠️ Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
-      # ─── 2. Install, Format, Test ───────────────────────────
-      - run: pnpm install --frozen-lockfile
+      # ───────────────────────────────────────────────────────────────
+      # 2. Install dependencies, format, lint, and test
+      # ───────────────────────────────────────────────────────────────
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: 🧼 Prettier Format (Auto-Fix)
+      - name: 🧼 Prettier format (auto‑fix)
         run: pnpm exec prettier --write .
 
-      - name: 🧼 Lint auto-fix
+      - name: 🧼 ESLint (auto‑fix)
         run: pnpm exec eslint . --fix
 
-      - name: 🔍 Re-run lint to validate
+      - name: 🔍 ESLint verify
         run: pnpm exec eslint .
 
       - name: 🧪 Lint + TypeScript
         run: pnpm lint
 
-      - name: ✅ Vitest Unit Tests
+      - name: ✅ Vitest unit tests
         run: pnpm run test:vitest -- --run --passWithNoTests
 
-      # ─── 3. Build (Vite) ─────────────────────────────────────
+      # ───────────────────────────────────────────────────────────────
+      # 3. Build the UI with Vite
+      # ───────────────────────────────────────────────────────────────
       - name: 🔨 Build UI
         run: |
           echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
@@ -54,20 +66,53 @@ jobs:
       - name: 📂 List dist/ before upload
         run: ls -R dist
 
-      # ─── 4. Local Preview Smoke Test ─────────────────────────
+      # ───────────────────────────────────────────────────────────────
+      # 4. Local preview smoke test (vite preview)
+      # ───────────────────────────────────────────────────────────────
       - name: 🌐 Local preview smoke test
         run: |
           pnpm exec vite preview --port 4173 --strictPort & SERVER=$!
           sleep 5 && curl -sf http://localhost:4173/
           kill $SERVER
 
-      # ─── 5. AWS Auth ─────────────────────────────────────────
-      - uses: aws-actions/configure-aws-credentials@v4
+      # ───────────────────────────────────────────────────────────────
+      # 5. Configure AWS credentials (OIDC)
+      # ───────────────────────────────────────────────────────────────
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ─── 6. Sync to S3 + Push SPA Routes ─────────────────────
+      # ───────────────────────────────────────────────────────────────
+      # 6. Backend deployment – CloudFormation/SAM (template‑conflict‑free)
+      # ───────────────────────────────────────────────────────────────
+      - name: 📦 Package backend SAM template
+        env:
+          ARTIFACT_BUCKET: ${{ secrets.SAM_ARTIFACTS_BUCKET }}
+        run: |
+          set -euxo pipefail
+          sam package \
+            --template-file infra/template-conflict-free.yaml \
+            --output-template-file infra/template-conflict-free-packaged.yaml \
+            --s3-bucket "$ARTIFACT_BUCKET" \
+            --region ${{ secrets.AWS_REGION }}
+
+      - name: 🚀 Deploy backend stack
+        run: |
+          set -euxo pipefail
+          TS=$(date +%Y%m%d-%H%M%S)
+          sam deploy \
+            --template-file infra/template-conflict-free-packaged.yaml \
+            --stack-name acta-simplified-backend \
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+            --region ${{ secrets.AWS_REGION }} \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides DeploymentTimestamp="$TS"
+
+      # ───────────────────────────────────────────────────────────────
+      # 7. Sync built UI to S3 & push SPA routes
+      # ───────────────────────────────────────────────────────────────
       - name: 🚀 Sync dist/ to S3
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
@@ -76,46 +121,46 @@ jobs:
           aws s3 sync dist "s3://$BUCKET" --delete
           bash scripts/push-spa-routes.sh
 
-      - name: 🧾 Log current S3 contents
+      - name: 🧾 Log S3 contents
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-          echo "✅ Dumping full contents of s3://$BUCKET:"
-          aws s3 ls s3://$BUCKET/ --recursive
+          aws s3 ls "s3://$BUCKET/" --recursive
 
-      # ─── 7. Ensure CF root object = index.html ───────────────
-      - name: 🛠️ Set CF root object if needed
+      # ───────────────────────────────────────────────────────────────
+      # 8. Ensure CloudFront root object = index.html
+      # ───────────────────────────────────────────────────────────────
+      - name: 🛠️ Ensure CF root object = index.html
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+          REGION: ${{ secrets.AWS_REGION }}
         run: |
           set -euo pipefail
           tmp=$(mktemp)
           aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
           etag=$(jq -r .ETag "$tmp")
-          jq '
-            .DistributionConfig as $cfg
-            | if $cfg.DefaultRootObject != "index.html"
-              then $cfg.DefaultRootObject = "index.html" | $cfg
-              else empty end
-          ' "$tmp" > /tmp/cf_patch.json
+          jq '(.DistributionConfig.DefaultRootObject) as $root | if $root != "index.html" then (.DistributionConfig.DefaultRootObject = "index.html") else empty end' "$tmp" > /tmp/cf_patch.json
           if [ -s /tmp/cf_patch.json ]; then
             aws cloudfront update-distribution \
               --id "$DIST_ID" \
               --if-match "$etag" \
               --distribution-config file:///tmp/cf_patch.json
-            echo "🔄 CF root object set to index.html"
+            echo "🔄 CloudFront root object set to index.html"
           else
-            echo "✅ CF root object already index.html"
+            echo "✅ CloudFront root object already index.html"
           fi
           rm -f "$tmp"
 
-      # ─── 8. OAC Policy ───────────────────────────────────────
+      # ───────────────────────────────────────────────────────────────
+      # 9. Apply S3 bucket policy for CloudFront OAC
+      # ───────────────────────────────────────────────────────────────
       - name: 🔐 Apply S3 bucket policy for CloudFront
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
           REGION: ${{ secrets.AWS_REGION }}
         run: |
+          set -euo pipefail
           ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
           cat > /tmp/s3-oac-policy.json <<EOF
           {
@@ -136,36 +181,29 @@ jobs:
             ]
           }
           EOF
-          aws s3api put-bucket-policy \
-            --bucket "$BUCKET" \
-            --policy file:///tmp/s3-oac-policy.json \
-            --region "$REGION"
+          aws s3api put-bucket-policy --bucket "$BUCKET" --policy file:///tmp/s3-oac-policy.json --region "$REGION"
 
-      # ─── 9. Invalidate CloudFront Cache ──────────────────────
-      - name: 🔄 CloudFront Invalidate /* and log status
+      # ───────────────────────────────────────────────────────────────
+      # 10. Invalidate CloudFront cache
+      # ───────────────────────────────────────────────────────────────
+      - name: 🔄 CloudFront invalidate /* and wait
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
-          INV=$(aws cloudfront create-invalidation \
-            --distribution-id "$DIST_ID" \
-            --paths '/*' \
-            --query 'Invalidation.Id' --output text)
-          echo "🕒 Waiting for CloudFront invalidation $INV…"
-          aws cloudfront wait invalidation-completed \
-            --distribution-id "$DIST_ID" --id "$INV"
+          set -eux
+          INV=$(aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths '/*' --query 'Invalidation.Id' --output text)
+          echo "🕒 Waiting for CloudFront invalidation $INV …"
+          aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$INV"
 
-      # ─── 10. Final CF URL Checks ─────────────────────────────
+      # ───────────────────────────────────────────────────────────────
+      # 11. Final URL checks via CloudFront
+      # ───────────────────────────────────────────────────────────────
       - name: 🌐 Verify /login and /dashboard via CF
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
-          CF_DOMAIN=$(aws cloudfront get-distribution \
-            --id "$DIST_ID" --query 'Distribution.DomainName' --output text)
-
+          set -eux
+          CF_DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" --query 'Distribution.DomainName' --output text)
           echo "✅ CloudFront Domain: https://$CF_DOMAIN"
-
-          echo "▶️ /login:"
-          curl -i https://$CF_DOMAIN/login || true
-
-          echo "▶️ /dashboard:"
-          curl -i https://$CF_DOMAIN/dashboard || true
+          echo "▶️ /login:" && curl -i https://$CF_DOMAIN/login || true
+          echo "▶️ /dashboard:" && curl -i https://$CF_DOMAIN/dashboard || true
