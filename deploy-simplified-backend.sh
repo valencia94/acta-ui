@@ -1,21 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# SIMPLIFecho "🔧 Deploying CloudFormation stack: $STACK_NAME"
-TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-
-aws cloudformation deploy \
-    --template-file infra/template-simplified-lambda.yaml \
-    --stack-name "$STACK_NAME" \
-    --parameter-overrides \
-        ExistingApiId="$ACTA_API_ID" \
-        ExistingApiRootResourceId="$ACTA_API_ROOT_ID" \
-        DeploymentTimestamp="$TIMESTAMP" \
-    --capabilities CAPABILITY_IAM \
-    --region us-east-2
-
-echo "✅ CloudFormation stack deployed successfully!"
-echo "ℹ️  API Gateway deployment is included in the CloudFormation stack"NT SCRIPT for ACTA-UI Backend
+# SIMPLIFIED DEPLOYMENT SCRIPT for ACTA-UI Backend
 # Routes all PM endpoints to existing projectMetadataEnricher Lambda
 
 echo "🚀 ACTA-UI Simplified Backend Deployment"
