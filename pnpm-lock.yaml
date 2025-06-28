@@ -51,7 +51,7 @@ importers:
   .:
     dependencies:
       '@aws-amplify/auth':
-        specifier: ^6
+        specifier: ^6.13.1
         version: 6.13.1(@aws-amplify/core@6.12.1)
       '@aws-amplify/ui-react':
         specifier: ^6
@@ -84,7 +84,7 @@ importers:
         specifier: ^2.5.2
         version: 2.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-idle-timer:
-        specifier: ^5
+        specifier: ^5.7.2
         version: 5.7.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom:
         specifier: ^6.30.1
@@ -3515,10 +3515,7 @@ packages:
     engines: {node: '>=10'}
 
   goober@2.1.16:
-    resolution:
-      {
-        integrity: sha512-erjk19y1U33+XAMe1VTvIONHYoSqE4iS7BYUZfHaqeohLmnC0FdxEh7rQU+6MZ4OajItzjZFSRtVANrQwNq6/g==,
-      }
+    resolution: {integrity: sha512-erjk19y1U33+XAMe1VTvIONHYoSqE4iS7BYUZfHaqeohLmnC0FdxEh7rQU+6MZ4OajItzjZFSRtVANrQwNq6/g==}
     peerDependencies:
       csstype: ^3.0.10
 
@@ -4373,11 +4370,8 @@ packages:
       react: ^16.8.0 || ^17 || ^18 || ^19
 
   react-hot-toast@2.5.2:
-    resolution:
-      {
-        integrity: sha512-Tun3BbCxzmXXM7C+NI4qiv6lT0uwGh4oAfeJyNOjYUejTsm35mK9iCaYLGv8cBz9L5YxZLx/2ii7zsIwPtPUdw==,
-      }
-    engines: { node: '>=10' }
+    resolution: {integrity: sha512-Tun3BbCxzmXXM7C+NI4qiv6lT0uwGh4oAfeJyNOjYUejTsm35mK9iCaYLGv8cBz9L5YxZLx/2ii7zsIwPtPUdw==}
+    engines: {node: '>=10'}
     peerDependencies:
       react: '>=16'
       react-dom: '>=16'

@@ -1,0 +1,273 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SIMPLIFIED API Gateway wiring - Route all PM endpoints to projectMetadataEnricher
+  (v3-robust)
+Parameters:
+  ExistingApiId:
+    Type: String
+    Default: q2b9avfwv5
+    Description: Existing API Gateway ID
+  ExistingApiRootResourceId:
+    Type: String
+    Default: kw8f8zihjg
+    Description: Existing API Gateway root resource ID
+  ProjectMetadataEnricherArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
+    Description: Lambda function for all project metadata and PM queries (handles
+      data enrichment and storage)
+  ProjectMetadataEnricherFunctionName:
+    Type: String
+    Default: projectMetadataEnricher
+    Description: Function name only (for Lambda permissions)
+  DeploymentTimestamp:
+    Type: String
+    Default: 20250628-030500
+    Description: Deployment timestamp to force API Gateway redeployment
+Resources:
+  SimplifiedPMProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: ExistingApiRootResourceId
+      PathPart: pm-projects
+    Metadata:
+      SamResourceId: SimplifiedPMProjectsResource
+  SimplifiedPMProjectsAllResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: SimplifiedPMProjectsResource
+      PathPart: all-projects
+    Metadata:
+      SamResourceId: SimplifiedPMProjectsAllResource
+  SimplifiedPMProjectsEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: SimplifiedPMProjectsResource
+      PathPart: '{pmEmail}'
+    Metadata:
+      SamResourceId: SimplifiedPMProjectsEmailResource
+  SimplifiedCheckDocumentResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: ExistingApiRootResourceId
+      PathPart: check-document
+    Metadata:
+      SamResourceId: SimplifiedCheckDocumentResource
+  SimplifiedCheckDocumentIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: SimplifiedCheckDocumentResource
+      PathPart: '{projectId}'
+    Metadata:
+      SamResourceId: SimplifiedCheckDocumentIdResource
+  SimplifiedProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: ExistingApiRootResourceId
+      PathPart: projects
+    Metadata:
+      SamResourceId: SimplifiedProjectsResource
+  SimplifiedPMProjectsAllMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: SimplifiedPMProjectsAllResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: SimplifiedPMProjectsAllMethod
+  SimplifiedPMProjectsEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: SimplifiedPMProjectsEmailResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: SimplifiedPMProjectsEmailMethod
+  SimplifiedProjectsListMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: SimplifiedProjectsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: SimplifiedProjectsListMethod
+  SimplifiedCheckDocumentMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: SimplifiedCheckDocumentIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: SimplifiedCheckDocumentMethod
+  SimplifiedCheckDocumentHeadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: SimplifiedCheckDocumentIdResource
+      HttpMethod: HEAD
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: SimplifiedCheckDocumentHeadMethod
+  SimplifiedPMProjectsAllPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/all-projects
+    Metadata:
+      SamResourceId: SimplifiedPMProjectsAllPermission
+  SimplifiedPMProjectsEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
+    Metadata:
+      SamResourceId: SimplifiedPMProjectsEmailPermission
+  SimplifiedProjectsListPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects
+    Metadata:
+      SamResourceId: SimplifiedProjectsListPermission
+  SimplifiedCheckDocumentGetPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/check-document/*
+    Metadata:
+      SamResourceId: SimplifiedCheckDocumentGetPermission
+  SimplifiedCheckDocumentHeadPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/check-document/*
+    Metadata:
+      SamResourceId: SimplifiedCheckDocumentHeadPermission
+  SimplifiedApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+    - SimplifiedPMProjectsAllMethod
+    - SimplifiedPMProjectsEmailMethod
+    - SimplifiedProjectsListMethod
+    - SimplifiedCheckDocumentMethod
+    - SimplifiedCheckDocumentHeadMethod
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      StageName: prod
+      Description:
+        Fn::Sub: Simplified backend deployment ${DeploymentTimestamp}
+    Metadata:
+      SamResourceId: SimplifiedApiGatewayDeployment
+Outputs:
+  APIGatewayId:
+    Description: API Gateway ID
+    Value:
+      Ref: ExistingApiId
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-APIGatewayId
+  DeploymentId:
+    Description: API Gateway Deployment ID
+    Value:
+      Ref: SimplifiedApiGatewayDeployment
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DeploymentId
+  PMProjectsEndpoints:
+    Description: PM Projects Endpoints
+    Value:
+      Fn::Sub: https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-projects/
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PMProjectsEndpoints
+  DocumentStatusEndpoints:
+    Description: Document Status Endpoints
+    Value:
+      Fn::Sub: https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DocumentStatusEndpoints
+  DeploymentTimestamp:
+    Description: Deployment timestamp for tracking
+    Value:
+      Ref: DeploymentTimestamp
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DeploymentTimestamp
