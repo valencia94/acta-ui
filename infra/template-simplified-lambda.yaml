@@ -9,11 +9,17 @@ Parameters:
     Type: String
     Default: kw8f8zihjg
   
-  # EXISTING Lambda ARN (projectMetadataEnricher handles everything)
+  # EXISTING Lambda ARN (projectMetadataEnricher exists and works)
   ProjectMetadataEnricherArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
-    Description: Enhanced Lambda function for all project metadata and PM queries
+    Description: Lambda function for all project metadata and PM queries
+  
+  # Lambda Function Name (extracted from ARN for permissions)
+  ProjectMetadataEnricherFunctionName:
+    Type: String
+    Default: projectMetadataEnricher
+    Description: Function name only (for Lambda permissions)
 
 Resources:
   # ═══════════════════════════════════════════════════════════════
@@ -146,7 +152,7 @@ Resources:
   PMProjectsAllPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref ProjectMetadataEnricherArn
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/all-projects
@@ -154,7 +160,7 @@ Resources:
   PMProjectsEmailPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref ProjectMetadataEnricherArn
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
@@ -162,18 +168,26 @@ Resources:
   ProjectsListPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref ProjectMetadataEnricherArn
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects
 
-  CheckDocumentPermission:
+  CheckDocumentGetPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref ProjectMetadataEnricherArn
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*/check-document/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/check-document/*
+
+  CheckDocumentHeadPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/check-document/*
 
 Outputs:
   APIGatewayId:
