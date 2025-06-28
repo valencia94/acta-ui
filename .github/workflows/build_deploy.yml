@@ -126,7 +126,7 @@ jobs:
           TS=$(date +%Y%m%d-%H%M%S)
           sam deploy \
             --template-file infra/template-conflict-free-packaged.yaml \
-            --stack-name acta-simplified-backend \
+            --stack-name Yo me puedo quedar aca con los niños si queres \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --region ${{ secrets.AWS_REGION }} \
             --no-fail-on-empty-changeset \
