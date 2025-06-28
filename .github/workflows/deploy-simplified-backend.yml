@@ -1,134 +1,211 @@
-name: 🎯 Deploy Simplified Backend (Lambda-Centric)
+name: "🚀 Build, Deploy Frontend + Backend"
 
 on:
+  push:
+    branches: [develop]
   workflow_dispatch:
     inputs:
-      test_endpoints:
-        description: 'Test endpoints after deployment'
+      deploy_backend:
+        description: Deploy simplified backend (Lambda‑centric)
+        required: true
+        default: true
+        type: boolean
+      test_backend_endpoints:
+        description: Test backend endpoints after deployment
         required: true
         default: true
         type: boolean
 
 jobs:
-  deploy-simplified-backend:
+  ci_deploy:
     runs-on: ubuntu-latest
+    environment: prod
     permissions:
       id-token: write
       contents: read
 
     steps:
+      # ─────────────────────────────────────────────────────────
+      # 0. Checkout
+      # ─────────────────────────────────────────────────────────
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🔐 Configure AWS credentials
+      # ─────────────────────────────────────────────────────────
+      # 1. Node & pnpm toolchain
+      # ─────────────────────────────────────────────────────────
+      - name: 🛠️ Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: 🛠️ Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # ─────────────────────────────────────────────────────────
+      # 2. Install, Format, Lint, Test
+      # ─────────────────────────────────────────────────────────
+      - name: 📦 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧼 Prettier format
+        run: pnpm exec prettier --write .
+
+      - name: 🧼 ESLint auto‑fix
+        run: pnpm exec eslint . --fix
+
+      - name: 🔍 ESLint verify
+        run: pnpm exec eslint .
+
+      - name: 🧪 Lint + TS
+        run: pnpm lint
+
+      - name: ✅ Vitest unit tests
+        run: pnpm run test:vitest -- --run --passWithNoTests
+
+      # ─────────────────────────────────────────────────────────
+      # 3. Build UI (Vite)
+      # ─────────────────────────────────────────────────────────
+      - name: 🔨 Build UI
+        run: |
+          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+          pnpm run build
+
+      - name: 📂 List dist/
+        run: ls -R dist
+
+      # ─────────────────────────────────────────────────────────
+      # 4. Local preview smoke test
+      # ─────────────────────────────────────────────────────────
+      - name: 🌐 Smoke test build
+        run: |
+          pnpm exec vite preview --port 4173 --strictPort & PID=$!
+          sleep 6 && curl -sf http://localhost:4173/
+          kill $PID
+
+      # ─────────────────────────────────────────────────────────
+      # 5. AWS Auth
+      # ─────────────────────────────────────────────────────────
+      - name: 🔐 Configure AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          role-session-name: acta-simplified-backend-deploy
-          aws-region: us-east-2
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: 🌐 Deploy API Gateway Resources
+      # ─────────────────────────────────────────────────────────
+      # 5.1 Proactive backend tests (optional)
+      # ─────────────────────────────────────────────────────────
+      - name: 🧪 Proactive backend tests
         run: |
-          echo "🌐 Deploying Simplified Backend (Lambda-Centric)"
-          echo "==============================================="
-          
-          # Deploy CloudFormation stack
+          echo "🧪 Running proactive backend tests …"
+          chmod +x test-backend-proactive.sh
+          ./test-backend-proactive.sh
+
+      # ─────────────────────────────────────────────────────────
+      # 5.5 Deploy simplified backend (with wait/cancel gate)
+      # ─────────────────────────────────────────────────────────
+      - name: 🎯 Deploy simplified backend (Lambda‑centric)
+        if: ${{ inputs.deploy_backend || github.event_name == 'push' }}
+        env:
+          STACK_NAME: acta-simplified-backend
+          REGION: us-east-2
+        run: |
+          set -euo pipefail
+          echo "🎯 Deploying Simplified Backend (Lambda‑centric)"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
+          # Wait or cancel if stack busy
+          STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo NONE)
+          echo "Current CFN status: $STATUS"
+          if [[ "$STATUS" == *_IN_PROGRESS ]]; then
+            echo "Attempting cancel‑update‑stack …"
+            aws cloudformation cancel-update-stack --stack-name "$STACK_NAME" --region "$REGION" || true
+          fi
+          while true; do
+            STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo NONE)
+            echo "  → $STATUS"
+            case "$STATUS" in
+              CREATE_IN_PROGRESS|UPDATE_IN_PROGRESS|UPDATE_ROLLBACK_IN_PROGRESS|ROLLBACK_IN_PROGRESS|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS)
+                sleep 15;;
+              CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|ROLLBACK_COMPLETE|NONE)
+                break;;
+              *) echo "❌ Unexpected terminal state: $STATUS"; exit 1;;
+            esac
+          done
+
+          # Deploy (no-fail on empty changeset)
           aws cloudformation deploy \
             --template-file infra/template-simplified-lambda.yaml \
-            --stack-name acta-simplified-backend \
-            --parameter-overrides \
-              ExistingApiId=q2b9avfwv5 \
-              ExistingApiRootResourceId=kw8f8zihjg \
+            --stack-name "$STACK_NAME" \
+            --parameter-overrides ExistingApiId=q2b9avfwv5 ExistingApiRootResourceId=kw8f8zihjg DeploymentTimestamp="$TIMESTAMP" \
             --capabilities CAPABILITY_IAM \
-            --region us-east-2
-            
-          echo "✅ CloudFormation stack deployed successfully"
-          
-          # Create API Gateway deployment
-          echo "🚀 Creating API Gateway deployment"
-          DEPLOYMENT_ID=$(aws apigateway create-deployment \
-            --rest-api-id q2b9avfwv5 \
-            --stage-name prod \
-            --description "Simplified backend deployment $(date)" \
-            --region us-east-2 \
-            --query 'id' \
-            --output text)
-            
-          echo "✅ API Gateway deployment created: $DEPLOYMENT_ID"
+            --region "$REGION" \
+            --no-fail-on-empty-changeset
 
-      - name: 🧪 Test Simplified Backend Endpoints
-        if: ${{ inputs.test_endpoints }}
+      # ─────────────────────────────────────────────────────────
+      # 5.6 Post‑deploy backend tests (optional)
+      # ─────────────────────────────────────────────────────────
+      - name: 🧪 Test backend endpoints
+        if: ${{ inputs.test_backend_endpoints || github.event_name == 'push' }}
         run: |
-          echo "🧪 Testing Simplified Backend Endpoints"
-          echo "======================================"
-          
-          BASE_URL="https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
-          
-          # Function to test endpoint
-          test_endpoint() {
-            local method=$1
-            local endpoint=$2
-            local description=$3
-            
-            echo "🔍 Testing: $description"
-            echo "   $method $endpoint"
-            
-            response=$(curl -s -w "HTTPSTATUS:%{http_code}" "$BASE_URL$endpoint" 2>/dev/null || echo "HTTPSTATUS:000")
-            status_code=$(echo "$response" | grep -o "HTTPSTATUS:[0-9]*" | cut -d: -f2)
-            
-            if [ "$status_code" = "200" ]; then
-                echo "   ✅ Status: $status_code (Working)"
-            elif [ "$status_code" = "403" ]; then
-                echo "   ✅ Status: $status_code (Auth Required - Expected)"
-            elif [ "$status_code" = "404" ]; then
-                echo "   ❌ Status: $status_code (Not Found - Check deployment)"
-            else
-                echo "   ⚠️  Status: $status_code"
-            fi
-            echo
-          }
-          
-          echo "📋 Testing NEW PM Endpoints (routed to projectMetadataEnricher):"
-          test_endpoint "GET" "/pm-projects/all-projects" "PM Projects (All)"
-          test_endpoint "GET" "/pm-projects/test@example.com" "PM Projects (By Email)"
-          test_endpoint "GET" "/projects" "Projects List"
-          test_endpoint "GET" "/check-document/test?format=docx" "Document Status (GET)"
-          
-          echo "📋 Testing EXISTING Endpoints:"
-          test_endpoint "GET" "/health" "Health Check"
-          test_endpoint "GET" "/project-summary/test" "Project Summary"
-          
-          echo "✅ Endpoint testing completed"
+          echo "🧪 Running post‑deploy backend tests …"
+          chmod +x test-backend-postdeploy.sh
+          ./test-backend-postdeploy.sh q2b9avfwv5 us-east-2 prod
 
-      - name: 📊 Generate Deployment Summary
+      # ─────────────────────────────────────────────────────────
+      # 6. Sync UI → S3
+      # ─────────────────────────────────────────────────────────
+      - name: 🚀 Sync dist → S3
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-          echo "📊 SIMPLIFIED BACKEND DEPLOYMENT SUMMARY"
-          echo "========================================"
-          echo "🕐 Deployed: $(date)"
-          echo "🎯 Architecture: Lambda-Centric (Single Lambda)"
-          echo "🔧 Lambda Function: projectMetadataEnricher"
-          echo "🌐 New API Routes:"
-          echo "  ✅ /pm-projects/all-projects → projectMetadataEnricher"
-          echo "  ✅ /pm-projects/{pmEmail} → projectMetadataEnricher"
-          echo "  ✅ /projects → projectMetadataEnricher"
-          echo "  ✅ /check-document/{projectId} → projectMetadataEnricher"
-          echo "🔗 Base URL: https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
-          echo
-          echo "💡 Benefits of This Approach:"
-          echo "  🎯 Single Lambda handles all project queries"
-          echo "  💰 No DynamoDB costs"
-          echo "  🚀 Faster response times"
-          echo "  🔧 Easier to maintain and debug"
-          echo "  📈 Better scalability"
-          echo
-          echo "📝 Next Steps:"
-          echo "  1. Test with authentication tokens"
-          echo "  2. Enhance projectMetadataEnricher to handle PM parameters"
-          echo "  3. Update frontend to use browser storage"
-          echo "  4. Remove DynamoDB dependencies"
-          echo
-          echo "🧪 Test with authentication:"
-          echo "curl -H 'Authorization: Bearer your-token' \\"
-          echo "  'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/pm-projects/all-projects'"
-          echo
-          echo "🎉 Simplified backend deployment completed successfully!"
+          aws s3 sync dist "s3://$BUCKET" --delete
+          bash scripts/push-spa-routes.sh
+
+      - name: 🧾 Log S3 contents
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+        run: aws s3 ls "s3://$BUCKET/" --recursive
+
+      # ─────────────────────────────────────────────────────────
+      # 7. Ensure CF root object = index.html
+      # ─────────────────────────────────────────────────────────
+      - name: 🛠️ Ensure CF default root
+        env:
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp)
+          aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
+          etag=$(jq -r .ETag "$tmp")
+          root=$(jq -r .DistributionConfig.DefaultRootObject "$tmp")
+          if [[ "$root" != "index.html" ]]; then
+            jq '.DistributionConfig.DefaultRootObject = "index.html" | .DistributionConfig' "$tmp" > /tmp/cf_patch.json
+            aws cloudfront update-distribution --id "$DIST_ID" --if-match "$etag" --distribution-config file:///tmp/cf_patch.json
+          fi
+          rm -f "$tmp"
+
+      # ─────────────────────────────────────────────────────────
+      # 8. Apply S3 bucket policy for OAC
+      # ─────────────────────────────────────────────────────────
+      - name: 🔐 Apply OAC bucket policy
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+        run: |
+          set -euo pipefail
+          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          cat > /tmp/oac.json <<EOF
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "OACAccess",
+                "Effect": "Allow",
+                "Principal": { "Service": "cloudfront.amazonaws.com" },
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::$BUCKET/*",
+                "Condition": { "StringEquals": { "AWS:SourceArn": "arn
