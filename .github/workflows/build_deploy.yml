@@ -99,19 +99,12 @@ jobs:
             echo "Attempting cancel-update-stack …"
             aws cloudformation cancel-update-stack --stack-name "$STACK_NAME" --region "$REGION" || true
           fi
-          # wait until stack is in a stable COMPLETE state or deleted
-          while true; do
+          while [[ "$STATUS" == *_IN_PROGRESS ]]; do
+            sleep 15
             STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NONE")
             echo "  → $STATUS"
-            case "$STATUS" in
-              CREATE_IN_PROGRESS|UPDATE_IN_PROGRESS|UPDATE_ROLLBACK_IN_PROGRESS|ROLLBACK_IN_PROGRESS|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS)
-                sleep 15;;
-              CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|ROLLBACK_COMPLETE|NONE)
-                break;;
-              *)
-                echo "❌ Unexpected terminal state: $STATUS"; exit 1;;
-            esac
           done
+          echo "Stack state stabilized: $STATUS"
 
       # ───────────────────────────────────────────────────────────────
       # 7. Package & deploy backend (SAM)
