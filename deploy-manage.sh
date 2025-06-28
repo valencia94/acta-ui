@@ -112,25 +112,20 @@ local_deploy() {
         run_pre_tests
         
         # Deploy CloudFormation
-        echo -e "${BLUE}Deploying CloudFormation stack...${NC}"
+        echo -e "${BLUE}Deploying CloudFormation stack with API Gateway deployment...${NC}"
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        
         aws cloudformation deploy \
             --template-file infra/template-simplified-lambda.yaml \
             --stack-name acta-simplified-backend \
             --parameter-overrides \
               ExistingApiId=q2b9avfwv5 \
               ExistingApiRootResourceId=kw8f8zihjg \
+              DeploymentTimestamp="$TIMESTAMP" \
             --capabilities CAPABILITY_IAM \
             --region us-east-2
         
-        # Create API Gateway deployment
-        echo -e "${BLUE}Creating API Gateway deployment...${NC}"
-        aws apigateway create-deployment \
-            --rest-api-id q2b9avfwv5 \
-            --stage-name prod \
-            --description "Simplified backend deployment $(date)" \
-            --region us-east-2
-        
-        echo -e "${GREEN}✅ Deployment completed!${NC}"
+        echo -e "${GREEN}✅ CloudFormation deployment completed (includes API Gateway deployment)!${NC}"
         
         # Run post-tests
         echo -e "${BLUE}Running post-deployment tests...${NC}"

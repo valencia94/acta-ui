@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: SIMPLIFIED API Gateway wiring - Route all PM endpoints to projectMetadataEnricher
+Description: SIMPLIFIED API Gateway wiring - Route all PM endpoints to projectMetadataEnricher (v2)
 
 Parameters:
   ExistingApiId:
@@ -20,6 +20,12 @@ Parameters:
     Type: String
     Default: projectMetadataEnricher
     Description: Function name only (for Lambda permissions)
+
+  # Add a deployment timestamp to force new deployment
+  DeploymentTimestamp:
+    Type: String
+    Default: "20250628-025500"
+    Description: Deployment timestamp to force API Gateway redeployment
 
 Resources:
   # ═══════════════════════════════════════════════════════════════
@@ -189,12 +195,35 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/check-document/*
 
+  # ═══════════════════════════════════════════════════════════════
+  # API GATEWAY DEPLOYMENT - Force redeployment with dependencies
+  # ═══════════════════════════════════════════════════════════════
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - PMProjectsAllMethod
+      - PMProjectsEmailMethod
+      - ProjectsListMethod
+      - CheckDocumentMethod
+      - CheckDocumentHeadMethod
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      StageName: prod
+      Description: !Sub "Simplified backend deployment ${DeploymentTimestamp}"
+
 Outputs:
   APIGatewayId:
     Description: API Gateway ID
     Value: !Ref ExistingApiId
     Export:
       Name: !Sub "${AWS::StackName}-APIGatewayId"
+
+  DeploymentId:
+    Description: API Gateway Deployment ID
+    Value: !Ref ApiGatewayDeployment
+    Export:
+      Name: !Sub "${AWS::StackName}-DeploymentId"
 
   PMProjectsEndpoints:
     Description: PM Projects Endpoints
@@ -207,3 +236,9 @@ Outputs:
     Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/"
     Export:
       Name: !Sub "${AWS::StackName}-DocumentStatusEndpoints"
+
+  DeploymentTimestamp:
+    Description: Deployment timestamp for tracking
+    Value: !Ref DeploymentTimestamp
+    Export:
+      Name: !Sub "${AWS::StackName}-DeploymentTimestamp"

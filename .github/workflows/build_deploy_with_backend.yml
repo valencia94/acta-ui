@@ -95,30 +95,22 @@ jobs:
           echo "💰 Benefits: No new Lambda functions, no DynamoDB costs, faster responses"
           echo
           
-          # Deploy CloudFormation stack
-          echo "📦 Deploying CloudFormation stack..."
+          # Deploy CloudFormation stack with API Gateway deployment included
+          echo "📦 Deploying CloudFormation stack with API Gateway deployment..."
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          
           aws cloudformation deploy \
             --template-file infra/template-simplified-lambda.yaml \
             --stack-name acta-simplified-backend \
             --parameter-overrides \
               ExistingApiId=q2b9avfwv5 \
               ExistingApiRootResourceId=kw8f8zihjg \
+              DeploymentTimestamp="$TIMESTAMP" \
             --capabilities CAPABILITY_IAM \
             --region us-east-2
             
           echo "✅ CloudFormation stack deployed successfully"
-          
-          # Create API Gateway deployment
-          echo "🚀 Creating API Gateway deployment..."
-          DEPLOYMENT_ID=$(aws apigateway create-deployment \
-            --rest-api-id q2b9avfwv5 \
-            --stage-name prod \
-            --description "Simplified backend deployment $(date)" \
-            --region us-east-2 \
-            --query 'id' \
-            --output text)
-            
-          echo "✅ API Gateway deployment created: $DEPLOYMENT_ID"
+          echo "ℹ️  API Gateway deployment is included in CloudFormation stack"
           echo
           echo "🎯 Simplified Backend Deployment Complete!"
           echo "📋 New Endpoints:"

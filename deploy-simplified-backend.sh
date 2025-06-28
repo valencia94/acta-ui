@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# SIMPLIFIED DEPLOYMENT SCRIPT for ACTA-UI Backend
+# SIMPLIFecho "🔧 Deploying CloudFormation stack: $STACK_NAME"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
+aws cloudformation deploy \
+    --template-file infra/template-simplified-lambda.yaml \
+    --stack-name "$STACK_NAME" \
+    --parameter-overrides \
+        ExistingApiId="$ACTA_API_ID" \
+        ExistingApiRootResourceId="$ACTA_API_ROOT_ID" \
+        DeploymentTimestamp="$TIMESTAMP" \
+    --capabilities CAPABILITY_IAM \
+    --region us-east-2
+
+echo "✅ CloudFormation stack deployed successfully!"
+echo "ℹ️  API Gateway deployment is included in the CloudFormation stack"NT SCRIPT for ACTA-UI Backend
 # Routes all PM endpoints to existing projectMetadataEnricher Lambda
 
 echo "🚀 ACTA-UI Simplified Backend Deployment"
@@ -47,33 +61,24 @@ echo "🌐 Step 2: Deploying API Gateway Resources"
 echo "=========================================="
 
 echo "🔧 Deploying CloudFormation stack: $STACK_NAME"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
 aws cloudformation deploy \
     --template-file infra/template-simplified-lambda.yaml \
     --stack-name "$STACK_NAME" \
     --parameter-overrides \
-      ExistingApiId="$ACTA_API_ID" \
-      ExistingApiRootResourceId="$ACTA_API_ROOT_ID" \
+        ExistingApiId="$ACTA_API_ID" \
+        ExistingApiRootResourceId="$ACTA_API_ROOT_ID" \
+        DeploymentTimestamp="$TIMESTAMP" \
     --capabilities CAPABILITY_IAM \
     --region us-east-2
 
-echo "✅ CloudFormation stack deployed successfully"
+echo "✅ CloudFormation stack deployed successfully!"
+echo "ℹ️  API Gateway deployment is included in the CloudFormation stack"
 
-# Step 3: Create API Gateway deployment
-echo "🚀 Step 3: Creating API Gateway Deployment"
-echo "=========================================="
-
-echo "🔧 Creating new deployment for API Gateway: $ACTA_API_ID"
-
-DEPLOYMENT_ID=$(aws apigateway create-deployment \
-    --rest-api-id "$ACTA_API_ID" \
-    --stage-name prod \
-    --description "Simplified backend deployment $(date)" \
-    --region us-east-2 \
-    --query 'id' \
-    --output text)
-
-echo "✅ API Gateway deployment created: $DEPLOYMENT_ID"
+# Step 3: Validate deployment
+echo "🧪 Step 3: Validating Deployment"
+echo "================================"
 
 # Step 4: Test endpoints
 echo "🧪 Step 4: Testing Endpoints"
