@@ -1,0 +1,258 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CONFLICT-FREE API Gateway wiring - Route PM endpoints to projectMetadataEnricher (unique paths)
+
+Parameters:
+  ExistingApiId:
+    Type: String
+    Default: q2b9avfwv5
+    Description: Existing API Gateway ID
+    
+  ExistingApiRootResourceId:
+    Type: String
+    Default: kw8f8zihjg
+    Description: Existing API Gateway root resource ID
+
+  ProjectMetadataEnricherArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
+    Description: Lambda function for project metadata enrichment
+
+  ProjectMetadataEnricherFunctionName:
+    Type: String
+    Default: projectMetadataEnricher
+    Description: Function name only (for Lambda permissions)
+
+  DeploymentTimestamp:
+    Type: String
+    Default: "20250628-115000"
+    Description: Deployment timestamp to force API Gateway redeployment
+
+Resources:
+
+  # ═══════════════════════════════════════════════════════════════
+  # UNIQUE PM PROJECTS RESOURCES - No conflicts
+  # ═══════════════════════════════════════════════════════════════
+  
+  PMManagerResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: pm-manager
+
+  PMManagerAllProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMManagerResource
+      PathPart: all-projects
+
+  PMManagerByEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMManagerResource
+      PathPart: '{pmEmail}'
+
+  DocumentValidatorResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: document-validator
+
+  DocumentValidatorIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref DocumentValidatorResource
+      PathPart: '{projectId}'
+
+  ProjectsManagerResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: projects-manager
+
+  # ═══════════════════════════════════════════════════════════════
+  # API GATEWAY METHODS - All routed to projectMetadataEnricher
+  # ═══════════════════════════════════════════════════════════════
+
+  PMManagerAllProjectsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMManagerAllProjectsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  PMManagerByEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMManagerByEmailResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  ProjectsManagerMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsManagerResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  DocumentValidatorGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref DocumentValidatorIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  DocumentValidatorHeadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref DocumentValidatorIdResource
+      HttpMethod: HEAD
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  # ═══════════════════════════════════════════════════════════════
+  # LAMBDA PERMISSIONS - API Gateway invoke permissions
+  # ═══════════════════════════════════════════════════════════════
+
+  PMManagerAllProjectsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/all-projects
+
+  PMManagerByEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/*
+
+  ProjectsManagerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects-manager
+
+  DocumentValidatorGetPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/document-validator/*
+
+  DocumentValidatorHeadPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/document-validator/*
+
+  # ═══════════════════════════════════════════════════════════════
+  # API GATEWAY DEPLOYMENT - WITH ALL DEPENDENCIES
+  # ═══════════════════════════════════════════════════════════════
+
+  ConflictFreeApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - PMManagerAllProjectsMethod
+      - PMManagerByEmailMethod
+      - ProjectsManagerMethod
+      - DocumentValidatorGetMethod
+      - DocumentValidatorHeadMethod
+      - PMManagerResource
+      - PMManagerAllProjectsResource
+      - PMManagerByEmailResource
+      - DocumentValidatorResource
+      - DocumentValidatorIdResource
+      - ProjectsManagerResource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      Description: !Sub "Conflict-free backend deployment ${DeploymentTimestamp}"
+
+  # Explicit Stage resource (ensures /prod stage is created)
+  ConflictFreeProdStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref ConflictFreeApiGatewayDeployment
+      RestApiId: !Ref ExistingApiId
+      StageName: prod
+      Description: !Sub "Production stage for conflict-free backend ${DeploymentTimestamp}"
+
+Outputs:
+  APIGatewayId:
+    Description: API Gateway ID
+    Value: !Ref ExistingApiId
+    Export:
+      Name: !Sub "${AWS::StackName}-APIGatewayId"
+
+  DeploymentId:
+    Description: API Gateway Deployment ID
+    Value: !Ref ConflictFreeApiGatewayDeployment
+    Export:
+      Name: !Sub "${AWS::StackName}-DeploymentId"
+
+  StageId:
+    Description: API Gateway Stage ID
+    Value: !Ref ConflictFreeProdStage
+    Export:
+      Name: !Sub "${AWS::StackName}-StageId"
+
+  PMManagerEndpoints:
+    Description: PM Manager Endpoints
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/"
+    Export:
+      Name: !Sub "${AWS::StackName}-PMManagerEndpoints"
+
+  DocumentValidatorEndpoints:
+    Description: Document Validator Endpoints  
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/document-validator/"
+    Export:
+      Name: !Sub "${AWS::StackName}-DocumentValidatorEndpoints"
+
+  ProjectsManagerEndpoint:
+    Description: Projects Manager Endpoint
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects-manager"
+    Export:
+      Name: !Sub "${AWS::StackName}-ProjectsManagerEndpoint"
+
+  DeploymentTimestamp:
+    Description: Deployment timestamp for tracking
+    Value: !Ref DeploymentTimestamp
+    Export:
+      Name: !Sub "${AWS::StackName}-DeploymentTimestamp"
