@@ -5,9 +5,11 @@ Description: >
 Parameters:
   ExistingApiId:
     Type: String
+    Default: q2b9avfwv5
     Description: Existing API Gateway RestApiId (e.g., q2b9avfwv5)
   ExistingApiRootResourceId:
     Type: String
+    Default: kw8f8zihjg
     Description: API root resource ID (e.g., kw8f8zihjg)
   ProjectMetadataEnricherArn:
     Type: String
@@ -223,7 +225,57 @@ Resources:
 ###############################################################################
 # Lambda invoke permissions
 ###############################################################################
-  ProjectsPermission:
+  # Core permissions (7 required)
+  PMManagerAllProjectsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/all-projects
+
+  PMManagerByEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/*
+
+  ProjectsManagerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects-manager
+
+  DocumentValidatorGetPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/document-validator/*
+
+  DocumentValidatorHeadPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/document-validator/*
+
+  ProjectMetadataEnricherPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*
+
+  # Alias permissions (5 required)
+  ProjectsAliasPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
@@ -231,7 +283,7 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects
 
-  PMProjectsAllPermission:
+  PMProjectsAllAliasPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
@@ -239,7 +291,7 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/all-projects
 
-  PMProjectsEmailPermission:
+  PMProjectsByEmailAliasPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
@@ -247,7 +299,7 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
 
-  CheckDocGetPermission:
+  CheckDocGetAliasPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
@@ -255,7 +307,7 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/check-document/*
 
-  CheckDocHeadPermission:
+  CheckDocHeadAliasPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
