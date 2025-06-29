@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Conflict-free API – core PM routes plus UI-alias paths
+Description: Conflict-free API – core PM routes + UI alias paths
 
 ###############################################################################
 # Parameters
@@ -12,7 +12,7 @@ Parameters:
   DeploymentTimestamp:         { Type: String, Default: "20250629-000000" }
 
 ###############################################################################
-# Helper – CORS MOCK snippet
+# Helper mapping for CORS headers
 ###############################################################################
 Mappings:
   CorsHeaders:
@@ -22,11 +22,11 @@ Mappings:
       AllowHeaders: "'*'"
 
 ###############################################################################
-# Core resources (pm-manager, projects-manager, document-validator,
-#                 direct /projectMetadataEnricher proxy)
+# 1️⃣  RESOURCE TREE  ──────────────────────────────────────────────────────────
 ###############################################################################
 Resources:
 
+  # ─── core paths
   PMManagerResource:
     Type: AWS::ApiGateway::Resource
     Properties: { RestApiId: !Ref ExistingApiId, ParentId: !Ref ExistingApiRootResourceId, PathPart: pm-manager }
@@ -55,9 +55,7 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties: { RestApiId: !Ref ExistingApiId, ParentId: !Ref ExistingApiRootResourceId, PathPart: projectMetadataEnricher }
 
-###############################################################################
-# UI-alias resources
-###############################################################################
+  # ─── UI alias paths
   ProjectsAliasResource:
     Type: AWS::ApiGateway::Resource
     Properties: { RestApiId: !Ref ExistingApiId, ParentId: !Ref ExistingApiRootResourceId, PathPart: projects }
@@ -83,36 +81,59 @@ Resources:
     Properties: { RestApiId: !Ref ExistingApiId, ParentId: !Ref CheckDocRootAliasResource, PathPart: '{projectId}' }
 
 ###############################################################################
-# Lambda-proxy methods ─ 12 total (7 core + 5 alias)
+# 2️⃣  LAMBDA-PROXY METHODS  (12)  – block-style Integration
 ###############################################################################
-  # core GET/HEAD/ANY
-  PMManagerAllProjectsMethod:           &LambdaProxyMethod
+  PMManagerAllProjectsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref PMManagerAllProjectsResource
       HttpMethod: GET
       AuthorizationType: NONE
-      Integration: { Type: AWS_PROXY, IntegrationHttpMethod: POST,
-                     Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations }
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   PMManagerByEmailMethod:
-    <<: *LambdaProxyMethod
+    Type: AWS::ApiGateway::Method
     Properties:
-      <<: *LambdaProxyMethod.Properties
+      RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref PMManagerByEmailResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   ProjectsManagerMethod:
-    <<: *LambdaProxyMethod
+    Type: AWS::ApiGateway::Method
     Properties:
-      <<: *LambdaProxyMethod.Properties
+      RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref ProjectsManagerResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   DocumentValidatorGetMethod:
-    <<: *LambdaProxyMethod
+    Type: AWS::ApiGateway::Method
     Properties:
-      <<: *LambdaProxyMethod.Properties
+      RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref DocumentValidatorIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   DocumentValidatorHeadMethod:
     Type: AWS::ApiGateway::Method
@@ -121,8 +142,11 @@ Resources:
       ResourceId: !Ref DocumentValidatorIdResource
       HttpMethod: HEAD
       AuthorizationType: NONE
-      Integration: { Type: AWS_PROXY, IntegrationHttpMethod: POST,
-                     Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations }
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   ProjectMetadataEnricherMethod:
     Type: AWS::ApiGateway::Method
@@ -131,33 +155,64 @@ Resources:
       ResourceId: !Ref ProjectMetadataEnricherResource
       HttpMethod: ANY
       AuthorizationType: NONE
-      Integration: { Type: AWS_PROXY, IntegrationHttpMethod: POST,
-                     Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations }
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # alias
+  # ─── alias proxy methods
   ProjectsAliasMethod:
-    <<: *LambdaProxyMethod
+    Type: AWS::ApiGateway::Method
     Properties:
-      <<: *LambdaProxyMethod.Properties
+      RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref ProjectsAliasResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   PMProjectsAllAliasMethod:
-    <<: *LambdaProxyMethod
+    Type: AWS::ApiGateway::Method
     Properties:
-      <<: *LambdaProxyMethod.Properties
+      RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref PMProjectsAllAliasResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   PMProjectsByEmailAliasMethod:
-    <<: *LambdaProxyMethod
+    Type: AWS::ApiGateway::Method
     Properties:
-      <<: *LambdaProxyMethod.Properties
+      RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref PMProjectsByEmailAliasResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   CheckDocGetAliasMethod:
-    <<: *LambdaProxyMethod
+    Type: AWS::ApiGateway::Method
     Properties:
-      <<: *LambdaProxyMethod.Properties
+      RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref CheckDocIdAliasResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   CheckDocHeadAliasMethod:
     Type: AWS::ApiGateway::Method
@@ -166,8 +221,11 @@ Resources:
       ResourceId: !Ref CheckDocIdAliasResource
       HttpMethod: HEAD
       AuthorizationType: NONE
-      Integration: { Type: AWS_PROXY, IntegrationHttpMethod: POST,
-                     Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations }
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
 ###############################################################################
 # OPTIONS (CORS) – 17 total (7 core + 5 alias + 5 alias parents)
