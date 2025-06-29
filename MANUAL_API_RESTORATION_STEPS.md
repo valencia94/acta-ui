@@ -3,6 +3,7 @@
 Since we can't run the automated script, here are the exact AWS CLI commands to restore the API integrations:
 
 ## Step 1: Set AWS Credentials
+
 ```bash
 export AWS_DEFAULT_REGION=us-east-2
 
@@ -15,6 +16,7 @@ aws sts assume-role --role-arn arn:aws:iam::703671891952:role/service-role/codeb
 ```
 
 ## Step 2: Get Resource IDs
+
 ```bash
 # Get approve resource ID
 APPROVE_RESOURCE_ID=$(aws apigateway get-resources --rest-api-id q2b9avfwv5 --query "items[?pathPart=='approve'].id" --output text)
@@ -34,6 +36,7 @@ echo "Email Resource ID: $EMAIL_RESOURCE_ID"
 ```
 
 ## Step 3: Fix /approve endpoint
+
 ```bash
 # Create ANY method integration for /approve
 aws apigateway put-integration \
@@ -66,6 +69,7 @@ aws apigateway put-integration-response \
 ```
 
 ## Step 4: Fix /pm-manager/all-projects endpoint
+
 ```bash
 # Create GET method integration
 aws apigateway put-integration \
@@ -87,6 +91,7 @@ aws apigateway put-integration \
 ```
 
 ## Step 5: Fix /pm-manager/{pmEmail} endpoint
+
 ```bash
 # Create GET method integration
 aws apigateway put-integration \
@@ -108,6 +113,7 @@ aws apigateway put-integration \
 ```
 
 ## Step 6: Deploy Changes
+
 ```bash
 # Create deployment to make changes active
 aws apigateway create-deployment \
@@ -117,6 +123,7 @@ aws apigateway create-deployment \
 ```
 
 ## Step 7: Test Endpoints
+
 ```bash
 # Test the restored endpoints
 curl -I "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/approve"
@@ -125,8 +132,9 @@ curl -I "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/pm-manager/
 ```
 
 ## Expected Results:
+
 - HTTP 403 (Authentication required) = ✅ Working
-- HTTP 200 = ✅ Working  
+- HTTP 200 = ✅ Working
 - HTTP 404 = ❌ Still broken
 
 Once you see 403 or 200 responses, the integrations are restored and your PDF preview feature will work perfectly! 🚀

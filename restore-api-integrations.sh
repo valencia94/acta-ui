@@ -2,6 +2,14 @@
 
 # API Gateway Integration Restoration Script
 # This script restores the manually created API Gateway integrations that were removed by CloudFormation
+# 
+# USAGE: 
+# 1. Ensure AWS credentials are configured (aws configure or environment variables)
+# 2. Run: ./restore-api-integrations.sh
+#
+# CREDENTIALS NEEDED:
+# User: arn:aws:iam::703671891952:user/D_botero_devX
+# Role: arn:aws:iam::703671891952:role/service-role/codebuild-acta-ui-service-role
 
 set -euo pipefail
 
@@ -11,6 +19,34 @@ LAMBDA_ARN="arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnrich
 
 echo "🔧 Restoring API Gateway Integrations"
 echo "======================================="
+echo "API Gateway: $API_ID"
+echo "Lambda: $LAMBDA_ARN"
+echo "Region: $REGION"
+echo ""
+
+# Check AWS credentials
+echo "🔐 Checking AWS credentials..."
+if ! aws sts get-caller-identity >/dev/null 2>&1; then
+    echo "❌ AWS credentials not configured!"
+    echo ""
+    echo "📋 SETUP INSTRUCTIONS:"
+    echo "1. Configure AWS CLI:"
+    echo "   aws configure"
+    echo ""
+    echo "2. Or set environment variables:"
+    echo "   export AWS_ACCESS_KEY_ID=your_key"
+    echo "   export AWS_SECRET_ACCESS_KEY=your_secret"
+    echo "   export AWS_DEFAULT_REGION=us-east-2"
+    echo ""
+    echo "3. Or assume role:"
+    echo "   aws sts assume-role --role-arn arn:aws:iam::703671891952:role/service-role/codebuild-acta-ui-service-role --role-session-name api-fix"
+    exit 1
+fi
+
+CALLER_ID=$(aws sts get-caller-identity)
+echo "✅ AWS credentials active:"
+echo "$CALLER_ID"
+echo ""
 
 # Function to get resource ID by path
 get_resource_id() {
