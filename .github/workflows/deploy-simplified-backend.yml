@@ -16,6 +16,7 @@ on:
         default: true
         type: boolean
 
+# Prevent two runs from updating the same stack at once
 concurrency:
   group: backend-deploy
   cancel-in-progress: true
@@ -29,151 +30,188 @@ jobs:
       contents: read
 
     steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+    # ───────── 0. Checkout ─────────
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
 
-      - name: 🛠️ Setup pnpm
-        uses: pnpm/action-setup@v2
-        with: { version: 9 }
+    # ───────── 1. Toolchain ────────
+    - name: 🛠️ Setup pnpm
+      uses: pnpm/action-setup@v2
+      with: { version: 9 }
 
-      - name: 🛠️ Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
+    - name: 🛠️ Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
 
-      - name: 📦 Install deps
-        run: pnpm install --frozen-lockfile
+    # ───────── 2. Install / Lint / Test ─────────
+    - name: 📦 Install deps
+      run: pnpm install --frozen-lockfile
 
-      - name: 🧼 Prettier format
-        run: pnpm exec prettier --write .
+    - name: 🧼 Prettier format
+      run: pnpm exec prettier --write .
 
-      - name: 🧼 ESLint auto-fix
-        run: pnpm exec eslint . --fix
+    - name: 🧼 ESLint auto-fix
+      run: pnpm exec eslint . --fix
 
-      - name: 🔍 ESLint verify
-        run: pnpm exec eslint .
+    - name: 🔍 ESLint verify
+      run: pnpm exec eslint .
 
-      - name: 🧪 Lint + TS
-        run: pnpm lint
+    - name: 🧪 Lint + TS
+      run: pnpm lint
 
-      - name: ✅ Vitest unit tests
-        run: pnpm run test:vitest -- --run --passWithNoTests
+    - name: ✅ Vitest unit tests
+      run: pnpm run test:vitest -- --run --passWithNoTests
 
-      - name: 🔨 Build UI
-        run: |
-          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
-          pnpm run build
+    # ───────── 3. Build UI ─────────
+    - name: 🔨 Build UI
+      run: |
+        echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+        pnpm run build
 
-      - name: 📂 List dist
-        run: ls -R dist
+    - name: 📂 List dist
+      run: ls -R dist
 
-      - name: 🌐 Smoke test build
-        run: |
-          pnpm exec vite preview --port 4173 --strictPort & srv=$!
-          sleep 6 && curl -sf http://localhost:4173/
-          kill $srv
+    - name: 🌐 Smoke test build
+      run: |
+        pnpm exec vite preview --port 4173 --strictPort & srv=$!
+        sleep 6 && curl -sf http://localhost:4173/
+        kill $srv
 
-      - name: 🔐 AWS creds
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+    # ───────── 4. AWS creds ─────────
+    - name: 🔐 AWS creds
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: 🧪 Proactive backend tests
-        run: |
-          chmod +x test-backend-proactive.sh
-          ./test-backend-proactive.sh
+    # ───────── 5. Proactive backend tests (optional) ─────────
+    - name: 🧪 Proactive backend tests
+      run: |
+        chmod +x test-backend-proactive.sh
+        ./test-backend-proactive.sh
 
-      - name: 🎯 Deploy simplified backend (Lambda-centric)
-        if: ${{ inputs.deploy_backend || github.event_name == 'push' }}
-        env:
-          STACK_NAME: acta-api-wiring-stack-manual
-          REGION: us-east-2
-        run: |
-          set -euo pipefail
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    # ───────── 6. Deploy backend (with wait/cancel gate) ─────────
+    - name: 🎯 Deploy simplified backend (Lambda-centric)
+      if: ${{ inputs.deploy_backend || github.event_name == 'push' }}
+      env:
+        STACK_NAME: acta-api-wiring-stack-manual
+        REGION: us-east-2
+      run: |
+        set -euo pipefail
+        TS=$(date +%Y%m%d-%H%M%S)
 
-          # wait/cancel gate
-          STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo NONE)
-          if [[ "$STATUS" == *_IN_PROGRESS ]]; then
-            aws cloudformation cancel-update-stack --stack-name "$STACK_NAME" --region "$REGION" || true
-          fi
-          while true; do
-            STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo NONE)
-            case "$STATUS" in
-              CREATE_IN_PROGRESS|UPDATE_IN_PROGRESS|UPDATE_ROLLBACK_IN_PROGRESS|ROLLBACK_IN_PROGRESS|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS)
-                sleep 15;;
-              CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|ROLLBACK_COMPLETE|NONE)
-                break;;
-              *) echo "Unexpected state $STATUS"; exit 1;;
-            esac
-          done
+        # Wait/cancel busy stack
+        STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
+                 --region "$REGION" --query 'Stacks[0].StackStatus' --output text \
+                 2>/dev/null || echo NONE)
+        if [[ "$STATUS" == *_IN_PROGRESS ]]; then
+          aws cloudformation cancel-update-stack --stack-name "$STACK_NAME" \
+                                                 --region "$REGION" || true
+        fi
+        while true; do
+          STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
+                   --region "$REGION" --query 'Stacks[0].StackStatus' --output text \
+                   2>/dev/null || echo NONE)
+          case "$STATUS" in
+            CREATE_IN_PROGRESS|UPDATE_IN_PROGRESS|UPDATE_ROLLBACK_IN_PROGRESS|ROLLBACK_IN_PROGRESS|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS)
+              sleep 15 ;;
+            CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|ROLLBACK_COMPLETE|NONE)
+              break ;;
+            *) echo "Unexpected state $STATUS"; exit 1 ;;
+          esac
+        done
 
-          # deploy
-          aws cloudformation deploy \
-            --template-file infra/template-simplified-lambda.yaml \
-            --stack-name "$STACK_NAME" \
-            --parameter-overrides ExistingApiId=q2b9avfwv5 ExistingApiRootResourceId=kw8f8zihjg DeploymentTimestamp="$TIMESTAMP" \
-            --capabilities CAPABILITY_IAM \
-            --region "$REGION" \
-            --no-fail-on-empty-changeset
+        # Deploy
+        aws cloudformation deploy \
+          --template-file infra/template-simplified-lambda.yaml \
+          --stack-name "$STACK_NAME" \
+          --parameter-overrides \
+              ExistingApiId=q2b9avfwv5 \
+              ExistingApiRootResourceId=kw8f8zihjg \
+              DeploymentTimestamp="$TS" \
+          --capabilities CAPABILITY_IAM \
+          --region "$REGION" \
+          --no-fail-on-empty-changeset
 
-      - name: 🧪 Post‑deploy backend tests
-        if: ${{ inputs.test_backend_endpoints || github.event_name == 'push' }}
-        run: |
-          chmod +x test-backend-postdeploy.sh
-          ./test-backend-postdeploy.sh q2b9avfwv5 us-east-2 prod
+    # ───────── 7. Post-deploy backend tests ─────────
+    - name: 🧪 Post-deploy backend tests
+      if: ${{ inputs.test_backend_endpoints || github.event_name == 'push' }}
+      run: |
+        chmod +x test-backend-postdeploy.sh
+        ./test-backend-postdeploy.sh q2b9avfwv5 us-east-2 prod
 
-      - name: 🚀 Sync dist → S3
-        env: { BUCKET: ${{ secrets.S3_BUCKET_NAME }} }
-        run: |
-          aws s3 sync dist "s3://$BUCKET" --delete
-          bash scripts/push-spa-routes.sh
+    # ───────── 8. Sync UI → S3 ─────────
+    - name: 🚀 Sync dist → S3
+      env:
+        BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      run: |
+        aws s3 sync dist "s3://$BUCKET" --delete
+        bash scripts/push-spa-routes.sh
 
-      - name: 🧾 List S3
-        env: { BUCKET: ${{ secrets.S3_BUCKET_NAME }} }
-        run: aws s3 ls "s3://$BUCKET/" --recursive
+    - name: 🧾 List S3
+      env:
+        BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      run: |
+        aws s3 ls "s3://$BUCKET/" --recursive
 
-      # (CF root, OAC, invalidate, summary steps remain unchanged)
+    # ───────── 9. Ensure CF root object ─────────
+    - name: 🛠️ Ensure CF default root
+      env:
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        set -euo pipefail
+        tmp=$(mktemp)
+        aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
+        etag=$(jq -r .ETag "$tmp")
+        root=$(jq -r .DistributionConfig.DefaultRootObject "$tmp")
+        if [[ "$root" != "index.html" ]]; then
+          jq '.DistributionConfig.DefaultRootObject = "index.html" | .DistributionConfig' "$tmp" > /tmp/cf_patch.json
+          aws cloudfront update-distribution --id "$DIST_ID" --if-match "$etag" \
+            --distribution-config file:///tmp/cf_patch.json
+        fi
+        rm -f "$tmp"
 
+    # ───────── 10. Apply OAC bucket policy ─────────
+    - name: 🔐 Apply OAC bucket policy
+      env:
+        BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        set -euo pipefail
+        ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+        cat > /tmp/oac.json <<EOF
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "OACAccess",
+              "Effect": "Allow",
+              "Principal": { "Service": "cloudfront.amazonaws.com" },
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::$BUCKET/*",
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": "arn:aws:cloudfront::$ACCOUNT:distribution/$DIST_ID"
+                }
+              }
+            }
+          ]
+        }
+        EOF
+        aws s3api put-bucket-policy --bucket "$BUCKET" --policy file:///tmp/oac.json
 
-      # ─────────────────────────────────────────────────────────
-      # 7. Ensure CF root object = index.html
-      # ─────────────────────────────────────────────────────────
-      - name: 🛠️ Ensure CF default root
-        env:
-          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-        run: |
-          set -euo pipefail
-          tmp=$(mktemp)
-          aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
-          etag=$(jq -r .ETag "$tmp")
-          root=$(jq -r .DistributionConfig.DefaultRootObject "$tmp")
-          if [[ "$root" != "index.html" ]]; then
-            jq '.DistributionConfig.DefaultRootObject = "index.html" | .DistributionConfig' "$tmp" > /tmp/cf_patch.json
-            aws cloudfront update-distribution --id "$DIST_ID" --if-match "$etag" --distribution-config file:///tmp/cf_patch.json
-          fi
-          rm -f "$tmp"
-
-      # ─────────────────────────────────────────────────────────
-      # 8. Apply S3 bucket policy for OAC
-      # ─────────────────────────────────────────────────────────
-      - name: 🔐 Apply OAC bucket policy
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-        run: |
-          set -euo pipefail
-          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-          cat > /tmp/oac.json <<EOF
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Sid": "OACAccess",
-                "Effect": "Allow",
-                "Principal": { "Service": "cloudfront.amazonaws.com" },
-                "Action": "s3:GetObject",
-                "Resource": "arn:aws:s3:::$BUCKET/*",
-                "Condition": { "StringEquals": { "AWS:SourceArn": "arn
+    # ───────── 11. CF invalidate & quick checks ─────────
+    - name: 🔄 CF invalidate & verify
+      env:
+        DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      run: |
+        id=$(aws cloudfront create-invalidation --distribution-id "$DIST_ID" \
+              --paths '/*' --query 'Invalidation.Id' --output text)
+        aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$id"
+        CF_DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" \
+                    --query 'Distribution.DomainName' --output text)
+        echo "CloudFront Domain → https://$CF_DOMAIN"
+        curl -sf https://$CF_DOMAIN/login  || true
+        curl -sf https://$CF_DOMAIN/dashboard || true
