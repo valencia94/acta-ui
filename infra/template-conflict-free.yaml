@@ -22,7 +22,7 @@ Parameters:
     Default: "20250629-000000"
 
 ###############################################################################
-# Helper mapping for MOCK OPTIONS
+# Helper mapping – MOCK OPTIONS
 ###############################################################################
 Mappings:
   MockOptionsTemplate:
@@ -50,7 +50,7 @@ Mappings:
 ###############################################################################
 Resources:
 
-  # PM-Manager
+  # ─── PM-Manager hierarchy ───────────────────────────────────
   PMManagerResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -72,7 +72,7 @@ Resources:
       ParentId:  !Ref PMManagerResource
       PathPart:  '{pmEmail}'
 
-  # Document-Validator
+  # ─── Document-Validator hierarchy ───────────────────────────
   DocumentValidatorResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -87,7 +87,7 @@ Resources:
       ParentId:  !Ref DocumentValidatorResource
       PathPart:  '{projectId}'
 
-  # Projects-Manager
+  # ─── Projects-Manager path ──────────────────────────────────
   ProjectsManagerResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -95,7 +95,7 @@ Resources:
       ParentId:  !Ref ExistingApiRootResourceId
       PathPart:  projects-manager
 
-  # NEW  /projectMetadataEnricher
+  # ─── NEW: /projectMetadataEnricher ──────────────────────────
   ProjectMetadataEnricherResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -103,7 +103,7 @@ Resources:
       ParentId:  !Ref ExistingApiRootResourceId
       PathPart:  projectMetadataEnricher
 
-  # NEW  /health
+  # ─── NEW: /health ───────────────────────────────────────────
   HealthResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -114,7 +114,6 @@ Resources:
 ###############################################################################
 # Lambda-proxy methods
 ###############################################################################
-  # PM-Manager
   PMManagerAllProjectsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -139,7 +138,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # Projects-Manager
   ProjectsManagerMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -152,7 +150,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # Document-Validator
   DocumentValidatorGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -177,7 +174,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # NEW  ANY /projectMetadataEnricher
   ProjectMetadataEnricherMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -190,7 +186,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # NEW  GET /health
   HealthGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -201,3 +196,187 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+###############################################################################
+# MOCK OPTIONS methods
+###############################################################################
+  PMManagerOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref PMManagerResource
+      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+
+  PMManagerAllProjectsOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref PMManagerAllProjectsResource
+      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+
+  PMManagerByEmailOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref PMManagerByEmailResource
+      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+
+  DocumentValidatorOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref DocumentValidatorResource
+      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+
+  DocumentValidatorIdOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref DocumentValidatorIdResource
+      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+
+  ProjectsManagerOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref ProjectsManagerResource
+      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+
+  ProjectMetadataEnricherOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref ProjectMetadataEnricherResource
+      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+
+  HealthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref HealthResource
+      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+
+###############################################################################
+# Lambda permissions (5 original + 2 new)
+###############################################################################
+  PMManagerAllProjectsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action:       lambda:InvokeFunction
+      Principal:    apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/all-projects
+
+  PMManagerByEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action:       lambda:InvokeFunction
+      Principal:    apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/*
+
+  ProjectsManagerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action:       lambda:InvokeFunction
+      Principal:    apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects-manager
+
+  DocumentValidatorGetPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action:       lambda:InvokeFunction
+      Principal:    apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/document-validator/*
+
+  DocumentValidatorHeadPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action:       lambda:InvokeFunction
+      Principal:    apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/document-validator/*
+
+  ProjectMetadataEnricherPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action:       lambda:InvokeFunction
+      Principal:    apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*/projectMetadataEnricher
+
+  HealthPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action:       lambda:InvokeFunction
+      Principal:    apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/health
+
+###############################################################################
+# Deployment & Stage
+###############################################################################
+  ConflictFreeApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      # 7 Lambda-proxy methods
+      - PMManagerAllProjectsMethod
+      - PMManagerByEmailMethod
+      - ProjectsManagerMethod
+      - DocumentValidatorGetMethod
+      - DocumentValidatorHeadMethod
+      - ProjectMetadataEnricherMethod
+      - HealthGetMethod
+      # 8 OPTIONS mock methods
+      - PMManagerOptionsMethod
+      - PMManagerAllProjectsOptionsMethod
+      - PMManagerByEmailOptionsMethod
+      - DocumentValidatorOptionsMethod
+      - DocumentValidatorIdOptionsMethod
+      - ProjectsManagerOptionsMethod
+      - ProjectMetadataEnricherOptionsMethod
+      - HealthOptionsMethod
+      # 5 key resources
+      - PMManagerResource
+      - DocumentValidatorResource
+      - ProjectsManagerResource
+      - ProjectMetadataEnricherResource
+      - HealthResource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      Description: !Sub "Conflict-free deployment ${DeploymentTimestamp}"
+
+  ConflictFreeProdStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref ConflictFreeApiGatewayDeployment
+      RestApiId:    !Ref ExistingApiId
+      StageName:    prod
+      Description:  !Sub "Prod stage ${DeploymentTimestamp}"
+
+###############################################################################
+# Outputs
+###############################################################################
+Outputs:
+  APIGatewayId:
+    Description: API Gateway ID
+    Value: !Ref ExistingApiId
+
+  DeploymentId:
+    Description: Deployment ID
+    Value: !Ref ConflictFreeApiGatewayDeployment
+
+  StageId:
+    Description: Stage ID
+    Value: !Ref ConflictFreeProdStage
+
+  HealthEndpoint:
+    Description: Health check
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/health"
+
+  MetadataEnricherEndpoint:
+    Description: Direct proxy
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projectMetadataEnricher"
