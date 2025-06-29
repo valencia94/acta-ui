@@ -15,7 +15,7 @@ echo -e "${BLUE}🚀 ACTA-UI Quick Deployment Check${NC}"
 echo "================================="
 
 # Configuration
-STACK_NAME="acta-simplified-backend"
+STACK_NAME="acta-api-wiring-stack-manual"
 REGION="us-east-2"
 API_ID="q2b9avfwv5"
 BASE_URL="https://${API_ID}.execute-api.${REGION}.amazonaws.com/prod"

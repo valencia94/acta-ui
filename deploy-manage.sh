@@ -117,7 +117,7 @@ local_deploy() {
         
         aws cloudformation deploy \
             --template-file infra/template-simplified-lambda.yaml \
-            --stack-name acta-simplified-backend \
+            --stack-name acta-api-wiring-stack-manual \
             --parameter-overrides \
               ExistingApiId=q2b9avfwv5 \
               ExistingApiRootResourceId=kw8f8zihjg \
@@ -145,7 +145,7 @@ show_logs() {
     echo -e "${BLUE}CloudFormation Events (if available):${NC}"
     if command -v aws >/dev/null 2>&1; then
         aws cloudformation describe-stack-events \
-            --stack-name acta-simplified-backend \
+            --stack-name acta-api-wiring-stack-manual \
             --region us-east-2 \
             --query 'StackEvents[0:9].[Timestamp,LogicalResourceId,ResourceStatus]' \
             --output table 2>/dev/null || echo "Stack not found or no events"

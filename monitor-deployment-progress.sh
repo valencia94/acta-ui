@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 # Configuration
 REPO_OWNER="valencia94"
 REPO_NAME="acta-ui"
-STACK_NAME="acta-simplified-backend"
+STACK_NAME="acta-api-wiring-stack-manual"
 REGION="us-east-2"
 API_ID="q2b9avfwv5"
 
