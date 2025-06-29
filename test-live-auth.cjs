@@ -36,7 +36,7 @@ async function testLiveAuthentication() {
           status: res.statusCode,
           size: data.length,
           hasReactRoot: data.includes('id="root"'),
-          hasAmplifyBundle: data.includes('index-B5NTLSft.js'),
+          hasAmplifyBundle: data.includes('index-DEyieCy3.js'),
           content: data
         }));
       });
@@ -55,7 +55,7 @@ async function testLiveAuthentication() {
       
       // Test the main JS bundle
       const jsTest = await new Promise((resolve, reject) => {
-        const req = https.get(`${FRONTEND_URL}/assets/index-B5NTLSft.js`, (res) => {
+        const req = https.get(`${FRONTEND_URL}/assets/index-DEyieCy3.js`, (res) => {
           let data = '';
           res.on('data', chunk => data += chunk);
           res.on('end', () => resolve({
