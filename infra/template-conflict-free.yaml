@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CONFLICT-FREE API Gateway wiring (PM endpoints → projectMetadataEnricher)
+Description: CONFLICT-FREE API – core PM routes + UI-compat alias paths
 
 ###############################################################################
 # Parameters
@@ -22,11 +22,11 @@ Parameters:
     Default: "20250629-000000"
 
 ###############################################################################
-# API Gateway resources
+# Core resources (pm-manager, projects-manager, document-validator)
 ###############################################################################
 Resources:
 
-  # ─── PM-Manager hierarchy ───────────────────────────────────
+  # ─── pm-manager/{...} ──────────────────────────────────────────
   PMManagerResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -48,7 +48,7 @@ Resources:
       ParentId:  !Ref PMManagerResource
       PathPart:  '{pmEmail}'
 
-  # ─── Document-Validator hierarchy ───────────────────────────
+  # ─── document-validator/{id} ───────────────────────────────────
   DocumentValidatorResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -63,7 +63,7 @@ Resources:
       ParentId:  !Ref DocumentValidatorResource
       PathPart:  '{projectId}'
 
-  # ─── Projects-Manager path ──────────────────────────────────
+  # ─── projects-manager (internal) ───────────────────────────────
   ProjectsManagerResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -71,7 +71,7 @@ Resources:
       ParentId:  !Ref ExistingApiRootResourceId
       PathPart:  projects-manager
 
-  # ─── NEW  /projectMetadataEnricher ──────────────────────────
+  # ─── direct proxy /projectMetadataEnricher ─────────────────────
   ProjectMetadataEnricherResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -79,18 +79,57 @@ Resources:
       ParentId:  !Ref ExistingApiRootResourceId
       PathPart:  projectMetadataEnricher
 
-  # ─── NEW  /health ───────────────────────────────────────────
-  HealthResource:
+###############################################################################
+# UI-compat alias resources
+###############################################################################
+  # /projects  → projectMetadataEnricher
+  ProjectsAliasResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId:  !Ref ExistingApiRootResourceId
-      PathPart:  health
+      PathPart:  projects
+
+  # /pm-projects
+  PMProjectsRootResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId:  !Ref ExistingApiRootResourceId
+      PathPart:  pm-projects
+
+  PMProjectsAllAliasResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId:  !Ref PMProjectsRootResource
+      PathPart:  all-projects
+
+  PMProjectsByEmailAliasResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId:  !Ref PMProjectsRootResource
+      PathPart:  '{pmEmail}'
+
+  # /check-document/{id}
+  CheckDocRootAliasResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId:  !Ref ExistingApiRootResourceId
+      PathPart:  check-document
+
+  CheckDocIdAliasResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId:  !Ref CheckDocRootAliasResource
+      PathPart:  '{projectId}'
 
 ###############################################################################
-# Lambda-proxy methods
+# Lambda-proxy METHODS (core)
 ###############################################################################
-  # PM-Manager
   PMManagerAllProjectsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -115,7 +154,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # Projects-Manager
   ProjectsManagerMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -128,7 +166,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # Document-Validator
   DocumentValidatorGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -153,7 +190,6 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # NEW  ANY /projectMetadataEnricher
   ProjectMetadataEnricherMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -166,12 +202,14 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # NEW  GET /health
-  HealthGetMethod:
+###############################################################################
+# Lambda-proxy METHODS (alias)
+###############################################################################
+  ProjectsAliasMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref HealthResource
+      ResourceId: !Ref ProjectsAliasResource
       HttpMethod: GET
       AuthorizationType: NONE
       Integration:
@@ -179,251 +217,240 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
+  PMProjectsAllAliasMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsAllAliasResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  PMProjectsByEmailAliasMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsByEmailAliasResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  CheckDocGetAliasMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref CheckDocIdAliasResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  CheckDocHeadAliasMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:  !Ref ExistingApiId
+      ResourceId: !Ref CheckDocIdAliasResource
+      HttpMethod: HEAD
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
 ###############################################################################
-# MOCK OPTIONS (explicit, duplicated — no macro)
+# OPTIONS methods for aliases (simplified CORS)
 ###############################################################################
-  PMManagerOptionsMethod:
+  ProjectsAliasOptions:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref PMManagerResource
-      AuthorizationType: NONE
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsAliasResource
       HttpMethod: OPTIONS
+      AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        RequestTemplates: { "application/json": "{\"statusCode\": 200}" }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS'"
               method.response.header.Access-Control-Allow-Headers: "'*'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Headers: true
 
-  PMManagerAllProjectsOptionsMethod:
+  PMProjectsAllAliasOptions:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref PMManagerAllProjectsResource
-      AuthorizationType: NONE
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsAllAliasResource
       HttpMethod: OPTIONS
+      AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        RequestTemplates: { "application/json": "{\"statusCode\": 200}" }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS'"
               method.response.header.Access-Control-Allow-Headers: "'*'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Headers: true
 
-  PMManagerByEmailOptionsMethod:
+  PMProjectsByEmailAliasOptions:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref PMManagerByEmailResource
-      AuthorizationType: NONE
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsByEmailAliasResource
       HttpMethod: OPTIONS
+      AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        RequestTemplates: { "application/json": "{\"statusCode\": 200}" }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS'"
               method.response.header.Access-Control-Allow-Headers: "'*'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Headers: true
 
-  DocumentValidatorOptionsMethod:
+  CheckDocAliasOptions:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref DocumentValidatorResource
-      AuthorizationType: NONE
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocIdAliasResource
       HttpMethod: OPTIONS
+      AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        RequestTemplates: { "application/json": "{\"statusCode\": 200}" }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS'"
               method.response.header.Access-Control-Allow-Headers: "'*'"
       MethodResponses:
         - StatusCode: 200
           ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Headers: true
-
-  DocumentValidatorIdOptionsMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref DocumentValidatorIdResource
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Headers: true
-
-  ProjectsManagerOptionsMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref ProjectsManagerResource
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Headers: true
-
-  ProjectMetadataEnricherOptionsMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref ProjectMetadataEnricherResource
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Headers: true
-
-  HealthOptionsMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId:  !Ref ExistingApiId
-      ResourceId: !Ref HealthResource
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Origin: true
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Headers: true
 
 ###############################################################################
-# Lambda permissions (5 original + 2 new)
+# Lambda-invoke permissions (12 total)
 ###############################################################################
   PMManagerAllProjectsPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action:       lambda:InvokeFunction
-      Principal:    apigateway.amazonaws.com
+      Action:  lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/all-projects
 
   PMManagerByEmailPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action:       lambda:InvokeFunction
-      Principal:    apigateway.amazonaws.com
+      Action:  lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/*
 
   ProjectsManagerPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action:       lambda:InvokeFunction
-      Principal:    apigateway.amazonaws.com
+      Action:  lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects-manager
 
   DocumentValidatorGetPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action:       lambda:InvokeFunction
-      Principal:    apigateway.amazonaws.com
+      Action:  lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/document-validator/*
 
   DocumentValidatorHeadPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action:       lambda:InvokeFunction
-      Principal:    apigateway.amazonaws.com
+      Action:  lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/document-validator/*
 
   ProjectMetadataEnricherPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action:       lambda:InvokeFunction
-      Principal:    apigateway.amazonaws.com
+      Action:  lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*/projectMetadataEnricher
 
-  HealthPermission:
+  # ─── Alias permissions ───────────────────────────────────────
+  ProjectsAliasPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action:       lambda:InvokeFunction
-      Principal:    apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/health
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects
+
+  PMProjectsAllAliasPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/all-projects
+
+  PMProjectsByEmailAliasPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
+
+  CheckDocGetAliasPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/check-document/*
+
+  CheckDocHeadAliasPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/check-document/*
 
 ###############################################################################
 # Deployment & Stage
@@ -431,15 +458,25 @@ Resources:
   ConflictFreeApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
-      # 7 Lambda-proxy methods
+      # original 6 proxy + projectMetadataEnricher
       - PMManagerAllProjectsMethod
       - PMManagerByEmailMethod
       - ProjectsManagerMethod
       - DocumentValidatorGetMethod
       - DocumentValidatorHeadMethod
       - ProjectMetadataEnricherMethod
-      - HealthGetMethod
-      # 8 OPTIONS methods
+      # alias proxy methods
+      - ProjectsAliasMethod
+      - PMProjectsAllAliasMethod
+      - PMProjectsByEmailAliasMethod
+      - CheckDocGetAliasMethod
+      - CheckDocHeadAliasMethod
+      # OPTIONS for aliases
+      - ProjectsAliasOptions
+      - PMProjectsAllAliasOptions
+      - PMProjectsByEmailAliasOptions
+      - CheckDocAliasOptions
+      # OPTIONS for core (already declared above)
       - PMManagerOptionsMethod
       - PMManagerAllProjectsOptionsMethod
       - PMManagerByEmailOptionsMethod
@@ -447,16 +484,17 @@ Resources:
       - DocumentValidatorIdOptionsMethod
       - ProjectsManagerOptionsMethod
       - ProjectMetadataEnricherOptionsMethod
-      - HealthOptionsMethod
-      # 5 resources
+      # resources that must exist first
       - PMManagerResource
       - DocumentValidatorResource
       - ProjectsManagerResource
       - ProjectMetadataEnricherResource
-      - HealthResource
+      - ProjectsAliasResource
+      - PMProjectsRootResource
+      - CheckDocRootAliasResource
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub "Conflict-free deployment ${DeploymentTimestamp}"
+      Description: !Sub \"Conflict-free deployment ${DeploymentTimestamp}\"
 
   ConflictFreeProdStage:
     Type: AWS::ApiGateway::Stage
@@ -464,7 +502,7 @@ Resources:
       DeploymentId: !Ref ConflictFreeApiGatewayDeployment
       RestApiId:    !Ref ExistingApiId
       StageName:    prod
-      Description:  !Sub "Prod stage ${DeploymentTimestamp}"
+      Description:  !Sub \"Prod stage ${DeploymentTimestamp}\"
 
 ###############################################################################
 # Outputs
@@ -475,17 +513,16 @@ Outputs:
     Value: !Ref ExistingApiId
 
   DeploymentId:
-    Description: Deployment ID
     Value: !Ref ConflictFreeApiGatewayDeployment
 
   StageId:
-    Description: Stage ID
     Value: !Ref ConflictFreeProdStage
 
-  HealthEndpoint:
-    Description: Health check URL
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/health"
+  ProjectsEndpoint:
+    Value: !Sub \"https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects\"
 
-  MetadataEnricherEndpoint:
-    Description: Direct proxy
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projectMetadataEnricher"
+  PMProjectsAllEndpoint:
+    Value: !Sub \"https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-projects/all-projects\"
+
+  CheckDocumentEndpoint:
+    Value: !Sub \"https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}\"
