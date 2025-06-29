@@ -101,7 +101,7 @@ jobs:
           
           aws cloudformation deploy \
             --template-file infra/template-simplified-lambda.yaml \
-            --stack-name acta-simplified-backend \
+            --stack-name acta-api-wiring-stack-manual \
             --parameter-overrides \
               ExistingApiId=q2b9avfwv5 \
               ExistingApiRootResourceId=kw8f8zihjg \

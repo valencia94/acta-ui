@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 TEMPLATE_FILE="infra/template-simplified-lambda.yaml"
-STACK_NAME="acta-simplified-backend-test"
+STACK_NAME="acta-api-wiring-stack-manual-test"
 API_ID="q2b9avfwv5"
 REGION="us-east-2"
 LAMBDA_ARN="arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher"
