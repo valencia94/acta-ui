@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CONFLICT-FREE API Gateway wiring – routes PM endpoints to projectMetadataEnricher (unique paths, no naming collisions)
+Description: CONFLICT-FREE API Gateway wiring – route PM endpoints to projectMetadataEnricher
 
+###############################################################################
+# Parameters
+###############################################################################
 Parameters:
   ExistingApiId:
     Type: String
@@ -27,9 +30,12 @@ Parameters:
     Default: "20250628-115000"
     Description: Deployment timestamp to force API Gateway redeployment
 
+###############################################################################
+# API Gateway Resources
+###############################################################################
 Resources:
   # ────────────────────────────────────────────────────────────
-  # API Gateway resources (unique paths)
+  # PM-Manager paths
   # ────────────────────────────────────────────────────────────
   PMManagerResource:
     Type: AWS::ApiGateway::Resource
@@ -52,6 +58,9 @@ Resources:
       ParentId: !Ref PMManagerResource
       PathPart: '{pmEmail}'
 
+  # ────────────────────────────────────────────────────────────
+  # Document-Validator paths
+  # ────────────────────────────────────────────────────────────
   DocumentValidatorResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -66,6 +75,9 @@ Resources:
       ParentId: !Ref DocumentValidatorResource
       PathPart: '{projectId}'
 
+  # ────────────────────────────────────────────────────────────
+  # Projects-Manager path
+  # ────────────────────────────────────────────────────────────
   ProjectsManagerResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -74,8 +86,28 @@ Resources:
       PathPart: projects-manager
 
   # ────────────────────────────────────────────────────────────
-  # Methods (all Lambda-proxy)
+  # NEW - projectMetadataEnricher proxy path
   # ────────────────────────────────────────────────────────────
+  ProjectMetadataEnricherResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: projectMetadataEnricher
+
+  # ────────────────────────────────────────────────────────────
+  # NEW - Health check path
+  # ────────────────────────────────────────────────────────────
+  HealthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: health
+
+###############################################################################
+# Methods (all Lambda proxy)
+###############################################################################
   PMManagerAllProjectsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -136,9 +168,35 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  # ────────────────────────────────────────────────────────────
-  # Lambda invoke permissions
-  # ────────────────────────────────────────────────────────────
+  # NEW – ANY /projectMetadataEnricher
+  ProjectMetadataEnricherMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectMetadataEnricherResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  # NEW – GET /health  (simple status ping)
+  HealthGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref HealthResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+###############################################################################
+# Lambda Permissions
+###############################################################################
   PMManagerAllProjectsPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -179,22 +237,51 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/document-validator/*
 
-  # ────────────────────────────────────────────────────────────
-  # Deployment & Stage
-  # ────────────────────────────────────────────────────────────
+  # NEW – permission for ANY /projectMetadataEnricher
+  ProjectMetadataEnricherPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*/projectMetadataEnricher
+
+  # NEW – permission for GET /health
+  HealthGetPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/health
+
+###############################################################################
+# Deployment & Stage
+###############################################################################
   ConflictFreeApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
+      # existing five methods
       - PMManagerAllProjectsMethod
       - PMManagerByEmailMethod
       - ProjectsManagerMethod
       - DocumentValidatorGetMethod
       - DocumentValidatorHeadMethod
+    
+      # new two methods
+      - ProjectMetadataEnricherMethod
+      - HealthGetMethod
+    
+      # existing five resources
       - PMManagerResource
       - PMManagerAllProjectsResource
       - PMManagerByEmailResource
       - DocumentValidatorIdResource
       - ProjectsManagerResource
+    
+      # new two resources
+      - ProjectMetadataEnricherResource
+      - HealthResource
     Properties:
       RestApiId: !Ref ExistingApiId
       Description: !Sub "Conflict-free backend deployment ${DeploymentTimestamp}"
@@ -207,25 +294,42 @@ Resources:
       StageName: prod
       Description: !Sub "Production stage for conflict-free backend ${DeploymentTimestamp}"
 
+###############################################################################
+# Outputs
+###############################################################################
 Outputs:
   APIGatewayId:
     Description: API Gateway ID
     Value: !Ref ExistingApiId
-    Export:
-      Name: !Sub "${AWS::StackName}-APIGatewayId"
 
   DeploymentId:
     Description: API Gateway Deployment ID
     Value: !Ref ConflictFreeApiGatewayDeployment
-    Export:
-      Name: !Sub "${AWS::StackName}-DeploymentId"
 
   StageId:
     Description: API Gateway Stage ID
     Value: !Ref ConflictFreeProdStage
-    Export:
-      Name: !Sub "${AWS::StackName}-StageId"
 
   PMManagerEndpoints:
-    Description: PM Manager Endpoints
-    Value: !Sub https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/
+    Description: PM Manager base path
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/"
+
+  DocumentValidatorEndpoints:
+    Description: Document Validator base path
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/document-validator/"
+
+  ProjectsManagerEndpoint:
+    Description: Projects Manager list
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects-manager"
+
+  MetadataEnricherEndpoint:
+    Description: Direct ProjectMetadataEnricher proxy
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projectMetadataEnricher"
+
+  HealthEndpoint:
+    Description: Health check
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/health"
+
+  DeploymentTimestamp:
+    Description: Timestamp used to force deployment
+    Value: !Ref DeploymentTimestamp
