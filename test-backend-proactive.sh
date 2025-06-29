@@ -69,6 +69,8 @@ REQ_PERMS=(
   "ProjectsManagerPermission"
   "DocumentValidatorGetPermission"
   "DocumentValidatorHeadPermission"
+  "ProjectMetadataEnricherPermission"   # NEW
+  "HealthPermission"                    # NEW
 )
 for p in "${REQ_PERMS[@]}"; do
   grep -q "$p:" "$TEMPLATE_FILE" || { echo -e "${RED}    ❌ Missing $p${NC}"; exit 1; }
