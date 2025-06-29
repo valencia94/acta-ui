@@ -115,8 +115,8 @@ jobs:
         ARTIFACT_BUCKET: ${{ secrets.SAM_ARTIFACTS_BUCKET }}
       run: |
         sam package \
-          --template-file infra/template-conflict-free.yaml \
-          --output-template-file infra/template-conflict-free-packaged.yaml \
+          --template-file infra/template-permissions-only.yaml \
+          --output-template-file infra/template-permissions-only-packaged.yaml \
           --s3-bucket "$ARTIFACT_BUCKET" \
           --region ${{ secrets.AWS_REGION }}
 
@@ -125,7 +125,7 @@ jobs:
         set -euxo pipefail
         TS=$(date +%Y%m%d-%H%M%S)
         sam deploy \
-          --template-file infra/template-conflict-free-packaged.yaml \
+          --template-file infra/template-permissions-only-packaged.yaml \
           --stack-name acta-api-wiring-stack-manual \
           --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
           --region ${{ secrets.AWS_REGION }} \
