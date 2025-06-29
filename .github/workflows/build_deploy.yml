@@ -1,9 +1,14 @@
-name: Build and Deploy 
+name: Build and Deploy
 
 on:
   push:
     branches: [develop]
   workflow_dispatch: {}
+
+# ▶︎ Serialize all backend updates
+concurrency:
+  group: backend-deploy
+  cancel-in-progress: true
 
 jobs:
   ci_deploy:
@@ -12,7 +17,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-
     steps:
       # ───────────────────────────────────────────────────────────────
       # 0. Checkout repo
@@ -126,7 +130,7 @@ jobs:
           TS=$(date +%Y%m%d-%H%M%S)
           sam deploy \
             --template-file infra/template-conflict-free-packaged.yaml \
-            --stack-name Yo me puedo quedar aca con los niños si queres \
+            --stack-name acta-api-wiring-stack-manual \        # ← fixed flag
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --region ${{ secrets.AWS_REGION }} \
             --no-fail-on-empty-changeset \
