@@ -3,6 +3,7 @@
 ## 📊 **Current Status with CORRECT Lambda Mappings:**
 
 ### ✅ **WORKING Endpoints:**
+
 ```bash
 ✅ GET /health                          → HealthCheck (200 OK)
 ✅ POST /send-approval-email            → sendApprovalEmail (400 - needs project_id, but function works)
@@ -10,6 +11,7 @@
 ```
 
 ### ⚠️ **PARTIALLY WORKING (Lambda Issues):**
+
 ```bash
 ⚠️ GET /timeline/{id}                   → getTimeline (502 - Lambda function error)
 ⚠️ GET /project-summary/{id}            → projectMetadataEnricher (502 - Lambda function error)
@@ -17,14 +19,16 @@
 ```
 
 ### ❌ **NOT WORKING (Route Issues):**
+
 ```bash
 ❌ GET /download-acta/{id}              → getDownloadActa (404 - API Gateway route missing)
 ```
 
 ### ❌ **MISSING ENTIRELY (No Backend):**
+
 ```bash
 ❌ GET /projects                        → NO LAMBDA FUNCTION
-❌ GET /pm-projects/all-projects        → NO LAMBDA FUNCTION  
+❌ GET /pm-projects/all-projects        → NO LAMBDA FUNCTION
 ❌ GET /pm-projects/{pmEmail}           → NO LAMBDA FUNCTION
 ❌ GET /check-document/{id}             → NO LAMBDA FUNCTION
 ❌ HEAD /check-document/{id}            → NO LAMBDA FUNCTION
@@ -35,10 +39,12 @@
 ## 🎯 **KEY FINDINGS:**
 
 ### **1. Correct Lambda Function Usage:**
+
 - ✅ `/project-summary/{id}` should use `projectMetadataEnricher` (not `GetProjectSummary`)
 - ✅ Other Lambda functions match what we expected
 
 ### **2. Function Status Analysis:**
+
 - **HealthCheck**: ✅ Perfect
 - **sendApprovalEmail**: ✅ Works (just needs proper input format)
 - **handleApprovalCallback**: ✅ Works (just needs proper input format)
@@ -48,6 +54,7 @@
 - **getDownloadActa**: ❌ 404 (API Gateway route not properly deployed)
 
 ### **3. Missing Functions:**
+
 - Projects management (list, filter by PM)
 - Document status checking in S3
 - S3 download URL generation
@@ -59,11 +66,12 @@
 ### **Phase 1: Fix Existing Lambda Issues (Quick Wins)**
 
 1. **Fix 502 Lambda Errors:**
+
    ```bash
    # CloudWatch debugging needed for:
    - getTimeline (Request ID: c547c108-3e7b-440a-b3e9-51d380a14731)
    - projectMetadataEnricher (Request ID: 4c0bbe54-e4ad-41bf-a277-bdba3e4ab79a)
-   
+
    # Common fixes:
    - Increase timeout from 3s to 30s
    - Increase memory allocation
@@ -72,6 +80,7 @@
    ```
 
 2. **Fix 404 Download Route:**
+
    ```bash
    # API Gateway issue - route exists but not properly deployed
    # Need to redeploy API Gateway stage
@@ -86,6 +95,7 @@
 ### **Phase 2: Add Missing Critical Functions**
 
 1. **Deploy New Lambda Functions:**
+
    ```bash
    # Already created:
    - lambda-functions/projects-manager.py
@@ -105,6 +115,7 @@
 ## 🚀 **Ready to Deploy Fixes:**
 
 ### **Deployment Command:**
+
 ```bash
 # Set environment variables
 export AWS_ROLE_ARN="your-role-arn"
@@ -116,6 +127,7 @@ export ACTA_API_ROOT_ID="your-root-resource-id"
 ```
 
 ### **Expected Results After Deployment:**
+
 ```bash
 # Before: 44% functionality (3/7 working)
 # After:  85-100% functionality (7-9/9 working)
@@ -137,11 +149,13 @@ export ACTA_API_ROOT_ID="your-root-resource-id"
 ## 📈 **Testing Plan Post-Deployment:**
 
 1. **Validate Fixed Functions:**
+
    ```bash
    ./test-full-workflow.sh
    ```
 
 2. **Test Frontend Integration:**
+
    ```bash
    # Test React app with corrected backend
    # Verify dashboard functionality

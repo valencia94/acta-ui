@@ -6,7 +6,7 @@ Parameters:
     Type: String
     Default: q2b9avfwv5
     Description: Existing API Gateway ID
-    
+
   ExistingApiRootResourceId:
     Type: String
     Default: kw8f8zihjg
@@ -24,11 +24,10 @@ Parameters:
 
   DeploymentTimestamp:
     Type: String
-    Default: "20250628-030500"
+    Default: '20250628-030500'
     Description: Deployment timestamp to force API Gateway redeployment
 
 Resources:
-
   SimplifiedPMProjectsResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -182,7 +181,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       StageName: prod
-      Description: !Sub "Simplified backend deployment ${DeploymentTimestamp}"
+      Description: !Sub 'Simplified backend deployment ${DeploymentTimestamp}'
 
 Outputs:
   APIGatewayId:

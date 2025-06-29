@@ -3,6 +3,7 @@
 ## 🔍 **EXISTING Lambda Functions (from your infrastructure):**
 
 ### ✅ **What ACTUALLY EXISTS:**
+
 ```yaml
 # Real deployed Lambda functions:
 1. ProjectPlaceDataExtractor    → POST /extract-project-place/{id}     ✅ EXISTS (timeout issue)
@@ -14,32 +15,37 @@
 ```
 
 ### ❌ **What's MISSING for Frontend:**
+
 ```typescript
 // Frontend expects these but NO Lambda functions exist:
-GET /projects                           // ❌ NO LAMBDA FUNCTION
-GET /pm-projects/all-projects          // ❌ NO LAMBDA FUNCTION  
-GET /pm-projects/{pmEmail}             // ❌ NO LAMBDA FUNCTION
-GET /project-summary/{id}              // ❌ NO LAMBDA FUNCTION (we thought this existed!)
-HEAD /check-document/{projectId}       // ❌ NO LAMBDA FUNCTION
-GET /check-document/{projectId}        // ❌ NO LAMBDA FUNCTION
+GET / projects; // ❌ NO LAMBDA FUNCTION
+GET / pm - projects / all - projects; // ❌ NO LAMBDA FUNCTION
+GET / pm - projects / { pmEmail }; // ❌ NO LAMBDA FUNCTION
+GET / project - summary / { id }; // ❌ NO LAMBDA FUNCTION (we thought this existed!)
+HEAD / check - document / { projectId }; // ❌ NO LAMBDA FUNCTION
+GET / check - document / { projectId }; // ❌ NO LAMBDA FUNCTION
 ```
 
 ## 🚨 **CORRECTED ANALYSIS:**
 
 ### **Problem 1: Missing GetProjectSummary Lambda**
+
 - Frontend calls: `getSummary(id)` → `/project-summary/{id}`
 - **Reality: NO Lambda function exists for project summary!**
 - This explains the 502 error - there's no function to call
 
 ### **Problem 2: Missing Projects Management**
+
 - Frontend calls: `getProjectsByPM()`, `getPMProjectsWithSummary()`
 - **Reality: NO Lambda functions exist for projects management!**
 
 ### **Problem 3: Missing Document Status**
+
 - Frontend calls: `checkDocumentInS3()`
 - **Reality: NO Lambda function exists for document status!**
 
 ### **Problem 4: We Missed HandleApprovalCallback**
+
 - **Exists but not in our analysis:** `/handleApprovalCallback`
 - This might be used by email approval workflows
 
@@ -73,6 +79,7 @@ def lambda_handler(event, context):
 ## 🎯 **TESTING PLAN - Updated:**
 
 ### **Test EXISTING Functions:**
+
 ```bash
 # These should work once Lambda issues are fixed:
 curl "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/health"                      # ✅ WORKS
@@ -97,7 +104,7 @@ GetProjectSummaryArn=arn:aws:lambda:us-east-2:703671891952:function:GetProjectSu
 
 # But these DO exist and work:
 GetTimelineArn=arn:aws:lambda:us-east-2:703671891952:function:GetTimeline                 # ✅ EXISTS
-GetDownloadActaArn=arn:aws:lambda:us-east-2:703671891952:function:GetDownloadActa         # ✅ EXISTS  
+GetDownloadActaArn=arn:aws:lambda:us-east-2:703671891952:function:GetDownloadActa         # ✅ EXISTS
 SendApprovalEmailArn=arn:aws:lambda:us-east-2:703671891952:function:SendApprovalEmail     # ✅ EXISTS
 ProjectPlaceDataExtractorArn=arn:aws:lambda:us-east-2:703671891952:function:ProjectPlaceDataExtractor # ✅ EXISTS
 HealthCheckArn=arn:aws:lambda:us-east-2:703671891952:function:HealthCheck                 # ✅ EXISTS
@@ -109,14 +116,16 @@ HandleApprovalCallbackArn=arn:aws:lambda:us-east-2:703671891952:function:HandleA
 ## 🎯 **CORRECTED ACTION PLAN:**
 
 ### **Phase 1: Create Missing Critical Lambda Functions**
+
 ```bash
 # Must create these Lambda functions:
 1. GetProjectSummary           # For /project-summary/{id}
-2. ProjectsManager            # For /projects, /pm-projects/*  
+2. ProjectsManager            # For /projects, /pm-projects/*
 3. DocumentStatus             # For /check-document/{id}
 ```
 
 ### **Phase 2: Fix Existing Lambda Issues**
+
 ```bash
 # Debug these existing functions:
 1. GetTimeline                # 502 error - check CloudWatch logs
@@ -125,6 +134,7 @@ HandleApprovalCallbackArn=arn:aws:lambda:us-east-2:703671891952:function:HandleA
 ```
 
 ### **Phase 3: Update CloudFormation**
+
 ```bash
 # Add missing routes and Lambda integrations
 # Include HandleApprovalCallback in wiring

@@ -12,28 +12,28 @@ phases:
       - echo "========================================"
       - aws --version
       - node --version
-      
+
   pre_build:
     commands:
       - echo "🔐 Verifying AWS credentials and permissions..."
       - aws sts get-caller-identity
       - echo "📋 Current AWS Identity confirmed"
-      
+
       - echo "🔍 Checking existing Lambda functions..."
       - aws lambda list-functions --query 'Functions[].FunctionName' --output table || echo "No Lambda access yet"
-      
+
       - echo "📦 Verifying Lambda function packages..."
       - ls -la lambda-functions/fixed/
-      
+
   build:
     commands:
       - echo "🛠️ Deploying Lambda Functions"
       - echo "=============================="
-      
+
       # Lambda execution role ARN
       - LAMBDA_ROLE="arn:aws:iam::703671891952:role/acta-ui-lambda-execution-role"
       - API_GATEWAY_ARN="arn:aws:execute-api:us-east-2:703671891952:q2b9avfwv5/*"
-      
+
       - echo "🔧 Deploying GetProjectSummary..."
       - |
         if aws lambda get-function --function-name GetProjectSummary >/dev/null 2>&1; then
@@ -56,7 +56,7 @@ phases:
               "S3_BUCKET":"acta-ui-documents"
             }'
         fi
-      
+
       - echo "🔗 Adding API Gateway permissions for GetProjectSummary..."
       - |
         aws lambda add-permission \
@@ -66,7 +66,7 @@ phases:
           --principal apigateway.amazonaws.com \
           --source-arn $API_GATEWAY_ARN \
           2>/dev/null || echo "⚠️ Permission already exists"
-      
+
       - echo "🔧 Deploying GetTimeline..."
       - |
         if aws lambda get-function --function-name GetTimeline >/dev/null 2>&1; then
@@ -88,7 +88,7 @@ phases:
               "TABLE_NAME":"acta-ui-projects"
             }'
         fi
-      
+
       - echo "🔗 Adding API Gateway permissions for GetTimeline..."
       - |
         aws lambda add-permission \
@@ -98,7 +98,7 @@ phases:
           --principal apigateway.amazonaws.com \
           --source-arn $API_GATEWAY_ARN \
           2>/dev/null || echo "⚠️ Permission already exists"
-      
+
       - echo "🔧 Deploying GetDownloadActa..."
       - |
         if aws lambda get-function --function-name GetDownloadActa >/dev/null 2>&1; then
@@ -120,7 +120,7 @@ phases:
               "S3_BUCKET":"acta-ui-documents"
             }'
         fi
-      
+
       - echo "🔗 Adding API Gateway permissions for GetDownloadActa..."
       - |
         aws lambda add-permission \
@@ -130,7 +130,7 @@ phases:
           --principal apigateway.amazonaws.com \
           --source-arn $API_GATEWAY_ARN \
           2>/dev/null || echo "⚠️ Permission already exists"
-      
+
       - echo "🔧 Deploying SendApprovalEmail..."
       - |
         if aws lambda get-function --function-name SendApprovalEmail >/dev/null 2>&1; then
@@ -152,7 +152,7 @@ phases:
               "SES_SOURCE_EMAIL":"noreply@acta-ui.com"
             }'
         fi
-      
+
       - echo "🔗 Adding API Gateway permissions for SendApprovalEmail..."
       - |
         aws lambda add-permission \
@@ -162,15 +162,15 @@ phases:
           --principal apigateway.amazonaws.com \
           --source-arn $API_GATEWAY_ARN \
           2>/dev/null || echo "⚠️ Permission already exists"
-  
+
   post_build:
     commands:
       - echo "🔍 Verifying deployment..."
       - echo "========================="
-      
+
       - echo "📋 Listing all Lambda functions:"
       - aws lambda list-functions --query 'Functions[].FunctionName' --output table
-      
+
       - echo "🧪 Testing Lambda functions..."
       - |
         for func in GetProjectSummary GetTimeline GetDownloadActa SendApprovalEmail; do
@@ -182,15 +182,15 @@ phases:
             echo "❌ Failed"
           fi
         done
-      
+
       - echo "🌐 Running comprehensive system test..."
       - chmod +x test-complete-system.sh
       - ./test-complete-system.sh
-      
+
       - echo "🎉 DEPLOYMENT COMPLETE!"
       - echo "======================"
       - echo "✅ All Lambda functions deployed"
-      - echo "✅ API Gateway permissions configured"  
+      - echo "✅ API Gateway permissions configured"
       - echo "✅ System test completed"
       - echo "🔗 API Gateway URL: https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
 

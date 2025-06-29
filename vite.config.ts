@@ -26,4 +26,19 @@ export default defineConfig({
   preview: {
     port: 5000,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate PDF.js into its own chunk
+          'pdf-viewer': ['react-pdf'],
+          // Separate other large dependencies
+          vendor: ['react', 'react-dom'],
+          ui: ['framer-motion', 'lucide-react'],
+        },
+      },
+    },
+    // Increase chunk size warning limit for PDF.js
+    chunkSizeWarningLimit: 600,
+  },
 });

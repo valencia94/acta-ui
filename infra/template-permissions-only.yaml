@@ -21,7 +21,6 @@ Parameters:
     Description: Used to force deployment
 
 Resources:
-
   # Lambda Permissions for existing API Gateway resources
   ProjectsGetPermission:
     Type: AWS::Lambda::Permission
@@ -133,41 +132,41 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       StageName: prod
-      Description: !Sub "Deployment at ${DeploymentTimestamp}"
+      Description: !Sub 'Deployment at ${DeploymentTimestamp}'
 
 Outputs:
   ProjectsEndpoint:
     Description: Projects endpoint URL
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects'
     Export:
-      Name: !Sub "${AWS::StackName}-ProjectsEndpoint"
-  
+      Name: !Sub '${AWS::StackName}-ProjectsEndpoint'
+
   PMManagerAllEndpoint:
     Description: PM Manager all projects endpoint URL
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/all-projects"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/all-projects'
     Export:
-      Name: !Sub "${AWS::StackName}-PMManagerAllEndpoint"
-  
+      Name: !Sub '${AWS::StackName}-PMManagerAllEndpoint'
+
   PMManagerByEmailEndpoint:
     Description: PM Manager by email endpoint URL
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/{pmEmail}"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/{pmEmail}'
     Export:
-      Name: !Sub "${AWS::StackName}-PMManagerByEmailEndpoint"
-  
+      Name: !Sub '${AWS::StackName}-PMManagerByEmailEndpoint'
+
   CheckDocumentEndpoint:
     Description: Check document endpoint URL
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}'
     Export:
-      Name: !Sub "${AWS::StackName}-CheckDocumentEndpoint"
+      Name: !Sub '${AWS::StackName}-CheckDocumentEndpoint'
 
   GenerateActaEndpoint:
     Description: Generate ACTA endpoint URL
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/project/{projectId}/generate-acta"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/project/{projectId}/generate-acta'
     Export:
-      Name: !Sub "${AWS::StackName}-GenerateActaEndpoint"
+      Name: !Sub '${AWS::StackName}-GenerateActaEndpoint'
 
   SendApprovalEndpoint:
     Description: Send approval endpoint URL
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/project/{projectId}/send-approval"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/project/{projectId}/send-approval'
     Export:
-      Name: !Sub "${AWS::StackName}-SendApprovalEndpoint"
+      Name: !Sub '${AWS::StackName}-SendApprovalEndpoint'

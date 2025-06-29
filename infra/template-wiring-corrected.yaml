@@ -6,7 +6,7 @@ Parameters:
     Type: String
   ExistingApiRootResourceId:
     Type: String
-  
+
   # EXISTING Lambda ARNs (these are deployed and working)
   GetTimelineArn:
     Type: String
@@ -32,7 +32,7 @@ Parameters:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:HealthCheck
     Description: Existing Lambda function for health checks
-  
+
   # NEW Lambda ARNs (need to be created)
   ProjectsManagerArn:
     Type: String
@@ -47,7 +47,7 @@ Resources:
   # ═══════════════════════════════════════════════════════════════
   # EXISTING RESOURCES (fix the ones that have issues)
   # ═══════════════════════════════════════════════════════════════
-  
+
   # Health Resource (WORKING - keep as is)
   HealthResource:
     Type: AWS::ApiGateway::Resource
@@ -94,7 +94,7 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetTimelineArn}/invocations
-        TimeoutInMillis: 29000  # Increase timeout to 29 seconds
+        TimeoutInMillis: 29000 # Increase timeout to 29 seconds
 
   # Project Summary Resources (FIX 502 ERROR)
   ProjectSummaryResource:
@@ -122,7 +122,7 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetProjectSummaryArn}/invocations
-        TimeoutInMillis: 29000  # Increase timeout
+        TimeoutInMillis: 29000 # Increase timeout
 
   # Download Acta Resources (FIX 404 ERROR)
   DownloadActaResource:
@@ -177,7 +177,7 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectPlaceDataExtractorArn}/invocations
-        TimeoutInMillis: 29000  # Increase timeout for long operations
+        TimeoutInMillis: 29000 # Increase timeout for long operations
 
   # Send Approval Email Resource
   SendApprovalEmailResource:
@@ -395,22 +395,22 @@ Resources:
       - CheckDocumentHeadMethod
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub "Corrected API deployment - ${AWS::StackName}"
+      Description: !Sub 'Corrected API deployment - ${AWS::StackName}'
       StageName: prod
 
 Outputs:
   ActaApiInvokeURL:
     Description: Base URL for invoking the corrected API
     Value: !Sub https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/
-    
+
   ExistingEndpoints:
     Description: Existing endpoints that should work after fixes
-    Value: "health, timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email"
-    
+    Value: 'health, timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email'
+
   NewEndpoints:
     Description: New endpoints added for missing functionality
-    Value: "projects, pm-projects/all-projects, pm-projects/{email}, check-document/{id}"
-    
+    Value: 'projects, pm-projects/all-projects, pm-projects/{email}, check-document/{id}'
+
   RequiredNewLambdas:
     Description: Lambda functions that need to be created
-    Value: "ProjectsManager, DocumentStatus"
+    Value: 'ProjectsManager, DocumentStatus'

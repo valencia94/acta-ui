@@ -5,6 +5,7 @@
 The CloudFormation template has been updated with the required resource dependencies to fix the "STAGE API DID NOT FORM" error.
 
 ### Changes Made:
+
 - Added **ALL resource dependencies** to `SimplifiedApiGatewayDeployment`
 - Updated deployment timestamp to force redeployment
 - Resources now included in DependsOn:
@@ -17,6 +18,7 @@ The CloudFormation template has been updated with the required resource dependen
 ## 🎯 DEPLOYMENT OPTIONS
 
 ### Option 1: GitHub Actions (Recommended)
+
 1. Go to your GitHub repository
 2. Navigate to **Actions** tab
 3. Find "🎯 Deploy Simplified Backend (Lambda-Centric)" workflow
@@ -26,6 +28,7 @@ The CloudFormation template has been updated with the required resource dependen
 7. Click **Run workflow**
 
 ### Option 2: Manual AWS CLI Deployment
+
 ```bash
 aws cloudformation deploy \
   --template-file infra/template-simplified-lambda.yaml \
@@ -39,6 +42,7 @@ aws cloudformation deploy \
 ```
 
 ### Option 3: Local Script (if AWS CLI available)
+
 ```bash
 ./deploy-simplified-backend.sh
 ```
@@ -55,7 +59,7 @@ curl "$BASE_URL/pm-projects/all-projects"
 curl "$BASE_URL/pm-projects/test@example.com"
 curl "$BASE_URL/projects"
 
-# Document Status (should return 403 - auth required)  
+# Document Status (should return 403 - auth required)
 curl "$BASE_URL/check-document/test"
 curl -I "$BASE_URL/check-document/test"
 
@@ -75,7 +79,7 @@ curl "$BASE_URL/health"
 ✅ API Gateway stage `/prod` forms correctly  
 ✅ All endpoints return proper HTTP status codes  
 ✅ No "STAGE API DID NOT FORM" errors  
-✅ CloudFormation deployment completes successfully  
+✅ CloudFormation deployment completes successfully
 
 ## 🔄 NEXT STEPS (After Successful Deployment)
 

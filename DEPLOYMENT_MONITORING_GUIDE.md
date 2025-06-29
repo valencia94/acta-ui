@@ -5,10 +5,13 @@ This document describes the comprehensive deployment monitoring and testing suit
 ## 📋 Available Tools
 
 ### 🎯 **Main Management Interface**
+
 ```bash
 ./deploy-manage.sh [command]
 ```
+
 **Unified interface for all deployment operations:**
+
 - `test-pre` - Run pre-deployment validation
 - `test-post` - Run post-deployment endpoint tests
 - `check` - Quick deployment status check
@@ -22,10 +25,13 @@ This document describes the comprehensive deployment monitoring and testing suit
 ### 🧪 **Testing Scripts**
 
 #### **Pre-Deployment Testing**
+
 ```bash
 ./test-backend-proactive.sh
 ```
+
 **Validates deployment readiness:**
+
 - ✅ CloudFormation template syntax and structure
 - ✅ Required parameters and resources
 - ✅ Lambda permissions configuration
@@ -34,10 +40,13 @@ This document describes the comprehensive deployment monitoring and testing suit
 - ✅ Git repository status
 
 #### **Post-Deployment Testing**
+
 ```bash
 ./test-backend-postdeploy.sh [api-id] [region] [stage]
 ```
+
 **Comprehensive endpoint validation:**
+
 - ✅ PM Projects endpoints functionality
 - ✅ Document status endpoints
 - ✅ Performance consistency testing
@@ -48,10 +57,13 @@ This document describes the comprehensive deployment monitoring and testing suit
 ### 📊 **Monitoring Scripts**
 
 #### **Full Deployment Monitor**
+
 ```bash
 ./monitor-deployment-progress.sh [--watch]
 ```
+
 **Comprehensive deployment tracking:**
+
 - 🔍 GitHub Actions workflow status
 - 🔍 CloudFormation stack status and events
 - 🔍 API Gateway endpoint health
@@ -60,10 +72,13 @@ This document describes the comprehensive deployment monitoring and testing suit
 - 📋 Next steps and troubleshooting guidance
 
 #### **Quick Status Check**
+
 ```bash
 ./quick-deploy-check.sh
 ```
+
 **Rapid deployment status overview:**
+
 - ⚡ CloudFormation stack status
 - ⚡ Critical endpoint health checks
 - ⚡ Quick action recommendations
@@ -72,6 +87,7 @@ This document describes the comprehensive deployment monitoring and testing suit
 ## 🎯 **Deployment Workflow Integration**
 
 ### **GitHub Actions Integration**
+
 The tools are integrated into your GitHub Actions workflows:
 
 1. **Pre-Deployment Testing**: Runs `test-backend-proactive.sh` before deployment
@@ -79,6 +95,7 @@ The tools are integrated into your GitHub Actions workflows:
 3. **Automated Validation**: Catches issues early in the CI/CD pipeline
 
 ### **Local Development Workflow**
+
 ```bash
 # 1. Pre-deployment validation
 ./deploy-manage.sh test-pre
@@ -102,6 +119,7 @@ The tools are integrated into your GitHub Actions workflows:
 ## 📊 **Monitoring Dashboard**
 
 ### **Real-time Status**
+
 ```bash
 # Continuous monitoring (refreshes every 30s)
 ./deploy-manage.sh watch
@@ -111,6 +129,7 @@ watch -n 30 ./deploy-manage.sh check
 ```
 
 ### **Key Indicators**
+
 - **🟢 Green**: Successful deployment/operation
 - **🟡 Yellow**: In progress or auth required (expected)
 - **🔴 Red**: Failed or error state
@@ -119,19 +138,23 @@ watch -n 30 ./deploy-manage.sh check
 ## 🔗 **Integration Points**
 
 ### **GitHub Actions**
+
 - Monitors: `https://github.com/valencia94/acta-ui/actions`
 - Triggers on push to `develop` branch
 - Manual trigger via `workflow_dispatch`
 
 ### **AWS Console Links**
+
 - **CloudFormation**: Stack `acta-simplified-backend` in `us-east-2`
 - **API Gateway**: ID `q2b9avfwv5` in `us-east-2`
 - **Lambda Functions**: Region `us-east-2`
 
 ### **API Endpoints**
+
 **Base URL**: `https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod`
 
 **New PM/Admin Endpoints** (routed to `projectMetadataEnricher`):
+
 - `GET /pm-projects/all-projects`
 - `GET /pm-projects/{pmEmail}`
 - `GET /projects`
@@ -143,6 +166,7 @@ watch -n 30 ./deploy-manage.sh check
 ### **Common Issues & Solutions**
 
 #### **CloudFormation Stack Not Found**
+
 ```bash
 # Check if deployment is running
 ./deploy-manage.sh monitor
@@ -152,16 +176,19 @@ watch -n 30 ./deploy-manage.sh check
 ```
 
 #### **403 Auth Required (Expected)**
+
 - ✅ **This is normal** for PM endpoints
 - Indicates endpoints exist and Lambda is responding
 - Authentication will be handled by your frontend
 
 #### **404 Not Found**
+
 - ❌ Endpoint not created or deployment failed
 - Check CloudFormation stack events
 - Re-run deployment
 
 #### **Deployment Monitoring**
+
 ```bash
 # Watch deployment in real-time
 ./deploy-manage.sh watch
@@ -176,6 +203,7 @@ watch -n 30 ./deploy-manage.sh check
 ## 📈 **Performance Metrics**
 
 The monitoring tools track:
+
 - **Response Times**: Typical 88-199ms for API endpoints
 - **Success Rates**: Tracks consistency across multiple requests
 - **Error Rates**: Monitors for 4xx/5xx errors
@@ -192,6 +220,7 @@ The monitoring tools track:
 ## 🔄 **Continuous Integration**
 
 Your deployment pipeline now includes:
+
 - ✅ **Proactive Testing**: Prevents deployment issues
 - ✅ **Automated Deployment**: GitHub Actions triggered on push
 - ✅ **Post-Deployment Validation**: Confirms successful deployment

@@ -24,21 +24,20 @@ Parameters:
     Description: Used to force deployment
 
 Resources:
-
   # /projects
   ProjectsResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ParentId:   !Ref ExistingApiRootResourceId
-      PathPart:   projects
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: projects
 
   ProjectsGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref ProjectsResource
-      HttpMethod:     GET
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsResource
+      HttpMethod: GET
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
@@ -48,13 +47,13 @@ Resources:
   ProjectsOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref ProjectsResource
-      HttpMethod:     OPTIONS
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsResource
+      HttpMethod: OPTIONS
       AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { "application/json": "{\"statusCode\": 200}" }
+        RequestTemplates: { 'application/json': '{"statusCode": 200}' }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
@@ -72,23 +71,23 @@ Resources:
   PMManagerResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ParentId:   !Ref ExistingApiRootResourceId
-      PathPart:   pm-manager
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: pm-manager
 
   PMManagerAllResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ParentId:   !Ref PMManagerResource
-      PathPart:   all-projects
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMManagerResource
+      PathPart: all-projects
 
   PMManagerAllGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref PMManagerAllResource
-      HttpMethod:     GET
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMManagerAllResource
+      HttpMethod: GET
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
@@ -98,13 +97,13 @@ Resources:
   PMManagerAllOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref PMManagerAllResource
-      HttpMethod:     OPTIONS
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMManagerAllResource
+      HttpMethod: OPTIONS
       AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { "application/json": "{\"statusCode\": 200}" }
+        RequestTemplates: { 'application/json': '{"statusCode": 200}' }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
@@ -121,16 +120,16 @@ Resources:
   PMManagerEmailResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ParentId:   !Ref PMManagerResource
-      PathPart:   '{pmEmail}'
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMManagerResource
+      PathPart: '{pmEmail}'
 
   PMManagerEmailGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref PMManagerEmailResource
-      HttpMethod:     GET
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMManagerEmailResource
+      HttpMethod: GET
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
@@ -140,13 +139,13 @@ Resources:
   PMManagerEmailOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref PMManagerEmailResource
-      HttpMethod:     OPTIONS
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMManagerEmailResource
+      HttpMethod: OPTIONS
       AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { "application/json": "{\"statusCode\": 200}" }
+        RequestTemplates: { 'application/json': '{"statusCode": 200}' }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
@@ -164,23 +163,23 @@ Resources:
   CheckDocRootResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ParentId:   !Ref ExistingApiRootResourceId
-      PathPart:   check-document
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: check-document
 
   CheckDocIdResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      RestApiId:  !Ref ExistingApiId
-      ParentId:   !Ref CheckDocRootResource
-      PathPart:   '{projectId}'
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref CheckDocRootResource
+      PathPart: '{projectId}'
 
   CheckDocGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref CheckDocIdResource
-      HttpMethod:     GET
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocIdResource
+      HttpMethod: GET
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
@@ -190,9 +189,9 @@ Resources:
   CheckDocHeadMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref CheckDocIdResource
-      HttpMethod:     HEAD
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocIdResource
+      HttpMethod: HEAD
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
@@ -202,13 +201,13 @@ Resources:
   CheckDocIdOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId:      !Ref ExistingApiId
-      ResourceId:     !Ref CheckDocIdResource
-      HttpMethod:     OPTIONS
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocIdResource
+      HttpMethod: OPTIONS
       AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { "application/json": "{\"statusCode\": 200}" }
+        RequestTemplates: { 'application/json': '{"statusCode": 200}' }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
@@ -222,9 +221,9 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Headers: true
 
-###############################################################################
-# Lambda invoke permissions
-###############################################################################
+  ###############################################################################
+  # Lambda invoke permissions
+  ###############################################################################
   # Core permissions (7 required)
   PMManagerAllProjectsPermission:
     Type: AWS::Lambda::Permission
@@ -315,9 +314,9 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/check-document/*
 
-###############################################################################
-# Deployment & Stage
-###############################################################################
+  ###############################################################################
+  # Deployment & Stage
+  ###############################################################################
   ConflictFreeApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
@@ -332,22 +331,22 @@ Resources:
       - CheckDocIdOptionsMethod
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub "ACTA-UI PM Enricher deployment ${DeploymentTimestamp}"
+      Description: !Sub 'ACTA-UI PM Enricher deployment ${DeploymentTimestamp}'
 
   ConflictFreeProdStage:
     Type: AWS::ApiGateway::Stage
     Properties:
-      RestApiId:    !Ref ExistingApiId
+      RestApiId: !Ref ExistingApiId
       DeploymentId: !Ref ConflictFreeApiGatewayDeployment
-      StageName:    prod
-      Description:  !Sub "Prod stage – ${DeploymentTimestamp}"
+      StageName: prod
+      Description: !Sub 'Prod stage – ${DeploymentTimestamp}'
 
 Outputs:
   ProjectsEndpoint:
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects'
   PMManagerAllEndpoint:
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/all-projects"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/all-projects'
   PMManagerByEmailEndpoint:
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/{pmEmail}"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/{pmEmail}'
   CheckDocumentEndpoint:
-    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}"
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}'

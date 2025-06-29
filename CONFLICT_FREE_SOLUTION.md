@@ -13,16 +13,18 @@ The CloudFormation deployment was failing due to:
 Created a **conflict-free template** (`template-conflict-free.yaml`) that uses **unique resource names**:
 
 ### 🔄 **Resource Name Mapping:**
-| Original (Conflicting) | New (Conflict-Free) | Endpoint Path |
-|----------------------|-------------------|---------------|
-| `pm-projects` | `pm-manager` | `/pm-manager/` |
-| `check-document` | `document-validator` | `/document-validator/` |
-| `projects` | `projects-manager` | `/projects-manager` |
+
+| Original (Conflicting) | New (Conflict-Free)  | Endpoint Path          |
+| ---------------------- | -------------------- | ---------------------- |
+| `pm-projects`          | `pm-manager`         | `/pm-manager/`         |
+| `check-document`       | `document-validator` | `/document-validator/` |
+| `projects`             | `projects-manager`   | `/projects-manager`    |
 
 ### 🎯 **New Endpoint Structure:**
+
 ```
 ✅ GET /pm-manager/all-projects          → projectMetadataEnricher
-✅ GET /pm-manager/{pmEmail}             → projectMetadataEnricher  
+✅ GET /pm-manager/{pmEmail}             → projectMetadataEnricher
 ✅ GET /projects-manager                 → projectMetadataEnricher
 ✅ GET /document-validator/{projectId}   → projectMetadataEnricher
 ✅ HEAD /document-validator/{projectId}  → projectMetadataEnricher
@@ -31,11 +33,13 @@ Created a **conflict-free template** (`template-conflict-free.yaml`) that uses *
 ## 🚀 **Deployment Instructions:**
 
 ### **Option 1: Local Deployment (Mac)**
+
 ```bash
 ./deploy-conflict-free-backend.sh
 ```
 
 ### **Option 2: Manual AWS CLI**
+
 ```bash
 aws cloudformation deploy \
   --template-file infra/template-conflict-free.yaml \
@@ -72,6 +76,7 @@ curl "$BASE_URL/health"
 ## 📝 **Frontend Update Required:**
 
 Update frontend code to use new endpoint paths:
+
 - `/pm-projects/` → `/pm-manager/`
 - `/check-document/` → `/document-validator/`
 - `/projects` → `/projects-manager`
@@ -82,7 +87,7 @@ Update frontend code to use new endpoint paths:
 ✅ **Clean deployment** without rollbacks  
 ✅ **Proper stage creation** - fixes "STAGE API DID NOT FORM"  
 ✅ **All integrations working** - no "No integration defined" errors  
-✅ **Scalable approach** - can add more endpoints easily  
+✅ **Scalable approach** - can add more endpoints easily
 
 ---
 

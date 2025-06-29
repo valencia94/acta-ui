@@ -3,10 +3,11 @@
 ## 🔍 **REAL vs EXPECTED Endpoints**
 
 ### ✅ **What ACTUALLY EXISTS (from deploy-wiring.sh):**
+
 ```bash
 # These Lambda functions are deployed:
 GetTimeline                   -> /timeline/{id}           ✅ EXISTS (502 Lambda error)
-GetDownloadActa              -> /download-acta/{id}       ✅ EXISTS (404 route issue)  
+GetDownloadActa              -> /download-acta/{id}       ✅ EXISTS (404 route issue)
 GetProjectSummary            -> /project-summary/{id}     ✅ EXISTS (502 Lambda error)
 SendApprovalEmail            -> /send-approval-email      ✅ EXISTS (not tested)
 ProjectPlaceDataExtractor    -> /extract-project-place/{id} ✅ EXISTS (timeout)
@@ -14,14 +15,15 @@ HealthCheck                  -> /health                   ✅ EXISTS & WORKING
 ```
 
 ### ❌ **What FRONTEND EXPECTS but DOESN'T EXIST:**
+
 ```typescript
 // From src/lib/api.ts - these are NOT deployed:
-GET /projects                     // ❌ NO LAMBDA EXISTS
-GET /pm-projects/all-projects     // ❌ NO LAMBDA EXISTS
-GET /pm-projects/{pmEmail}        // ❌ NO LAMBDA EXISTS
-HEAD /check-document/{id}         // ❌ NO LAMBDA EXISTS
-GET /check-document/{id}          // ❌ NO LAMBDA EXISTS
-GET /s3-download-url/{id}         // ❌ NO LAMBDA EXISTS
+GET / projects; // ❌ NO LAMBDA EXISTS
+GET / pm - projects / all - projects; // ❌ NO LAMBDA EXISTS
+GET / pm - projects / { pmEmail }; // ❌ NO LAMBDA EXISTS
+HEAD / check - document / { id }; // ❌ NO LAMBDA EXISTS
+GET / check - document / { id }; // ❌ NO LAMBDA EXISTS
+GET / s3 - download - url / { id }; // ❌ NO LAMBDA EXISTS
 ```
 
 ---
@@ -29,18 +31,22 @@ GET /s3-download-url/{id}         // ❌ NO LAMBDA EXISTS
 ## 🔧 **ROOT CAUSE ANALYSIS**
 
 ### **Problem 1: Lambda Function Errors (502)**
+
 - `GetTimeline` and `GetProjectSummary` Lambda functions exist but are failing
 - **Fix:** Debug CloudWatch logs for these specific functions
 
-### **Problem 2: Download Route Mismatch (404)**  
+### **Problem 2: Download Route Mismatch (404)**
+
 - `GetDownloadActa` function exists but route returns 404
 - **Fix:** Check API Gateway deployment or route configuration
 
 ### **Problem 3: Missing Project Management**
+
 - Frontend expects project listing but **NO Lambda function exists for this**
 - **Fix:** Create new Lambda function OR modify frontend
 
 ### **Problem 4: Missing Document Status**
+
 - Frontend expects S3 document checking but **NO Lambda function exists**
 - **Fix:** Create new Lambda function OR modify frontend
 
@@ -49,9 +55,11 @@ GET /s3-download-url/{id}         // ❌ NO LAMBDA EXISTS
 ## 🎯 **CORRECTION PLAN - 3 Options**
 
 ### **Option A: Fix Existing Only (QUICK - 2 hours)**
+
 Focus on making existing functions work:
 
 1. **Fix Lambda 502 Errors:**
+
    ```bash
    # Debug these specific functions in CloudWatch:
    - GetTimeline (Request ID: c547c108-3e7b-440a-b3e9-51d380a14731)
@@ -59,6 +67,7 @@ Focus on making existing functions work:
    ```
 
 2. **Fix Download 404 Error:**
+
    ```bash
    # Check API Gateway deployment status
    # Verify /download-acta/{id} route is properly deployed
@@ -67,15 +76,17 @@ Focus on making existing functions work:
 3. **Modify Frontend to Remove Missing Features:**
    ```typescript
    // Remove or mock these calls in src/lib/api.ts:
-   - getProjectsByPM()          // Mock with hardcoded data
-   - checkDocumentInS3()        // Remove S3 status checking
-   - getPMProjectsWithSummary() // Simplify dashboard
+   -getProjectsByPM() - // Mock with hardcoded data
+     checkDocumentInS3() - // Remove S3 status checking
+     getPMProjectsWithSummary(); // Simplify dashboard
    ```
 
 ### **Option B: Create Missing Functions (COMPLETE - 1-2 days)**
+
 Create all missing Lambda functions:
 
 1. **New Lambda Functions to Create:**
+
    ```python
    # projects-manager-lambda.py
    import json
@@ -89,15 +100,15 @@ Create all missing Lambda functions:
                ]
            })
        }
-   
-   # document-status-lambda.py  
+
+   # document-status-lambda.py
    import json
    import boto3
    def lambda_handler(event, context):
        # Check S3 document status
        project_id = event['pathParameters']['projectId']
        format = event['queryStringParameters'].get('format', 'pdf')
-       
+
        # Mock S3 check for now
        return {
            'statusCode': 200,
@@ -116,7 +127,8 @@ Create all missing Lambda functions:
    DocumentStatusArn=arn:aws:lambda:us-east-2:703671891952:function:DocumentStatus
    ```
 
-### **Option C: Hybrid Fix (RECOMMENDED - 4-6 hours)**  
+### **Option C: Hybrid Fix (RECOMMENDED - 4-6 hours)**
+
 Fix existing + add critical missing functions:
 
 1. **Phase 1:** Fix existing Lambda 502 errors
@@ -131,6 +143,7 @@ Fix existing + add critical missing functions:
 ### **IMMEDIATE (Fix 502 Errors):**
 
 1. **Check CloudWatch Logs:**
+
    ```bash
    # In AWS Console CloudWatch:
    # Search for GetTimeline function logs
@@ -144,7 +157,7 @@ Fix existing + add critical missing functions:
    ```python
    # Likely issues in Lambda functions:
    # 1. Incorrect environment variables
-   # 2. Missing IAM permissions  
+   # 2. Missing IAM permissions
    # 3. Timeout too short (default 3 seconds)
    # 4. Memory allocation too low
    # 5. Missing dependencies or imports
@@ -153,16 +166,17 @@ Fix existing + add critical missing functions:
 ### **SHORT-TERM (Add Critical Missing Endpoints):**
 
 1. **Create Projects Manager Lambda:**
+
    ```python
    # Save as projects-manager.py and deploy
    import json
    import os
-   
+
    def lambda_handler(event, context):
        try:
            path = event.get('path', '')
            method = event.get('httpMethod', 'GET')
-           
+
            # Handle different project endpoints
            if '/pm-projects/all-projects' in path:
                return get_all_projects()
@@ -171,18 +185,18 @@ Fix existing + add critical missing functions:
                return get_projects_by_pm(pm_email)
            elif '/projects' in path:
                return get_projects_list()
-               
+
            return {
                'statusCode': 404,
                'body': json.dumps({'error': 'Endpoint not found'})
            }
-           
+
        except Exception as e:
            return {
                'statusCode': 500,
                'body': json.dumps({'error': str(e)})
            }
-   
+
    def get_all_projects():
        # TODO: Connect to your actual data source
        mock_projects = [
@@ -200,7 +214,7 @@ Fix existing + add critical missing functions:
                'projects': mock_projects
            })
        }
-   
+
    def get_projects_by_pm(pm_email):
        # TODO: Filter by actual PM email
        mock_projects = [
@@ -209,7 +223,7 @@ Fix existing + add critical missing functions:
        return {
            'statusCode': 200,
            'headers': {
-               'Content-Type': 'application/json', 
+               'Content-Type': 'application/json',
                'Access-Control-Allow-Origin': '*'
            },
            'body': json.dumps({
@@ -217,29 +231,30 @@ Fix existing + add critical missing functions:
                'projects': mock_projects
            })
        }
-   
+
    def get_projects_list():
        return get_all_projects()
    ```
 
 2. **Create Document Status Lambda:**
+
    ```python
    # Save as document-status.py and deploy
    import json
    import boto3
    from botocore.exceptions import ClientError
-   
+
    def lambda_handler(event, context):
        try:
            project_id = event['pathParameters']['projectId']
            format = event.get('queryStringParameters', {}).get('format', 'pdf')
            method = event.get('httpMethod', 'GET')
-           
+
            # Check S3 for document
            s3_client = boto3.client('s3')
            bucket_name = 'projectplace-dv-2025-x9a7b'  # Your S3 bucket
            object_key = f"acta-documents/{project_id}.{format}"
-           
+
            try:
                response = s3_client.head_object(Bucket=bucket_name, Key=object_key)
                document_exists = True
@@ -252,7 +267,7 @@ Fix existing + add critical missing functions:
                    size = 0
                else:
                    raise e
-           
+
            if method == 'HEAD':
                return {
                    'statusCode': 200 if document_exists else 404,
@@ -277,7 +292,7 @@ Fix existing + add critical missing functions:
                        'project_id': project_id
                    })
                }
-               
+
        except Exception as e:
            return {
                'statusCode': 500,

@@ -5,21 +5,26 @@
 ### ✅ **Why Lambda-Centric is the BEST Choice:**
 
 #### **1. Simplicity & Maintainability**
+
 ```typescript
 // Instead of: Frontend → API → DynamoDB → Response
 // You get: Frontend → Lambda → Response (with enriched data)
 
 // Single API call gets everything:
-const projectData = await fetch('/projectMetadataEnricher?projectId=123&pmEmail=john@company.com')
+const projectData = await fetch(
+  '/projectMetadataEnricher?projectId=123&pmEmail=john@company.com'
+);
 ```
 
 #### **2. Cost & Performance Benefits**
+
 - **No DynamoDB costs** for simple queries
 - **Faster response times** (no DB round trips)
 - **Better caching** (Lambda can cache externally fetched data)
 - **Easier scaling** (Lambda auto-scales, no DB provisioning)
 
 #### **3. Data Consistency**
+
 - **Single source of truth** in `projectMetadataEnricher`
 - **Real-time data** (always fresh from external APIs)
 - **No sync issues** between DB and external sources
@@ -27,6 +32,7 @@ const projectData = await fetch('/projectMetadataEnricher?projectId=123&pmEmail=
 ### 🚀 **Recommended Implementation:**
 
 #### **Enhanced `projectMetadataEnricher` Endpoint:**
+
 ```typescript
 // Make it accept multiple parameters:
 GET /projectMetadataEnricher?projectId=123                    // Single project
@@ -36,29 +42,30 @@ GET /projectMetadataEnricher?action=bulkGenerate&projects=[]  // Bulk operations
 ```
 
 #### **Frontend Data Management:**
+
 ```typescript
 // Use browser storage for UI state:
 class ProjectDataManager {
-  private cache = new Map<string, ProjectData>()
-  
+  private cache = new Map<string, ProjectData>();
+
   async getProjectData(projectId: string): Promise<ProjectData> {
     // Check cache first
     if (this.cache.has(projectId)) {
-      return this.cache.get(projectId)!
+      return this.cache.get(projectId)!;
     }
-    
+
     // Fetch from Lambda
-    const data = await fetch(`/projectMetadataEnricher?projectId=${projectId}`)
-    this.cache.set(projectId, data)
-    
+    const data = await fetch(`/projectMetadataEnricher?projectId=${projectId}`);
+    this.cache.set(projectId, data);
+
     // Optionally persist to localStorage
-    localStorage.setItem(`project_${projectId}`, JSON.stringify(data))
-    
-    return data
+    localStorage.setItem(`project_${projectId}`, JSON.stringify(data));
+
+    return data;
   }
-  
+
   async getAllProjectsForPM(pmEmail: string): Promise<ProjectData[]> {
-    return await fetch(`/projectMetadataEnricher?pmEmail=${pmEmail}`)
+    return await fetch(`/projectMetadataEnricher?pmEmail=${pmEmail}`);
   }
 }
 ```
@@ -66,16 +73,19 @@ class ProjectDataManager {
 ### 🔧 **Implementation Strategy:**
 
 #### **Phase 1: Enhance Existing Lambda (RECOMMENDED)**
+
 1. **Modify `projectMetadataEnricher`** to accept additional parameters
 2. **Update API Gateway** to route all project queries to this Lambda
 3. **Update frontend** to use single endpoint for all project data
 
 #### **Phase 2: Client-Side Data Management**
+
 1. **Implement caching** in browser (localStorage/sessionStorage)
 2. **Add real-time updates** (WebSocket or polling)
 3. **Optimize for offline** (service worker caching)
 
 #### **Phase 3: Advanced Features**
+
 1. **Background sync** for S3 document status
 2. **Progressive loading** for large datasets
 3. **Smart prefetching** based on user behavior
@@ -83,6 +93,7 @@ class ProjectDataManager {
 ### 🎯 **Data Storage Options (My Recommendations):**
 
 #### **Option A: Browser-Only Storage (Simplest)**
+
 ```typescript
 // Use browser APIs for UI state:
 - localStorage: Persistent project data
@@ -92,6 +103,7 @@ class ProjectDataManager {
 ```
 
 #### **Option B: Hybrid Approach (Balanced)**
+
 ```typescript
 // Cache frequently accessed data in browser
 // Use Lambda for real-time/computed data
@@ -99,6 +111,7 @@ class ProjectDataManager {
 ```
 
 #### **Option C: Cloud Storage (Future Growth)**
+
 ```typescript
 // If you need multi-device sync:
 - S3: Store user preferences/settings
@@ -119,17 +132,20 @@ class ProjectDataManager {
 ### 🔧 **Next Steps (Priority Order):**
 
 #### **High Priority:**
+
 1. **Test current `projectMetadataEnricher`** with authentication
 2. **Enhance Lambda** to accept PM email parameters
 3. **Update frontend** to use single endpoint
 4. **Implement browser caching**
 
 #### **Medium Priority:**
+
 1. **Add document status checking** to the Lambda
 2. **Implement bulk operations**
 3. **Add real-time updates**
 
 #### **Low Priority:**
+
 1. **Add cloud storage** if multi-device sync needed
 2. **Implement offline support**
 3. **Add advanced caching strategies**

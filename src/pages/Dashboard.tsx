@@ -15,6 +15,7 @@ import { toast } from 'react-hot-toast';
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
 import DocumentStatus from '@/components/DocumentStatus';
 import Header from '@/components/Header';
+import PDFPreview from '@/components/PDFPreview';
 import PMProjectManager from '@/components/PMProjectManager';
 import ProjectTable, { Project } from '@/components/ProjectTable';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,6 +34,10 @@ export default function Dashboard() {
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'manual' | 'pm'>('pm'); // Default to PM mode
+
+  // PDF Preview state
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>('');
 
   // Check if user has admin access
   const isAdmin =
@@ -414,6 +419,80 @@ export default function Dashboard() {
     }
   }
 
+  // Preview PDF with enhanced UI
+  async function handlePreviewPdf() {
+    if (!projectId || actionLoading) return;
+
+    const loadingToast = toast.loading(
+      `Preparing PDF preview for project ${projectId}...`
+    );
+    setActionLoading(true);
+
+    try {
+      console.log(`🔍 Previewing PDF for project: ${projectId}`);
+
+      // Check if document exists first
+      const documentExists = await checkDocumentInS3(projectId, 'pdf');
+      if (!documentExists.available) {
+        toast.dismiss(loadingToast);
+        toast.error(
+          `No PDF document found for project ${projectId}. Please generate the document first.`,
+          { duration: 6000 }
+        );
+        return;
+      }
+
+      // Get the PDF download URL
+      const downloadResult = await getS3DownloadUrl(projectId, 'pdf');
+
+      if (!downloadResult.success || !downloadResult.downloadUrl) {
+        console.error(
+          '❌ Failed to get S3 download URL for preview:',
+          downloadResult.error
+        );
+        toast.error(
+          downloadResult.error ||
+            'Failed to get PDF URL for preview. Please try again.',
+          { duration: 8000 }
+        );
+        return;
+      }
+
+      const pdfUrl = downloadResult.downloadUrl;
+      const fileName = `project-${projectId}-acta.pdf`;
+
+      console.log(`🔗 Got PDF URL for preview: ${pdfUrl.substring(0, 100)}...`);
+
+      // Set preview state
+      setPdfPreviewUrl(pdfUrl);
+      setPdfPreviewFileName(fileName);
+
+      toast.success(
+        'PDF preview loaded! You can now view the document in full screen.',
+        { duration: 3000 }
+      );
+    } catch (error) {
+      console.error('❌ Preview PDF error:', error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        toast.error(
+          `PDF not found for project "${projectId}". Please generate the document first.`,
+          { duration: 8000 }
+        );
+      } else {
+        toast.error(`Failed to load PDF preview: ${errorMessage}`, {
+          duration: 8000,
+        });
+      }
+    } finally {
+      toast.dismiss(loadingToast);
+      setActionLoading(false);
+    }
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100 flex items-center justify-center">
@@ -588,6 +667,7 @@ export default function Dashboard() {
                 onSendForApproval={handleSendForApproval}
                 onDownloadWord={() => handleDownload('docx')}
                 onDownloadPdf={() => handleDownload('pdf')}
+                onPreviewPdf={handlePreviewPdf}
                 disabled={!projectId || actionLoading}
               />
             </div>
@@ -754,6 +834,7 @@ export default function Dashboard() {
                   onSendForApproval={handleSendForApproval}
                   onDownloadWord={() => handleDownload('docx')}
                   onDownloadPdf={() => handleDownload('pdf')}
+                  onPreviewPdf={handlePreviewPdf}
                   disabled={!projectId || actionLoading}
                 />
               </div>
@@ -790,6 +871,7 @@ export default function Dashboard() {
                   onSendForApproval={handleSendForApproval}
                   onDownloadWord={() => handleDownload('docx')}
                   onDownloadPdf={() => handleDownload('pdf')}
+                  onPreviewPdf={handlePreviewPdf}
                   disabled={!projectId || actionLoading}
                 />
               </div>
@@ -838,6 +920,16 @@ export default function Dashboard() {
             <ProjectTable data={projects} />
           </div>
         </motion.div>
+
+        {/* PDF Preview Component */}
+        {pdfPreviewUrl && (
+          <PDFPreview
+            isOpen={true}
+            pdfUrl={pdfPreviewUrl}
+            fileName={pdfPreviewFileName}
+            onClose={() => setPdfPreviewUrl(null)}
+          />
+        )}
       </main>
     </div>
   );

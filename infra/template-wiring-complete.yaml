@@ -34,7 +34,7 @@ Resources:
   # ═══════════════════════════════════════════════════════════════
   # EXISTING RESOURCES (unchanged)
   # ═══════════════════════════════════════════════════════════════
-  
+
   # Timeline Resources
   TimelineResource:
     Type: AWS::ApiGateway::Resource
@@ -443,8 +443,8 @@ Outputs:
 
   MissingEndpointsAdded:
     Description: Summary of endpoints added in this update
-    Value: "projects, pm-projects/*, check-document/{id}, s3-download-url/{id}"
+    Value: 'projects, pm-projects/*, check-document/{id}, s3-download-url/{id}'
 
   RequiredLambdaFunctions:
     Description: New Lambda functions that need to be created
-    Value: "GetProjectsListArn, CheckDocumentStatusArn, GetS3DownloadUrlArn"
+    Value: 'GetProjectsListArn, CheckDocumentStatusArn, GetS3DownloadUrlArn'

@@ -3,14 +3,16 @@
 ## ✅ Current System Status
 
 ### **Templates Ready for Deployment:**
+
 - ✅ `infra/template-conflict-free.yaml` - **11 permissions verified**
 - ✅ All required Lambda invoke permissions present
 - ✅ API Gateway routing configuration complete
 - ✅ DynamoDB integration configured
 
 ### **Scripts Ready:**
+
 - ✅ `test-backend-proactive.sh` - Template validation
-- ✅ `test-backend-postdeploy.sh` - Endpoint testing  
+- ✅ `test-backend-postdeploy.sh` - Endpoint testing
 - ✅ `test-live-system.sh` - Real credentials testing
 - ✅ `deploy-simplified-backend.sh` - Deployment automation
 
@@ -19,6 +21,7 @@
 Since AWS CLI is experiencing timeout issues in this environment, here's how to deploy manually:
 
 ### **Step 1: CloudFormation Deployment**
+
 1. Go to **AWS CloudFormation Console** (us-east-2)
 2. Click **Create Stack** > **With new resources**
 3. Upload template: `infra/template-conflict-free.yaml`
@@ -31,6 +34,7 @@ Since AWS CLI is experiencing timeout issues in this environment, here's how to 
 7. Click **Create Stack**
 
 ### **Step 2: Verify Deployment**
+
 1. Wait for stack status: **CREATE_COMPLETE**
 2. Go to **API Gateway Console**
 3. Find API: `q2b9avfwv5`
@@ -40,12 +44,13 @@ Since AWS CLI is experiencing timeout issues in this environment, here's how to 
    - `/document-validator/{projectId}` → Lambda function
 
 ### **Step 3: Test Endpoints**
+
 ```bash
 # Test admin access
 curl -H "Authorization: Bearer <token>" \
   https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/pm-manager/all-projects
 
-# Test PM access  
+# Test PM access
 curl -H "Authorization: Bearer <token>" \
   https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/pm-manager/valencia942003@gmail.com
 ```
@@ -63,22 +68,26 @@ If manual deployment is preferred, trigger the GitHub Actions workflow:
 ## 📊 Expected Results
 
 ### **API Endpoints (with auth):**
+
 - `GET /pm-manager/all-projects` → **Admin sees ALL ~390 projects**
 - `GET /pm-manager/{email}` → **PM sees filtered projects**
 - `GET /document-validator/{id}` → **Document status check**
 - `HEAD /document-validator/{id}` → **Document existence check**
 
 ### **Frontend Behavior:**
+
 - **Admin (`valencia942003@gmail.com`)**: Dashboard shows ALL projects
 - **PM Users**: Dashboard shows only their projects (filtered by email)
 
 ## 🧪 Testing with Real Credentials
 
 Use the test credentials you provided:
+
 - **User**: `ACTA_UI_USER` (from secrets)
 - **Password**: `ACTA_UI_PW` (from secrets)
 
 Test scenarios:
+
 1. **Admin login** → Should see all ~390 projects
 2. **PM login** → Should see filtered subset
 3. **Document access** → Should work for accessible projects
@@ -90,7 +99,7 @@ Test scenarios:
 ✅ **API Gateway**: Routes properly mapped  
 ✅ **Lambda Functions**: All handlers implemented  
 ✅ **DynamoDB**: Integration confirmed (~390 projects)  
-✅ **Testing**: Scripts ready for validation  
+✅ **Testing**: Scripts ready for validation
 
 ---
 

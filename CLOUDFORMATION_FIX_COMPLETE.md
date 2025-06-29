@@ -5,31 +5,37 @@
 The CloudFormation deployment failed with `UPDATE_ROLLBACK_IN_PROGRESS` because the template was trying to create API Gateway resources that already exist from our manual setup:
 
 ```
-Failed resources: CheckDocHeadAliasPermission, ProjectsAliasPermission, 
-PMManagerResource, ProjectsManagerPermission, PMManagerAllProjectsPermission, 
-PMManagerByEmailPermission, DocumentValidatorGetPermission, 
-PMProjectsAllAliasPermission, ProjectMetadataEnricherPermission, 
-CheckDocRootResource, ProjectsResource, PMProjectsByEmailAliasPermission, 
+Failed resources: CheckDocHeadAliasPermission, ProjectsAliasPermission,
+PMManagerResource, ProjectsManagerPermission, PMManagerAllProjectsPermission,
+PMManagerByEmailPermission, DocumentValidatorGetPermission,
+PMProjectsAllAliasPermission, ProjectMetadataEnricherPermission,
+CheckDocRootResource, ProjectsResource, PMProjectsByEmailAliasPermission,
 DocumentValidatorHeadPermission, CheckDocGetAliasPermission
 ```
 
 ## ✅ **SOLUTION IMPLEMENTED:**
 
 ### **1. New Permissions-Only Template**
+
 Created `infra/template-permissions-only.yaml` that:
+
 - ✅ **Only manages Lambda permissions** (no API Gateway resource creation)
 - ✅ **Works with existing manually created API Gateway resources**
 - ✅ **Includes all required Lambda permissions for all endpoints**
 - ✅ **Creates API deployment to make changes active**
 
 ### **2. Updated GitHub Actions Workflow**
+
 Modified `build_deploy.yml` to use the new template:
+
 - ✅ **Uses `template-permissions-only.yaml`** instead of `template-conflict-free.yaml`
 - ✅ **Same deployment process** but without resource conflicts
 - ✅ **All other steps remain unchanged**
 
 ### **3. CloudFormation Recovery Script**
+
 Created `fix-cloudformation-stack.sh` to:
+
 - ✅ **Check current stack status**
 - ✅ **Wait for rollback completion if needed**
 - ✅ **Provide guidance for next steps**
@@ -37,7 +43,9 @@ Created `fix-cloudformation-stack.sh` to:
 ## 🔧 **IMMEDIATE ACTIONS REQUIRED:**
 
 ### **Option 1: Wait for Automatic Recovery (Recommended)**
+
 The GitHub Actions workflow has built-in logic to handle stuck stacks:
+
 ```yaml
 # Wait / cancel busy stack
 - name: ⏳ Ensure backend stack free
@@ -52,6 +60,7 @@ The GitHub Actions workflow has built-in logic to handle stuck stacks:
 2. **Then deploy**: Once rollback completes, it will deploy with the new permissions-only template
 
 ### **Option 2: Manual Recovery (If Needed)**
+
 If you have AWS CLI access:
 
 ```bash
@@ -65,8 +74,9 @@ gh workflow run build_deploy.yml
 ## 📋 **WHAT THE NEW TEMPLATE DOES:**
 
 ### **✅ Lambda Permissions (Managed by CloudFormation):**
+
 - `GET /projects` → Lambda permission
-- `GET /pm-manager/all-projects` → Lambda permission  
+- `GET /pm-manager/all-projects` → Lambda permission
 - `GET /pm-manager/{pmEmail}` → Lambda permission
 - `GET /check-document/{projectId}` → Lambda permission
 - `GET /project/{projectId}/generate-acta` → Lambda permission
@@ -74,6 +84,7 @@ gh workflow run build_deploy.yml
 - All OPTIONS methods for CORS
 
 ### **✅ API Gateway Resources (Already Exist Manually):**
+
 - `/pm-manager` resource ✅ (created manually)
 - `/pm-manager/all-projects` resource ✅ (created manually)
 - `/pm-manager/{pmEmail}` resource ✅ (created manually)
@@ -89,11 +100,13 @@ gh workflow run build_deploy.yml
 ## 🔍 **MONITORING:**
 
 ### **GitHub Actions Progress:**
+
 1. Go to: https://github.com/valencia94/acta-ui/actions
 2. Watch for "Build and Deploy" workflow
 3. Should show: ✅ Build → ✅ Deploy Backend → ✅ Deploy Frontend
 
 ### **CloudFormation Status:**
+
 - Stack: `acta-api-wiring-stack-manual`
 - Expected final status: `UPDATE_COMPLETE`
 - Resources: Only Lambda permissions (no API Gateway resources)
@@ -110,7 +123,7 @@ gh workflow run build_deploy.yml
 ## 🚀 **NEXT STEPS:**
 
 1. **Let the workflow complete** - It will handle the stuck stack automatically
-2. **Verify endpoints** - All should continue working as before  
+2. **Verify endpoints** - All should continue working as before
 3. **Monitor logs** - Check for any unexpected issues
 4. **Document success** - Update deployment documentation
 

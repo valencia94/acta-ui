@@ -3,6 +3,7 @@
 ## 🚀 **Lambda-Centric Approach - Implementation Details**
 
 ### ✅ **CURRENT SITUATION:**
+
 - ✅ `projectMetadataEnricher` Lambda exists and works
 - ✅ Frontend expects specific PM/Admin API calls
 - ✅ API Gateway routes need to be simplified
@@ -10,6 +11,7 @@
 ### 🔧 **RECOMMENDED SOLUTION:**
 
 #### **Single Lambda Strategy:**
+
 Instead of creating multiple new Lambda functions, **enhance the existing `projectMetadataEnricher`** to handle all project queries.
 
 ### 📝 **API Gateway Mapping (Simplified):**
@@ -17,7 +19,7 @@ Instead of creating multiple new Lambda functions, **enhance the existing `proje
 ```yaml
 # Route ALL project-related calls to projectMetadataEnricher:
 /project-summary/{id}           → projectMetadataEnricher
-/pm-projects/all-projects       → projectMetadataEnricher  
+/pm-projects/all-projects       → projectMetadataEnricher
 /pm-projects/{pmEmail}          → projectMetadataEnricher
 /projects                       → projectMetadataEnricher
 ```
@@ -29,14 +31,14 @@ def lambda_handler(event, context):
     """
     Enhanced projectMetadataEnricher that handles all project queries
     """
-    
+
     # Extract parameters from different sources
     path_params = event.get('pathParameters', {})
     query_params = event.get('queryStringParameters', {}) or {}
-    
+
     # Determine the action based on the path
     path = event.get('path', '')
-    
+
     if '/pm-projects/all-projects' in path:
         return get_all_projects_for_admin()
     elif '/pm-projects/' in path:
@@ -54,12 +56,12 @@ def lambda_handler(event, context):
 
 def get_projects_for_pm(pm_email):
     """Get all projects for a specific PM with enriched metadata"""
-    
+
     # This can fetch from external APIs, S3, or any data source
     # No DynamoDB needed!
-    
+
     projects = fetch_projects_from_external_source(pm_email)
-    
+
     enriched_projects = []
     for project in projects:
         enriched = {
@@ -67,7 +69,7 @@ def get_projects_for_pm(pm_email):
             'project_name': project.get('name', f"Project {project['id']}"),
             'pm_email': pm_email,
             'status': project.get('status', 'active'),
-            
+
             # Enriched metadata (computed on-demand)
             'has_acta_document': check_s3_document_exists(project['id']),
             'last_activity': get_last_activity(project['id']),
@@ -75,7 +77,7 @@ def get_projects_for_pm(pm_email):
             'document_status': check_document_generation_status(project['id']),
         }
         enriched_projects.append(enriched)
-    
+
     return {
         'statusCode': 200,
         'body': json.dumps({
@@ -100,13 +102,13 @@ export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
   // This will now call the enhanced projectMetadataEnricher
   if (pmEmail === 'admin-all-access') {
     const response = await get<PMProjectsResponse>(
-      `${BASE}/pm-projects/all-projects`  // → projectMetadataEnricher
+      `${BASE}/pm-projects/all-projects` // → projectMetadataEnricher
     );
     return response.projects;
   }
 
   const response = await get<PMProjectsResponse>(
-    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`  // → projectMetadataEnricher
+    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}` // → projectMetadataEnricher
   );
   return response.projects;
 }
@@ -115,6 +117,7 @@ export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
 ### 🎯 **Implementation Steps:**
 
 #### **Step 1: Update API Gateway Routes (CloudFormation)**
+
 ```yaml
 # Update existing template to route all PM endpoints to projectMetadataEnricher:
 
@@ -144,6 +147,7 @@ PMProjectsEmailMethod:
 ```
 
 #### **Step 2: Test Current Lambda Functionality**
+
 ```bash
 # Test with authentication to see current behavior:
 curl -H "Authorization: Bearer your-token" \
@@ -151,6 +155,7 @@ curl -H "Authorization: Bearer your-token" \
 ```
 
 #### **Step 3: Enhance Lambda (Only if needed)**
+
 - Add PM email parameter handling
 - Add bulk project queries
 - Add S3 document status checking
