@@ -30,32 +30,63 @@ def lambda_handler(event, context):
                 'body': json.dumps({'error': 'Invalid format. Use pdf or docx'})
             }
         
-        # Generate S3 key
-        s3_key = f"acta/{project_id}.{format_type}"
-        
         # Create S3 client
         s3_client = boto3.client('s3')
         
+        # Search for the actual file in S3 with the project ID pattern
         try:
-            # Check if file exists
-            s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
-            
-            # Generate signed URL (valid for 1 hour)
-            signed_url = s3_client.generate_presigned_url(
-                'get_object',
-                Params={'Bucket': S3_BUCKET, 'Key': s3_key},
-                ExpiresIn=3600
+            # List files in the actas/ folder that match the project ID
+            response = s3_client.list_objects_v2(
+                Bucket=S3_BUCKET,
+                Prefix=f"actas/",
+                MaxKeys=100
             )
             
-            # Return 302 redirect to signed URL
+            s3_key = None
+            if 'Contents' in response:
+                for obj in response['Contents']:
+                    key = obj['Key']
+                    # Check if the file contains the project ID and has the right format
+                    if project_id in key and key.endswith(f'.{format_type}'):
+                        s3_key = key
+                        break
+            
+            if not s3_key:
+                # If no file found, return 404
+                return {
+                    'statusCode': 404,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({
+                        'error': 'Document not found',
+                        'message': f'ACTA document not available for project {project_id}',
+                        'suggestion': 'Generate the document first using the Generate ACTA button'
+                    })
+                }
+            
+            # Verify the file exists (double check)
+            s3_client.head_object(Bucket=S3_BUCKET, Key=s3_key)
+            
+            # Generate presigned URL for immediate download (more reliable)
+            presigned_url = s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': S3_BUCKET, 'Key': s3_key},
+                ExpiresIn=3600  # 1 hour
+            )
+            
+            # Return 302 redirect to presigned URL
             return {
                 'statusCode': 302,
                 'headers': {
-                    'Location': signed_url,
+                    'Location': presigned_url,
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'GET, OPTIONS',
                     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-                }
+                },
+                'body': json.dumps({
+                    'message': 'Document found, redirecting to download',
+                    'download_url': presigned_url,
+                    'file_name': s3_key.split('/')[-1]
+                })
             }
             
         except ClientError as e:
