@@ -1,0 +1,67 @@
+{
+  "timestamp": "2025-06-29T22:57:07.132Z",
+  "frontend": {
+    "accessible": true,
+    "isReactApp": true,
+    "hasAmplify": false,
+    "hasConfig": false,
+    "contentLength": 736
+  },
+  "api": [
+    {
+      "endpoint": "/health",
+      "description": "Health Check",
+      "status": 200,
+      "expected": true,
+      "response": "{\"status\":\"ok\"}"
+    },
+    {
+      "endpoint": "/projects",
+      "description": "Projects List",
+      "status": 403,
+      "expected": true,
+      "response": "{\"message\":\"Missing Authentication Token\"}"
+    },
+    {
+      "endpoint": "/pm-manager/all-projects",
+      "description": "PM All Projects",
+      "status": 403,
+      "expected": true,
+      "response": "{\"message\":\"Missing Authentication Token\"}"
+    },
+    {
+      "endpoint": "/project-summary/1000000049842296",
+      "description": "Project Summary",
+      "status": 200,
+      "expected": false,
+      "response": "{\"project_id\": \"1000000049842296\", \"project_name\": \"Project 1000000049842296\", \"pm\": \"project.manager@company.com\", \"status\": \"active\", \"description\": \"Project summary retrieved successfully\", \"last_u"
+    },
+    {
+      "endpoint": "/send-approval-email",
+      "description": "Send Approval Email",
+      "status": 400,
+      "expected": false,
+      "response": "{\"error\": \"Missing required field: client_email\"}"
+    }
+  ],
+  "cors": null,
+  "cognito": {
+    "found": true,
+    "region": "us-east-2",
+    "userPoolId": "us-east-2_FyHLtOhiY",
+    "clientId": "1hdn8b19ub2kmfkuse8rsjpv8e",
+    "oauthDomain": "us-east-2-fyhltohiy.auth.us-east-2.amazoncognito.com",
+    "redirectSignIn": "https://d7t9x3j66yd8k.cloudfront.net/",
+    "redirectMatchesFrontend": true
+  },
+  "credentials": {
+    "available": true,
+    "email": "adm***"
+  },
+  "issues": [
+    "Amplify/Auth references not found in frontend"
+  ],
+  "recommendations": [
+    "Check if Amplify is properly bundled"
+  ]
+}
