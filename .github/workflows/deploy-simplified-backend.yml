@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy_backend:
-        description: Deploy simplified backend (Lambda‑centric)
+        description: Deploy simplified backend (Lambda-centric)
         required: true
         default: true
         type: boolean
@@ -15,6 +15,10 @@ on:
         required: true
         default: true
         type: boolean
+
+concurrency:
+  group: backend-deploy
+  cancel-in-progress: true
 
 jobs:
   ci_deploy:
@@ -25,19 +29,12 @@ jobs:
       contents: read
 
     steps:
-      # ─────────────────────────────────────────────────────────
-      # 0. Checkout
-      # ─────────────────────────────────────────────────────────
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      # ─────────────────────────────────────────────────────────
-      # 1. Node & pnpm toolchain
-      # ─────────────────────────────────────────────────────────
       - name: 🛠️ Setup pnpm
         uses: pnpm/action-setup@v2
-        with:
-          version: 9
+        with: { version: 9 }
 
       - name: 🛠️ Setup Node
         uses: actions/setup-node@v4
@@ -45,16 +42,13 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      # ─────────────────────────────────────────────────────────
-      # 2. Install, Format, Lint, Test
-      # ─────────────────────────────────────────────────────────
       - name: 📦 Install deps
         run: pnpm install --frozen-lockfile
 
       - name: 🧼 Prettier format
         run: pnpm exec prettier --write .
 
-      - name: 🧼 ESLint auto‑fix
+      - name: 🧼 ESLint auto-fix
         run: pnpm exec eslint . --fix
 
       - name: 🔍 ESLint verify
@@ -66,77 +60,57 @@ jobs:
       - name: ✅ Vitest unit tests
         run: pnpm run test:vitest -- --run --passWithNoTests
 
-      # ─────────────────────────────────────────────────────────
-      # 3. Build UI (Vite)
-      # ─────────────────────────────────────────────────────────
       - name: 🔨 Build UI
         run: |
           echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
           pnpm run build
 
-      - name: 📂 List dist/
+      - name: 📂 List dist
         run: ls -R dist
 
-      # ─────────────────────────────────────────────────────────
-      # 4. Local preview smoke test
-      # ─────────────────────────────────────────────────────────
       - name: 🌐 Smoke test build
         run: |
-          pnpm exec vite preview --port 4173 --strictPort & PID=$!
+          pnpm exec vite preview --port 4173 --strictPort & srv=$!
           sleep 6 && curl -sf http://localhost:4173/
-          kill $PID
+          kill $srv
 
-      # ─────────────────────────────────────────────────────────
-      # 5. AWS Auth
-      # ─────────────────────────────────────────────────────────
-      - name: 🔐 Configure AWS creds
+      - name: 🔐 AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ─────────────────────────────────────────────────────────
-      # 5.1 Proactive backend tests (optional)
-      # ─────────────────────────────────────────────────────────
       - name: 🧪 Proactive backend tests
         run: |
-          echo "🧪 Running proactive backend tests …"
           chmod +x test-backend-proactive.sh
           ./test-backend-proactive.sh
 
-      # ─────────────────────────────────────────────────────────
-      # 5.5 Deploy simplified backend (with wait/cancel gate)
-      # ─────────────────────────────────────────────────────────
-      - name: 🎯 Deploy simplified backend (Lambda‑centric)
+      - name: 🎯 Deploy simplified backend (Lambda-centric)
         if: ${{ inputs.deploy_backend || github.event_name == 'push' }}
         env:
-          STACK_NAME: acta-simplified-backend
+          STACK_NAME: acta-api-wiring-stack-manual
           REGION: us-east-2
         run: |
           set -euo pipefail
-          echo "🎯 Deploying Simplified Backend (Lambda‑centric)"
           TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
-          # Wait or cancel if stack busy
+          # wait/cancel gate
           STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo NONE)
-          echo "Current CFN status: $STATUS"
           if [[ "$STATUS" == *_IN_PROGRESS ]]; then
-            echo "Attempting cancel‑update‑stack …"
             aws cloudformation cancel-update-stack --stack-name "$STACK_NAME" --region "$REGION" || true
           fi
           while true; do
             STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$REGION" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo NONE)
-            echo "  → $STATUS"
             case "$STATUS" in
               CREATE_IN_PROGRESS|UPDATE_IN_PROGRESS|UPDATE_ROLLBACK_IN_PROGRESS|ROLLBACK_IN_PROGRESS|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS)
                 sleep 15;;
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|ROLLBACK_COMPLETE|NONE)
                 break;;
-              *) echo "❌ Unexpected terminal state: $STATUS"; exit 1;;
+              *) echo "Unexpected state $STATUS"; exit 1;;
             esac
           done
 
-          # Deploy (no-fail on empty changeset)
+          # deploy
           aws cloudformation deploy \
             --template-file infra/template-simplified-lambda.yaml \
             --stack-name "$STACK_NAME" \
@@ -145,30 +119,24 @@ jobs:
             --region "$REGION" \
             --no-fail-on-empty-changeset
 
-      # ─────────────────────────────────────────────────────────
-      # 5.6 Post‑deploy backend tests (optional)
-      # ─────────────────────────────────────────────────────────
-      - name: 🧪 Test backend endpoints
+      - name: 🧪 Post‑deploy backend tests
         if: ${{ inputs.test_backend_endpoints || github.event_name == 'push' }}
         run: |
-          echo "🧪 Running post‑deploy backend tests …"
           chmod +x test-backend-postdeploy.sh
           ./test-backend-postdeploy.sh q2b9avfwv5 us-east-2 prod
 
-      # ─────────────────────────────────────────────────────────
-      # 6. Sync UI → S3
-      # ─────────────────────────────────────────────────────────
       - name: 🚀 Sync dist → S3
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+        env: { BUCKET: ${{ secrets.S3_BUCKET_NAME }} }
         run: |
           aws s3 sync dist "s3://$BUCKET" --delete
           bash scripts/push-spa-routes.sh
 
-      - name: 🧾 Log S3 contents
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      - name: 🧾 List S3
+        env: { BUCKET: ${{ secrets.S3_BUCKET_NAME }} }
         run: aws s3 ls "s3://$BUCKET/" --recursive
+
+      # (CF root, OAC, invalidate, summary steps remain unchanged)
+
 
       # ─────────────────────────────────────────────────────────
       # 7. Ensure CF root object = index.html
