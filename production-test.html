@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Production API Test</title>
+</head>
+<body>
+    <h1>ACTA-UI Production Test</h1>
+    <p>Testing production environment with provided credentials:</p>
+    <ul>
+        <li>Email: valencia942003@gmail.com</li>
+        <li>Production URL: <a href="https://d7t9x3j66yd8k.cloudfront.net" target="_blank">https://d7t9x3j66yd8k.cloudfront.net</a></li>
+        <li>API Base: https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod</li>
+    </ul>
+    
+    <h2>Test Steps:</h2>
+    <ol>
+        <li>Open production URL</li>
+        <li>Login with provided credentials</li>
+        <li>Test dashboard functionality</li>
+        <li>Check browser console for API errors</li>
+    </ol>
+
+    <h2>Expected Issues:</h2>
+    <ul>
+        <li>Local development won't work due to OAuth redirect mismatch</li>
+        <li>Production should work if APIs are properly configured</li>
+        <li>502 errors may still occur on timeline/project-summary endpoints</li>
+    </ul>
+</body>
+</html>
