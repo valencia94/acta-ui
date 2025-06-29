@@ -273,8 +273,17 @@ Resources:
 # Outputs
 ###############################################################################
 Outputs:
-  APIGatewayId:            { Value: !Ref ExistingApiId }
-  DeploymentId:            { Value: !Ref ConflictFreeApiGatewayDeployment }
-  StageId:                 { Value: !Ref ConflictFreeProdStage }
-  HealthEndpoint:          { Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/health" }
-  MetadataEnricherEndpoint:{ Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projectMetadataEnricher" }
+  APIGatewayId:
+    Value: !Ref ExistingApiId
+
+  DeploymentId:
+    Value: !Ref ConflictFreeApiGatewayDeployment
+
+  StageId:
+    Value: !Ref ConflictFreeProdStage
+
+  HealthEndpoint:
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/health"
+
+  MetadataEnricherEndpoint:
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projectMetadataEnricher"
