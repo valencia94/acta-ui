@@ -129,7 +129,7 @@ echo -e "${GREEN}✅ Test 4 PASSED${NC}\n"
 ###############################################################################
 echo -e "${YELLOW}🔍 Test 5: Deployment Readiness Check${NC}"
 MAIN_WF=".github/workflows/build_deploy.yml"
-BACKEND_WF=".github/workflows/build_deploy_with_backend.yml"
+BACKEND_WF=".github/workflows/deploy-simplified-backend.yml"
 
 [ -f "$MAIN_WF" ]    && echo "  ✓ Main workflow exists" \
                      || { echo -e "${RED}❌ Main workflow missing${NC}"; exit 1; }
