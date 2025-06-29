@@ -103,6 +103,12 @@ jobs:
           esac
         done
 
+    # ───────── 5.1 Proactive backend tests ─────────
+    - name: 🧪 Proactive backend tests
+      run: |
+        chmod +x test-backend-proactive.sh
+        ./test-backend-proactive.sh
+    
     # ───────── 6. Package & deploy backend ─────────
     - name: 📦 SAM package backend
       env:
@@ -126,6 +132,12 @@ jobs:
           --no-fail-on-empty-changeset \
           --parameter-overrides DeploymentTimestamp="$TS"
 
+    # ───────── 6.1 Post-deploy backend tests ───────
+    - name: 🧪 Post-deploy backend tests
+      run: |
+        chmod +x test-backend-postdeploy.sh
+        ./test-backend-postdeploy.sh q2b9avfwv5 us-east-2 prod
+    
     # ───────── 7. Sync UI → S3 ─────────
     - name: 🚀 Sync dist → S3
       env:
