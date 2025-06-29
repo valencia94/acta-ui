@@ -1,22 +1,22 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "ACTA-UI Minimal Conflict-Free Stack — No Anchors, All Integrations"
+Description: ACTA-UI Minimal Conflict-Free Stack for Enhanced projectMetadataEnricher Integration
 
 Parameters:
   ExistingApiId:
     Type: String
-    Description: "Pre-existing REST API ID"
+    Description: Existing API Gateway RestApiId (e.g., q2b9avfwv5)
   ExistingApiRootResourceId:
     Type: String
-    Description: "API root resource ID"
+    Description: API root resource ID (e.g., kw8f8zihjg)
   ProjectMetadataEnricherArn:
     Type: String
-    Description: "Lambda ARN to route all endpoints to"
+    Description: Lambda ARN to which all endpoints are routed
   ProjectMetadataEnricherFunctionName:
     Type: String
-    Description: "Function name for permissions"
+    Description: Lambda function name for permissions
   DeploymentTimestamp:
     Type: String
-    Description: "Forces new deployment (use current timestamp)"
+    Description: Used to force deployment
 
 Resources:
 
@@ -277,7 +277,7 @@ Resources:
       - CheckDocIdOptionsMethod
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub "Conflict-free deployment ${DeploymentTimestamp}"
+      Description: !Sub "ACTA-UI PM Enricher deployment ${DeploymentTimestamp}"
 
   ConflictFreeProdStage:
     Type: AWS::ApiGateway::Stage
