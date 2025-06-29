@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: ACTA-UI Minimal Conflict-Free Stack for Enhanced projectMetadataEnricher Integration
+Description: >
+  ACTA-UI Minimal Conflict-Free Stack for Enhanced projectMetadataEnricher Integration
 
 Parameters:
   ExistingApiId:
@@ -10,9 +11,11 @@ Parameters:
     Description: API root resource ID (e.g., kw8f8zihjg)
   ProjectMetadataEnricherArn:
     Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
     Description: Lambda ARN to which all endpoints are routed
   ProjectMetadataEnricherFunctionName:
     Type: String
+    Default: projectMetadataEnricher
     Description: Lambda function name for permissions
   DeploymentTimestamp:
     Type: String
@@ -38,7 +41,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Ref ProjectMetadataEnricherArn
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   ProjectsOptionsMethod:
     Type: AWS::ApiGateway::Method
@@ -88,7 +91,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Ref ProjectMetadataEnricherArn
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   PMProjectsAllOptionsMethod:
     Type: AWS::ApiGateway::Method
@@ -130,7 +133,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Ref ProjectMetadataEnricherArn
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   PMProjectsEmailOptionsMethod:
     Type: AWS::ApiGateway::Method
@@ -180,7 +183,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Ref ProjectMetadataEnricherArn
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   CheckDocHeadMethod:
     Type: AWS::ApiGateway::Method
@@ -192,7 +195,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Ref ProjectMetadataEnricherArn
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
   CheckDocIdOptionsMethod:
     Type: AWS::ApiGateway::Method
