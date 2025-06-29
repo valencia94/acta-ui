@@ -11,7 +11,7 @@ echo "========================================"
 ROLE="arn:aws:iam::703671891952:role/ProjectplaceLambdaRole"
 ACTA_API_ID="q2b9avfwv5"
 ACTA_API_ROOT_ID="kw8f8zihjg"
-STACK_NAME="acta-simplified-backend"
+STACK_NAME="acta-api-wiring-stack-manual"
 
 echo "✅ Configuration:"
 echo "📋 Role: $ROLE"
