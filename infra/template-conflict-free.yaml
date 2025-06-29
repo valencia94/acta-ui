@@ -22,30 +22,6 @@ Parameters:
     Default: "20250629-000000"
 
 ###############################################################################
-# Helper mapping – MOCK OPTIONS
-###############################################################################
-Mappings:
-  MockOptionsTemplate:
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        Type: MOCK
-        RequestTemplates: { "application/json": '{"statusCode": 200}' }
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin:  "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-      MethodResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Access-Control-Allow-Origin:  true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Headers: true
-
-###############################################################################
 # API Gateway resources
 ###############################################################################
 Resources:
@@ -95,7 +71,7 @@ Resources:
       ParentId:  !Ref ExistingApiRootResourceId
       PathPart:  projects-manager
 
-  # ─── NEW: /projectMetadataEnricher ──────────────────────────
+  # ─── NEW  /projectMetadataEnricher ──────────────────────────
   ProjectMetadataEnricherResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -103,7 +79,7 @@ Resources:
       ParentId:  !Ref ExistingApiRootResourceId
       PathPart:  projectMetadataEnricher
 
-  # ─── NEW: /health ───────────────────────────────────────────
+  # ─── NEW  /health ───────────────────────────────────────────
   HealthResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -114,6 +90,7 @@ Resources:
 ###############################################################################
 # Lambda-proxy methods
 ###############################################################################
+  # PM-Manager
   PMManagerAllProjectsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -138,6 +115,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
+  # Projects-Manager
   ProjectsManagerMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -150,6 +128,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
+  # Document-Validator
   DocumentValidatorGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -174,6 +153,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
+  # NEW  ANY /projectMetadataEnricher
   ProjectMetadataEnricherMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -186,6 +166,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
+  # NEW  GET /health
   HealthGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -199,63 +180,191 @@ Resources:
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
 ###############################################################################
-# MOCK OPTIONS methods
+# MOCK OPTIONS (explicit, duplicated — no macro)
 ###############################################################################
   PMManagerOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref PMManagerResource
-      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin:  "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
 
   PMManagerAllProjectsOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref PMManagerAllProjectsResource
-      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin:  "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
 
   PMManagerByEmailOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref PMManagerByEmailResource
-      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin:  "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
 
   DocumentValidatorOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref DocumentValidatorResource
-      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin:  "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
 
   DocumentValidatorIdOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref DocumentValidatorIdResource
-      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin:  "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
 
   ProjectsManagerOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref ProjectsManagerResource
-      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin:  "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
 
   ProjectMetadataEnricherOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref ProjectMetadataEnricherResource
-      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin:  "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
 
   HealthOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId:  !Ref ExistingApiId
       ResourceId: !Ref HealthResource
-      Fn::Merge: [ !FindInMap [MockOptionsTemplate, Properties] ]
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        Type: MOCK
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin:  "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,HEAD,OPTIONS,ANY'"
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin:  true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
 
 ###############################################################################
 # Lambda permissions (5 original + 2 new)
@@ -330,7 +439,7 @@ Resources:
       - DocumentValidatorHeadMethod
       - ProjectMetadataEnricherMethod
       - HealthGetMethod
-      # 8 OPTIONS mock methods
+      # 8 OPTIONS methods
       - PMManagerOptionsMethod
       - PMManagerAllProjectsOptionsMethod
       - PMManagerByEmailOptionsMethod
@@ -339,7 +448,7 @@ Resources:
       - ProjectsManagerOptionsMethod
       - ProjectMetadataEnricherOptionsMethod
       - HealthOptionsMethod
-      # 5 key resources
+      # 5 resources
       - PMManagerResource
       - DocumentValidatorResource
       - ProjectsManagerResource
@@ -362,7 +471,7 @@ Resources:
 ###############################################################################
 Outputs:
   APIGatewayId:
-    Description: API Gateway ID
+    Description: API ID
     Value: !Ref ExistingApiId
 
   DeploymentId:
@@ -374,7 +483,7 @@ Outputs:
     Value: !Ref ConflictFreeProdStage
 
   HealthEndpoint:
-    Description: Health check
+    Description: Health check URL
     Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/health"
 
   MetadataEnricherEndpoint:
