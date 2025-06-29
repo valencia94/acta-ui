@@ -18,10 +18,9 @@ sam validate --template-file "$TEMPLATE_FILE" --region "$REGION" >/dev/null
 echo -e "${GREEN}✅ sam validate passed${NC}\n"
 
 ###############################################################################
-# Test 2 – every permission block present
+# Test 2 – every permission block present (12 total)
 ###############################################################################
 echo -e "${YELLOW}🔍 Test 2 – Lambda-invoke permissions present${NC}"
-
 REQ_PERMS=(
   # core 7
   PMManagerAllProjectsPermission
@@ -43,18 +42,15 @@ for p in "${REQ_PERMS[@]}"; do
   if grep -q "^  $p:" "$TEMPLATE_FILE"; then
     echo "  ✓ $p"
   else
-    echo -e "  ${RED}❌ Missing $p${NC}"
-    missing=1
+    echo -e "  ${RED}❌ Missing $p${NC}"; missing=1
   fi
 done
 
-[[ $missing -eq 0 ]] && echo -e "${GREEN}✅ All permissions declared${NC}\n" || {
-  echo -e "${RED}❌ Permission list incomplete – aborting${NC}"
-  exit 1
-}
+[[ $missing -eq 0 ]] || { echo -e "${RED}❌ Permission list incomplete – aborting${NC}"; exit 1; }
+echo -e "${GREEN}✅ All permissions declared${NC}\n"
 
 ###############################################################################
-# Test 3 – Endpoint reachability (basic 200/403 check)
+# Test 3 – Endpoint reachability (expects 200 or 403)
 ###############################################################################
 echo -e "${YELLOW}🔍 Test 3 – Endpoint ping${NC}"
 
@@ -62,6 +58,7 @@ declare -A ENDPOINTS=(
   [health]="/health"
   [projects]="/projects"
   [pm-all]="/pm-projects/all-projects"
+  [check-doc]="/check-document/test-id"
 )
 
 for key in "${!ENDPOINTS[@]}"; do
