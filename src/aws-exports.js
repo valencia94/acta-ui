@@ -4,7 +4,7 @@ const awsmobile = {
 
   // ── Cognito ─────────────────────────────────────────────────────────────
   aws_user_pools_id: 'us-east-2_FyHLtOhiY',
-  aws_user_pools_web_client_id: '1e2q3ush5en5i53i56jf3ug5p2',
+  aws_user_pools_web_client_id: '1hdn8b19ub2kmfkuse8rsjpv8e',
 
   oauth: {
     // NO https://  and NO trailing slash on the domain line
