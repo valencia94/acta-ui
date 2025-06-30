@@ -1,0 +1,800 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: COMPREHENSIVE Lambda Deployment - Deploy all missing Lambda functions and API Gateway routes (v4-complete)
+
+Parameters:
+  ExistingApiId:
+    Type: String
+    Default: q2b9avfwv5
+    Description: Existing API Gateway ID
+
+  ExistingApiRootResourceId:
+    Type: String
+    Default: kw8f8zihjg
+    Description: Existing API Gateway root resource ID
+
+  # Existing Lambda - projectMetadataEnricher
+  ProjectMetadataEnricherArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
+    Description: Lambda function for project metadata and PM queries (already exists)
+
+  ProjectMetadataEnricherFunctionName:
+    Type: String
+    Default: projectMetadataEnricher
+    Description: Function name only (for Lambda permissions)
+
+  # S3 and DynamoDB Configuration for new Lambda functions
+  S3BucketName:
+    Type: String
+    Default: projectplace-dv-2025-x9a7b
+    Description: S3 bucket for ACTA documents
+
+  DynamoDBTableName:
+    Type: String
+    Default: ProjectPlace_DataExtrator_landing_table_v2
+    Description: DynamoDB table for project data
+
+  # Lambda execution role (should already exist)
+  LambdaExecutionRoleArn:
+    Type: String
+    Default: arn:aws:iam::703671891952:role/lambda-execution-role
+    Description: IAM role for Lambda execution
+
+  # Add a deployment timestamp to force new deployment
+  DeploymentTimestamp:
+    Type: String
+    Default: '20250628-080000'
+    Description: Deployment timestamp to force API Gateway redeployment - COMPLETE LAMBDA SUITE
+
+Resources:
+  # ═══════════════════════════════════════════════════════════════
+  # NEW LAMBDA FUNCTIONS
+  # ═══════════════════════════════════════════════════════════════
+
+  # 1. Projects List Lambda (/projects)
+  ProjectsListFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: projectsList
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !Ref LambdaExecutionRoleArn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          from datetime import datetime
+          import logging
+          from decimal import Decimal
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          DYNAMODB_TABLE = os.environ.get('DYNAMODB_TABLE')
+          DYNAMODB_REGION = os.environ.get('AWS_REGION')
+
+          def lambda_handler(event, context):
+              try:
+                  method = event.get('httpMethod', 'GET')
+                  if method != 'GET':
+                      return create_response(405, {'error': 'Method not allowed'})
+                  
+                  projects = get_all_projects_simple()
+                  return create_response(200, {
+                      'projects': projects,
+                      'count': len(projects),
+                      'timestamp': datetime.utcnow().isoformat() + 'Z'
+                  })
+                  
+              except Exception as e:
+                  logger.error(f"Error: {str(e)}")
+                  return create_response(500, {'error': 'Internal server error', 'details': str(e)})
+
+          def get_all_projects_simple():
+              try:
+                  dynamodb = boto3.resource('dynamodb', region_name=DYNAMODB_REGION)
+                  table = dynamodb.Table(DYNAMODB_TABLE)
+                  
+                  response = table.scan()
+                  items = response.get('Items', [])
+                  
+                  while 'LastEvaluatedKey' in response:
+                      response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+                      items.extend(response.get('Items', []))
+                  
+                  projects = []
+                  for item in items:
+                      project = convert_decimals(item)
+                      simplified_project = {
+                          'projectId': project.get('projectId', ''),
+                          'projectName': project.get('projectName', ''),
+                          'pmEmail': project.get('pmEmail', ''),
+                          'projectManager': project.get('projectManager', ''),
+                          'status': project.get('status', 'unknown'),
+                          'lastUpdated': project.get('lastUpdated', ''),
+                          'timeline': project.get('timeline', {}),
+                          'documentStatus': project.get('documentStatus', {})
+                      }
+                      projects.append(simplified_project)
+                  
+                  logger.info(f"Retrieved {len(projects)} projects")
+                  return projects
+                  
+              except Exception as e:
+                  logger.error(f"Error retrieving projects: {str(e)}")
+                  raise
+
+          def convert_decimals(obj):
+              if isinstance(obj, list):
+                  return [convert_decimals(i) for i in obj]
+              elif isinstance(obj, dict):
+                  return {k: convert_decimals(v) for k, v in obj.items()}
+              elif isinstance(obj, Decimal):
+                  return int(obj) if obj % 1 == 0 else float(obj)
+              else:
+                  return obj
+
+          def create_response(status_code, body):
+              return {
+                  'statusCode': status_code,
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                      'Access-Control-Allow-Methods': 'GET,OPTIONS'
+                  },
+                  'body': json.dumps(body, default=str)
+              }
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref DynamoDBTableName
+          S3_BUCKET: !Ref S3BucketName
+      MemorySize: 256
+      Timeout: 30
+      Description: Lambda function for simple projects list (/projects)
+
+  # 2. Projects Manager Lambda (/pm-projects/*)
+  ProjectsManagerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: projectsManager
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !Ref LambdaExecutionRoleArn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          from datetime import datetime
+          import logging
+          from boto3.dynamodb.conditions import Key
+          from decimal import Decimal
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          DYNAMODB_TABLE = os.environ.get('DYNAMODB_TABLE')
+          DYNAMODB_REGION = os.environ.get('AWS_REGION')
+
+          def lambda_handler(event, context):
+              try:
+                  path = event.get('path', '')
+                  method = event.get('httpMethod', 'GET')
+                  path_parameters = event.get('pathParameters') or {}
+                  query_parameters = event.get('queryStringParameters') or {}
+                  
+                  logger.info(f"Request: {method} {path}")
+                  
+                  if path == '/pm-projects/all-projects':
+                      return handle_all_projects_from_dynamodb(query_parameters)
+                  elif '/pm-projects/' in path and path_parameters.get('pmEmail'):
+                      pm_email = path_parameters['pmEmail']
+                      return handle_projects_by_pm_from_dynamodb(pm_email, query_parameters)
+                  elif path == '/bulk-generate-summaries' and method == 'POST':
+                      body = json.loads(event.get('body', '{}'))
+                      return handle_bulk_generate_summaries(body)
+                  else:
+                      return create_response(404, {'error': 'Endpoint not found', 'path': path})
+                      
+              except Exception as e:
+                  logger.error(f"Error: {str(e)}")
+                  return create_response(500, {'error': 'Internal server error', 'details': str(e)})
+
+          def handle_all_projects_from_dynamodb(query_params):
+              try:
+                  dynamodb = boto3.resource('dynamodb', region_name=DYNAMODB_REGION)
+                  table = dynamodb.Table(DYNAMODB_TABLE)
+                  
+                  response = table.scan()
+                  items = response.get('Items', [])
+                  
+                  while 'LastEvaluatedKey' in response:
+                      response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+                      items.extend(response.get('Items', []))
+                  
+                  projects = [convert_decimals(item) for item in items]
+                  
+                  return create_response(200, {
+                      'projects': projects,
+                      'count': len(projects),
+                      'source': 'dynamodb',
+                      'timestamp': datetime.utcnow().isoformat() + 'Z'
+                  })
+                  
+              except Exception as e:
+                  logger.error(f"Error in handle_all_projects: {str(e)}")
+                  return create_response(500, {'error': str(e)})
+
+          def handle_projects_by_pm_from_dynamodb(pm_email, query_params):
+              try:
+                  dynamodb = boto3.resource('dynamodb', region_name=DYNAMODB_REGION)
+                  table = dynamodb.Table(DYNAMODB_TABLE)
+                  
+                  response = table.scan(
+                      FilterExpression=boto3.dynamodb.conditions.Attr('pmEmail').eq(pm_email)
+                  )
+                  items = response.get('Items', [])
+                  
+                  while 'LastEvaluatedKey' in response:
+                      response = table.scan(
+                          FilterExpression=boto3.dynamodb.conditions.Attr('pmEmail').eq(pm_email),
+                          ExclusiveStartKey=response['LastEvaluatedKey']
+                      )
+                      items.extend(response.get('Items', []))
+                  
+                  projects = [convert_decimals(item) for item in items]
+                  
+                  return create_response(200, {
+                      'pmEmail': pm_email,
+                      'projects': projects,
+                      'count': len(projects),
+                      'source': 'dynamodb',
+                      'timestamp': datetime.utcnow().isoformat() + 'Z'
+                  })
+                  
+              except Exception as e:
+                  logger.error(f"Error in handle_projects_by_pm: {str(e)}")
+                  return create_response(500, {'error': str(e)})
+
+          def handle_bulk_generate_summaries(body):
+              return create_response(200, {
+                  'message': 'Bulk generation initiated',
+                  'requestId': body.get('requestId', 'unknown'),
+                  'timestamp': datetime.utcnow().isoformat() + 'Z'
+              })
+
+          def convert_decimals(obj):
+              if isinstance(obj, list):
+                  return [convert_decimals(i) for i in obj]
+              elif isinstance(obj, dict):
+                  return {k: convert_decimals(v) for k, v in obj.items()}
+              elif isinstance(obj, Decimal):
+                  return int(obj) if obj % 1 == 0 else float(obj)
+              else:
+                  return obj
+
+          def create_response(status_code, body):
+              return {
+                  'statusCode': status_code,
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+                  },
+                  'body': json.dumps(body, default=str)
+              }
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref DynamoDBTableName
+          S3_BUCKET: !Ref S3BucketName
+      MemorySize: 512
+      Timeout: 60
+      Description: Lambda function for PM projects management (/pm-projects/*)
+
+  # 3. Document Status Lambda (/check-document/{id})
+  DocumentStatusFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: documentStatus
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !Ref LambdaExecutionRoleArn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          from datetime import datetime
+          import logging
+          from botocore.exceptions import ClientError
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          S3_BUCKET = os.environ.get('S3_BUCKET')
+          S3_PREFIX = os.environ.get('S3_PREFIX', 'acta-documents/')
+
+          def lambda_handler(event, context):
+              try:
+                  method = event.get('httpMethod', 'GET')
+                  path_parameters = event.get('pathParameters') or {}
+                  query_parameters = event.get('queryStringParameters') or {}
+                  
+                  project_id = path_parameters.get('projectId')
+                  if not project_id:
+                      return create_response(400, {'error': 'Missing projectId parameter'})
+                  
+                  format_type = query_parameters.get('format', 'pdf').lower()
+                  if format_type not in ['pdf', 'docx']:
+                      return create_response(400, {'error': 'Invalid format. Must be pdf or docx'})
+                  
+                  logger.info(f"Checking document status: {project_id}.{format_type}")
+                  
+                  document_info = check_document_in_s3(project_id, format_type)
+                  
+                  if method == 'HEAD':
+                      status_code = 200 if document_info['exists'] else 404
+                      return create_head_response(status_code, document_info)
+                  else:
+                      return create_response(200, document_info)
+                      
+              except Exception as e:
+                  logger.error(f"Error: {str(e)}")
+                  return create_response(500, {'error': 'Internal server error', 'details': str(e)})
+
+          def check_document_in_s3(project_id, format_type):
+              try:
+                  s3_client = boto3.client('s3')
+                  object_key = f"{S3_PREFIX}{project_id}.{format_type}"
+                  
+                  try:
+                      response = s3_client.head_object(Bucket=S3_BUCKET, Key=object_key)
+                      return {
+                          'exists': True,
+                          'projectId': project_id,
+                          'format': format_type,
+                          'size': response.get('ContentLength', 0),
+                          'lastModified': response.get('LastModified', '').isoformat() if response.get('LastModified') else '',
+                          'contentType': get_content_type(format_type),
+                          's3Key': object_key,
+                          'bucket': S3_BUCKET
+                      }
+                  except ClientError as e:
+                      if e.response['Error']['Code'] == '404':
+                          return {
+                              'exists': False,
+                              'projectId': project_id,
+                              'format': format_type,
+                              's3Key': object_key,
+                              'bucket': S3_BUCKET
+                          }
+                      else:
+                          raise
+                          
+              except Exception as e:
+                  logger.error(f"Error checking S3: {str(e)}")
+                  raise
+
+          def get_content_type(format_type):
+              content_types = {
+                  'pdf': 'application/pdf',
+                  'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              }
+              return content_types.get(format_type, 'application/octet-stream')
+
+          def create_response(status_code, body):
+              return {
+                  'statusCode': status_code,
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                      'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS'
+                  },
+                  'body': json.dumps(body, default=str)
+              }
+
+          def create_head_response(status_code, body):
+              return {
+                  'statusCode': status_code,
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                      'Access-Control-Allow-Methods': 'GET,HEAD,OPTIONS',
+                      'X-Document-Exists': str(body.get('exists', False)).lower(),
+                      'X-Project-Id': body.get('projectId', ''),
+                      'X-Format': body.get('format', '')
+                  }
+              }
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3BucketName
+          S3_PREFIX: acta-documents/
+      MemorySize: 256
+      Timeout: 30
+      Description: Lambda function for document status checking (/check-document/{id})
+
+  # 4. Download ACTA Lambda (/download-acta/{id})
+  DownloadActaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: downloadActa
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !Ref LambdaExecutionRoleArn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          from datetime import datetime
+          import logging
+          from botocore.exceptions import ClientError
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          S3_BUCKET = os.environ.get('S3_BUCKET')
+          S3_PREFIX = os.environ.get('S3_PREFIX', 'acta-documents/')
+
+          def lambda_handler(event, context):
+              try:
+                  method = event.get('httpMethod', 'GET')
+                  path_parameters = event.get('pathParameters') or {}
+                  query_parameters = event.get('queryStringParameters') or {}
+                  
+                  project_id = path_parameters.get('projectId')
+                  if not project_id:
+                      return create_response(400, {'error': 'Missing projectId parameter'})
+                  
+                  format_type = query_parameters.get('format', 'pdf').lower()
+                  if format_type not in ['pdf', 'docx']:
+                      return create_response(400, {'error': 'Invalid format. Must be pdf or docx'})
+                  
+                  logger.info(f"Download request for: {project_id}.{format_type}")
+                  
+                  if method != 'GET':
+                      return create_response(405, {'error': 'Method not allowed'})
+                  
+                  download_info = get_download_url(project_id, format_type)
+                  
+                  if not download_info['exists']:
+                      return create_response(404, {
+                          'error': 'Document not found',
+                          'projectId': project_id,
+                          'format': format_type
+                      })
+                  
+                  return create_response(200, download_info)
+                  
+              except Exception as e:
+                  logger.error(f"Error: {str(e)}")
+                  return create_response(500, {'error': 'Internal server error', 'details': str(e)})
+
+          def get_download_url(project_id, format_type):
+              try:
+                  s3_client = boto3.client('s3')
+                  object_key = f"{S3_PREFIX}{project_id}.{format_type}"
+                  
+                  try:
+                      s3_client.head_object(Bucket=S3_BUCKET, Key=object_key)
+                      exists = True
+                  except ClientError as e:
+                      if e.response['Error']['Code'] == '404':
+                          exists = False
+                      else:
+                          raise
+                  
+                  if not exists:
+                      return {
+                          'exists': False,
+                          'projectId': project_id,
+                          'format': format_type
+                      }
+                  
+                  download_url = s3_client.generate_presigned_url(
+                      'get_object',
+                      Params={'Bucket': S3_BUCKET, 'Key': object_key},
+                      ExpiresIn=3600
+                  )
+                  
+                  response = s3_client.head_object(Bucket=S3_BUCKET, Key=object_key)
+                  
+                  return {
+                      'exists': True,
+                      'projectId': project_id,
+                      'format': format_type,
+                      'downloadUrl': download_url,
+                      'fileName': f"{project_id}.{format_type}",
+                      'contentType': get_content_type(format_type),
+                      'size': response.get('ContentLength', 0),
+                      'lastModified': response.get('LastModified', '').isoformat() if response.get('LastModified') else '',
+                      'expiresIn': 3600,
+                      'expiresAt': (datetime.utcnow().timestamp() + 3600)
+                  }
+                  
+              except Exception as e:
+                  logger.error(f"Error generating download URL: {str(e)}")
+                  raise
+
+          def get_content_type(format_type):
+              content_types = {
+                  'pdf': 'application/pdf',
+                  'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              }
+              return content_types.get(format_type, 'application/octet-stream')
+
+          def create_response(status_code, body):
+              return {
+                  'statusCode': status_code,
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                      'Access-Control-Allow-Methods': 'GET,OPTIONS'
+                  },
+                  'body': json.dumps(body, default=str)
+              }
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3BucketName
+          S3_PREFIX: acta-documents/
+      MemorySize: 256
+      Timeout: 30
+      Description: Lambda function for downloading ACTA documents (/download-acta/{id})
+
+  # ═══════════════════════════════════════════════════════════════
+  # API GATEWAY RESOURCES AND ROUTING
+  # ═══════════════════════════════════════════════════════════════
+
+  # /projects resource (simple list)
+  ProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: projects
+
+  ProjectsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsListFunction.Arn}/invocations'
+
+  # /pm-projects resource hierarchy
+  PMProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: pm-projects
+
+  PMProjectsAllResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMProjectsResource
+      PathPart: all-projects
+
+  PMProjectsAllMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsAllResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsManagerFunction.Arn}/invocations'
+
+  PMProjectsByEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMProjectsResource
+      PathPart: '{pmEmail}'
+
+  PMProjectsByEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsByEmailResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsManagerFunction.Arn}/invocations'
+
+  # /check-document/{id} resource
+  CheckDocumentResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: check-document
+
+  CheckDocumentIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref CheckDocumentResource
+      PathPart: '{projectId}'
+
+  CheckDocumentGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocumentIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DocumentStatusFunction.Arn}/invocations'
+
+  CheckDocumentHeadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocumentIdResource
+      HttpMethod: HEAD
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DocumentStatusFunction.Arn}/invocations'
+
+  # /download-acta/{id} resource
+  DownloadActaResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: download-acta
+
+  DownloadActaIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref DownloadActaResource
+      PathPart: '{projectId}'
+
+  DownloadActaMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref DownloadActaIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DownloadActaFunction.Arn}/invocations'
+
+  # Route existing project summary endpoint to existing Lambda
+  ProjectSummaryResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: project-summary
+
+  ProjectSummaryIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ProjectSummaryResource
+      PathPart: '{id}'
+
+  ProjectSummaryMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectSummaryIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Ref ProjectMetadataEnricherArn
+
+  # ═══════════════════════════════════════════════════════════════
+  # LAMBDA PERMISSIONS
+  # ═══════════════════════════════════════════════════════════════
+
+  ProjectsListPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectsListFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*'
+
+  ProjectsManagerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectsManagerFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*'
+
+  DocumentStatusPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DocumentStatusFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*'
+
+  DownloadActaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DownloadActaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*'
+
+  ProjectMetadataEnricherPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*'
+
+  # ═══════════════════════════════════════════════════════════════
+  # API GATEWAY DEPLOYMENT
+  # ═══════════════════════════════════════════════════════════════
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ProjectsMethod
+      - PMProjectsAllMethod
+      - PMProjectsByEmailMethod
+      - CheckDocumentGetMethod
+      - CheckDocumentHeadMethod
+      - DownloadActaMethod
+      - ProjectSummaryMethod
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      Description: !Sub 'Deployment for comprehensive Lambda functions - ${DeploymentTimestamp}'
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      DeploymentId: !Ref ApiDeployment
+      StageName: prod
+      Description: Production stage for ACTA-UI API
+      Variables:
+        deploymentTimestamp: !Ref DeploymentTimestamp
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod'
+
+  NewLambdaFunctions:
+    Description: Newly deployed Lambda functions
+    Value: !Sub '${ProjectsListFunction}, ${ProjectsManagerFunction}, ${DocumentStatusFunction}, ${DownloadActaFunction}'
+
+  EndpointsDeployed:
+    Description: API endpoints now available
+    Value: '/projects, /pm-projects/all-projects, /pm-projects/{pmEmail}, /check-document/{id}, /download-acta/{id}, /project-summary/{id}'
+
+  DeploymentTimestamp:
+    Description: Deployment timestamp
+    Value: !Ref DeploymentTimestamp

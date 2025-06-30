@@ -1,0 +1,13 @@
+{
+    "apiName": "exampleAPI",
+    "service": "AppSync",
+    "authConfig": {
+        "defaultAuthentication": {
+            "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+            "userPoolConfig": {
+                "userPoolId": "us-east-1_examplePoolId"
+            }
+        },
+        "additionalAuthenticationProviders": []
+    }
+}

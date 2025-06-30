@@ -50,11 +50,13 @@ echo "🔧 Deploying CloudFormation stack: $STACK_NAME"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
 aws cloudformation deploy \
-    --template-file infra/template-conflict-free.yaml \
+    --template-file infra/template-simplified-lambda.yaml \
     --stack-name "$STACK_NAME" \
     --parameter-overrides \
+        ExistingApiId="$ACTA_API_ID" \
+        ExistingApiRootResourceId="$ACTA_API_ROOT_ID" \
         DeploymentTimestamp="$TIMESTAMP" \
-    --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+    --capabilities CAPABILITY_IAM \
     --region us-east-2
 
 echo "✅ CloudFormation stack deployed successfully!"

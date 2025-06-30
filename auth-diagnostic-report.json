@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-06-29T22:57:07.132Z",
+  "timestamp": "2025-06-30T10:10:13.850Z",
   "frontend": {
     "accessible": true,
     "isReactApp": true,
@@ -50,18 +50,22 @@
     "region": "us-east-2",
     "userPoolId": "us-east-2_FyHLtOhiY",
     "clientId": "1hdn8b19ub2kmfkuse8rsjpv8e",
-    "oauthDomain": "us-east-2-fyhltohiy.auth.us-east-2.amazoncognito.com",
-    "redirectSignIn": "https://d7t9x3j66yd8k.cloudfront.net/",
-    "redirectMatchesFrontend": true
+    "oauthDomain": "acta-ui-prod.auth.us-east-2.amazoncognito.com",
+    "redirectSignIn": "https://d7t9x3j66yd8k.cloudfront.net/callback/",
+    "redirectMatchesFrontend": false
   },
   "credentials": {
-    "available": true,
-    "email": "adm***"
+    "available": false,
+    "email": "Not set"
   },
   "issues": [
-    "Amplify/Auth references not found in frontend"
+    "Amplify/Auth references not found in frontend",
+    "Cognito redirect URL mismatch",
+    "Test credentials not available"
   ],
   "recommendations": [
-    "Check if Amplify is properly bundled"
+    "Check if Amplify is properly bundled",
+    "Update Cognito redirect URLs to match frontend domain",
+    "Set ACTA_UI_USER and ACTA_UI_PW environment variables"
   ]
 }

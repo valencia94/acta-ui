@@ -1,0 +1,452 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SECURE API Gateway with proper Cognito User Pool authorization for all protected endpoints
+
+Parameters:
+  ExistingApiId:
+    Type: String
+    Description: Existing API Gateway ID
+  ExistingApiRootResourceId:
+    Type: String
+    Description: Existing API Gateway root resource ID
+  CognitoUserPoolArn:
+    Type: String
+    Default: arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY
+    Description: Cognito User Pool ARN for authorization
+
+  # EXISTING Lambda ARNs (these are deployed and working)
+  GetTimelineArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:GetTimeline
+    Description: Existing Lambda function for timeline
+  GetDownloadActaArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:GetDownloadActa
+    Description: Existing Lambda function for downloads
+  GetProjectSummaryArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
+    Description: Existing Lambda function for project summary (uses projectMetadataEnricher)
+  SendApprovalEmailArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:SendApprovalEmail
+    Description: Existing Lambda function for approval emails
+  ProjectPlaceDataExtractorArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:ProjectPlaceDataExtractor
+    Description: Existing Lambda function for data extraction
+  HealthCheckArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:HealthCheck
+    Description: Existing Lambda function for health checks
+
+  # NEW Lambda ARNs (need to be created)
+  ProjectsManagerArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:ProjectsManager
+    Description: NEW Lambda function for projects management
+  DocumentStatusArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:DocumentStatus
+    Description: NEW Lambda function for document status checking
+
+Resources:
+  # ═══════════════════════════════════════════════════════════════
+  # COGNITO USER POOL AUTHORIZER (CRITICAL SECURITY COMPONENT)
+  # ═══════════════════════════════════════════════════════════════
+
+  CognitoAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      Name: CognitoUserPoolAuthorizer
+      Type: COGNITO_USER_POOLS
+      ProviderARNs:
+        - !Ref CognitoUserPoolArn
+      IdentitySource: method.request.header.Authorization
+      AuthorizerResultTtlInSeconds: 300
+
+  # ═══════════════════════════════════════════════════════════════
+  # PUBLIC ENDPOINTS (No authentication required)
+  # ═══════════════════════════════════════════════════════════════
+
+  # Health Resource (PUBLIC - for monitoring)
+  HealthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: health
+
+  HealthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref HealthResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HealthCheckArn}/invocations
+
+  # ═══════════════════════════════════════════════════════════════
+  # PROTECTED ENDPOINTS (Require Cognito authentication)
+  # ═══════════════════════════════════════════════════════════════
+
+  # Timeline Resources (PROTECTED)
+  TimelineResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: timeline
+
+  TimelineIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref TimelineResource
+      PathPart: '{id}'
+
+  TimelineMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref TimelineIdResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetTimelineArn}/invocations
+        TimeoutInMillis: 29000
+
+  # Project Summary Resources (PROTECTED)
+  ProjectSummaryResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: project-summary
+
+  ProjectSummaryIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ProjectSummaryResource
+      PathPart: '{id}'
+
+  ProjectSummaryMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectSummaryIdResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetProjectSummaryArn}/invocations
+        TimeoutInMillis: 29000
+
+  # Download Acta Resources (PROTECTED)
+  DownloadActaResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: download-acta
+
+  DownloadActaIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref DownloadActaResource
+      PathPart: '{id}'
+
+  DownloadActaMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref DownloadActaIdResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDownloadActaArn}/invocations
+
+  # Extract Project Place Resources (PROTECTED)
+  ExtractProjectPlaceResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: extract-project-place
+
+  ExtractProjectPlaceIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExtractProjectPlaceResource
+      PathPart: '{id}'
+
+  ExtractProjectPlaceMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ExtractProjectPlaceIdResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectPlaceDataExtractorArn}/invocations
+        TimeoutInMillis: 29000
+
+  # Send Approval Email Resource (PROTECTED)
+  SendApprovalEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: send-approval-email
+
+  SendApprovalEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref SendApprovalEmailResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendApprovalEmailArn}/invocations
+
+  # Projects List Resource (PROTECTED)
+  ProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: projects
+
+  ProjectsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsManagerArn}/invocations
+
+  # PM Projects Resource Structure (PROTECTED)
+  PMProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: pm-projects
+
+  PMProjectsAllResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMProjectsResource
+      PathPart: all-projects
+
+  PMProjectsAllMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsAllResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsManagerArn}/invocations
+
+  PMProjectsEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref PMProjectsResource
+      PathPart: '{pmEmail}'
+
+  PMProjectsEmailMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref PMProjectsEmailResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectsManagerArn}/invocations
+
+  # Document Status Check Resource (PROTECTED)
+  CheckDocumentResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: check-document
+
+  CheckDocumentIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref CheckDocumentResource
+      PathPart: '{projectId}'
+
+  CheckDocumentMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocumentIdResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DocumentStatusArn}/invocations
+
+  CheckDocumentHeadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref CheckDocumentIdResource
+      HttpMethod: HEAD
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DocumentStatusArn}/invocations
+
+  # ═══════════════════════════════════════════════════════════════
+  # LAMBDA PERMISSIONS
+  # ═══════════════════════════════════════════════════════════════
+
+  # Existing function permissions
+  HealthPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HealthCheckArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/health
+
+  TimelinePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetTimelineArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/timeline/*
+
+  ProjectSummaryPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetProjectSummaryArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/project-summary/*
+
+  DownloadActaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetDownloadActaArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/download-acta/*
+
+  ExtractProjectPlacePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ProjectPlaceDataExtractorArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/POST/extract-project-place/*
+
+  SendApprovalEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SendApprovalEmailArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/POST/send-approval-email
+
+  # New function permissions
+  ProjectsManagerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ProjectsManagerArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/*
+
+  DocumentStatusPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DocumentStatusArn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*/check-document/*
+
+  # API Gateway Deployment (IMPORTANT - triggers route updates)
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - CognitoAuthorizer
+      - HealthMethod
+      - TimelineMethod
+      - ProjectSummaryMethod
+      - DownloadActaMethod
+      - ExtractProjectPlaceMethod
+      - SendApprovalEmailMethod
+      - ProjectsMethod
+      - PMProjectsAllMethod
+      - PMProjectsEmailMethod
+      - CheckDocumentMethod
+      - CheckDocumentHeadMethod
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      Description: !Sub 'SECURE API deployment with Cognito authorization - ${AWS::StackName}'
+      StageName: prod
+
+Outputs:
+  ActaApiInvokeURL:
+    Description: Base URL for invoking the secure API
+    Value: !Sub https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/
+
+  CognitoAuthorizerInfo:
+    Description: Cognito User Pool Authorizer details
+    Value: !Sub 'Authorizer ID: ${CognitoAuthorizer}, User Pool: ${CognitoUserPoolArn}'
+
+  SecurityStatus:
+    Description: Security configuration status
+    Value: 'ALL endpoints now properly protected with Cognito User Pool authorization'
+
+  PublicEndpoints:
+    Description: Endpoints that remain public (no auth required)
+    Value: 'health'
+
+  ProtectedEndpoints:
+    Description: Endpoints that require Cognito authentication
+    Value: 'timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email, projects, pm-projects/*, check-document/{id}'

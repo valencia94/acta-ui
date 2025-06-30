@@ -4,6 +4,7 @@ import '@/utils/authFlowTest'; // Import comprehensive auth flow tests
 import '@/utils/dashboardTesting'; // Import dashboard button testing
 
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
+import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
@@ -18,6 +19,10 @@ import { useThemedFavicon } from '@/hooks/useThemedFavicon';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
+
+import awsconfig from './aws-exports';
+
+Amplify.configure(awsconfig);
 
 export default function App() {
   useThemedFavicon();

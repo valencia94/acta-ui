@@ -178,7 +178,7 @@ export async function checkDocumentInS3(
 
   try {
     const response = await fetch(
-      `${BASE}/document-validator/${projectId}?format=${format}`,
+      `${BASE}/check-document/${projectId}?format=${format}`,
       {
         method: 'HEAD',
       }
@@ -381,13 +381,13 @@ export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
   // Handle admin access - get all projects
   if (pmEmail === 'admin-all-access') {
     const response = await get<PMProjectsResponse>(
-      `${BASE}/pm-manager/all-projects`
+      `${BASE}/pm-projects/all-projects`
     );
     return response.projects;
   }
 
   const response = await get<PMProjectsResponse>(
-    `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`
+    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
   );
   return response.projects;
 }
@@ -398,11 +398,11 @@ export async function getPMProjectsWithSummary(
 ): Promise<PMProjectsResponse> {
   // Handle admin access
   if (pmEmail === 'admin-all-access') {
-    return get<PMProjectsResponse>(`${BASE}/pm-manager/all-projects`);
+    return get<PMProjectsResponse>(`${BASE}/pm-projects/all-projects`);
   }
 
   return get<PMProjectsResponse>(
-    `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`
+    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
   );
 }
 
@@ -435,7 +435,7 @@ export async function checkDocumentAvailability(
 ): Promise<{ available: boolean; lastModified?: string }> {
   try {
     const response = await fetch(
-      `${BASE}/document-validator/${id}?format=${format}`,
+      `${BASE}/check-document/${id}?format=${format}`,
       {
         method: 'HEAD',
       }

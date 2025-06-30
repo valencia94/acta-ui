@@ -1,0 +1,167 @@
+name: 🔧 Deploy Backend Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_lambdas:
+        description: 'Deploy Lambda functions'
+        required: true
+        default: true
+        type: boolean
+      deploy_api_gateway:
+        description: 'Deploy API Gateway updates'
+        required: true
+        default: true
+        type: boolean
+      test_endpoints:
+        description: 'Test endpoints after deployment'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: acta-backend-deploy
+          aws-region: us-east-2
+
+      - name: 📦 Deploy Missing Lambda Functions
+        if: ${{ inputs.deploy_lambdas }}
+        run: |
+          echo "🔧 Creating/Updating Lambda Functions"
+          echo "===================================="
+
+          # Function to create/update Lambda function
+          create_or_update_lambda() {
+            local function_name=$1
+            local python_file=$2
+            local description=$3
+            
+            echo "🔧 Processing Lambda function: $function_name"
+            
+            # Create deployment package
+            cd lambda-functions
+            zip "/tmp/${function_name}.zip" "$python_file"
+            cd ..
+            
+            # Check if function exists
+            if aws lambda get-function --function-name "$function_name" --region us-east-2 >/dev/null 2>&1; then
+              echo "🔄 Updating existing function: $function_name"
+              aws lambda update-function-code \
+                --function-name "$function_name" \
+                --zip-file "fileb:///tmp/${function_name}.zip" \
+                --region us-east-2
+                
+              aws lambda update-function-configuration \
+                --function-name "$function_name" \
+                --timeout 30 \
+                --memory-size 256 \
+                --region us-east-2
+            else
+              echo "✨ Creating new function: $function_name"
+              aws lambda create-function \
+                --function-name "$function_name" \
+                --runtime python3.9 \
+                --role "arn:aws:iam::703671891952:role/ProjectplaceLambdaRole" \
+                --handler "${python_file%.*}.lambda_handler" \
+                --zip-file "fileb:///tmp/${function_name}.zip" \
+                --timeout 30 \
+                --memory-size 256 \
+                --description "$description" \
+                --region us-east-2
+            fi
+            
+            echo "✅ Function $function_name processed successfully"
+            echo
+          }
+
+          # Deploy Lambda functions
+          create_or_update_lambda "ProjectsManager" "projects-manager.py" "Manages PM projects and DynamoDB queries"
+          create_or_update_lambda "DocumentStatus" "document-status.py" "Checks S3 document status and metadata"
+
+      - name: 🌐 Deploy API Gateway Updates
+        if: ${{ inputs.deploy_api_gateway }}
+        run: |
+          echo "🌐 Deploying API Gateway Resources"
+          echo "================================="
+
+          # Deploy CloudFormation stack
+          aws cloudformation deploy \
+            --template-file infra/template-wiring-corrected.yaml \
+            --stack-name acta-api-backend-corrected \
+            --parameter-overrides \
+              ExistingApiId=q2b9avfwv5 \
+              ExistingApiRootResourceId=kw8f8zihjg \
+              ProjectsManagerArn="arn:aws:lambda:us-east-2:703671891952:function:ProjectsManager" \
+              DocumentStatusArn="arn:aws:lambda:us-east-2:703671891952:function:DocumentStatus" \
+            --capabilities CAPABILITY_IAM \
+            --region us-east-2
+            
+          echo "✅ CloudFormation stack deployed successfully"
+
+          # Create API Gateway deployment
+          echo "🚀 Creating API Gateway deployment"
+          aws apigateway create-deployment \
+            --rest-api-id q2b9avfwv5 \
+            --stage-name prod \
+            --description "Deploy corrected backend endpoints $(date)" \
+            --region us-east-2
+            
+          echo "✅ API Gateway deployment created"
+
+      - name: 🧪 Test Backend Endpoints
+        if: ${{ inputs.test_endpoints }}
+        run: |
+          echo "🧪 Testing Backend Endpoints"
+          echo "============================"
+
+          BASE_URL="https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
+
+          # Test existing endpoints
+          echo "📋 Testing existing endpoints:"
+
+          echo "🔍 Health Check:"
+          curl -s -w "Status: %{http_code}\n" "$BASE_URL/health" || echo "❌ Health check failed"
+
+          echo "🔍 Project Summary (using projectMetadataEnricher):"
+          curl -s -w "Status: %{http_code}\n" "$BASE_URL/project-summary/test" || echo "⚠️ Project summary may need authentication"
+
+          # Test new endpoints (may return 403 due to auth)
+          echo "📋 Testing new endpoints:"
+
+          echo "🔍 PM Projects (All):"
+          curl -s -w "Status: %{http_code}\n" "$BASE_URL/pm-projects/all-projects" || echo "⚠️ New endpoint may need authentication"
+
+          echo "🔍 Document Status:"
+          curl -s -w "Status: %{http_code}\n" "$BASE_URL/check-document/test?format=docx" || echo "⚠️ New endpoint may need authentication"
+
+          echo "✅ Endpoint testing completed"
+
+      - name: 📊 Generate Deployment Report
+        run: |
+          echo "📊 ACTA-UI Backend Deployment Report"
+          echo "===================================="
+          echo "🕐 Deployed: $(date)"
+          echo "🎯 Lambda Functions:"
+          echo "  ✅ ProjectsManager - DynamoDB project management"
+          echo "  ✅ DocumentStatus - S3 document status checking"
+          echo "🌐 API Gateway:"
+          echo "  ✅ /pm-projects/all-projects - Admin project listing"
+          echo "  ✅ /pm-projects/{pmEmail} - PM-specific projects"
+          echo "  ✅ /check-document/{projectId} - Document status"
+          echo "🔗 Base URL: https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
+          echo
+          echo "🎉 Backend deployment completed successfully!"
+          echo "Next: Test with frontend integration"

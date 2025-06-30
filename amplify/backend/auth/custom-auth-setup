@@ -1,0 +1,31 @@
+{
+    "authSelections": "identityPoolAndUserPool",
+    "resourceName": "customAuth",
+    "serviceName": "Cognito",
+    "userPoolConfig": {
+        "userPoolName": "exampleUserPool",
+        "signInAliases": ["email"],
+        "requiredAttributes": ["email"],
+        "passwordPolicy": {
+            "minimumLength": 8,
+            "requireUppercase": true,
+            "requireLowercase": true,
+            "requireNumbers": true,
+            "requireSymbols": true
+        },
+        "mfaConfiguration": "OFF",
+        "emailVerificationSubject": "Verify your email",
+        "emailVerificationMessage": "Please verify your email using the code: {####}"
+    },
+    "identityPoolConfig": {
+        "identityPoolName": "exampleIdentityPool",
+        "unauthenticatedLogin": false
+    },
+    "oauthConfig": {
+        "domainPrefix": "example",
+        "redirectSignIn": "https://example.com/callback/",
+        "redirectSignOut": "https://example.com/logout/",
+        "responseType": "code",
+        "scopes": ["email", "openid", "profile"]
+    }
+}

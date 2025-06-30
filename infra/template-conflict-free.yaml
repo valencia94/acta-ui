@@ -5,11 +5,9 @@ Description: >
 Parameters:
   ExistingApiId:
     Type: String
-    Default: q2b9avfwv5
     Description: Existing API Gateway RestApiId (e.g., q2b9avfwv5)
   ExistingApiRootResourceId:
     Type: String
-    Default: kw8f8zihjg
     Description: API root resource ID (e.g., kw8f8zihjg)
   ProjectMetadataEnricherArn:
     Type: String
@@ -67,26 +65,26 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Headers: true
 
-  # /pm-manager (matches current deployed structure)
-  PMManagerResource:
+  # /pm-projects
+  PMProjectsResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ExistingApiRootResourceId
-      PathPart: pm-manager
+      PathPart: pm-projects
 
-  PMManagerAllResource:
+  PMProjectsAllResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !Ref PMManagerResource
+      ParentId: !Ref PMProjectsResource
       PathPart: all-projects
 
-  PMManagerAllGetMethod:
+  PMProjectsAllGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ExistingApiId
-      ResourceId: !Ref PMManagerAllResource
+      ResourceId: !Ref PMProjectsAllResource
       HttpMethod: GET
       AuthorizationType: NONE
       Integration:
@@ -94,11 +92,11 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  PMManagerAllOptionsMethod:
+  PMProjectsAllOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ExistingApiId
-      ResourceId: !Ref PMManagerAllResource
+      ResourceId: !Ref PMProjectsAllResource
       HttpMethod: OPTIONS
       AuthorizationType: NONE
       Integration:
@@ -117,18 +115,18 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Headers: true
 
-  PMManagerEmailResource:
+  PMProjectsEmailResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ExistingApiId
-      ParentId: !Ref PMManagerResource
+      ParentId: !Ref PMProjectsResource
       PathPart: '{pmEmail}'
 
-  PMManagerEmailGetMethod:
+  PMProjectsEmailGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ExistingApiId
-      ResourceId: !Ref PMManagerEmailResource
+      ResourceId: !Ref PMProjectsEmailResource
       HttpMethod: GET
       AuthorizationType: NONE
       Integration:
@@ -136,11 +134,11 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
-  PMManagerEmailOptionsMethod:
+  PMProjectsEmailOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ExistingApiId
-      ResourceId: !Ref PMManagerEmailResource
+      ResourceId: !Ref PMProjectsEmailResource
       HttpMethod: OPTIONS
       AuthorizationType: NONE
       Integration:
@@ -224,57 +222,7 @@ Resources:
   ###############################################################################
   # Lambda invoke permissions
   ###############################################################################
-  # Core permissions (7 required)
-  PMManagerAllProjectsPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/all-projects
-
-  PMManagerByEmailPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/*
-
-  ProjectsManagerPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects-manager
-
-  DocumentValidatorGetPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/document-validator/*
-
-  DocumentValidatorHeadPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/document-validator/*
-
-  ProjectMetadataEnricherPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref ProjectMetadataEnricherFunctionName
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/*
-
-  # Alias permissions (5 required)
-  ProjectsAliasPermission:
+  ProjectsPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
@@ -282,23 +230,23 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects
 
-  PMProjectsAllAliasPermission:
+  PMProjectsAllPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/all-projects
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/all-projects
 
-  PMProjectsByEmailAliasPermission:
+  PMProjectsEmailPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-manager/*
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
 
-  CheckDocGetAliasPermission:
+  CheckDocGetPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
@@ -306,7 +254,7 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/check-document/*
 
-  CheckDocHeadAliasPermission:
+  CheckDocHeadPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref ProjectMetadataEnricherFunctionName
@@ -322,10 +270,10 @@ Resources:
     DependsOn:
       - ProjectsGetMethod
       - ProjectsOptionsMethod
-      - PMManagerAllGetMethod
-      - PMManagerAllOptionsMethod
-      - PMManagerEmailGetMethod
-      - PMManagerEmailOptionsMethod
+      - PMProjectsAllGetMethod
+      - PMProjectsAllOptionsMethod
+      - PMProjectsEmailGetMethod
+      - PMProjectsEmailOptionsMethod
       - CheckDocGetMethod
       - CheckDocHeadMethod
       - CheckDocIdOptionsMethod
@@ -344,9 +292,9 @@ Resources:
 Outputs:
   ProjectsEndpoint:
     Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects'
-  PMManagerAllEndpoint:
-    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/all-projects'
-  PMManagerByEmailEndpoint:
-    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/{pmEmail}'
+  PMProjectsAllEndpoint:
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-projects/all-projects'
+  PMProjectsByEmailEndpoint:
+    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-projects/{pmEmail}'
   CheckDocumentEndpoint:
     Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}'
