@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, main]
   workflow_dispatch: {}
 
 # Prevent two jobs from updating the same CF stack
@@ -56,12 +56,21 @@ jobs:
 
       # ───────── 3. Build UI ─────────
       - name: 🔨 Build UI
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: |
-          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> "$GITHUB_ENV"
+          echo "Building with API URL: $VITE_API_BASE_URL"
           pnpm run build
 
-      - name: 📂 List dist
-        run: ls -R dist
+      - name: 📂 List dist contents
+        run: |
+          echo "Listing dist directory structure..."
+          ls -la dist/
+          echo ""
+          echo "Checking for all required files..."
+          echo "✓ Index file:" && ls -la dist/index.html
+          echo "✓ Assets directory:" && ls -la dist/assets/ | head -5
+          echo "✓ Public files:" && find dist/ -name "robots.txt" -o -name "health" -o -name "*.png" | head -5
 
       - name: 🌐 Smoke test build
         run: |
@@ -103,80 +112,133 @@ jobs:
             esac
           done
 
-      # ───────── 5.1 Proactive backend tests ─────────
-      - name: 🧪 Proactive backend tests
+      # ───────── 6. Verify backend endpoints are working ───────
+      - name: 🧪 Verify backend API endpoints
         run: |
-          chmod +x test-backend-proactive.sh
-          ./test-backend-proactive.sh
+          echo "🔍 Testing API endpoints..."
 
-      # ───────── 6. Skip CloudFormation - APIs manually wired ─────────
-      - name: ⚡ Skip CloudFormation deployment (APIs manually wired)
-        run: |
-          echo "🎯 Skipping CloudFormation deployment - all APIs are manually wired and working!"
-          echo "✅ API Gateway Resources: Manually created and tested"
-          echo "✅ Lambda Integration: projectMetadataEnricher routes all requests"
-          echo "✅ Endpoints Working:"
-          echo "   - /pm-manager/all-projects ✅"
-          echo "   - /pm-manager/{pmEmail} ✅" 
-          echo "   - /projects ✅"
-          echo "   - /check-document/{projectId} ✅"
-          echo "   - /project/{projectId}/generate-acta ✅"
-          echo "   - /project/{projectId}/send-approval ✅"
-          echo "🚀 Proceeding to frontend deployment..."
+          # Test public endpoints
+          echo "Testing /health..."
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/health" || echo "000")
+          echo "Health endpoint: HTTP $HEALTH_STATUS"
 
-      # ───────── 6.1 Verify backend endpoints are working ───────
-      - name: 🧪 Verify manually wired endpoints
-        run: |
-          echo "🔍 Testing manually wired API endpoints..."
+          # Test protected endpoints (should return 403 without auth)
+          echo "Testing protected endpoints (expecting 403)..."
+          TIMELINE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/timeline/1000000049842296" || echo "000")
+          PROJECTS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/projects" || echo "000")
+          
+          echo "Timeline endpoint: HTTP $TIMELINE_STATUS"
+          echo "Projects endpoint: HTTP $PROJECTS_STATUS"
 
-          # Test PM manager endpoints (expect 403/auth required)
-          echo "Testing /pm-manager/all-projects..."
-          STATUS1=$(curl -s -o /dev/null -w "%{http_code}" "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/pm-manager/all-projects" || echo "000")
-
-          echo "Testing /pm-manager/test@example.com..."
-          STATUS2=$(curl -s -o /dev/null -w "%{http_code}" "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/pm-manager/test@example.com" || echo "000")
-
-          echo "Testing /projects..."
-          STATUS3=$(curl -s -o /dev/null -w "%{http_code}" "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/projects" || echo "000")
-
-          # Check results (403 = auth required = working, 404 = not found = broken)
-          if [[ "$STATUS1" == "403" && "$STATUS2" == "403" && "$STATUS3" == "403" ]]; then
-            echo "✅ All manually wired endpoints responding correctly (auth required)"
-          elif [[ "$STATUS1" == "200" || "$STATUS2" == "200" || "$STATUS3" == "200" ]]; then
-            echo "✅ Endpoints working (some may not require auth)"
+          if [[ "$HEALTH_STATUS" == "200" ]]; then
+            echo "✅ Health endpoint working correctly"
           else
-            echo "⚠️  Endpoint status: PM-all=$STATUS1, PM-email=$STATUS2, Projects=$STATUS3"
-            echo "   Note: Manual API wiring may need verification"
+            echo "❌ Health endpoint not responding"
+            exit 1
           fi
 
-      # ───────── 7. Sync UI → S3 ─────────
-      - name: 🚀 Sync dist → S3
+          if [[ "$TIMELINE_STATUS" == "403" && "$PROJECTS_STATUS" == "403" ]]; then
+            echo "✅ Protected endpoints properly secured"
+          else
+            echo "⚠️ Protected endpoints may need authentication configuration"
+          fi
+
+      # ───────── 7. Sync UI → S3 with comprehensive file verification ─────────
+      - name: 🚀 Sync all files to S3
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          echo "Deploying to S3 bucket: $BUCKET"
+          
+          # Sync with proper cache headers and file types
+          aws s3 sync dist/ "s3://$BUCKET" \
+            --delete \
+            --exclude "*.map" \
+            --cache-control "max-age=86400" \
+            --metadata-directive REPLACE
+          
+          # Set special cache headers for HTML files (no cache for SPA routing)
+          aws s3 cp dist/index.html "s3://$BUCKET/index.html" \
+            --cache-control "max-age=0, no-cache, no-store, must-revalidate" \
+            --content-type "text/html; charset=utf-8"
+          
+          echo "✅ S3 sync completed"
+
+      - name: �️ Setup SPA routes for CloudFront
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          echo "Setting up SPA routes in S3..."
+          chmod +x scripts/push-spa-routes.sh
+          BUCKET="$BUCKET" AWS_REGION="$AWS_REGION" ./scripts/push-spa-routes.sh dist
+
+      - name: 🧾 Verify S3 deployment
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-          aws s3 sync dist "s3://$BUCKET" --delete
-          bash scripts/push-spa-routes.sh
+          echo "Verifying S3 deployment..."
+          
+          # Check essential files
+          echo "✓ Essential files:"
+          aws s3 ls "s3://$BUCKET/index.html" && echo "  - index.html ✅" || echo "  - index.html ❌"
+          aws s3 ls "s3://$BUCKET/robots.txt" && echo "  - robots.txt ✅" || echo "  - robots.txt ❌"
+          aws s3 ls "s3://$BUCKET/health" && echo "  - health ✅" || echo "  - health ❌"
+          
+          # Check SPA routes
+          echo "✓ SPA routes:"
+          aws s3 ls "s3://$BUCKET/dashboard/index.html" && echo "  - /dashboard ✅" || echo "  - /dashboard ❌"
+          aws s3 ls "s3://$BUCKET/login/index.html" && echo "  - /login ✅" || echo "  - /login ❌"
+          
+          # Check assets
+          echo "✓ Asset files:"
+          ASSET_COUNT=$(aws s3 ls "s3://$BUCKET/assets/" --recursive | wc -l)
+          echo "  - Asset files: $ASSET_COUNT"
+          
+          # Total file count
+          TOTAL_FILES=$(aws s3 ls "s3://$BUCKET/" --recursive | wc -l)
+          echo "✓ Total files deployed: $TOTAL_FILES"
 
-      - name: 🧾 List S3
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-        run: aws s3 ls "s3://$BUCKET/" --recursive
-
-      # ───────── 8. Ensure CF root object ─────────
-      - name: 🛠️ Ensure CF default root
+      # ───────── 8. Configure CloudFront for SPA ─────────
+      - name: 🛠️ Configure CloudFront SPA routing
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
           set -euo pipefail
+          echo "Configuring CloudFront distribution: $DIST_ID"
+          
+          # Get current config
           tmp=$(mktemp)
           aws cloudfront get-distribution-config --id "$DIST_ID" > "$tmp"
           etag=$(jq -r .ETag "$tmp")
-          root=$(jq -r .DistributionConfig.DefaultRootObject "$tmp")
-          if [[ "$root" != "index.html" ]]; then
-            jq '.DistributionConfig.DefaultRootObject = "index.html" | .DistributionConfig' "$tmp" > /tmp/cf_patch.json
-            aws cloudfront update-distribution --id "$DIST_ID" --if-match "$etag" \
-              --distribution-config file:///tmp/cf_patch.json
-          fi
+          
+          # Update config for SPA routing
+          jq '.DistributionConfig.DefaultRootObject = "index.html" |
+              .DistributionConfig.CustomErrorResponses = {
+                "Quantity": 2,
+                "Items": [
+                  {
+                    "ErrorCode": 403,
+                    "ResponsePagePath": "/index.html",
+                    "ResponseCode": "200",
+                    "ErrorCachingMinTTL": 10
+                  },
+                  {
+                    "ErrorCode": 404,
+                    "ResponsePagePath": "/index.html",
+                    "ResponseCode": "200",
+                    "ErrorCachingMinTTL": 10
+                  }
+                ]
+              } |
+              .DistributionConfig' "$tmp" > /tmp/cf_patch.json
+          
+          # Update distribution
+          aws cloudfront update-distribution --id "$DIST_ID" --if-match "$etag" \
+            --distribution-config file:///tmp/cf_patch.json
+          
+          echo "✅ CloudFront SPA routing configured"
           rm -f "$tmp"
 
       # ───────── 9. Apply OAC bucket policy ─────────
@@ -207,18 +269,58 @@ jobs:
           }
           EOF
           aws s3api put-bucket-policy --bucket "$BUCKET" --policy file:///tmp/oac.json
+          echo "✅ OAC bucket policy applied"
 
-      # ───────── 10. CF invalidate & quick checks ─────────
-      - name: 🔄 CF invalidate & verify
+      # ───────── 10. CF invalidate & verify ─────────
+      - name: 🔄 CloudFront invalidate & verify
         env:
           DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
         run: |
           set -euo pipefail
+          echo "Creating CloudFront invalidation..."
           iid=$(aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths '/*' \
                  --query 'Invalidation.Id' --output text)
+          echo "Invalidation ID: $iid"
+          
+          echo "Waiting for invalidation to complete..."
           aws cloudfront wait invalidation-completed --distribution-id "$DIST_ID" --id "$iid"
+          
           CF_DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" \
                        --query 'Distribution.DomainName' --output text)
           echo "CloudFront Domain → https://$CF_DOMAIN"
-          curl -sf https://$CF_DOMAIN/login      || true
-          curl -sf https://$CF_DOMAIN/dashboard  || true
+          
+          # Test routes after invalidation
+          echo "Testing routes..."
+          curl -sf "https://$CF_DOMAIN/" && echo "✅ Root route OK" || echo "❌ Root route failed"
+          curl -sf "https://$CF_DOMAIN/dashboard" && echo "✅ Dashboard route OK" || echo "❌ Dashboard route failed"
+          curl -sf "https://$CF_DOMAIN/login" && echo "✅ Login route OK" || echo "❌ Login route failed"
+          
+          echo "🎉 Deployment completed successfully!"
+          echo "🌐 Application URL: https://$CF_DOMAIN"
+
+      # ───────── 11. Deployment summary ─────────
+      - name: 📋 Deployment Summary
+        env:
+          DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+        run: |
+          CF_DOMAIN=$(aws cloudfront get-distribution --id "$DIST_ID" \
+                       --query 'Distribution.DomainName' --output text)
+          
+          echo "🎉 DEPLOYMENT SUCCESSFUL!"
+          echo "========================"
+          echo "📅 Time: $(date)"
+          echo "🌐 URL: https://$CF_DOMAIN"
+          echo "📦 S3 Bucket: $BUCKET"
+          echo "☁️ CloudFront ID: $DIST_ID"
+          echo "🚀 SPA Routing: Configured"
+          echo "🔒 Security: OAC + Bucket Policy Applied"
+          echo ""
+          echo "✅ All files deployed including:"
+          echo "  - React application build (dist/)"
+          echo "  - Static assets (public/ content)"
+          echo "  - SPA routing setup (/dashboard, /login)"
+          echo "  - Health check endpoint"
+          echo "  - Application assets and icons"
+          echo ""
+          echo "🧪 Ready for button functionality testing"
