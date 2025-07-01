@@ -10,7 +10,7 @@ Verify that all dashboard buttons in ACTA-UI are making proper API calls and pro
 
 ### **Step 1: Access the Application**
 
-- **URL**: http://localhost:3000
+- **LIVE URL**: https://d7t9x3j66yd8k.cloudfront.net
 - **Login Credentials**:
   - Email: `valencia942003@gmail.com`
   - Password: `PdYb7TU7HvBhYP7$`
@@ -244,7 +244,7 @@ clickButton('preview');
 
 ## 🚀 **START TESTING!**
 
-1. **Open**: http://localhost:3000
+1. **Open**: https://d7t9x3j66yd8k.cloudfront.net
 2. **Login**: valencia942003@gmail.com / PdYb7TU7HvBhYP7$
 3. **Enter Project ID**: 1000000049842296
 4. **Test each button systematically**
