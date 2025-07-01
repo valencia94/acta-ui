@@ -26,9 +26,9 @@ concurrency:
 
 env:
   # CloudFront distribution domain (confirmed working)
-  CLOUDFRONT_URL: "https://d7t9x3j66yd8k.cloudfront.net"
+  CLOUDFRONT_URL: 'https://d7t9x3j66yd8k.cloudfront.net'
   # API Gateway endpoint (confirmed working)
-  API_ENDPOINT: "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
+  API_ENDPOINT: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod'
 
 jobs:
   # ========================================
@@ -41,7 +41,7 @@ jobs:
       should_deploy: ${{ steps.changes.outputs.should_deploy }}
       commit_hash: ${{ steps.info.outputs.commit_hash }}
       build_time: ${{ steps.info.outputs.build_time }}
-    
+
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -62,9 +62,9 @@ jobs:
           # Check if we have changes in important files
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep -E "\.(tsx?|jsx?|html|css|json|md)$" | wc -l)
           FORCE_DEPLOY="${{ github.event.inputs.force_deploy }}"
-          
+
           echo "📁 Changed files: $CHANGED_FILES"
-          
+
           if [[ "$CHANGED_FILES" -gt 0 || "$FORCE_DEPLOY" == "true" ]]; then
             echo "✅ Changes detected or force deploy requested"
             echo "should_deploy=true" >> $GITHUB_OUTPUT
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: preflight
     if: needs.preflight.outputs.should_deploy == 'true'
-    
+
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -122,13 +122,13 @@ jobs:
             echo "⚠️ Formatting issues found, auto-fixing..."
             pnpm exec prettier --write .
           }
-          
+
           echo "→ ESLint check..."
           pnpm exec eslint . --fix || {
             echo "⚠️ ESLint issues found, attempting auto-fix..."
             pnpm exec eslint . --fix --quiet || true
           }
-          
+
           echo "→ TypeScript check..."
           pnpm run type-check || {
             echo "⚠️ TypeScript errors found, but continuing..."
@@ -141,52 +141,52 @@ jobs:
         run: |
           echo "🔨 Building React application..."
           echo "📡 API Base URL: $VITE_API_BASE_URL"
-          
+
           # Build the application
           pnpm run build
-          
+
           echo "✅ Build completed successfully"
 
       - name: 📋 Build Verification
         run: |
           echo "📋 VERIFYING BUILD OUTPUT"
           echo "========================"
-          
+
           # Check if dist directory exists
           if [ ! -d "dist" ]; then
             echo "❌ dist directory not found!"
             exit 1
           fi
-          
+
           # Check essential files
           echo "🔍 Checking essential files..."
-          
+
           if [ ! -f "dist/index.html" ]; then
             echo "❌ index.html not found!"
             exit 1
           fi
           echo "✅ index.html found"
-          
+
           # Check assets directory
           if [ ! -d "dist/assets" ]; then
             echo "❌ assets directory not found!"
             exit 1
           fi
           echo "✅ assets directory found"
-          
+
           # Count files
           TOTAL_FILES=$(find dist -type f | wc -l)
           ASSET_FILES=$(find dist/assets -type f | wc -l)
-          
+
           echo "📊 Build Statistics:"
           echo "   Total files: $TOTAL_FILES"
           echo "   Asset files: $ASSET_FILES"
-          
+
           # List key files
           echo "📁 Key files:"
           ls -la dist/index.html
           ls -la dist/assets/ | head -5
-          
+
           # Check file sizes
           echo "📏 File sizes:"
           du -sh dist/
@@ -195,18 +195,18 @@ jobs:
       - name: 🧪 Build Test
         run: |
           echo "🧪 Testing built application..."
-          
+
           # Start preview server in background
           pnpm exec vite preview --port 4173 --host 0.0.0.0 &
           PREVIEW_PID=$!
-          
+
           # Wait for server to start
           echo "⏳ Waiting for preview server..."
           sleep 10
-          
+
           # Test the build
           echo "🔍 Testing application endpoints..."
-          
+
           # Test main page
           if curl -sf http://localhost:4173/ > /dev/null; then
             echo "✅ Main page loads successfully"
@@ -215,7 +215,7 @@ jobs:
             kill $PREVIEW_PID || true
             exit 1
           fi
-          
+
           # Test that it's a React app
           if curl -s http://localhost:4173/ | grep -q "root"; then
             echo "✅ React app structure detected"
@@ -224,7 +224,7 @@ jobs:
             kill $PREVIEW_PID || true
             exit 1
           fi
-          
+
           # Clean up
           kill $PREVIEW_PID || true
           echo "✅ Build test completed successfully"
@@ -270,11 +270,11 @@ jobs:
         run: |
           echo "🧪 AWS PRE-DEPLOYMENT VERIFICATION"
           echo "================================="
-          
+
           # Verify AWS credentials
           echo "🔍 Verifying AWS credentials..."
           aws sts get-caller-identity
-          
+
           # Verify S3 bucket access
           echo "🔍 Verifying S3 bucket access..."
           aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/ --region ${{ secrets.AWS_REGION }} || {
@@ -282,7 +282,7 @@ jobs:
             exit 1
           }
           echo "✅ S3 bucket accessible"
-          
+
           # Verify CloudFront distribution
           echo "🔍 Verifying CloudFront distribution..."
           aws cloudfront get-distribution --id ${{ secrets.CLOUDFRONT_DIST_ID }} > /dev/null || {
@@ -300,16 +300,16 @@ jobs:
           echo "=================="
           echo "Bucket: $BUCKET"
           echo "Region: $AWS_REGION"
-          
+
           # Verify dist directory exists
           if [ ! -d "dist" ]; then
             echo "❌ dist directory not found after artifact download!"
             exit 1
           fi
-          
+
           echo "📁 Files to deploy:"
           find dist -type f | head -10
-          
+
           # Sync files to S3 with proper headers
           echo "📤 Syncing files to S3..."
           aws s3 sync dist/ s3://$BUCKET/ \
@@ -317,14 +317,14 @@ jobs:
             --exclude "*.map" \
             --cache-control "max-age=31536000" \
             --region $AWS_REGION
-          
+
           # Set special headers for HTML files (no cache for SPA)
           echo "📝 Setting HTML file headers..."
           aws s3 cp dist/index.html s3://$BUCKET/index.html \
             --cache-control "max-age=0, no-cache, no-store, must-revalidate" \
             --content-type "text/html; charset=utf-8" \
             --region $AWS_REGION
-          
+
           echo "✅ S3 deployment completed"
 
       - name: 🔧 Setup SPA Routing
@@ -334,10 +334,10 @@ jobs:
         run: |
           echo "🔧 SETTING UP SPA ROUTING"
           echo "========================"
-          
+
           # Create SPA route copies for client-side routing
           ROUTES=("dashboard" "login" "admin" "profile")
-          
+
           for route in "${ROUTES[@]}"; do
             echo "→ Setting up /$route route..."
             
@@ -356,15 +356,15 @@ jobs:
         run: |
           echo "☁️ UPDATING CLOUDFRONT CONFIGURATION"
           echo "==================================="
-          
+
           # Get current distribution config
           echo "📥 Getting current CloudFront configuration..."
           aws cloudfront get-distribution-config --id $DIST_ID > /tmp/cf-config.json
-          
+
           # Extract ETag and configuration
           ETAG=$(jq -r '.ETag' /tmp/cf-config.json)
           echo "🏷️ Current ETag: $ETAG"
-          
+
           # Update configuration for SPA routing
           echo "🔧 Updating configuration for SPA routing..."
           jq '.DistributionConfig | 
@@ -386,14 +386,14 @@ jobs:
                   }
                 ]
               }' /tmp/cf-config.json > /tmp/cf-updated.json
-          
+
           # Apply configuration update
           echo "📤 Applying CloudFront configuration update..."
           aws cloudfront update-distribution \
             --id $DIST_ID \
             --if-match $ETAG \
             --distribution-config file:///tmp/cf-updated.json
-          
+
           echo "✅ CloudFront configuration updated"
 
       - name: 🔄 CloudFront Cache Invalidation
@@ -402,7 +402,7 @@ jobs:
         run: |
           echo "🔄 CLOUDFRONT CACHE INVALIDATION"
           echo "==============================="
-          
+
           # Create invalidation
           echo "🚮 Creating cache invalidation..."
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
@@ -410,15 +410,15 @@ jobs:
             --paths "/*" \
             --query 'Invalidation.Id' \
             --output text)
-          
+
           echo "🆔 Invalidation ID: $INVALIDATION_ID"
-          
+
           # Wait for invalidation to complete
           echo "⏳ Waiting for invalidation to complete..."
           aws cloudfront wait invalidation-completed \
             --distribution-id $DIST_ID \
             --id $INVALIDATION_ID
-          
+
           echo "✅ Cache invalidation completed"
 
       - name: 🧪 Post-Deploy Verification
@@ -427,23 +427,23 @@ jobs:
         run: |
           echo "🧪 POST-DEPLOYMENT VERIFICATION"
           echo "==============================="
-          
+
           # Get CloudFront domain
           CF_DOMAIN=$(aws cloudfront get-distribution \
             --id $DIST_ID \
             --query 'Distribution.DomainName' \
             --output text)
-          
+
           echo "🌐 CloudFront Domain: $CF_DOMAIN"
           echo "🔗 Full URL: https://$CF_DOMAIN"
-          
+
           # Wait a moment for propagation
           echo "⏳ Waiting for CloudFront propagation..."
           sleep 30
-          
+
           # Test main routes
           echo "🔍 Testing application routes..."
-          
+
           # Test root route
           if curl -sf "https://$CF_DOMAIN/" > /dev/null; then
             echo "✅ Root route (/) - OK"
@@ -451,7 +451,7 @@ jobs:
             echo "❌ Root route (/) - FAILED"
             exit 1
           fi
-          
+
           # Test SPA routes
           for route in "dashboard" "login"; do
             if curl -sf "https://$CF_DOMAIN/$route" > /dev/null; then
@@ -461,7 +461,7 @@ jobs:
               exit 1
             fi
           done
-          
+
           # Test that we get React app
           echo "🔍 Verifying React app content..."
           if curl -s "https://$CF_DOMAIN/" | grep -q "root"; then
@@ -470,7 +470,7 @@ jobs:
             echo "❌ React app root element not found"
             exit 1
           fi
-          
+
           # Test API connectivity from deployed app
           echo "🔍 Testing API connectivity..."
           if curl -sf "${{ env.API_ENDPOINT }}/health" > /dev/null; then
@@ -479,7 +479,7 @@ jobs:
             echo "❌ API endpoint not accessible"
             exit 1
           fi
-          
+
           echo "✅ All post-deployment tests passed!"
 
   # ========================================
@@ -490,7 +490,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [preflight, build, deploy]
     if: always() && needs.preflight.outputs.should_deploy == 'true'
-    
+
     steps:
       - name: 📊 Generate Deployment Report
         env:

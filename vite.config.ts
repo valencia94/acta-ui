@@ -41,12 +41,4 @@ export default defineConfig({
     // Increase chunk size warning limit for PDF.js
     chunkSizeWarningLimit: 600,
   },
-  define: {
-    'process.env.REDIRECT_SIGN_IN': JSON.stringify(
-      'https://example.com/callback/'
-    ),
-    'process.env.REDIRECT_SIGN_OUT': JSON.stringify(
-      'https://example.com/logout/'
-    ),
-  },
 });

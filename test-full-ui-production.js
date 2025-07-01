@@ -7,12 +7,14 @@
  * including API endpoints, frontend functionality, and deployment status
  */
 
-import fs from 'fs';
-import https from 'https';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const https = require('https');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const fs = require('fs');
 
 // Configuration
 const API_BASE = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
-const FRONTEND_URL = 'https://d7t9x3j66yd8k.cloudfront.net';
+const FRONTEND_URL = 'https://d1abwcphmz9heu.cloudfront.net';
 
 // Test results
 const results = {
@@ -238,7 +240,7 @@ function generateReport() {
   console.log(`⚠️  Warnings: ${results.summary.warnings}`);
   console.log('\n📋 Recommendations:');
   report.recommendations.forEach((rec) => console.log(`   ${rec}`));
-  console.log('\\n📊 Full report saved to: production-test-report.json');
+  console.log('\n📊 Full report saved to: production-test-report.json');
 }
 
 // Main execution
@@ -262,4 +264,8 @@ async function main() {
 }
 
 // Run if called directly
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = { testAPIs, testFrontend, checkDeployment, testPDFPreview };

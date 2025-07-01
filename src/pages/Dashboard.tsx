@@ -1,5 +1,4 @@
 // src/pages/Dashboard.tsx
-// Force deployment trigger - Updated: 2025-07-01 12:45:00 - DEPLOY NOW!
 import { motion } from 'framer-motion';
 import {
   Download,
@@ -36,10 +35,9 @@ export default function Dashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'manual' | 'pm'>('pm'); // Default to PM mode
 
-  // PDF Preview modal state
-  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string>('');
-  const [pdfFileName, setPdfFileName] = useState<string>('');
+  // PDF Preview state
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>('');
 
   // Check if user has admin access
   const isAdmin =
@@ -421,48 +419,35 @@ export default function Dashboard() {
     }
   }
 
-  // Preview PDF with the PDFPreview modal
+  // Preview PDF with enhanced UI
   async function handlePreviewPdf() {
-    if (!projectId.trim()) {
-      toast.error('Please enter a Project ID');
-      return;
-    }
+    if (!projectId || actionLoading) return;
 
+    const loadingToast = toast.loading(
+      `Preparing PDF preview for project ${projectId}...`
+    );
     setActionLoading(true);
 
-    // Show loading message
-    const loadingToast = toast.loading('Preparing PDF preview...');
-
     try {
-      console.log(`🔍 Preparing PDF preview for project: ${projectId}`);
+      console.log(`🔍 Previewing PDF for project: ${projectId}`);
 
-      // Step 1: Check if PDF document exists in S3
-      console.log('🔍 Checking PDF document availability in S3...');
-      const availability = await checkDocumentInS3(projectId, 'pdf');
-
-      if (!availability.available) {
+      // Check if document exists first
+      const documentExists = await checkDocumentInS3(projectId, 'pdf');
+      if (!documentExists.available) {
         toast.dismiss(loadingToast);
         toast.error(
-          `No PDF document found in S3 for project "${projectId}". Please generate the Acta first.`,
-          { duration: 8000 }
+          `No PDF document found for project ${projectId}. Please generate the document first.`,
+          { duration: 6000 }
         );
         return;
       }
 
-      console.log(
-        `✅ PDF document found in S3 - Size: ${availability.size} bytes`
-      );
-
-      // Step 2: Get S3 signed URL for PDF
-      console.log('📤 Getting PDF signed URL...');
+      // Get the PDF download URL
       const downloadResult = await getS3DownloadUrl(projectId, 'pdf');
-
-      // Dismiss loading toast
-      toast.dismiss(loadingToast);
 
       if (!downloadResult.success || !downloadResult.downloadUrl) {
         console.error(
-          '❌ Failed to get PDF download URL:',
+          '❌ Failed to get S3 download URL for preview:',
           downloadResult.error
         );
         toast.error(
@@ -473,29 +458,37 @@ export default function Dashboard() {
         return;
       }
 
-      // Step 3: Open PDF in preview modal
       const pdfUrl = downloadResult.downloadUrl;
-      const fileName = `ACTA_Project_${projectId}.pdf`;
+      const fileName = `project-${projectId}-acta.pdf`;
 
-      console.log(
-        `🔗 Opening PDF preview with URL: ${pdfUrl.substring(0, 100)}...`
-      );
+      console.log(`🔗 Got PDF URL for preview: ${pdfUrl.substring(0, 100)}...`);
 
+      // Set preview state
       setPdfPreviewUrl(pdfUrl);
-      setPdfFileName(fileName);
-      setPdfPreviewOpen(true);
+      setPdfPreviewFileName(fileName);
 
-      toast.success('PDF preview opened successfully!', { duration: 3000 });
+      toast.success(
+        'PDF preview loaded! You can now view the document in full screen.',
+        { duration: 3000 }
+      );
     } catch (error) {
-      console.error('PDF preview error:', error);
-      toast.dismiss(loadingToast);
+      console.error('❌ Preview PDF error:', error);
 
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      toast.error(`Failed to open PDF preview: ${errorMessage}`, {
-        duration: 8000,
-      });
+
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        toast.error(
+          `PDF not found for project "${projectId}". Please generate the document first.`,
+          { duration: 8000 }
+        );
+      } else {
+        toast.error(`Failed to load PDF preview: ${errorMessage}`, {
+          duration: 8000,
+        });
+      }
     } finally {
+      toast.dismiss(loadingToast);
       setActionLoading(false);
     }
   }
@@ -927,15 +920,17 @@ export default function Dashboard() {
             <ProjectTable data={projects} />
           </div>
         </motion.div>
-      </main>
 
-      {/* PDF Preview Modal */}
-      <PDFPreview
-        isOpen={pdfPreviewOpen}
-        onClose={() => setPdfPreviewOpen(false)}
-        pdfUrl={pdfPreviewUrl}
-        fileName={pdfFileName}
-      />
+        {/* PDF Preview Component */}
+        {pdfPreviewUrl && (
+          <PDFPreview
+            isOpen={true}
+            pdfUrl={pdfPreviewUrl}
+            fileName={pdfPreviewFileName}
+            onClose={() => setPdfPreviewUrl(null)}
+          />
+        )}
+      </main>
     </div>
   );
 }

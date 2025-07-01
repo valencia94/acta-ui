@@ -7,5 +7,14 @@
   // Auto-installs AWS CLI v2 every time a Codespace is created
   "features": {
     "ghcr.io/devcontainers-contrib/features/aws-cli:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode-remote.remote-containers",
+        "ms-azuretools.vscode-docker",
+        "Zim.vsc-docker"
+      ]
+    }
   }
 }
