@@ -9,7 +9,7 @@ echo "🚀 Starting Final Live Environment Button Integration Test"
 echo "========================================================"
 
 # Configuration
-SITE_URL="https://d13zx5u8i7fdt7.cloudfront.net"
+SITE_URL="https://d7t9x3j66yd8k.cloudfront.net"
 API_BASE_URL="https://api.acta.ikusii.com"
 TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
 REPORT_FILE="live-button-test-report-${TIMESTAMP}.md"

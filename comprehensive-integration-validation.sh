@@ -11,7 +11,7 @@ echo "=============================================="
 # Configuration
 REGION="us-east-2"
 API_BASE_URL="https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
-SITE_URL="https://d13zx5u8i7fdt7.cloudfront.net"
+SITE_URL="https://d7t9x3j66yd8k.cloudfront.net"
 USER_POOL_ID="us-east-2_FyHLtOhiY"
 APP_CLIENT_ID="dshos5iou44tuach7ta3ici5m"
 CF_STACK_NAME="Ikusii-acta-ui-secure-api"

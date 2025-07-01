@@ -19,7 +19,7 @@
 
 - **User Pool ID:** `us-east-2_FyHLtOhiY`
 - **App Client ID:** `dshos5iou44tuach7ta3ici5m`
-- **Callback URL:** `https://d13zx5u8i7fdt7.cloudfront.net` ✅ Updated
+- **Callback URL:** `https://d7t9x3j66yd8k.cloudfront.net` ✅ Updated
 - **Status:** ✅ Properly configured
 
 ### Lambda Functions (Verified Existing)
@@ -40,7 +40,7 @@
 
 ### UI Configuration
 
-- **Live Site:** `https://d13zx5u8i7fdt7.cloudfront.net`
+- **Live Site:** `https://d7t9x3j66yd8k.cloudfront.net`
 - **aws-exports.js:** ✅ Updated with correct app client ID
 - **API Endpoint:** ✅ Configured correctly
 
@@ -82,7 +82,7 @@
 ### Step 1: Open Live Site
 
 ```
-https://d13zx5u8i7fdt7.cloudfront.net
+https://d7t9x3j66yd8k.cloudfront.net
 ```
 
 ### Step 2: Load Testing Script

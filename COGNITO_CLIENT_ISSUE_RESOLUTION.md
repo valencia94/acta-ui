@@ -11,7 +11,7 @@
 ### 🔧 Available Cognito App Clients:
 
 1. **Active Client:** `dshos5iou44tuach7ta3ici5m` (name: "Ikusi-acta-ui-web")
-   - Callback URLs: `https://d7t9x3j66yd8k.cloudfront.net`, `https://d13zx5u8i7fdt7.cloudfront.net`
+   - Callback URLs: `https://d7t9x3j66yd8k.cloudfront.net`, `https://d7t9x3j66yd8k.cloudfront.net`
    - Status: ✅ Properly configured
 
 2. **Temporary Client:** `669b1hu7kbud6ribj7ranq71p4` (name: "acta-ui-web-temp-fix")
@@ -24,7 +24,7 @@
    - Configuration: Uses old client ID `1hdn8b19ub2kmfkuse8rsjpv8e` (missing)
    - Status: ❌ Broken authentication
 
-2. **New Site:** `https://d13zx5u8i7fdt7.cloudfront.net`
+2. **New Site:** `https://d7t9x3j66yd8k.cloudfront.net`
    - Configuration: Updated to use correct client ID `dshos5iou44tuach7ta3ici5m`
    - Status: ✅ Should work
 
@@ -32,7 +32,7 @@
 
 ### Option 1: Use the New Site (Recommended)
 
-**URL:** `https://d13zx5u8i7fdt7.cloudfront.net`
+**URL:** `https://d7t9x3j66yd8k.cloudfront.net`
 
 - This site should work with the correct Cognito configuration
 - Updated with correct app client ID
@@ -101,7 +101,7 @@ Follow `manual-button-testing-checklist.md` for comprehensive testing.
 ## Recommended Next Steps
 
 1. **Try the New Site First:**
-   - Navigate to: `https://d13zx5u8i7fdt7.cloudfront.net`
+   - Navigate to: `https://d7t9x3j66yd8k.cloudfront.net`
    - Test authentication and button functionality
 
 2. **If New Site Works:**

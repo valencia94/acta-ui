@@ -52,7 +52,7 @@
 
 ### Option 1: Use the Correct Site (Recommended)
 
-**URL:** `https://d13zx5u8i7fdt7.cloudfront.net`
+**URL:** `https://d7t9x3j66yd8k.cloudfront.net`
 
 - Pre-configured with correct Cognito settings
 - Should work immediately

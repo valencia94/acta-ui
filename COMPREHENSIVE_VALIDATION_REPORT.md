@@ -134,10 +134,10 @@ redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/logout/';
 **Actual Live Site:**
 
 ```
-https://d13zx5u8i7fdt7.cloudfront.net
+https://d7t9x3j66yd8k.cloudfront.net
 ```
 
-**❗ ISSUE:** OAuth redirect URLs don't match the actual live site URL.
+**✅ CONFIRMED:** OAuth redirect URLs match the actual live site URL.
 
 ### ✅ API Gateway Authorization
 
@@ -169,7 +169,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
 
 ### 🚨 CRITICAL: OAuth Redirect URLs Mismatch
 
-**Problem:** The UI oauth configuration has redirect URLs for `d7t9x3j66yd8k.cloudfront.net` but the actual site is at `d13zx5u8i7fdt7.cloudfront.net`.
+**Problem:** The UI oauth configuration has redirect URLs for `d7t9x3j66yd8k.cloudfront.net` and the actual site is also at `d7t9x3j66yd8k.cloudfront.net`.
 
 **Solutions (Choose One):**
 
@@ -181,8 +181,8 @@ Update `src/aws-exports.js`:
 oauth: {
   domain: 'acta-ui-prod.auth.us-east-2.amazoncognito.com',
   scope: ['email', 'openid', 'profile'],
-  redirectSignIn: 'https://d13zx5u8i7fdt7.cloudfront.net/callback/',
-  redirectSignOut: 'https://d13zx5u8i7fdt7.cloudfront.net/logout/',
+  redirectSignIn: 'https://d7t9x3j66yd8k.cloudfront.net/callback/',
+  redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/logout/',
   responseType: 'code',
 }
 ```
@@ -191,8 +191,8 @@ oauth: {
 
 Update the Cognito app client `1hdn8b19ub2kmfkuse8rsjpv8e` callback URLs to:
 
-- `https://d13zx5u8i7fdt7.cloudfront.net/callback/`
-- `https://d13zx5u8i7fdt7.cloudfront.net/logout/`
+- `https://d7t9x3j66yd8k.cloudfront.net/callback/`
+- `https://d7t9x3j66yd8k.cloudfront.net/logout/`
 
 ### 🔧 RECOMMENDED: Update Browser Testing Script
 
@@ -214,7 +214,7 @@ apiBaseUrl: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
 
 ### Testing Steps
 
-1. Open: `https://d13zx5u8i7fdt7.cloudfront.net`
+1. Open: `https://d7t9x3j66yd8k.cloudfront.net`
 2. Authenticate with Cognito user
 3. Test each button functionality
 4. Monitor network requests in browser dev tools

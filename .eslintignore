@@ -12,3 +12,4 @@ testing-resources
 public/*.js
 test-api*.js
 api-connectivity*.js
+public-backup/

@@ -2,7 +2,7 @@
 
 ## Live Site URL
 
-https://d13zx5u8i7fdt7.cloudfront.net
+https://d7t9x3j66yd8k.cloudfront.net
 
 ## Pre-Testing Setup
 

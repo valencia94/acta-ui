@@ -3,7 +3,7 @@
 **Date:** Tue Jul 1 10:08:43 UTC 2025
 **Region:** us-east-2
 **API Base URL:** https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod
-**Site URL:** https://d13zx5u8i7fdt7.cloudfront.net
+**Site URL:** https://d7t9x3j66yd8k.cloudfront.net
 **User Pool ID:** us-east-2_FyHLtOhiY
 **App Client ID:** dshos5iou44tuach7ta3ici5m
 
@@ -14,7 +14,7 @@
 - **CloudFormation Stack:** ✅ CREATE_COMPLETE
 - **User Pool:** ✅ Active
 - **App Client:** ✅ Active
-- **Callback URL:** https://d13zx5u8i7fdt7.cloudfront.net
+- **Callback URL:** https://d7t9x3j66yd8k.cloudfront.net
 
 ## API Endpoint Tests
 
@@ -76,7 +76,7 @@
 
 ## Site Accessibility
 
-- **URL:** https://d13zx5u8i7fdt7.cloudfront.net
+- **URL:** https://d7t9x3j66yd8k.cloudfront.net
 - **Status:** ❌ Error (000000)
 - **Response Code:** 000000
 
@@ -111,8 +111,8 @@
 
 - **User Pool ID:** `us-east-2_FyHLtOhiY`
 - **App Client ID:** `dshos5iou44tuach7ta3ici5m`
-- **Callback URL:** `https://d13zx5u8i7fdt7.cloudfront.net`
-- **Site URL:** `https://d13zx5u8i7fdt7.cloudfront.net`
+- **Callback URL:** `https://d7t9x3j66yd8k.cloudfront.net`
+- **Site URL:** `https://d7t9x3j66yd8k.cloudfront.net`
 
 ### Validation Status
 
@@ -122,7 +122,7 @@
 
 ### 1. Browser Setup
 
-1. Open: https://d13zx5u8i7fdt7.cloudfront.net
+1. Open: https://d7t9x3j66yd8k.cloudfront.net
 2. Open Developer Tools (F12)
 3. Navigate to Network tab
 4. Clear existing requests
