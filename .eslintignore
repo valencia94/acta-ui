@@ -8,6 +8,7 @@ node_modules
 coverage
 storybook-static
 test-results
+testing-resources
 public/*.js
 test-api*.js
 api-connectivity*.js
