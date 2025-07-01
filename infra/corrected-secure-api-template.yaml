@@ -20,37 +20,37 @@ Parameters:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:getTimeline
     Description: Timeline data function (camelCase - actual AWS name)
-    
+
   GetDownloadActaArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:getDownloadActa
     Description: Download ACTA documents function (camelCase - actual AWS name)
-    
+
   SendApprovalEmailArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:sendApprovalEmail
     Description: Send approval email function (camelCase - actual AWS name)
-    
+
   ProjectPlaceDataExtractorArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:ProjectPlaceDataExtractor
     Description: Extract project place data function (PascalCase - actual AWS name)
-    
+
   DocumentStatusArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:DocumentStatus
     Description: Document status checking function (PascalCase - actual AWS name)
-    
+
   HealthCheckArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:HealthCheck
     Description: Health check function (PascalCase - actual AWS name)
-    
+
   GetProjectSummaryArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:getProjectSummary
     Description: Project summary function (camelCase - actual AWS name)
-    
+
   ProjectsManagerArn:
     Type: String
     Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher

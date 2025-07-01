@@ -1,9 +1,11 @@
 # Manual Button Testing Checklist - Live Environment
 
 ## Live Site URL
+
 https://d13zx5u8i7fdt7.cloudfront.net
 
 ## Pre-Testing Setup
+
 1. Open browser developer tools (F12)
 2. Navigate to Network tab to monitor API calls
 3. Clear console and network logs
@@ -12,10 +14,11 @@ https://d13zx5u8i7fdt7.cloudfront.net
 ## Button Testing Checklist
 
 ### 1. Generate ACTA Button
+
 - **Location**: Main dashboard
 - **Expected API Call**: `POST /generate-acta`
 - **Expected Endpoint**: `https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/generate-acta`
-- **Expected Headers**: 
+- **Expected Headers**:
   - `Authorization: Bearer <token>`
   - `Content-Type: application/json`
 - **Test Steps**:
@@ -27,6 +30,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Note any errors in console
 
 ### 2. Download Word Document Button
+
 - **Location**: Document actions section
 - **Expected API Call**: `GET /download-acta?format=word`
 - **Expected Endpoint**: `https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/download-acta`
@@ -39,6 +43,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Note any errors in console
 
 ### 3. Download PDF Button
+
 - **Location**: Document actions section
 - **Expected API Call**: `GET /download-acta?format=pdf`
 - **Expected Endpoint**: `https://api.acta.ikusii.com/download-acta`
@@ -51,6 +56,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Note any errors in console
 
 ### 4. Preview PDF Button
+
 - **Location**: Document preview section
 - **Expected API Call**: `GET /download-acta?format=pdf&preview=true`
 - **Expected Endpoint**: `https://api.acta.ikusii.com/download-acta`
@@ -63,6 +69,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Note any errors in console
 
 ### 5. Send Approval Button
+
 - **Location**: Approval workflow section
 - **Expected API Call**: `POST /send-approval-email`
 - **Expected Endpoint**: `https://api.acta.ikusii.com/send-approval-email`
@@ -76,6 +83,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Note any errors in console
 
 ### 6. Timeline Button
+
 - **Location**: Project tracking section
 - **Expected API Call**: `GET /timeline`
 - **Expected Endpoint**: `https://api.acta.ikusii.com/timeline`
@@ -88,6 +96,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Note any errors in console
 
 ### 7. Project Summary Button
+
 - **Location**: Dashboard overview
 - **Expected API Call**: `GET /project-summary`
 - **Expected Endpoint**: `https://api.acta.ikusii.com/project-summary`
@@ -100,6 +109,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Note any errors in console
 
 ### 8. Document Status Button
+
 - **Location**: Status tracking section
 - **Expected API Call**: `GET /check-document`
 - **Expected Endpoint**: `https://api.acta.ikusii.com/check-document`
@@ -112,6 +122,7 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Note any errors in console
 
 ## Authentication Testing
+
 - **Test Steps**:
   - [ ] Verify Cognito/Amplify authentication is working
   - [ ] Check that auth tokens are present in requests
@@ -119,12 +130,14 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Verify token refresh functionality
 
 ## General API Testing
+
 - **Health Check**:
   - [ ] Test `GET /health` endpoint
   - [ ] Verify CORS headers are present
   - [ ] Check response time and status
 
 ## Error Handling Testing
+
 - **Test Steps**:
   - [ ] Test button clicks when offline/network error
   - [ ] Verify proper error messages display
@@ -132,7 +145,9 @@ https://d13zx5u8i7fdt7.cloudfront.net
   - [ ] Test timeout scenarios
 
 ## Results Documentation
+
 For each button test, document:
+
 1. **Status**: ✅ Pass / ❌ Fail / ⚠️ Partial
 2. **API Call Made**: Yes/No + actual endpoint called
 3. **Authorization Header**: Present/Missing + token format
@@ -141,11 +156,13 @@ For each button test, document:
 6. **Issues Found**: Any problems or unexpected behavior
 
 ## Test Environment Details
-- **Date**: _____
-- **Browser**: _____
-- **User Agent**: _____
+
+- **Date**: **\_**
+- **Browser**: **\_**
+- **User Agent**: **\_**
 - **Auth Status**: Authenticated/Unauthenticated
 - **Network Conditions**: Normal/Slow/Offline
 
 ## Notes Section
+
 Use this section to record any additional observations, performance issues, or recommendations for improvement.

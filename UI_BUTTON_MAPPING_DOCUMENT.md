@@ -9,6 +9,7 @@ This document maps every UI button to its corresponding API endpoint and Lambda 
 ## 📱 **DASHBOARD BUTTONS**
 
 ### **1. GENERATE ACTA BUTTON**
+
 - **UI Handler**: `handleGenerateActa()`
 - **API Call**: `POST /extract-project-place/{projectId}`
 - **Lambda Function**: `ProjectPlaceDataExtractor`
@@ -24,6 +25,7 @@ const handleGenerateActa = async () => {
 ```
 
 ### **2. DOWNLOAD PDF BUTTON**
+
 - **UI Handler**: `handleDownloadPdf()`
 - **API Call**: `GET /download-acta/{projectId}?format=pdf`
 - **Lambda Function**: `getDownloadActa`
@@ -39,6 +41,7 @@ const handleDownloadPdf = async () => {
 ```
 
 ### **3. DOWNLOAD WORD BUTTON**
+
 - **UI Handler**: `handleDownloadWord()`
 - **API Call**: `GET /download-acta/{projectId}?format=docx`
 - **Lambda Function**: `getDownloadActa`
@@ -54,6 +57,7 @@ const handleDownloadWord = async () => {
 ```
 
 ### **4. PREVIEW PDF BUTTON**
+
 - **UI Handler**: `handlePreviewPdf()`
 - **API Call**: `GET /download-acta/{projectId}?format=pdf`
 - **Lambda Function**: `getDownloadActa`
@@ -71,6 +75,7 @@ const handlePreviewPdf = async () => {
 ```
 
 ### **5. SEND FOR APPROVAL BUTTON**
+
 - **UI Handler**: `handleSendApproval()`
 - **API Call**: `POST /send-approval-email`
 - **Lambda Function**: `sendApprovalEmail`
@@ -84,7 +89,7 @@ const handleSendApproval = async () => {
   const response = await api.post('/send-approval-email', {
     projectId,
     recipientEmail,
-    documentUrl
+    documentUrl,
   });
 };
 ```
@@ -94,6 +99,7 @@ const handleSendApproval = async () => {
 ## 📊 **PROJECT MANAGEMENT FUNCTIONS**
 
 ### **6. LOAD PROJECT DATA**
+
 - **UI Handler**: `useEffect()` on project ID change
 - **API Call**: `GET /project-summary/{projectId}`
 - **Lambda Function**: `projectMetadataEnricher`
@@ -112,6 +118,7 @@ useEffect(() => {
 ```
 
 ### **7. VIEW TIMELINE**
+
 - **UI Handler**: `handleViewTimeline()`
 - **API Call**: `GET /timeline/{projectId}`
 - **Lambda Function**: `getTimeline`
@@ -133,6 +140,7 @@ const handleViewTimeline = async () => {
 ## 🔍 **SUPPORT FUNCTIONS**
 
 ### **8. HEALTH CHECK (PUBLIC)**
+
 - **UI Handler**: Background health monitoring
 - **API Call**: `GET /health`
 - **Lambda Function**: `HealthCheck`
@@ -141,6 +149,7 @@ const handleViewTimeline = async () => {
 - **Response**: System status
 
 ### **9. DOCUMENT STATUS CHECK**
+
 - **UI Handler**: Background document verification
 - **API Call**: `GET /check-document/{projectId}`
 - **Lambda Function**: `projectMetadataEnricher`
@@ -149,6 +158,7 @@ const handleViewTimeline = async () => {
 - **Response**: Document status
 
 ### **10. PROJECT LIST (PM FUNCTIONS)**
+
 - **UI Handler**: PM dashboard project loading
 - **API Call**: `GET /projects` or `GET /pm-projects/all-projects`
 - **Lambda Function**: `projectMetadataEnricher`
@@ -161,18 +171,20 @@ const handleViewTimeline = async () => {
 ## 🔐 **AUTHENTICATION FLOW**
 
 ### **Amplify Integration:**
+
 ```javascript
 // src/index.js
 const cognitoAuthConfig = {
-  authority: "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_FyHLtOhiY",
-  client_id: "dshos5iou44tuach7ta3ici5m",
-  redirect_uri: "https://d7t9x3j66yd8k.cloudfront.net",
-  response_type: "code",
-  scope: "email openid phone",
+  authority: 'https://cognito-idp.us-east-2.amazonaws.com/us-east-2_FyHLtOhiY',
+  client_id: 'dshos5iou44tuach7ta3ici5m',
+  redirect_uri: 'https://d7t9x3j66yd8k.cloudfront.net',
+  response_type: 'code',
+  scope: 'email openid phone',
 };
 ```
 
 ### **API Authorization Headers:**
+
 ```javascript
 // All protected API calls include:
 headers: {
@@ -185,30 +197,32 @@ headers: {
 
 ## 🏗️ **CLOUDFORMATION ENDPOINT MAPPING**
 
-| **Button Action** | **HTTP Method** | **API Gateway Resource** | **Lambda Permission** |
-|-------------------|-----------------|---------------------------|------------------------|
-| Generate ACTA | POST | `/extract-project-place/{id}` | `ExtractProjectPlacePermission` |
-| Download PDF | GET | `/download-acta/{id}` | `DownloadActaPermission` |
-| Download Word | GET | `/download-acta/{id}` | `DownloadActaPermission` |
-| Preview PDF | GET | `/download-acta/{id}` | `DownloadActaPermission` |
-| Send Approval | POST | `/send-approval-email` | `SendApprovalEmailPermission` |
-| Load Project | GET | `/project-summary/{id}` | `ProjectSummaryPermission` |
-| View Timeline | GET | `/timeline/{id}` | `TimelinePermission` |
-| Health Check | GET | `/health` | `HealthPermission` |
-| Check Document | GET | `/check-document/{id}` | `CheckDocumentPermission` |
-| List Projects | GET | `/projects` | `ProjectsPermission` |
+| **Button Action** | **HTTP Method** | **API Gateway Resource**      | **Lambda Permission**           |
+| ----------------- | --------------- | ----------------------------- | ------------------------------- |
+| Generate ACTA     | POST            | `/extract-project-place/{id}` | `ExtractProjectPlacePermission` |
+| Download PDF      | GET             | `/download-acta/{id}`         | `DownloadActaPermission`        |
+| Download Word     | GET             | `/download-acta/{id}`         | `DownloadActaPermission`        |
+| Preview PDF       | GET             | `/download-acta/{id}`         | `DownloadActaPermission`        |
+| Send Approval     | POST            | `/send-approval-email`        | `SendApprovalEmailPermission`   |
+| Load Project      | GET             | `/project-summary/{id}`       | `ProjectSummaryPermission`      |
+| View Timeline     | GET             | `/timeline/{id}`              | `TimelinePermission`            |
+| Health Check      | GET             | `/health`                     | `HealthPermission`              |
+| Check Document    | GET             | `/check-document/{id}`        | `CheckDocumentPermission`       |
+| List Projects     | GET             | `/projects`                   | `ProjectsPermission`            |
 
 ---
 
 ## 🧪 **TESTING CHECKLIST**
 
 ### **Pre-Deployment Testing:**
+
 - [ ] All Lambda functions exist in AWS
 - [ ] All function names match CloudFormation template
 - [ ] Cognito User Pool is accessible
 - [ ] API Gateway ID is correct
 
 ### **Post-Deployment Testing:**
+
 - [ ] User can log in with Cognito
 - [ ] Generate ACTA button creates document
 - [ ] Download PDF button downloads file
@@ -220,6 +234,7 @@ headers: {
 - [ ] Error handling works for failed requests
 
 ### **Error Scenarios to Test:**
+
 - [ ] Unauthenticated user access (should return 401)
 - [ ] Invalid project ID (should return 404)
 - [ ] Network timeout (should show error message)
@@ -230,6 +245,7 @@ headers: {
 ## 🔄 **WORKFLOW SEQUENCE**
 
 ### **Typical User Flow:**
+
 1. **Login** → Cognito authentication
 2. **Enter Project ID** → Triggers project data loading
 3. **Generate ACTA** → Creates document (if not exists)
@@ -237,6 +253,7 @@ headers: {
 5. **Send Approval** → Email notification to stakeholders
 
 ### **API Call Sequence:**
+
 1. `GET /project-summary/{id}` - Load project data
 2. `POST /extract-project-place/{id}` - Generate document
 3. `GET /download-acta/{id}?format=pdf` - Download/preview

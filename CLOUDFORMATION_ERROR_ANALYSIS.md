@@ -5,26 +5,31 @@
 The original CloudFormation stack `Ikusii-acta-ui-secure-api` failed with these 5 specific errors:
 
 ### **ERROR 1: SendApprovalEmailPermission**
+
 ```
 Function not found: arn:aws:lambda:us-east-2:703671891952:function:SendApprovalEmail
 ```
 
-### **ERROR 2: ProjectsManagerPermission** 
+### **ERROR 2: ProjectsManagerPermission**
+
 ```
 Function not found: arn:aws:lambda:us-east-2:703671891952:function:ProjectsManager
 ```
 
 ### **ERROR 3: DownloadActaPermission**
+
 ```
 Function not found: arn:aws:lambda:us-east-2:703671891952:function:GetDownloadActa
 ```
 
 ### **ERROR 4: DocumentStatusPermission**
+
 ```
 Function not found: arn:aws:lambda:us-east-2:703671891952:function:DocumentStatus
 ```
 
 ### **ERROR 5: TimelinePermission**
+
 ```
 Function not found: arn:aws:lambda:us-east-2:703671891952:function:GetTimeline
 ```
@@ -35,13 +40,13 @@ Function not found: arn:aws:lambda:us-east-2:703671891952:function:GetTimeline
 
 ### **How Each Error Was Fixed:**
 
-| **Original Template Error** | **Root Cause** | **Corrected Solution** | **AWS Function Name** |
-|------------------------------|----------------|------------------------|------------------------|
-| `SendApprovalEmail` not found | Template used PascalCase name | Changed to actual function name | `sendApprovalEmail` (camelCase) |
-| `ProjectsManager` not found | Function doesn't exist | Routed to existing multi-purpose function | `projectMetadataEnricher` |
-| `GetDownloadActa` not found | Template used PascalCase name | Changed to actual function name | `getDownloadActa` (camelCase) |
-| `DocumentStatus` not found | Function doesn't exist | Routed to existing multi-purpose function | `projectMetadataEnricher` |
-| `GetTimeline` not found | Template used PascalCase name | Changed to actual function name | `getTimeline` (camelCase) |
+| **Original Template Error**   | **Root Cause**                | **Corrected Solution**                    | **AWS Function Name**           |
+| ----------------------------- | ----------------------------- | ----------------------------------------- | ------------------------------- |
+| `SendApprovalEmail` not found | Template used PascalCase name | Changed to actual function name           | `sendApprovalEmail` (camelCase) |
+| `ProjectsManager` not found   | Function doesn't exist        | Routed to existing multi-purpose function | `projectMetadataEnricher`       |
+| `GetDownloadActa` not found   | Template used PascalCase name | Changed to actual function name           | `getDownloadActa` (camelCase)   |
+| `DocumentStatus` not found    | Function doesn't exist        | Routed to existing multi-purpose function | `projectMetadataEnricher`       |
+| `GetTimeline` not found       | Template used PascalCase name | Changed to actual function name           | `getTimeline` (camelCase)       |
 
 ---
 
@@ -50,6 +55,7 @@ Function not found: arn:aws:lambda:us-east-2:703671891952:function:GetTimeline
 ### **LAMBDA FUNCTION PARAMETERS**
 
 **❌ ORIGINAL (FAILED):**
+
 ```yaml
 SendApprovalEmailArn:
   Default: arn:aws:lambda:us-east-2:703671891952:function:SendApprovalEmail
@@ -64,6 +70,7 @@ GetTimelineArn:
 ```
 
 **✅ CORRECTED (WORKING):**
+
 ```yaml
 SendApprovalEmailArn:
   Default: arn:aws:lambda:us-east-2:703671891952:function:sendApprovalEmail
@@ -78,33 +85,35 @@ GetTimelineArn:
 ### **LAMBDA PERMISSIONS**
 
 **❌ ORIGINAL (FAILED):**
+
 ```yaml
 SendApprovalEmailPermission:
   Properties:
-    FunctionName: !Ref SendApprovalEmailArn  # Points to non-existent SendApprovalEmail
-    
+    FunctionName: !Ref SendApprovalEmailArn # Points to non-existent SendApprovalEmail
+
 ProjectsManagerPermission:
   Properties:
-    FunctionName: !Ref ProjectsManagerArn    # Points to non-existent ProjectsManager
-    
+    FunctionName: !Ref ProjectsManagerArn # Points to non-existent ProjectsManager
+
 DocumentStatusPermission:
   Properties:
-    FunctionName: !Ref DocumentStatusArn     # Points to non-existent DocumentStatus
+    FunctionName: !Ref DocumentStatusArn # Points to non-existent DocumentStatus
 ```
 
 **✅ CORRECTED (WORKING):**
+
 ```yaml
 SendApprovalEmailPermission:
   Properties:
-    FunctionName: sendApprovalEmail           # Uses actual AWS function name
-    
+    FunctionName: sendApprovalEmail # Uses actual AWS function name
+
 ProjectsPermission:
   Properties:
-    FunctionName: projectMetadataEnricher     # Routes to existing multi-purpose function
-    
+    FunctionName: projectMetadataEnricher # Routes to existing multi-purpose function
+
 CheckDocumentPermission:
   Properties:
-    FunctionName: projectMetadataEnricher     # Routes to existing multi-purpose function
+    FunctionName: projectMetadataEnricher # Routes to existing multi-purpose function
 ```
 
 ---
@@ -127,32 +136,33 @@ CheckDocumentPermission:
 CognitoAuthorizer:
   Type: AWS::ApiGateway::Authorizer
   Properties:
-    RestApiId: q2b9avfwv5                    # ✅ Your API
+    RestApiId: q2b9avfwv5 # ✅ Your API
     Type: COGNITO_USER_POOLS
     ProviderARNs:
-      - arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY  # ✅ Your User Pool
-    IdentitySource: method.request.header.Authorization  # ✅ Amplify auth header
+      - arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY # ✅ Your User Pool
+    IdentitySource: method.request.header.Authorization # ✅ Amplify auth header
 ```
 
 **All Protected Endpoints Use:**
+
 ```yaml
 AuthorizationType: COGNITO_USER_POOLS
-AuthorizerId: !Ref CognitoAuthorizer         # ✅ Links to your Cognito setup
+AuthorizerId: !Ref CognitoAuthorizer # ✅ Links to your Cognito setup
 ```
 
 ---
 
 ## 🔗 **BUTTON-TO-FUNCTION MAPPING**
 
-| **UI Button** | **API Endpoint** | **Lambda Function** | **Status** |
-|---------------|------------------|-------------------|------------|
-| **Generate ACTA** | `POST /extract-project-place/{id}` | `ProjectPlaceDataExtractor` | ✅ EXISTS |
-| **Download PDF** | `GET /download-acta/{id}?format=pdf` | `getDownloadActa` | ✅ EXISTS |
-| **Download Word** | `GET /download-acta/{id}?format=docx` | `getDownloadActa` | ✅ EXISTS |
-| **Preview PDF** | `GET /download-acta/{id}?format=pdf` | `getDownloadActa` | ✅ EXISTS |
-| **Send Approval** | `POST /send-approval-email` | `sendApprovalEmail` | ✅ EXISTS |
-| **View Timeline** | `GET /timeline/{id}` | `getTimeline` | ✅ EXISTS |
-| **Load Project** | `GET /project-summary/{id}` | `projectMetadataEnricher` | ✅ EXISTS |
+| **UI Button**     | **API Endpoint**                      | **Lambda Function**         | **Status** |
+| ----------------- | ------------------------------------- | --------------------------- | ---------- |
+| **Generate ACTA** | `POST /extract-project-place/{id}`    | `ProjectPlaceDataExtractor` | ✅ EXISTS  |
+| **Download PDF**  | `GET /download-acta/{id}?format=pdf`  | `getDownloadActa`           | ✅ EXISTS  |
+| **Download Word** | `GET /download-acta/{id}?format=docx` | `getDownloadActa`           | ✅ EXISTS  |
+| **Preview PDF**   | `GET /download-acta/{id}?format=pdf`  | `getDownloadActa`           | ✅ EXISTS  |
+| **Send Approval** | `POST /send-approval-email`           | `sendApprovalEmail`         | ✅ EXISTS  |
+| **View Timeline** | `GET /timeline/{id}`                  | `getTimeline`               | ✅ EXISTS  |
+| **Load Project**  | `GET /project-summary/{id}`           | `projectMetadataEnricher`   | ✅ EXISTS  |
 
 ---
 
@@ -161,7 +171,7 @@ AuthorizerId: !Ref CognitoAuthorizer         # ✅ Links to your Cognito setup
 ### **Pre-Deployment Checklist:**
 
 ✅ **All Lambda functions exist in AWS**
-✅ **Function names match template parameters** 
+✅ **Function names match template parameters**
 ✅ **Cognito User Pool ARN is correct**
 ✅ **API Gateway ID is correct**
 ✅ **API Root Resource ID is correct**

@@ -2,13 +2,15 @@
 
 ## 🚨 IMPORTANT: Backend Already Manually Configured
 
-The backend infrastructure has been **manually configured** and is working correctly. 
+The backend infrastructure has been **manually configured** and is working correctly.
 
 ### ❌ **DISABLED WORKFLOWS** (to prevent destroying manual work):
+
 - `deploy-simplified-backend.yml.DISABLED`
 - `build_deploy_with_backend.yml.DISABLED`
 
 ### ✅ **SAFE WORKFLOW** (frontend-only deployment):
+
 - `build_deploy.yml` - Frontend deployment only, skips CloudFormation
 
 ## 🛡️ Why This Matters:
@@ -16,7 +18,7 @@ The backend infrastructure has been **manually configured** and is working corre
 Yesterday's deployment issues were caused by automated CloudFormation stacks overwriting manual backend configurations. The current manual setup includes:
 
 - ✅ API Gateway resources manually created
-- ✅ Lambda functions properly integrated  
+- ✅ Lambda functions properly integrated
 - ✅ CORS policies correctly configured
 - ✅ Authentication working
 - ✅ All endpoints tested and functional
@@ -29,8 +31,9 @@ Yesterday's deployment issues were caused by automated CloudFormation stacks ove
 4. **Testing First**: Always verify endpoints before any changes
 
 ## 📋 Working Endpoints (Manual):
+
 - `/timeline/{projectId}` ✅
-- `/project-summary/{projectId}` ✅  
+- `/project-summary/{projectId}` ✅
 - `/download-acta/{projectId}` ✅
 - `/extract-project-place/{projectId}` ✅
 - `/send-approval-email` ✅

@@ -24,6 +24,16 @@
 
 - **Email**: valencia942003@gmail.com
 - **Password**: PdYb7TU7HvBhYP7$
+- **Test Project ID**: 1000000049842296
+
+## 🧪 **BROWSER CONSOLE TESTING SCRIPT**
+
+Load the automated testing script in browser console:
+
+```javascript
+// Run this in the browser console after logging in
+actaTestSuite.runButtonTests();
+```
 
 ## 📋 **COMPREHENSIVE TESTING CHECKLIST:**
 

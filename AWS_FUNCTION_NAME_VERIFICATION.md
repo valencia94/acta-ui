@@ -2,17 +2,18 @@
 
 ### Current AWS Functions vs CloudFormation Template
 
-| Button Function | AWS Function Name | Template Reference | Status |
-|----------------|-------------------|-------------------|---------|
-| Timeline | `getTimeline` | ✅ Correct | ✅ |
-| Download ACTA | `getDownloadActa` | ✅ Correct | ✅ |
-| Generate ACTA | `ProjectPlaceDataExtractor` | ✅ Correct | ✅ |
-| Send Approval | `sendApprovalEmail` | ✅ Correct | ✅ |
-| Project Summary | `projectMetadataEnricher` | ✅ Correct | ✅ |
-| Document Status | `DocumentStatus` | ✅ Fixed | ✅ |
-| Health Check | `HealthCheck` | ✅ Correct | ✅ |
+| Button Function | AWS Function Name           | Template Reference | Status |
+| --------------- | --------------------------- | ------------------ | ------ |
+| Timeline        | `getTimeline`               | ✅ Correct         | ✅     |
+| Download ACTA   | `getDownloadActa`           | ✅ Correct         | ✅     |
+| Generate ACTA   | `ProjectPlaceDataExtractor` | ✅ Correct         | ✅     |
+| Send Approval   | `sendApprovalEmail`         | ✅ Correct         | ✅     |
+| Project Summary | `projectMetadataEnricher`   | ✅ Correct         | ✅     |
+| Document Status | `DocumentStatus`            | ✅ Fixed           | ✅     |
+| Health Check    | `HealthCheck`               | ✅ Correct         | ✅     |
 
 ### Additional Functions Available
+
 - `handleApprovalCallback` - For approval callbacks
 - `projectMetadataEnricherById` - Alternative enricher
 - `getProjectSummary` - Alternative project summary

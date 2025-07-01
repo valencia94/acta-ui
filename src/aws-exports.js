@@ -12,8 +12,8 @@ const awsmobile = {
     // NO https://  and NO trailing slash on the domain line
     domain: 'acta-ui-prod.auth.us-east-2.amazoncognito.com',
     scope: ['email', 'openid', 'profile'],
-    redirectSignIn: 'https://d13zx5u8i7fdt7.cloudfront.net/callback/',
-    redirectSignOut: 'https://d13zx5u8i7fdt7.cloudfront.net/logout/',
+    redirectSignIn: 'https://d7t9x3j66yd8k.cloudfront.net/callback/',
+    redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/logout/',
     responseType: 'code',
   },
 
