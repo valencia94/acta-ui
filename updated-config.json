@@ -54,7 +54,9 @@
           "OriginProtocolPolicy": "https-only",
           "OriginSslProtocols": {
             "Quantity": 1,
-            "Items": ["TLSv1.2"]
+            "Items": [
+              "TLSv1.2"
+            ]
           },
           "OriginReadTimeout": 30,
           "OriginKeepaliveTimeout": 5
@@ -84,10 +86,16 @@
     "ViewerProtocolPolicy": "allow-all",
     "AllowedMethods": {
       "Quantity": 2,
-      "Items": ["HEAD", "GET"],
+      "Items": [
+        "HEAD",
+        "GET"
+      ],
       "CachedMethods": {
         "Quantity": 2,
-        "Items": ["HEAD", "GET"]
+        "Items": [
+          "HEAD",
+          "GET"
+        ]
       }
     },
     "SmoothStreaming": false,
@@ -135,10 +143,16 @@
         "ViewerProtocolPolicy": "allow-all",
         "AllowedMethods": {
           "Quantity": 2,
-          "Items": ["HEAD", "GET"],
+          "Items": [
+            "HEAD",
+            "GET"
+          ],
           "CachedMethods": {
             "Quantity": 2,
-            "Items": ["HEAD", "GET"]
+            "Items": [
+              "HEAD",
+              "GET"
+            ]
           }
         },
         "SmoothStreaming": false,
@@ -183,10 +197,16 @@
         "ViewerProtocolPolicy": "allow-all",
         "AllowedMethods": {
           "Quantity": 2,
-          "Items": ["HEAD", "GET"],
+          "Items": [
+            "HEAD",
+            "GET"
+          ],
           "CachedMethods": {
             "Quantity": 2,
-            "Items": ["HEAD", "GET"]
+            "Items": [
+              "HEAD",
+              "GET"
+            ]
           }
         },
         "SmoothStreaming": false,
@@ -231,10 +251,21 @@
         "ViewerProtocolPolicy": "allow-all",
         "AllowedMethods": {
           "Quantity": 7,
-          "Items": ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"],
+          "Items": [
+            "HEAD",
+            "DELETE",
+            "POST",
+            "GET",
+            "OPTIONS",
+            "PUT",
+            "PATCH"
+          ],
           "CachedMethods": {
             "Quantity": 2,
-            "Items": ["HEAD", "GET"]
+            "Items": [
+              "HEAD",
+              "GET"
+            ]
           }
         },
         "SmoothStreaming": false,
@@ -255,21 +286,7 @@
     ]
   },
   "CustomErrorResponses": {
-    "Quantity": 2,
-    "Items": [
-      {
-        "ErrorCode": 403,
-        "ResponsePagePath": "/index.html",
-        "ResponseCode": "200",
-        "ErrorCachingMinTTL": 10
-      },
-      {
-        "ErrorCode": 404,
-        "ResponsePagePath": "/index.html",
-        "ResponseCode": "200",
-        "ErrorCachingMinTTL": 10
-      }
-    ]
+    "Quantity": 0
   },
   "Comment": "ACTA UI Distribution with Documents Access",
   "Logging": {
@@ -296,5 +313,24 @@
   "HttpVersion": "http2",
   "IsIPV6Enabled": true,
   "ContinuousDeploymentPolicyId": "",
-  "Staging": false
+  "Staging": false,
+  "DistributionConfig": {
+    "CustomErrorResponses": {
+      "Quantity": 2,
+      "Items": [
+        {
+          "ErrorCode": 403,
+          "ResponsePagePath": "/index.html",
+          "ResponseCode": "200",
+          "ErrorCachingMinTTL": 10
+        },
+        {
+          "ErrorCode": 404,
+          "ResponsePagePath": "/index.html",
+          "ResponseCode": "200",
+          "ErrorCachingMinTTL": 10
+        }
+      ]
+    }
+  }
 }
