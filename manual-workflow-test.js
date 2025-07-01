@@ -1,5 +1,5 @@
 // Manual Workflow Testing Script for ACTA-UI
-// Run this in the browser console on https://d7t9x3j86yd8k.cloudfront.net/dashboard
+// Run this in the browser console on https://d7t9x3j66yd8k.cloudfront.net/dashboard
 
 console.log('🧪 Starting Manual Workflow Test...');
 

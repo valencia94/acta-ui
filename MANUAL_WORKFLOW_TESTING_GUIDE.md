@@ -6,7 +6,7 @@ This guide helps you test the ACTA-UI manual workflows when the backend API is u
 
 ## Prerequisites
 
-- ✅ ACTA-UI is deployed to CloudFront: https://d7t9x3j86yd8k.cloudfront.net
+- ✅ ACTA-UI is deployed to CloudFront: https://d7t9x3j66yd8k.cloudfront.net
 - ✅ User is authenticated (logged in)
 - ⚠️ Backend API may be unavailable (expected condition)
 
@@ -14,7 +14,7 @@ This guide helps you test the ACTA-UI manual workflows when the backend API is u
 
 ### 1. Access the Dashboard
 
-1. Navigate to: https://d7t9x3j86yd8k.cloudfront.net
+1. Navigate to: https://d7t9x3j66yd8k.cloudfront.net
 2. **Expected:** Should redirect to login if not authenticated
 3. **Expected:** Should show dashboard if authenticated
 4. **Visual Check:** Header shows user email and logout button
