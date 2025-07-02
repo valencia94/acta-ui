@@ -1,15 +1,15 @@
 {
-  "timestamp": "2025-07-02T00:42:30.490Z",
+  "timestamp": "2025-07-02T00:59:43.565Z",
   "summary": {
-    "passed": 10,
-    "failed": 3,
+    "passed": 11,
+    "failed": 2,
     "warnings": 0
   },
   "results": {
     "api": {
       "Health Check": {
-        "status": "FAIL",
-        "code": 401
+        "status": "PASS",
+        "code": 200
       },
       "Projects (Auth Required)": {
         "status": "PASS",
@@ -56,8 +56,8 @@
       }
     },
     "summary": {
-      "passed": 10,
-      "failed": 3,
+      "passed": 11,
+      "failed": 2,
       "warnings": 0
     }
   },

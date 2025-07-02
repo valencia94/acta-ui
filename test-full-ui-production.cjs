@@ -68,7 +68,7 @@ async function testAPIs() {
   log('INFO', 'Testing API Endpoints...');
 
   const endpoints = [
-    { path: '/health', expectedStatus: 200, name: 'Health Check' },
+    { path: '/health', expectedStatus: 200, name: 'Health Check', useCloudFront: true },
     {
       path: '/projects',
       expectedStatus: 403,
@@ -93,7 +93,8 @@ async function testAPIs() {
 
   for (const endpoint of endpoints) {
     try {
-      const response = await makeRequest(`${API_BASE}${endpoint.path}`);
+      const baseUrl = endpoint.useCloudFront ? FRONTEND_URL : API_BASE;
+      const response = await makeRequest(`${baseUrl}${endpoint.path}`);
       const expectedStatuses = Array.isArray(endpoint.expectedStatus)
         ? endpoint.expectedStatus
         : [endpoint.expectedStatus];
