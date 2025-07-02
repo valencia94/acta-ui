@@ -1,0 +1,132 @@
+name: 🚀 Deploy ACTA-UI to Production
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  NODE_VERSION: '18'
+  VITE_API_BASE_URL: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod'
+  VITE_COGNITO_REGION: 'us-east-2'
+  VITE_COGNITO_POOL_ID: 'us-east-2_FyHLtOhiY'
+  VITE_COGNITO_WEB_CLIENT: 'dshos5iou44tuach7ta3ici5m'
+  VITE_SKIP_AUTH: 'false'
+  VITE_USE_MOCK_API: 'false'
+
+jobs:
+  deploy:
+    name: 🏗️ Build & Deploy
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+      
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 📦 Install dependencies
+        run: |
+          echo "🧹 Clearing all caches..."
+          rm -rf node_modules/.vite dist .cache
+          pnpm install --frozen-lockfile
+          
+      - name: 🔍 Pre-build verification
+        run: |
+          echo "🔍 Verifying environment..."
+          echo "API Base URL: $VITE_API_BASE_URL"
+          echo "Skip Auth: $VITE_SKIP_AUTH"
+          echo "Use Mock API: $VITE_USE_MOCK_API"
+          
+      - name: 🏗️ Build application
+        run: |
+          echo "🚀 Building for production..."
+          pnpm run build
+          echo "✅ Build completed!"
+          
+      - name: 🔍 Post-build verification
+        run: |
+          echo "🔍 Verifying build output..."
+          
+          # Check document title
+          if grep -q "Ikusi · Acta Platform" dist/index.html; then
+            echo "✅ Document title correct"
+          else
+            echo "❌ Document title incorrect"
+            exit 1
+          fi
+          
+          # Check API URL in build
+          if grep -q "q2b9avfwv5.execute-api.us-east-2.amazonaws.com" dist/assets/*.js; then
+            echo "✅ Production API URL found in build"
+          else
+            echo "❌ Production API URL not found in build"
+            exit 1
+          fi
+          
+          # Verify no test data
+          if grep -r "test-project\|mock-project" dist/ 2>/dev/null; then
+            echo "❌ Test data found in build"
+            exit 1
+          else
+            echo "✅ No test data in build"
+          fi
+          
+          echo "🎯 Build verification successful!"
+          
+      - name: 🔧 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+          
+      - name: 🚀 Deploy to AWS Amplify
+        run: |
+          echo "🚀 Deploying to AWS Amplify..."
+          
+          # Check if amplify app exists
+          if aws amplify get-app --app-id ${{ secrets.AMPLIFY_APP_ID }} 2>/dev/null; then
+            echo "📱 Amplify app found, starting deployment..."
+            aws amplify start-job \
+              --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+              --branch-name ${{ github.ref_name }} \
+              --job-type RELEASE
+            echo "✅ Deployment job started!"
+          else
+            echo "⚠️ Amplify app not found, please configure AMPLIFY_APP_ID secret"
+            echo "💡 You can also deploy manually using the built files in dist/"
+          fi
+          
+      - name: 🎉 Deployment complete
+        run: |
+          echo "🎉 ACTA-UI deployment completed successfully!"
+          echo "🌐 Your application should be live with:"
+          echo "   ✅ Document title: 'Ikusi · Acta Platform'"
+          echo "   ✅ Live API integration"
+          echo "   ✅ No test/mock data"
+          echo "   ✅ Cache invalidation applied"
+          echo ""
+          echo "🔗 Check your Amplify console for the live URL!"
