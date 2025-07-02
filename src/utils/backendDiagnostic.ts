@@ -1,6 +1,15 @@
 // Quick backend status diagnostic
+import { shouldUseMockApi } from './mockApiServer';
+
 export async function quickBackendDiagnostic() {
   console.log('🔍 Quick Backend Diagnostic...');
+
+  // Check if we should use mock API
+  if (shouldUseMockApi()) {
+    console.log('🎭 Mock API mode enabled - backend diagnostic skipped');
+    console.log('✅ Mock API is ready for development');
+    return true;
+  }
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   console.log(`🌐 API Base URL: ${apiBaseUrl}`);
