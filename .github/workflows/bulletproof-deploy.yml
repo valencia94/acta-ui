@@ -473,7 +473,7 @@ jobs:
 
           # Test API connectivity from deployed app
           echo "🔍 Testing API connectivity..."
-          if curl -sf "${{ env.API_ENDPOINT }}/health" > /dev/null; then
+          if curl -sf "https://$CF_DOMAIN/health" > /dev/null; then
             echo "✅ API endpoint accessible"
           else
             echo "❌ API endpoint not accessible"
@@ -529,7 +529,7 @@ jobs:
           echo "🌐 Live App: ${{ env.CLOUDFRONT_URL }}"
           echo "📊 Dashboard: ${{ env.CLOUDFRONT_URL }}/dashboard"
           echo "🔐 Login: ${{ env.CLOUDFRONT_URL }}/login"
-          echo "🧪 Health Check: ${{ env.API_ENDPOINT }}/health"
+          echo "🧪 Health Check: ${{ env.CLOUDFRONT_URL }}/health"
           echo "📋 GitHub Actions: ${{ github.server_url }}/${{ github.repository }}/actions"
 
       - name: 🎉 Success Notification
