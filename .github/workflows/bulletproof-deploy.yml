@@ -1,20 +1,20 @@
-name: 🚀 Production Deploy - Bulletproof Edition
+name: 🚀 Production Deploy - Bulletproof Edition (DISABLED)
 
+# DISABLED - Using deploy-production.yml instead
 # This deployment workflow is designed to be reliable, debuggable, and failure-resistant
 # Created after 5 days of deployment issues - this WILL work
 
 on:
-  push:
-    branches: [main, develop]
+  # Disabled - no triggers
   workflow_dispatch:
     inputs:
       force_deploy:
-        description: 'Force deploy even if no changes detected'
+        description: 'Force deploy even if no changes detected (DISABLED)'
         required: false
         default: false
         type: boolean
       debug_mode:
-        description: 'Enable verbose debugging output'
+        description: 'Enable verbose debugging output (DISABLED)'
         required: false
         default: false
         type: boolean
