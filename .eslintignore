@@ -16,3 +16,8 @@ public-backup/
 archive/
 src/aws-exports.js
 tests/playwright.preload.js
+# Root JS files (test scripts and debugging)
+*.js
+!*.config.js
+!vite.config.ts
+!vitest.config.ts

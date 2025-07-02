@@ -36,6 +36,11 @@ export default function Login() {
   const [success, setSuccess] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>('');
 
+  // Ensure document title is always correct
+  useEffect(() => {
+    document.title = 'Ikusi · Acta Platform';
+  }, []);
+
   useEffect(() => {
     // Only sign out if we're not in skip auth mode
     if (!skipAuth) {

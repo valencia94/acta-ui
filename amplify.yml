@@ -1,0 +1,51 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Installing dependencies..."
+        - npm ci
+        - echo "Environment setup..."
+        - echo "AWS Region: us-east-2"
+        - echo "Building for production..."
+    build:
+      commands:
+        - echo "Running build..."
+        - npm run build
+        - echo "Build completed successfully"
+    postBuild:
+      commands:
+        - echo "Post-build optimizations..."
+        - echo "Verifying dist directory..."
+        - ls -la dist/
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'Strict-Transport-Security'
+          value: 'max-age=31536000; includeSubDomains'
+        - key: 'X-Content-Type-Options'
+          value: 'nosniff'
+        - key: 'X-Frame-Options'
+          value: 'DENY'
+        - key: 'X-XSS-Protection'
+          value: '1; mode=block'
+        - key: 'Referrer-Policy'
+          value: 'strict-origin-when-cross-origin'
+backend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Backend pre-build phase"
+    build:
+      commands:
+        - echo "Backend build phase"
+    postBuild:
+      commands:
+        - echo "Backend post-build phase"

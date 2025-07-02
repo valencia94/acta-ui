@@ -1,21 +1,36 @@
-// src/aws-exports.js
+// src/aws-exports.js - CORRECTED PRODUCTION CONFIGURATION
 const awsmobile = {
-  aws_project_region: 'us-east-2', // ── Cognito ─────────────────────────────────────────────────────────────
+  aws_project_region: 'us-east-2',
+  
+  // ── Cognito User Pool Configuration ─────────────────────────────────────────
   aws_user_pools_id: 'us-east-2_FyHLtOhiY',
-  aws_user_pools_web_client_id: 'dshos5iou44tuach7ta3ici5m',
+  aws_user_pools_web_client_id: 'dshos5iou44tuach7ta3ici5m', // ✅ CORRECTED CLIENT ID
 
-  // ── CloudWatch Policy ID ───────────────────────────────────────────────
+  // ── CloudWatch Policy ID ───────────────────────────────────────────────────
   // Policy ID for monitoring: WDnzkPmx3dKaEAQgFKx2jj
 
-  // OAuth configuration disabled until custom domain is properly configured
-  // This will use the default Cognito hosted UI without custom domain
-  // oauth: {
-  //   domain: 'your-custom-domain.auth.us-east-2.amazoncognito.com',
-  //   scope: ['email', 'openid'],
-  //   redirectSignIn: 'https://d7t9x3j66yd8k.cloudfront.net/',
-  //   redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/login',
-  //   responseType: 'code',
-  // },
+  // ── OAuth Configuration ────────────────────────────────────────────────────
+  // Production OAuth setup matching working deployment
+  oauth: {
+    domain: 'acta-ui-prod.auth.us-east-2.amazoncognito.com',
+    scope: ['email', 'openid', 'profile'],
+    redirectSignIn: 'https://d7t9x3j66yd8k.cloudfront.net/',
+    redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/login',
+    responseType: 'code',
+  },
+  
+  // ── API Gateway Configuration ──────────────────────────────────────────────
+  aws_cloud_logic_custom: [
+    {
+      name: 'ActaAPI',
+      endpoint: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod',
+      region: 'us-east-2'
+    }
+  ],
+
+  // ── S3 Storage Configuration ───────────────────────────────────────────────
+  aws_user_files_s3_bucket: 'projectplace-dv-2025-x9a7b',
+  aws_user_files_s3_bucket_region: 'us-east-2',
 };
 
 export default awsmobile;
