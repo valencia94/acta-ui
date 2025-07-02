@@ -7,10 +7,8 @@
  * including API endpoints, frontend functionality, and deployment status
  */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const https = require('https');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
+import fs from 'fs';
+import https from 'https';
 
 // Configuration
 const API_BASE = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
@@ -68,7 +66,12 @@ async function testAPIs() {
   log('INFO', 'Testing API Endpoints...');
 
   const endpoints = [
-    { path: '/health', expectedStatus: 200, name: 'Health Check' },
+    {
+      path: '/health',
+      expectedStatus: 200,
+      name: 'Health Check',
+      useCloudFront: true,
+    },
     {
       path: '/projects',
       expectedStatus: 403,
@@ -93,7 +96,8 @@ async function testAPIs() {
 
   for (const endpoint of endpoints) {
     try {
-      const response = await makeRequest(`${API_BASE}${endpoint.path}`);
+      const baseUrl = endpoint.useCloudFront ? FRONTEND_URL : API_BASE;
+      const response = await makeRequest(`${baseUrl}${endpoint.path}`);
       const expectedStatuses = Array.isArray(endpoint.expectedStatus)
         ? endpoint.expectedStatus
         : [endpoint.expectedStatus];
@@ -264,8 +268,8 @@ async function main() {
 }
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-module.exports = { testAPIs, testFrontend, checkDeployment, testPDFPreview };
+export { checkDeployment, testAPIs, testFrontend, testPDFPreview };
