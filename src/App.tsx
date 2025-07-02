@@ -44,6 +44,11 @@ export default function App() {
   const [checked, setChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
 
+  // Ensure the document title stays correct
+  useEffect(() => {
+    document.title = 'Ikusi · Acta Platform';
+  }, []);
+
   useEffect(() => {
     if (skipAuth) {
       setIsAuthed(true);

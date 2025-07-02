@@ -7,6 +7,8 @@ import { defineConfig } from 'vite';
 import svgr from 'vite-plugin-svgr';
 
 export default defineConfig({
+  root: '.',
+  publicDir: 'public',
   plugins: [react(), svgr()],
   resolve: {
     alias: {

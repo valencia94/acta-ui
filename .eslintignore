@@ -13,3 +13,6 @@ public/*.js
 test-api*.js
 api-connectivity*.js
 public-backup/
+archive/
+src/aws-exports.js
+tests/playwright.preload.js
