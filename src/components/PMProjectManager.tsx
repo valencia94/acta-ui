@@ -3,7 +3,7 @@ import { CheckCircle, Clock, FileText, RefreshCw, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
-import { generateSummariesForPM, getProjectsByPM, PMProject } from '@/lib/api';
+import { generateSummariesForPM, getProjectsByPM, getAllProjects, PMProject } from '@/lib/api';
 
 import Button from './Button';
 
@@ -51,7 +51,16 @@ export default function PMProjectManager({
     setLoading(true);
     try {
       console.log(`Loading projects for PM: ${pmEmail}`);
-      const pmProjects = await getProjectsByPM(pmEmail);
+      const projectSummaries = await getProjectsByPM(pmEmail);
+      // Transform ProjectSummary to PMProject
+      const pmProjects: PMProject[] = projectSummaries.map(summary => ({
+        project_id: summary.project_id,
+        project_name: summary.project_name,
+        pm_email: summary.pm || summary.project_manager || pmEmail,
+        project_status: 'active',
+        has_acta_document: false,
+        last_updated: new Date().toISOString(),
+      }));
       setProjects(pmProjects);
 
       if (pmProjects.length > 0) {
@@ -84,38 +93,21 @@ export default function PMProjectManager({
     setLoading(true);
     try {
       console.log('Loading all projects for admin view');
-      // For now, mock some data since the "all projects" endpoint isn't implemented
-      // In production, this would call something like getAllProjects()
-      const mockProjects: PMProject[] = [
-        {
-          project_id: '1000000064013473',
-          project_name: 'Infrastructure Upgrade Phase 1',
-          pm_email: 'pm1@ikusi.com',
-          project_status: 'active',
-          has_acta_document: true,
-          last_updated: new Date().toISOString(),
-        },
-        {
-          project_id: '1000000049842296',
-          project_name: 'Network Security Enhancement',
-          pm_email: 'pm2@ikusi.com',
-          project_status: 'pending',
-          has_acta_document: false,
-          last_updated: new Date().toISOString(),
-        },
-        {
-          project_id: '1000000055667788',
-          project_name: 'Digital Transformation Initiative',
-          pm_email: 'pm3@ikusi.com',
-          project_status: 'active',
-          has_acta_document: true,
-          last_updated: new Date().toISOString(),
-        },
-      ];
+      
+      // Use real API call instead of hardcoded mock data
+      const allProjects = await getAllProjects();
+      const transformedProjects: PMProject[] = allProjects.map(project => ({
+        project_id: project.project_id,
+        project_name: project.project_name,
+        pm_email: project.pm || project.project_manager || 'unknown@example.com',
+        project_status: 'active',
+        has_acta_document: false,
+        last_updated: new Date().toISOString(),
+      }));
 
-      setProjects(mockProjects);
+      setProjects(transformedProjects);
       const adminLabel = isAdminView ? '(admin dashboard)' : '(admin access)';
-      toast.success(`Loaded ${mockProjects.length} projects ${adminLabel}`);
+      toast.success(`Loaded ${transformedProjects.length} projects ${adminLabel}`);
     } catch (error) {
       console.error('Error loading all projects:', error);
       toast.error(

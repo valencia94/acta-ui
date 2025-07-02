@@ -96,68 +96,47 @@ const S3_BUCKET = 'projectplace-dv-2025-x9a7b';
  * 2. Generates DOCX document
  * 3. Stores in S3 bucket projectplace-dv-2025-x9a7b
  */
-export async function generateActaDocument(projectId: string): Promise<{
+export async function generateActaDocument(
+  projectId: string,
+  userEmail: string,
+  userRole: 'admin' | 'pm' = 'pm'
+): Promise<{
   success: boolean;
   message: string;
   s3Location?: string;
   documentId?: string;
 }> {
-  console.log(`🔄 Generating ACTA document for project: ${projectId}`);
-  console.log(`📦 Target S3 bucket: ${S3_BUCKET}`);
+  console.log('🔄 Generating ACTA document for project:', projectId);
+  console.log('📦 Target S3 bucket:', import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b');
 
-  try {
-    const response = await post<{
-      success: boolean;
-      message: string;
-      s3_location?: string;
-      document_id?: string;
-      bucket?: string;
-      key?: string;
-    }>(`${BASE}/extract-project-place/${projectId}`, {});
+  // CORRECT PAYLOAD STRUCTURE for ProjectPlaceDataExtractor
+  const payload = {
+    projectId: projectId,
+    pmEmail: userEmail,
+    userRole: userRole,
+    s3Bucket: import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b',
+    requestSource: 'acta-ui',
+    generateDocuments: true,
+    extractMetadata: true,
+    timestamp: new Date().toISOString()
+  };
 
-    console.log('✅ Document generation response:', response);
+  console.log('📋 Payload structure:', payload);
 
-    // Check if the response indicates successful S3 storage
-    if (response.s3_location || response.bucket) {
-      console.log(
-        `📁 Document stored in S3: ${response.s3_location || `s3://${response.bucket}/${response.key}`}`
-      );
-    }
+  const response = await post<{
+    success: boolean;
+    message: string;
+    s3Location?: string;
+    documentId?: string;
+    projectData?: any;
+  }>(`${BASE}/extract-project-place/${projectId}`, payload);
 
-    return {
-      success: response.success || true,
-      message: response.message || 'Document generation completed',
-      s3Location:
-        response.s3_location ||
-        (response.bucket && response.key
-          ? `s3://${response.bucket}/${response.key}`
-          : undefined),
-      documentId: response.document_id || projectId,
-    };
-  } catch (error) {
-    console.error('❌ Document generation failed:', error);
-
-    // Enhanced error messages based on common issues
-    let errorMessage = 'Document generation failed';
-    if (error instanceof Error) {
-      if (error.message.includes('fetch')) {
-        errorMessage += ' - Network or API Gateway issue';
-      } else if (error.message.includes('500')) {
-        errorMessage +=
-          ' - Lambda function error or external data source unavailable';
-      } else if (error.message.includes('403')) {
-        errorMessage +=
-          ' - Insufficient permissions for S3 or external data access';
-      } else {
-        errorMessage += ` - ${error.message}`;
-      }
-    }
-
-    return {
-      success: false,
-      message: errorMessage,
-    };
-  }
+  return {
+    success: response.success || true,
+    message: response.message || 'Document generation completed',
+    s3Location: response.s3Location,
+    documentId: response.documentId || projectId,
+  };
 }
 
 /**
@@ -377,19 +356,31 @@ export interface PMProjectsResponse {
 }
 
 // Get all projects assigned to a PM by email (via metadata enricher)
-export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
-  // Handle admin access - get all projects
-  if (pmEmail === 'admin-all-access') {
-    const response = await get<PMProjectsResponse>(
-      `${BASE}/pm-manager/all-projects`
-    );
-    return response.projects;
-  }
+export async function getProjectsByPM(
+  pmEmail: string,
+  isAdmin: boolean = false
+): Promise<ProjectSummary[]> {
+  console.log('📋 Loading projects for PM:', pmEmail, 'Admin:', isAdmin);
+  
+  // Use correct endpoint that matches projectMetadataEnricher
+  const endpoint = isAdmin 
+    ? `${BASE}/pm-projects/all-projects`
+    : `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`;
+  
+  console.log('🌐 PM Projects endpoint:', endpoint);
+  
+  return get<ProjectSummary[]>(endpoint);
+}
 
-  const response = await get<PMProjectsResponse>(
-    `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`
-  );
-  return response.projects;
+// Get all projects (admin only)
+export async function getAllProjects(): Promise<ProjectSummary[]> {
+  console.log('📋 Loading all projects (admin access)');
+  
+  // Use the admin endpoint to get all projects
+  const endpoint = `${BASE}/pm-projects/all-projects`;
+  console.log('🌐 All Projects endpoint:', endpoint);
+  
+  return get<ProjectSummary[]>(endpoint);
 }
 
 // Get enhanced PM projects with summary data

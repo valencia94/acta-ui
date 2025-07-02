@@ -5,32 +5,10 @@ export interface MockApiResponse {
   [key: string]: any;
 }
 
-// Mock project data
+// Mock project data - EMPTY for production-like testing
 const mockProjects = [
-  {
-    id: '1000000064013473',
-    name: 'Infrastructure Upgrade Phase 1',
-    pm_email: 'admin@ikusi.com',
-    status: 'active',
-    updated_at: new Date().toISOString(),
-    acta_status: 'available'
-  },
-  {
-    id: '1000000049842296', 
-    name: 'Network Security Enhancement',
-    pm_email: 'admin@ikusi.com',
-    status: 'active',
-    updated_at: new Date().toISOString(),
-    acta_status: 'pending'
-  },
-  {
-    id: '1000000055667788',
-    name: 'Digital Transformation Initiative', 
-    pm_email: 'admin@ikusi.com',
-    status: 'active',
-    updated_at: new Date().toISOString(),
-    acta_status: 'available'
-  }
+  // Empty array - no default projects shown
+  // Individual projects can still be accessed by project ID
 ];
 
 // Mock API responses
@@ -42,9 +20,14 @@ export const mockApiResponses: Record<string, MockApiResponse> = {
     timestamp: new Date().toISOString()
   },
 
-  // Projects endpoints
+  // Projects endpoints (CORRECTED for backend architecture)
   '/projects': mockProjects,
-  '/projects-by-pm': mockProjects,
+  '/projects-by-pm': mockProjects, // Legacy endpoint
+  '/pm-projects/all-projects': mockProjects, // Admin endpoint 
+  
+  // PM-specific project endpoints
+  '/pm-projects/admin@ikusi.com': mockProjects,
+  '/pm-projects/valencia942003@gmail.com': mockProjects.filter(p => p.pm_email === 'valencia942003@gmail.com'),
   
   // Project specific endpoints
   '/project/1000000064013473': mockProjects[0],
@@ -140,10 +123,15 @@ export const mockApiResponses: Record<string, MockApiResponse> = {
  * Check if we should use mock API responses
  */
 export function shouldUseMockApi(): boolean {
-  const skipAuth = import.meta.env.VITE_SKIP_AUTH === 'true';
+  // Only use mock API when explicitly enabled, not based on auth mode
   const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
   
-  return skipAuth || useMockApi;
+  console.log('🔍 Mock API check:', {
+    VITE_USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API,
+    useMockApi
+  });
+  
+  return useMockApi;
 }
 
 /**
@@ -188,8 +176,17 @@ export function getMockResponse(endpoint: string, method: string = 'GET'): MockA
     };
   }
   
-  // Handle projects by PM email
-  if (cleanEndpoint === '/projects-by-pm') {
+  // Handle PM projects by email (corrected endpoint)
+  if (cleanEndpoint === '/projects-by-pm' || cleanEndpoint.startsWith('/pm-projects/')) {
+    if (cleanEndpoint === '/pm-projects/all-projects') {
+      return mockProjects; // Admin gets all projects
+    }
+    // Extract email from path
+    const emailMatch = cleanEndpoint.match(/\/pm-projects\/(.+)$/);
+    if (emailMatch) {
+      const email = decodeURIComponent(emailMatch[1]);
+      return mockProjects.filter(p => p.pm_email === email || email === 'admin@ikusi.com');
+    }
     return mockProjects;
   }
   

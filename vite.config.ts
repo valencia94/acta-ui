@@ -15,6 +15,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  define: {
+    __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
+  },
   css: {
     postcss: {
       plugins: [tailwindcss(), autoprefixer()],
@@ -56,6 +59,15 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           ui: ['framer-motion', 'lucide-react'],
         },
+        // Add timestamp to chunk names for better cache busting
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId
+            ? path.basename(chunkInfo.facadeModuleId, path.extname(chunkInfo.facadeModuleId))
+            : 'chunk';
+          return `assets/${facadeModuleId}-[hash].js`;
+        },
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
     // Increase chunk size warning limit for PDF.js

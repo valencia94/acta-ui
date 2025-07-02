@@ -22,6 +22,7 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   checkDocumentInS3,
   generateActaDocument,
+  getProjectsByPM,
   getS3DownloadUrl,
   sendApprovalEmail,
 } from '@/lib/api';
@@ -81,14 +82,18 @@ export default function Dashboard() {
   async function loadProjects() {
     setLoadingProjects(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/projects-by-pm?pm_email=${encodeURIComponent(
-          user!.email
-        )}`
-      );
-      if (!res.ok) throw new Error(await res.text());
-      setProjects((await res.json()) as Project[]);
-    } catch {
+      // Use corrected API endpoint that matches backend architecture
+      const projectSummaries = await getProjectsByPM(user!.email, isAdmin);
+      // Transform ProjectSummary to Project interface for the table
+      const projects: Project[] = projectSummaries.map((summary, index) => ({
+        id: index + 1, // Use index as ID since ProjectSummary doesn't have numeric id
+        name: summary.project_name,
+        pm: summary.pm || summary.project_manager || 'Unknown',
+        status: 'Active' // Default status since ProjectSummary doesn't have status
+      }));
+      setProjects(projects);
+    } catch (error) {
+      console.error('Failed to load projects:', error);
       toast.error('Could not load your projects');
     } finally {
       setLoadingProjects(false);
@@ -113,8 +118,12 @@ export default function Dashboard() {
       console.log(`🚀 Generating Acta for project: ${projectId}`);
       console.log('📦 Target S3 bucket: projectplace-dv-2025-x9a7b');
 
-      // Use the enhanced generation function
-      const result = await generateActaDocument(projectId);
+      // Use the enhanced generation function with proper payload
+      const result = await generateActaDocument(
+        projectId,
+        user?.email || 'unknown@example.com',
+        isAdmin ? 'admin' : 'pm'
+      );
       console.log('✅ Acta generation result:', result);
 
       // Dismiss loading toast
