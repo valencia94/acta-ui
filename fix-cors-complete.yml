@@ -1,0 +1,112 @@
+# CORS Fix for API Gateway - Complete CloudFormation Template
+# This template adds CORS support to your existing API Gateway endpoints
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "ACTA-UI API Gateway - Add CORS support to existing endpoints"
+
+Parameters:
+  ExistingApiId:
+    Type: String
+    Default: "q2b9avfwv5"
+    Description: "Existing API Gateway ID"
+  CorsOrigin:
+    Type: String
+    Default: "https://d7t9x3j66yd8k.cloudfront.net"
+    Description: "CORS allowed origin"
+
+Resources:
+  # CORS Methods for Health endpoint
+  HealthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !GetAtt HealthResource.ResourceId
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationHttpMethod: OPTIONS
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: !Sub "'${CorsOrigin}'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+
+  # Get Health Resource Reference
+  HealthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !GetAtt ApiGatewayRootResource.RootResourceId
+      PathPart: health
+
+  # Get Root Resource
+  ApiGatewayRootResource:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      RestApiId: !Ref ExistingApiId
+
+  # CORS Methods for Timeline endpoint
+  TimelineOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !GetAtt TimelineIdResource.ResourceId
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationHttpMethod: OPTIONS
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: !Sub "'${CorsOrigin}'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+
+  TimelineResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !GetAtt ApiGatewayRootResource.RootResourceId
+      PathPart: timeline
+
+  TimelineIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref TimelineResource
+      PathPart: "{id}"
+
+  # API Deployment
+  CorsApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - HealthOptionsMethod
+      - TimelineOptionsMethod
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      Description: "CORS support deployment"
+      StageName: prod
+
+Outputs:
+  CorsStatus:
+    Description: "CORS configuration status"
+    Value: "CORS methods added for health and timeline endpoints"
