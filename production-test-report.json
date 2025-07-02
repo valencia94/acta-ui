@@ -1,27 +1,27 @@
 {
-  "timestamp": "2025-06-30T21:31:30.011Z",
+  "timestamp": "2025-07-02T00:27:02.875Z",
   "summary": {
-    "passed": 13,
-    "failed": 0,
+    "passed": 10,
+    "failed": 3,
     "warnings": 0
   },
   "results": {
     "api": {
       "Health Check": {
-        "status": "PASS",
-        "code": 200
+        "status": "FAIL",
+        "code": 401
       },
       "Projects (Auth Required)": {
         "status": "PASS",
         "code": 403
       },
       "PM All Projects (Auth Required)": {
-        "status": "PASS",
-        "code": 403
+        "status": "FAIL",
+        "code": 401
       },
       "PM Email Projects (Auth Required)": {
-        "status": "PASS",
-        "code": 403
+        "status": "FAIL",
+        "code": 401
       },
       "Document Check": {
         "status": "PASS",
@@ -56,10 +56,12 @@
       }
     },
     "summary": {
-      "passed": 13,
-      "failed": 0,
+      "passed": 10,
+      "failed": 3,
       "warnings": 0
     }
   },
-  "recommendations": ["✅ All tests passed - system is production ready!"]
+  "recommendations": [
+    "❌ Some tests failed - review failed items"
+  ]
 }

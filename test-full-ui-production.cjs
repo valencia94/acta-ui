@@ -7,7 +7,9 @@
  * including API endpoints, frontend functionality, and deployment status
  */
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const https = require('https');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
 
 // Configuration
@@ -238,7 +240,7 @@ function generateReport() {
   console.log(`⚠️  Warnings: ${results.summary.warnings}`);
   console.log('\n📋 Recommendations:');
   report.recommendations.forEach((rec) => console.log(`   ${rec}`));
-  console.log(`\n📊 Full report saved to: production-test-report.json`);
+  console.log('\n📊 Full report saved to: production-test-report.json');
 }
 
 // Main execution

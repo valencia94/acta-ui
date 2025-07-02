@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-07-02T00:26:42.122Z",
+  "configuration": {
+    "cognitoRegion": "us-east-2",
+    "cognitoPoolId": "us-east-2_FyHLtOhiY",
+    "cognitoClientId": "dshos5iou44tuach7ta3ici5m",
+    "cognitoDomain": "us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com",
+    "frontendUrl": "https://d7t9x3j66yd8k.cloudfront.net"
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "warnings": 1
+  },
+  "results": {
+    "cognito": {
+      "Env Config": {
+        "status": "PASS",
+        "clientId": "dshos5iou44tuach7ta3ici5m"
+      },
+      "AWS Exports Config": {
+        "status": "PASS",
+        "clientId": "dshos5iou44tuach7ta3ici5m"
+      },
+      "User Pool Access": {
+        "status": "PASS",
+        "pool": "us-east-2_FyHLtOhiY"
+      }
+    },
+    "oauth": {
+      "OAuth Status": {
+        "status": "DISABLED",
+        "message": "Custom domain not deployed, using default Cognito hosted UI"
+      }
+    },
+    "frontend": {
+      "Root Page": {
+        "status": "PASS",
+        "code": 200
+      },
+      "Login Page": {
+        "status": "PASS",
+        "code": 200
+      },
+      "Auth Elements": {
+        "status": "WARN"
+      },
+      "Dashboard Page": {
+        "status": "PASS",
+        "code": 200
+      }
+    },
+    "summary": {
+      "passed": 6,
+      "failed": 0,
+      "warnings": 1
+    }
+  },
+  "recommendations": [
+    "⚠️ Some authentication components need attention"
+  ]
+}

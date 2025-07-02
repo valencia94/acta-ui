@@ -14,7 +14,7 @@ const fs = require('fs');
 
 // Configuration
 const API_BASE = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
-const FRONTEND_URL = 'https://d1abwcphmz9heu.cloudfront.net';
+const FRONTEND_URL = 'https://d7t9x3j66yd8k.cloudfront.net';
 
 // Test results
 const results = {
