@@ -1,0 +1,63 @@
+{
+  "timestamp": "2025-07-03T02:32:56.907Z",
+  "configuration": {
+    "cognitoRegion": "us-east-2",
+    "cognitoPoolId": "us-east-2_FyHLtOhiY",
+    "cognitoClientId": "dshos5iou44tuach7ta3ici5m",
+    "cognitoDomain": "us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com",
+    "frontendUrl": "https://d7t9x3j66yd8k.cloudfront.net"
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 1,
+    "warnings": 1
+  },
+  "results": {
+    "cognito": {
+      "Env Config": {
+        "status": "PASS",
+        "clientId": "dshos5iou44tuach7ta3ici5m"
+      },
+      "AWS Exports Config": {
+        "status": "PASS",
+        "clientId": "dshos5iou44tuach7ta3ici5m"
+      },
+      "User Pool Access": {
+        "status": "PASS",
+        "pool": "us-east-2_FyHLtOhiY"
+      }
+    },
+    "oauth": {
+      "Domain Access": {
+        "status": "FAIL",
+        "code": 404
+      }
+    },
+    "frontend": {
+      "Root Page": {
+        "status": "PASS",
+        "code": 200
+      },
+      "Login Page": {
+        "status": "PASS",
+        "code": 200
+      },
+      "Auth Elements": {
+        "status": "WARN"
+      },
+      "Dashboard Page": {
+        "status": "PASS",
+        "code": 200
+      }
+    },
+    "summary": {
+      "passed": 6,
+      "failed": 1,
+      "warnings": 1
+    }
+  },
+  "recommendations": [
+    "❌ Authentication configuration has critical issues",
+    "⚠️ Some authentication components need attention"
+  ]
+}

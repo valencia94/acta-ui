@@ -235,7 +235,7 @@ export default function Login() {
               }}
             />
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {getTitle()}
+              Acta Platform
             </h1>
             <p className="text-sm text-teal-600 font-medium">
               {authMode === 'confirm'

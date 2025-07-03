@@ -12,7 +12,7 @@ const awsmobile = {
   // ── OAuth Configuration ────────────────────────────────────────────────────
   // Production OAuth setup matching working deployment
   oauth: {
-    domain: 'acta-ui-prod.auth.us-east-2.amazoncognito.com',
+    domain: 'us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com',
     scope: ['email', 'openid', 'profile'],
     redirectSignIn: 'https://d7t9x3j66yd8k.cloudfront.net/',
     redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/login',

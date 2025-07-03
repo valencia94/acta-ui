@@ -364,8 +364,8 @@ export async function getProjectsByPM(
   
   // Use correct endpoint that matches projectMetadataEnricher
   const endpoint = isAdmin 
-    ? `${BASE}/pm-projects/all-projects`
-    : `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`;
+    ? `${BASE}/pm-manager/all-projects`
+    : `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`;
   
   console.log('🌐 PM Projects endpoint:', endpoint);
   
@@ -377,7 +377,7 @@ export async function getAllProjects(): Promise<ProjectSummary[]> {
   console.log('📋 Loading all projects (admin access)');
   
   // Use the admin endpoint to get all projects
-  const endpoint = `${BASE}/pm-projects/all-projects`;
+  const endpoint = `${BASE}/pm-manager/all-projects`;
   console.log('🌐 All Projects endpoint:', endpoint);
   
   return get<ProjectSummary[]>(endpoint);

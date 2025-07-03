@@ -23,7 +23,7 @@ export const mockApiResponses: Record<string, MockApiResponse> = {
   // Projects endpoints (CORRECTED for backend architecture)
   '/projects': mockProjects,
   '/projects-by-pm': mockProjects, // Legacy endpoint
-  '/pm-projects/all-projects': mockProjects, // Admin endpoint 
+  '/pm-manager/all-projects': mockProjects, // Admin endpoint 
   
   // PM-specific project endpoints
   '/pm-projects/admin@ikusi.com': mockProjects,
@@ -178,7 +178,7 @@ export function getMockResponse(endpoint: string, method: string = 'GET'): MockA
   
   // Handle PM projects by email (corrected endpoint)
   if (cleanEndpoint === '/projects-by-pm' || cleanEndpoint.startsWith('/pm-projects/')) {
-    if (cleanEndpoint === '/pm-projects/all-projects') {
+    if (cleanEndpoint === '/pm-manager/all-projects') {
       return mockProjects; // Admin gets all projects
     }
     // Extract email from path

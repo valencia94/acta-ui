@@ -27,7 +27,7 @@ env:
   VITE_USE_MOCK_API: 'false'
   # AWS Resources
   CLOUDFRONT_DISTRIBUTION: 'd7t9x3j66yd8k'
-  S3_BUCKET: 'acta-ui-production'
+  S3_BUCKET: 'acta-ui-frontend-prod'
   AWS_REGION: 'us-east-2'
 
 jobs:
