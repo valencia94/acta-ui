@@ -1,0 +1,371 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'ACTA-UI Minimal Conflict-Free Stack for Enhanced projectMetadataEnricher
+  Integration
+
+  '
+Parameters:
+  ExistingApiId:
+    Type: String
+    Description: Existing API Gateway RestApiId (e.g., q2b9avfwv5)
+  ExistingApiRootResourceId:
+    Type: String
+    Description: API root resource ID (e.g., kw8f8zihjg)
+  ProjectMetadataEnricherArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher
+    Description: Lambda ARN to which all endpoints are routed
+  ProjectMetadataEnricherFunctionName:
+    Type: String
+    Default: projectMetadataEnricher
+    Description: Lambda function name for permissions
+  DeploymentTimestamp:
+    Type: String
+    Description: Used to force deployment
+Resources:
+  ProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: ExistingApiRootResourceId
+      PathPart: projects
+    Metadata:
+      SamResourceId: ProjectsResource
+  ProjectsGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: ProjectsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: ProjectsGetMethod
+  ProjectsOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: ProjectsResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,HEAD,OPTIONS'''
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type'''
+      MethodResponses:
+      - StatusCode: 200
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: true
+          method.response.header.Access-Control-Allow-Methods: true
+          method.response.header.Access-Control-Allow-Headers: true
+    Metadata:
+      SamResourceId: ProjectsOptionsMethod
+  PMProjectsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: ExistingApiRootResourceId
+      PathPart: pm-projects
+    Metadata:
+      SamResourceId: PMProjectsResource
+  PMProjectsAllResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: PMProjectsResource
+      PathPart: all-projects
+    Metadata:
+      SamResourceId: PMProjectsAllResource
+  PMProjectsAllGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: PMProjectsAllResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: PMProjectsAllGetMethod
+  PMProjectsAllOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: PMProjectsAllResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,HEAD,OPTIONS'''
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type'''
+      MethodResponses:
+      - StatusCode: 200
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: true
+          method.response.header.Access-Control-Allow-Methods: true
+          method.response.header.Access-Control-Allow-Headers: true
+    Metadata:
+      SamResourceId: PMProjectsAllOptionsMethod
+  PMProjectsEmailResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: PMProjectsResource
+      PathPart: '{pmEmail}'
+    Metadata:
+      SamResourceId: PMProjectsEmailResource
+  PMProjectsEmailGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: PMProjectsEmailResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: PMProjectsEmailGetMethod
+  PMProjectsEmailOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: PMProjectsEmailResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,HEAD,OPTIONS'''
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type'''
+      MethodResponses:
+      - StatusCode: 200
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: true
+          method.response.header.Access-Control-Allow-Methods: true
+          method.response.header.Access-Control-Allow-Headers: true
+    Metadata:
+      SamResourceId: PMProjectsEmailOptionsMethod
+  CheckDocRootResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: ExistingApiRootResourceId
+      PathPart: check-document
+    Metadata:
+      SamResourceId: CheckDocRootResource
+  CheckDocIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ParentId:
+        Ref: CheckDocRootResource
+      PathPart: '{projectId}'
+    Metadata:
+      SamResourceId: CheckDocIdResource
+  CheckDocGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: CheckDocIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: CheckDocGetMethod
+  CheckDocHeadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: CheckDocIdResource
+      HttpMethod: HEAD
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+    Metadata:
+      SamResourceId: CheckDocHeadMethod
+  CheckDocIdOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      ResourceId:
+        Ref: CheckDocIdResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: '''*'''
+            method.response.header.Access-Control-Allow-Methods: '''GET,HEAD,OPTIONS'''
+            method.response.header.Access-Control-Allow-Headers: '''Content-Type'''
+      MethodResponses:
+      - StatusCode: 200
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Origin: true
+          method.response.header.Access-Control-Allow-Methods: true
+          method.response.header.Access-Control-Allow-Headers: true
+    Metadata:
+      SamResourceId: CheckDocIdOptionsMethod
+  ProjectsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects
+    Metadata:
+      SamResourceId: ProjectsPermission
+  PMProjectsAllPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/all-projects
+    Metadata:
+      SamResourceId: PMProjectsAllPermission
+  PMProjectsEmailPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
+    Metadata:
+      SamResourceId: PMProjectsEmailPermission
+  CheckDocGetPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/check-document/*
+    Metadata:
+      SamResourceId: CheckDocGetPermission
+  CheckDocHeadPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: ProjectMetadataEnricherFunctionName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/HEAD/check-document/*
+    Metadata:
+      SamResourceId: CheckDocHeadPermission
+  ConflictFreeApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+    - ProjectsGetMethod
+    - ProjectsOptionsMethod
+    - PMProjectsAllGetMethod
+    - PMProjectsAllOptionsMethod
+    - PMProjectsEmailGetMethod
+    - PMProjectsEmailOptionsMethod
+    - CheckDocGetMethod
+    - CheckDocHeadMethod
+    - CheckDocIdOptionsMethod
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      Description:
+        Fn::Sub: ACTA-UI PM Enricher deployment ${DeploymentTimestamp}
+    Metadata:
+      SamResourceId: ConflictFreeApiGatewayDeployment
+  ConflictFreeProdStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId:
+        Ref: ExistingApiId
+      DeploymentId:
+        Ref: ConflictFreeApiGatewayDeployment
+      StageName: prod
+      Description:
+        Fn::Sub: "Prod stage \u2013 ${DeploymentTimestamp}"
+    Metadata:
+      SamResourceId: ConflictFreeProdStage
+Outputs:
+  ProjectsEndpoint:
+    Value:
+      Fn::Sub: https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects
+  PMProjectsAllEndpoint:
+    Value:
+      Fn::Sub: https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-projects/all-projects
+  PMProjectsByEmailEndpoint:
+    Value:
+      Fn::Sub: https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-projects/{pmEmail}
+  CheckDocumentEndpoint:
+    Value:
+      Fn::Sub: https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}

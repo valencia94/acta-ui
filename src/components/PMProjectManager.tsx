@@ -84,38 +84,19 @@ export default function PMProjectManager({
     setLoading(true);
     try {
       console.log('Loading all projects for admin view');
-      // For now, mock some data since the "all projects" endpoint isn't implemented
-      // In production, this would call something like getAllProjects()
-      const mockProjects: PMProject[] = [
-        {
-          project_id: '1000000064013473',
-          project_name: 'Infrastructure Upgrade Phase 1',
-          pm_email: 'pm1@ikusi.com',
-          project_status: 'active',
-          has_acta_document: true,
-          last_updated: new Date().toISOString(),
-        },
-        {
-          project_id: '1000000049842296',
-          project_name: 'Network Security Enhancement',
-          pm_email: 'pm2@ikusi.com',
-          project_status: 'pending',
-          has_acta_document: false,
-          last_updated: new Date().toISOString(),
-        },
-        {
-          project_id: '1000000055667788',
-          project_name: 'Digital Transformation Initiative',
-          pm_email: 'pm3@ikusi.com',
-          project_status: 'active',
-          has_acta_document: true,
-          last_updated: new Date().toISOString(),
-        },
-      ];
+      // Use the real API with admin access
+      const allProjects = await getProjectsByPM('admin-all-access');
+      setProjects(allProjects);
 
-      setProjects(mockProjects);
-      const adminLabel = isAdminView ? '(admin dashboard)' : '(admin access)';
-      toast.success(`Loaded ${mockProjects.length} projects ${adminLabel}`);
+      if (allProjects.length > 0) {
+        const adminLabel = isAdminView ? '(admin dashboard)' : '(admin access)';
+        toast.success(`Loaded ${allProjects.length} projects ${adminLabel}`);
+      } else {
+        toast('No projects found in the system. Backend may not be configured yet.', {
+          icon: '⚠️',
+          duration: 5000,
+        });
+      }
     } catch (error) {
       console.error('Error loading all projects:', error);
       toast.error(
