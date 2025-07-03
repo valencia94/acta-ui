@@ -2,8 +2,14 @@
 # Update CloudFront distribution with custom Origin Request Policy
 set -euo pipefail
 
-DIST_ID="EPQU7PVDLQXUA"
-POLICY_NAME="acta-ui-auth-policy"
+DIST_ID="${DIST_ID:-}"
+POLICY_NAME="${POLICY_NAME:-}"
+
+if [ -z "$DIST_ID" ] || [ -z "$POLICY_NAME" ]; then
+  echo "Error: DIST_ID and POLICY_NAME must be set as environment variables or passed as arguments."
+  echo "Usage: DIST_ID=<distribution-id> POLICY_NAME=<policy-name> $0"
+  exit 1
+fi
 POLICY_CONFIG="$(dirname "$0")/custom-origin-request-policy.json"
 
 # Create policy if it doesn't exist
