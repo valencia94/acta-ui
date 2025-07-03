@@ -1,0 +1,17 @@
+{
+  "Comment": "Allow Authorization and CORS headers",
+  "Name": "acta-ui-auth-policy",
+  "HeadersConfig": {
+    "HeaderBehavior": "whitelist",
+    "Headers": {
+      "Quantity": 3,
+      "Items": ["Authorization", "Origin", "Content-Type"]
+    }
+  },
+  "CookiesConfig": {
+    "CookieBehavior": "none"
+  },
+  "QueryStringsConfig": {
+    "QueryStringBehavior": "all"
+  }
+}
