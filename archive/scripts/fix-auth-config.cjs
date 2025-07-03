@@ -41,7 +41,7 @@ async function fixAuthConfiguration() {
 
   // Test different domain formats
   const domainOptions = [
-    `acta-ui-prod.auth.${COGNITO_REGION}.amazoncognito.com`,
+    `us-east-2fyhltohiy.auth.${COGNITO_REGION}.amazoncognito.com`,
     `${COGNITO_REGION.toLowerCase()}-${COGNITO_USER_POOL_ID.toLowerCase()}.auth.${COGNITO_REGION}.amazoncognito.com`,
     `${COGNITO_USER_POOL_ID.toLowerCase()}.auth.${COGNITO_REGION}.amazoncognito.com`
   ];

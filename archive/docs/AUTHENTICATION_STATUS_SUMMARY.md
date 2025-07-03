@@ -61,7 +61,7 @@
 ```javascript
 // Uncomment in src/aws-exports.js
 oauth: {
-  domain: 'acta-ui-prod.auth.us-east-2.amazoncognito.com',
+  domain: 'us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com',
   scope: ['email', 'openid'],
   redirectSignIn: 'https://d7t9x3j66yd8k.cloudfront.net/',
   redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/login',
