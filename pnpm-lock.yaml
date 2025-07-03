@@ -51,8 +51,8 @@ importers:
   .:
     dependencies:
       '@aws-amplify/auth':
-        specifier: ^6.13.1
-        version: 6.13.1(@aws-amplify/core@6.12.1)
+        specifier: ^6.13.2
+        version: 6.13.2(@aws-amplify/core@6.12.1)
       '@aws-amplify/ui-react':
         specifier: ^6
         version: 6.11.2(@aws-amplify/core@6.12.1)(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(aws-amplify@6.15.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(xstate@4.38.3)
@@ -102,8 +102,8 @@ importers:
         specifier: ^6.1.19
         version: 6.1.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       zod:
-        specifier: ^3.25.67
-        version: 3.25.67
+        specifier: ^3.25.71
+        version: 3.25.71
     devDependencies:
       '@chakra-ui/form-control':
         specifier: ^2.2.0
@@ -134,7 +134,7 @@ importers:
         version: 5.2.6
       '@julr/vite-plugin-validate-env':
         specifier: ^1.3.0
-        version: 1.3.0(vite@5.4.19(@types/node@22.16.0))(zod@3.25.67)
+        version: 1.3.0(vite@5.4.19(@types/node@22.16.0))(zod@3.25.71)
       '@playwright/test':
         specifier: ^1.53.2
         version: 1.53.2
@@ -238,8 +238,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)
       framer-motion:
-        specifier: ^12.22.0
-        version: 12.22.0(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^12.23.0
+        version: 12.23.0(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       gh-pages:
         specifier: ^6.3.0
         version: 6.3.0
@@ -340,6 +340,11 @@ packages:
 
   '@aws-amplify/auth@6.13.1':
     resolution: {integrity: sha512-AGSJe6rvrVYgI4JmYg7sd6/I4Z7r8rPoYrlA/x4vzjo/fTm56a3R5HIhrqq+cFJUTTrbWPSvjk9X/S8xIq7hAw==}
+    peerDependencies:
+      '@aws-amplify/core': ^6.1.0
+
+  '@aws-amplify/auth@6.13.2':
+    resolution: {integrity: sha512-wwD2GKlfteRrLUqn713h0whmorPws53aNS8TeI+lwSy9n+X2gcQAuib7OMfFEQ6+3K3c4dJNL9HvLbX2fj4rzw==}
     peerDependencies:
       '@aws-amplify/core': ^6.1.0
 
@@ -3576,8 +3581,8 @@ packages:
   fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
 
-  framer-motion@12.22.0:
-    resolution: {integrity: sha512-qG07rR8/mboCNU34nORbrIbBXbJzP4aDqBdr67TAIVlMryDEOwh7LXjylWovlnPCMg78ExoY0Gn2F1fV+3DNIw==}
+  framer-motion@12.23.0:
+    resolution: {integrity: sha512-xf6NxTGAyf7zR4r2KlnhFmsRfKIbjqeBupEDBAaEtVIBJX96sAon00kMlsKButSIRwPSHjbRrAPnYdJJ9kyhbA==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -5516,8 +5521,8 @@ packages:
     resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
 
-  zod@3.25.67:
-    resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}
+  zod@3.25.71:
+    resolution: {integrity: sha512-BsBc/NPk7h8WsUWYWYL+BajcJPY8YhjelaWu2NMLuzgraKAz4Lb4/6K11g9jpuDetjMiqhZ6YaexFLOC0Ogi3Q==}
 
 snapshots:
 
@@ -5632,6 +5637,13 @@ snapshots:
       tslib: 2.8.1
 
   '@aws-amplify/auth@6.13.1(@aws-amplify/core@6.12.1)':
+    dependencies:
+      '@aws-amplify/core': 6.12.1
+      '@aws-crypto/sha256-js': 5.2.0
+      '@smithy/types': 3.7.2
+      tslib: 2.8.1
+
+  '@aws-amplify/auth@6.13.2(@aws-amplify/core@6.12.1)':
     dependencies:
       '@aws-amplify/core': 6.12.1
       '@aws-crypto/sha256-js': 5.2.0
@@ -6863,14 +6875,14 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@julr/vite-plugin-validate-env@1.3.0(vite@5.4.19(@types/node@22.16.0))(zod@3.25.67)':
+  '@julr/vite-plugin-validate-env@1.3.0(vite@5.4.19(@types/node@22.16.0))(zod@3.25.71)':
     dependencies:
       '@poppinss/cliui': 6.4.3
       '@poppinss/validator-lite': 1.0.3
       unconfig: 0.6.1
       vite: 5.4.19(@types/node@22.16.0)
     optionalDependencies:
-      zod: 3.25.67
+      zod: 3.25.71
     transitivePeerDependencies:
       - supports-color
 
@@ -7428,7 +7440,7 @@ snapshots:
       node-fetch: 3.3.2
       ora: 6.3.1
       prompts: 2.4.2
-      zod: 3.25.67
+      zod: 3.25.71
 
   '@sideway/address@4.1.5':
     dependencies:
@@ -9221,7 +9233,7 @@ snapshots:
     dependencies:
       devtools-protocol: 0.0.1464554
       mitt: 3.0.1
-      zod: 3.25.67
+      zod: 3.25.71
 
   cli-boxes@4.0.1: {}
 
@@ -9825,7 +9837,7 @@ snapshots:
 
   fraction.js@4.3.7: {}
 
-  framer-motion@12.22.0(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  framer-motion@12.23.0(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       motion-dom: 12.22.0
       motion-utils: 12.19.0
@@ -11718,4 +11730,4 @@ snapshots:
 
   yocto-queue@1.2.1: {}
 
-  zod@3.25.67: {}
+  zod@3.25.71: {}
