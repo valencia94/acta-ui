@@ -39,7 +39,7 @@ jq '.DistributionConfig' "$DIST_JSON" > "$CONFIG_JSON"
 
 # Update all cache behaviors to use the policy
 jq --arg pid "$POLICY_ID" \
-  '(.DefaultCacheBehavior.OriginRequestPolicyId)=$pid | if .CacheBehaviors.Items then (.CacheBehaviors.Items[].OriginRequestPolicyId=$pid) else . end' \
+  '(.DefaultCacheBehavior.OriginRequestPolicyId)=$pid | if .CacheBehaviors then if .CacheBehaviors.Items then (.CacheBehaviors.Items[].OriginRequestPolicyId=$pid) else . end else . end' \
   "$CONFIG_JSON" > "$UPDATED_JSON"
 
 aws cloudfront update-distribution \
