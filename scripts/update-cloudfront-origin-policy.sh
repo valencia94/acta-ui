@@ -22,19 +22,24 @@ else
 fi
 
 # Fetch current distribution config and ETag
-aws cloudfront get-distribution-config --id "$DIST_ID" > /tmp/dist.json
-ETAG=$(jq -r '.ETag' /tmp/dist.json)
-jq '.DistributionConfig' /tmp/dist.json > /tmp/config.json
+DIST_JSON=$(mktemp)
+CONFIG_JSON=$(mktemp)
+UPDATED_JSON=$(mktemp)
+trap 'rm -f "$DIST_JSON" "$CONFIG_JSON" "$UPDATED_JSON"' EXIT
+
+aws cloudfront get-distribution-config --id "$DIST_ID" > "$DIST_JSON"
+ETAG=$(jq -r '.ETag' "$DIST_JSON")
+jq '.DistributionConfig' "$DIST_JSON" > "$CONFIG_JSON"
 
 # Update all cache behaviors to use the policy
 jq --arg pid "$POLICY_ID" \
   '(.DefaultCacheBehavior.OriginRequestPolicyId)=$pid | if .CacheBehaviors.Items then (.CacheBehaviors.Items[].OriginRequestPolicyId=$pid) else . end' \
-  /tmp/config.json > /tmp/updated.json
+  "$CONFIG_JSON" > "$UPDATED_JSON"
 
 aws cloudfront update-distribution \
   --id "$DIST_ID" \
   --if-match "$ETAG" \
-  --distribution-config file:///tmp/updated.json
+  --distribution-config file://$UPDATED_JSON
 
 echo "Updated distribution $DIST_ID to use policy $POLICY_ID"
 echo "Run the following to confirm:" 
