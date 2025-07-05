@@ -14,6 +14,7 @@ import { toast } from 'react-hot-toast';
 
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
 import DocumentStatus from '@/components/DocumentStatus';
+import { EmailInputDialog } from '@/components/EmailInputDialog';
 import Header from '@/components/Header';
 import PDFPreview from '@/components/PDFPreview';
 import PMProjectManager from '@/components/PMProjectManager';
@@ -39,6 +40,10 @@ export default function Dashboard() {
   // PDF Preview state
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>('');
+
+  // Email dialog state
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
 
   // Check if user has admin access
   const isAdmin =
@@ -227,10 +232,17 @@ export default function Dashboard() {
       return;
     }
 
-    setActionLoading(true);
+    // Show email input dialog
+    setShowEmailDialog(true);
+  }
+
+  // Handle email submission
+  async function handleEmailSubmit(email: string) {
+    setEmailLoading(true);
     try {
-      await sendApprovalEmail(projectId, user!.email);
+      await sendApprovalEmail(projectId, email);
       toast.success('Approval email sent successfully!');
+      setShowEmailDialog(false);
     } catch (error) {
       console.error('Send approval error:', error);
       const errorMessage =
@@ -253,7 +265,7 @@ export default function Dashboard() {
         );
       }
     } finally {
-      setActionLoading(false);
+      setEmailLoading(false);
     }
   }
 
@@ -939,6 +951,15 @@ export default function Dashboard() {
             onClose={() => setPdfPreviewUrl(null)}
           />
         )}
+
+        {/* Email Input Dialog */}
+        <EmailInputDialog
+          isOpen={showEmailDialog}
+          onClose={() => setShowEmailDialog(false)}
+          onSubmit={handleEmailSubmit}
+          isLoading={emailLoading}
+          projectId={projectId}
+        />
       </main>
     </div>
   );

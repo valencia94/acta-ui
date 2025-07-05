@@ -81,7 +81,7 @@ async function runAllTests() {
   console.log('🧪 Starting comprehensive authentication tests...');
   console.log('📍 AWS Region:', 'us-east-2');
   console.log('🏊 User Pool:', 'us-east-2_FyHLtOhiY');
-  console.log('📱 Client ID:', '1hdn8b19ub2kmfkuse8rsjpv8e');
+  console.log('📱 Client ID:', 'dshos5iou44tuach7ta3ici5m');
 
   await testCurrentAuth();
   const createResult = await testAccountCreation();
