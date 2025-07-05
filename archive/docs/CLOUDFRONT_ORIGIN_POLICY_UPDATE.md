@@ -36,4 +36,4 @@ CustomAuthOriginPolicy:
         CookieBehavior: none
       QueryStringsConfig:
         QueryStringBehavior: all
-```
+
