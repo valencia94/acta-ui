@@ -1,21 +1,11 @@
 # ACTA-UI - Project Management Dashboard
 
-[![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](https://acta-ui-frontend-prod.s3-website.us-east-2.amazonaws.com)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue.svg)](https://www.typescriptlang.org/)
-[![Clean Architecture](https://img.shields.io/badge/Architecture-Clean-success.svg)](https://github.com/valencia94/acta-ui)
 
 A modern React-based project management dashboard for the ACTA system, built with TypeScript and deployed on AWS infrastructure.
 
-## 🚀 **PRODUCTION STATUS - JANUARY 2025**
+## 🚀 **PRODUCTION STATUS - June 2025**
 
-✅ **PRODUCTION READY** - Fully deployed and operational  
-✅ **AUTHENTICATION FIXED** - Cognito domain and CORS issues resolved  
-✅ **PROFESSIONAL BRANDING** - Enhanced Cognito Hosted UI with client-ready styling  
-✅ **COMPREHENSIVE TESTING** - Full test suite for all critical functionality  
-✅ **DOCUMENTED & CLEAN** - Workspace organized and client-ready  
 
-> **Live URL:** [acta-ui-frontend-prod.s3-website.us-east-2.amazonaws.com](https://acta-ui-frontend-prod.s3-website.us-east-2.amazonaws.com)  
-> **Test Results:** See `PRODUCTION_TEST_RESULTS.md` for comprehensive verification
 
 ## 🏗️ Architecture Overview
 
@@ -507,8 +497,8 @@ Create a `.env` file in the root directory:
 VITE_API_BASE_URL=https://your-api-gateway-url.com
 
 # AWS Cognito Authentication
-VITE_COGNITO_REGION=us-east-1
-VITE_COGNITO_POOL_ID=us-east-1_xxxxxxxxx
+VITE_COGNITO_REGION=us-east-2
+VITE_COGNITO_POOL_ID=us-east-2_xxxxxxxxx
 VITE_COGNITO_WEB_CLIENT=xxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Optional Development Settings
