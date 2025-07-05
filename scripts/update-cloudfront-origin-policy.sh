@@ -2,10 +2,13 @@
 # Update CloudFront distribution with custom Origin Request Policy
 set -euo pipefail
 
-DIST_ID="EPQU7PVDLQXUA"
-POLICY_NAME="acta-ui-auth-policy"
-POLICY_CONFIG="$(dirname "$0")/custom-origin-request-policy.json"
+DIST_ID="${DIST_ID:-}"
+POLICY_NAME="${POLICY_NAME:-}"
 
+if [ -z "$DIST_ID" ] || [ -z "$POLICY_NAME" ]; then
+  echo "Error: DIST_ID and POLICY_NAME must be set as environment variables or passed as arguments."
+  echo "Usage: DIST_ID=<distribution-id> POLICY_NAME=<policy-name> $0"
+  exit 1
 # Create policy if it doesn't exist
 POLICY_ID=$(aws cloudfront list-origin-request-policies \
   --query "OriginRequestPolicyList.Items[?OriginRequestPolicyConfig.Name=='${POLICY_NAME}'].Id" \
@@ -32,8 +35,8 @@ ETAG=$(jq -r '.ETag' "$DIST_JSON")
 jq '.DistributionConfig' "$DIST_JSON" > "$CONFIG_JSON"
 
 # Update all cache behaviors to use the policy
-jq --arg pid "$POLICY_ID" \
-  '(.DefaultCacheBehavior.OriginRequestPolicyId)=$pid | if .CacheBehaviors.Items then (.CacheBehaviors.Items[].OriginRequestPolicyId=$pid) else . end' \
+  '(.DefaultCacheBehavior.OriginRequestPolicyId)=$pid | if .CacheBehaviors then if .CacheBehaviors.Items then (.CacheBehaviors.Items[].OriginRequestPolicyId=$pid) else . end else . end' \
+
   "$CONFIG_JSON" > "$UPDATED_JSON"
 
 aws cloudfront update-distribution \
