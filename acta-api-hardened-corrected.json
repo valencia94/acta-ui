@@ -1,0 +1,186 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "ACTA Automation Platform API - Production Hardened Version",
+    "version": "2025-07-10-hardened",
+    "title": "acta-backend-hardened",
+    "contact": {
+      "name": "ACTA Platform Team",
+      "email": "support@ikusi.com"
+    }
+  },
+  "host": "q2b9avfwv5.execute-api.us-east-2.amazonaws.com",
+  "basePath": "/prod",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Returns API health status - no authentication required for monitoring",
+        "tags": ["Monitoring"],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:HealthCheck/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 10000
+        }
+      },
+      "options": {
+        "summary": "CORS preflight for health endpoint",
+        "description": "Handles CORS preflight requests",
+        "responses": {
+          "200": {
+            "description": "CORS preflight successful",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'",
+                "method.response.header.Access-Control-Allow-Methods": "'GET,OPTIONS'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "summary": "Get projects for authenticated user",
+        "description": "Retrieves projects accessible to the authenticated user",
+        "tags": ["Projects"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "responses": {
+          "200": {
+            "description": "List of projects",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "500": {"$ref": "#/responses/InternalServerError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:GetProjects/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "summary": "CORS preflight for projects endpoint",
+        "responses": {
+          "200": {
+            "description": "CORS preflight successful",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Methods": {"type": "string"},
+              "Access-Control-Allow-Headers": {"type": "string"}
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'",
+                "method.response.header.Access-Control-Allow-Methods": "'GET,POST,PUT,DELETE,OPTIONS'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "CognitoUserPoolAuthorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "cognito_user_pools",
+      "x-amazon-apigateway-authorizer": {
+        "type": "cognito_user_pools",
+        "providerARNs": [
+          "arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY"
+        ]
+      }
+    }
+  },
+  "responses": {
+    "Unauthorized": {
+      "description": "Unauthorized - Invalid or missing JWT token",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    },
+    "Forbidden": {
+      "description": "Forbidden - Valid token but insufficient permissions",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    },
+    "InternalServerError": {
+      "description": "Internal server error",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    }
+  },
+  "definitions": {
+    "Empty": {
+      "type": "object",
+      "title": "Empty Schema"
+    }
+  }
+}

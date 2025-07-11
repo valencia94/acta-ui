@@ -1,0 +1,759 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "ACTA Automation Platform API - Production Hardened Version",
+    "version": "2025-07-10-hardened",
+    "title": "acta-backend-hardened",
+    "contact": {
+      "name": "ACTA Platform Team",
+      "email": "support@ikusi.com"
+    }
+  },
+  "host": "q2b9avfwv5.execute-api.us-east-2.amazonaws.com",
+  "basePath": "/prod",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Returns API health status - no authentication required for monitoring",
+        "tags": ["Monitoring"],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Credentials": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:HealthCheck/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 10000
+        }
+      },
+      "options": {
+        "summary": "CORS preflight for health endpoint",
+        "responses": {
+          "200": {
+            "description": "CORS response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'",
+                "method.response.header.Access-Control-Allow-Methods": "'GET,OPTIONS'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "summary": "Get projects for authenticated user",
+        "description": "Retrieves projects accessible to the authenticated user",
+        "tags": ["Projects"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "responses": {
+          "200": {
+            "description": "Projects retrieved successfully",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {"Access-Control-Allow-Origin": {"type": "string"}}
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {"Access-Control-Allow-Origin": {"type": "string"}}
+          },
+          "500": {
+            "description": "Internal server error",
+            "headers": {"Access-Control-Allow-Origin": {"type": "string"}}
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:sendProjectsForPM/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/pm-manager/all-projects": {
+      "get": {
+        "summary": "Get all projects (PM Manager)",
+        "description": "Retrieves all projects for project managers",
+        "tags": ["Project Management"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "responses": {
+          "200": {
+            "description": "All projects retrieved",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "500": {"$ref": "#/responses/InternalError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/pm-manager/{pmEmail}": {
+      "get": {
+        "summary": "Get projects by PM email",
+        "description": "Retrieves projects assigned to a specific project manager",
+        "tags": ["Project Management"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "parameters": [
+          {
+            "name": "pmEmail",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Project manager email address",
+            "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PM projects retrieved",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "400": {"$ref": "#/responses/BadRequest"},
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "404": {"$ref": "#/responses/NotFound"},
+          "500": {"$ref": "#/responses/InternalError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000,
+          "requestParameters": {
+            "integration.request.path.pmEmail": "method.request.path.pmEmail"
+          }
+        }
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "pmEmail",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/project-summary/{projectId}": {
+      "get": {
+        "summary": "Get project summary",
+        "description": "Retrieves detailed summary for a specific project",
+        "tags": ["Projects"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Unique project identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project summary retrieved",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "404": {"$ref": "#/responses/NotFound"},
+          "500": {"$ref": "#/responses/InternalError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/check-document/{projectId}": {
+      "get": {
+        "summary": "Check document status",
+        "description": "Retrieves the current status of documents for a project",
+        "tags": ["Documents"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Project identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document status retrieved",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "404": {"$ref": "#/responses/NotFound"},
+          "500": {"$ref": "#/responses/InternalError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:DocumentStatus/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/download-acta/{projectId}": {
+      "get": {
+        "summary": "Download ACTA document",
+        "description": "Downloads the ACTA document for a specific project",
+        "tags": ["Documents"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Project identifier for ACTA download"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ACTA document download successful",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"},
+              "Content-Type": {"type": "string"},
+              "Content-Disposition": {"type": "string"}
+            }
+          },
+          "302": {
+            "description": "Redirect to download URL",
+            "headers": {
+              "Location": {"type": "string"},
+              "Access-Control-Allow-Origin": {"type": "string"}
+            }
+          },
+          "400": {"$ref": "#/responses/BadRequest"},
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "404": {"$ref": "#/responses/NotFound"},
+          "500": {"$ref": "#/responses/InternalError"},
+          "502": {"$ref": "#/responses/BadGateway"},
+          "503": {"$ref": "#/responses/ServiceUnavailable"},
+          "504": {"$ref": "#/responses/GatewayTimeout"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:getDownloadActa/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000,
+          "contentHandling": "CONVERT_TO_TEXT"
+        }
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/extract-project-place/{projectId}": {
+      "post": {
+        "summary": "Extract project place data",
+        "description": "Triggers data extraction from ProjectPlace for a specific project",
+        "tags": ["Data Extraction"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Project identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Extraction completed successfully",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "202": {
+            "description": "Extraction started (async operation)",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "404": {"$ref": "#/responses/NotFound"},
+          "500": {"$ref": "#/responses/InternalError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:ProjectPlaceDataExtractor/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/timeline/{projectId}": {
+      "get": {
+        "summary": "Get project timeline",
+        "description": "Retrieves the timeline of events for a specific project",
+        "tags": ["Projects"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Project identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Timeline retrieved successfully",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "404": {"$ref": "#/responses/NotFound"},
+          "500": {"$ref": "#/responses/InternalError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:getTimeline/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/send-approval-email": {
+      "post": {
+        "summary": "Send approval email",
+        "description": "Sends approval email for project documentation",
+        "tags": ["Notifications"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "responses": {
+          "200": {
+            "description": "Email sent successfully",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "202": {
+            "description": "Email queued for sending",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "400": {"$ref": "#/responses/BadRequest"},
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "500": {"$ref": "#/responses/InternalError"},
+          "502": {"$ref": "#/responses/BadGateway"},
+          "503": {"$ref": "#/responses/ServiceUnavailable"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:sendApprovalEmail/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/approve": {
+      "post": {
+        "summary": "Approve project documentation",
+        "description": "Approves project documentation and triggers workflow",
+        "tags": ["Approvals"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "responses": {
+          "200": {
+            "description": "Approval processed successfully",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "404": {"$ref": "#/responses/NotFound"},
+          "500": {"$ref": "#/responses/InternalError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:projectMetadataEnricher/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 29000
+        }
+      },
+      "options": {
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    },
+    "/handleApprovalCallback": {
+      "post": {
+        "summary": "Handle approval callback",
+        "description": "Processes approval callbacks from external systems",
+        "tags": ["Callbacks"],
+        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "responses": {
+          "200": {
+            "description": "Callback processed successfully",
+            "headers": {
+              "Access-Control-Allow-Origin": {"type": "string"},
+              "Access-Control-Allow-Credentials": {"type": "string"}
+            }
+          },
+          "401": {"$ref": "#/responses/Unauthorized"},
+          "403": {"$ref": "#/responses/Forbidden"},
+          "404": {"$ref": "#/responses/NotFound"},
+          "500": {"$ref": "#/responses/InternalError"}
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:handleApprovalCallback/invocations",
+          "passthroughBehavior": "when_no_match",
+          "timeoutInMillis": 30000,
+          "contentHandling": "CONVERT_TO_TEXT"
+        }
+      },
+      "options": {
+        "$ref": "#/x-amazon-apigateway-cors-options"
+      }
+    }
+  },
+  "responses": {
+    "BadRequest": {
+      "description": "Bad request - invalid parameters",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"},
+        "Access-Control-Allow-Credentials": {"type": "string"}
+      }
+    },
+    "Unauthorized": {
+      "description": "Unauthorized - authentication required",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    },
+    "Forbidden": {
+      "description": "Forbidden - insufficient permissions",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    },
+    "NotFound": {
+      "description": "Resource not found",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    },
+    "InternalError": {
+      "description": "Internal server error",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    },
+    "BadGateway": {
+      "description": "Bad gateway - upstream error",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    },
+    "ServiceUnavailable": {
+      "description": "Service temporarily unavailable",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    },
+    "GatewayTimeout": {
+      "description": "Gateway timeout",
+      "headers": {
+        "Access-Control-Allow-Origin": {"type": "string"}
+      }
+    }
+  },
+  "securityDefinitions": {
+    "CognitoUserPoolAuthorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "cognito_user_pools",
+      "x-amazon-apigateway-authorizer": {
+        "providerARNs": ["arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY"],
+        "type": "cognito_user_pools"
+      }
+    }
+  },
+  "definitions": {
+    "Empty": {
+      "type": "object",
+      "title": "Empty Schema"
+    }
+  },
+  "x-amazon-apigateway-cors-options": {
+    "summary": "CORS preflight response",
+    "responses": {
+      "200": {
+        "description": "CORS response",
+        "headers": {
+          "Access-Control-Allow-Origin": {"type": "string"},
+          "Access-Control-Allow-Methods": {"type": "string"},
+          "Access-Control-Allow-Headers": {"type": "string"},
+          "Access-Control-Allow-Credentials": {"type": "string"}
+        }
+      }
+    },
+    "x-amazon-apigateway-integration": {
+      "type": "mock",
+      "requestTemplates": {
+        "application/json": "{\"statusCode\": 200}"
+      },
+      "responses": {
+        "default": {
+          "statusCode": "200",
+          "responseParameters": {
+            "method.response.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'",
+            "method.response.header.Access-Control-Allow-Methods": "'GET,POST,PUT,DELETE,OPTIONS'",
+            "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+            "method.response.header.Access-Control-Allow-Credentials": "'true'"
+          }
+        }
+      }
+    }
+  },
+  "x-amazon-apigateway-gateway-responses": {
+    "UNAUTHORIZED": {
+      "statusCode": 401,
+      "responseParameters": {
+        "gatewayresponse.header.Access-Control-Allow-Methods": "'GET,POST,OPTIONS'",
+        "gatewayresponse.header.Access-Control-Allow-Credentials": "'true'",
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      },
+      "responseTemplates": {
+        "application/json": "{\"message\": \"Unauthorized\"}"
+      }
+    },
+    "ACCESS_DENIED": {
+      "statusCode": 403,
+      "responseParameters": {
+        "gatewayresponse.header.Access-Control-Allow-Methods": "'GET,POST,OPTIONS'",
+        "gatewayresponse.header.Access-Control-Allow-Credentials": "'true'",
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      },
+      "responseTemplates": {
+        "application/json": "{\"message\": \"Access Denied\"}"
+      }
+    },
+    "DEFAULT_4XX": {
+      "responseParameters": {
+        "gatewayresponse.header.Access-Control-Allow-Credentials": "'true'",
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      }
+    },
+    "DEFAULT_5XX": {
+      "responseParameters": {
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      }
+    },
+    "THROTTLED": {
+      "statusCode": 429,
+      "responseParameters": {
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'https://d7t9x3j66yd8k.cloudfront.net'"
+      },
+      "responseTemplates": {
+        "application/json": {
+          "message": "Too Many Requests"
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Monitoring",
+      "description": "Health checks and monitoring endpoints"
+    },
+    {
+      "name": "Projects",
+      "description": "Project management and retrieval"
+    },
+    {
+      "name": "Project Management",
+      "description": "PM-specific project operations"
+    },
+    {
+      "name": "Documents",
+      "description": "Document operations and downloads"
+    },
+    {
+      "name": "Data Extraction",
+      "description": "ProjectPlace data extraction"
+    },
+    {
+      "name": "Notifications",
+      "description": "Email and notification services"
+    },
+    {
+      "name": "Approvals",
+      "description": "Approval workflow operations"
+    },
+    {
+      "name": "Callbacks",
+      "description": "External system callbacks"
+    }
+  ]
+}

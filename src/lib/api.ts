@@ -1,7 +1,8 @@
 // src/lib/api.ts
 
 import { apiBaseUrl } from '@/env.variables';
-import { get, post } from '@/utils/fetchWrapper';
+import { get, post, getAuthToken } from '@/utils/fetchWrapper';
+import { apiGet, apiPost, getCurrentUser } from './api-amplify';
 
 const BASE = apiBaseUrl;
 
@@ -24,12 +25,12 @@ export interface TimelineEvent {
 
 /** ---------- SUMMARY ---------- */
 export function getSummary(id: string): Promise<ProjectSummary> {
-  return get<ProjectSummary>(`${BASE}/project-summary/${id}`);
+  return apiGet<ProjectSummary>(`${BASE}/project-summary/${id}`);
 }
 
 /** ---------- TIMELINE ---------- */
 export function getTimeline(id: string): Promise<TimelineEvent[]> {
-  return get<TimelineEvent[]>(`${BASE}/timeline/${id}`);
+  return apiGet<TimelineEvent[]>(`${BASE}/timeline/${id}`);
 }
 
 /** ---------- ACTA DOWNLOAD (302 redirect) ---------- */
@@ -73,7 +74,7 @@ export function sendApprovalEmail(
   actaId: string,
   clientEmail: string
 ): Promise<{ message: string; token: string }> {
-  return post<{ message: string; token: string }>(
+  return apiPost<{ message: string; token: string }>(
     `${BASE}/send-approval-email`,
     { actaId, clientEmail }
   );
@@ -81,7 +82,7 @@ export function sendApprovalEmail(
 
 /** ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
 export function extractProjectPlaceData(projectId: string): Promise<unknown> {
-  return post<unknown>(`${BASE}/extract-project-place/${projectId}`);
+  return apiPost<unknown>(`${BASE}/extract-project-place/${projectId}`);
 }
 
 /** ---------- ENHANCED S3 INTEGRATION FOR LAMBDA WORKFLOW ---------- */
@@ -123,7 +124,7 @@ export async function generateActaDocument(
 
   console.log('📋 Payload structure:', payload);
 
-  const response = await post<{
+  const response = await apiPost<{
     success: boolean;
     message: string;
     s3Location?: string;
@@ -369,7 +370,7 @@ export async function getProjectsByPM(
   
   console.log('🌐 PM Projects endpoint:', endpoint);
   
-  return get<ProjectSummary[]>(endpoint);
+  return apiGet<ProjectSummary[]>(endpoint);
 }
 
 // Get all projects (admin only)
@@ -380,7 +381,7 @@ export async function getAllProjects(): Promise<ProjectSummary[]> {
   const endpoint = `${BASE}/pm-manager/all-projects`;
   console.log('🌐 All Projects endpoint:', endpoint);
   
-  return get<ProjectSummary[]>(endpoint);
+  return apiGet<ProjectSummary[]>(endpoint);
 }
 
 // Get enhanced PM projects with summary data
@@ -389,10 +390,10 @@ export async function getPMProjectsWithSummary(
 ): Promise<PMProjectsResponse> {
   // Handle admin access
   if (pmEmail === 'admin-all-access') {
-    return get<PMProjectsResponse>(`${BASE}/pm-manager/all-projects`);
+    return apiGet<PMProjectsResponse>(`${BASE}/pm-manager/all-projects`);
   }
 
-  return get<PMProjectsResponse>(
+  return apiGet<PMProjectsResponse>(
     `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`
   );
 }
@@ -402,7 +403,7 @@ export async function getProjectSummaryForPM(
   projectId: string,
   pmEmail: string
 ): Promise<ProjectSummary & { pm_context?: PMProject }> {
-  return get<ProjectSummary & { pm_context?: PMProject }>(
+  return apiGet<ProjectSummary & { pm_context?: PMProject }>(
     `${BASE}/project-summary/${projectId}?pm_email=${encodeURIComponent(pmEmail)}`
   );
 }
@@ -413,7 +414,7 @@ export async function generateSummariesForPM(pmEmail: string): Promise<{
   failed: string[];
   total: number;
 }> {
-  return post<{ success: string[]; failed: string[]; total: number }>(
+  return apiPost<{ success: string[]; failed: string[]; total: number }>(
     `${BASE}/bulk-generate-summaries`,
     { pm_email: pmEmail }
   );
@@ -444,4 +445,15 @@ export async function checkDocumentAvailability(
     console.warn('Error checking document availability:', error);
     return { available: false };
   }
+}
+
+// Attach critical API functions to window for test-production.js visibility
+if (typeof window !== 'undefined') {
+  window.getSummary = getSummary;
+  window.getTimeline = getTimeline;
+  window.getDownloadUrl = getDownloadUrl;
+  window.sendApprovalEmail = sendApprovalEmail;
+  window.fetchWrapper = apiGet; // Expose Cognito-authenticated GET as fetchWrapper for test
+  window.getAuthToken = getAuthToken; // Keep for backward compatibility
+  (window as any).getCurrentUser = getCurrentUser; // Add Cognito user info
 }

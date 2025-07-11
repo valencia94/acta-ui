@@ -20,11 +20,23 @@ export function useAuth() {
           return;
         }
 
+        // Check if we have a token in localStorage first
+        const token = localStorage.getItem('ikusi.jwt');
+        if (!token) {
+          console.log('🔍 useAuth: No token in localStorage');
+          setUser(null);
+          return;
+        }
+
+        console.log('🔍 useAuth: Token found, getting current user...');
         const currentUser = await getCurrentUser();
+        console.log('🔍 useAuth: Current user:', currentUser);
+        
         setUser({
-          email: currentUser.signInDetails?.loginId || '',
+          email: currentUser.signInDetails?.loginId || currentUser.username || '',
         });
       } catch (error) {
+        console.error('🔍 useAuth: Error getting current user:', error);
         // In skip auth mode, still provide mock user even if getCurrentUser fails
         if (skipAuth) {
           console.log('🔓 Skip auth mode: Using mock admin user (fallback)');
@@ -40,6 +52,28 @@ export function useAuth() {
     };
 
     fetchUser();
+
+    // Listen for authentication state changes
+    const handleAuthChange = () => {
+      console.log('🔍 useAuth: Auth state changed, re-fetching user...');
+      fetchUser();
+    };
+
+    // Listen for storage changes (logout)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'ikusi.jwt') {
+        console.log('🔍 useAuth: JWT token changed in localStorage');
+        fetchUser();
+      }
+    };
+
+    window.addEventListener('auth-success', handleAuthChange);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('auth-success', handleAuthChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   return { user, loading };

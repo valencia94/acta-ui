@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTA-UI Button Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            color: #2c3e50;
+        }
+        .test-panel {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .test-button:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            background-color: #f1f1f1;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-running {
+            background-color: #f39c12;
+        }
+        .status-success {
+            background-color: #2ecc71;
+        }
+        .status-fail {
+            background-color: #e74c3c;
+        }
+        .test-suite {
+            margin-bottom: 30px;
+        }
+        .test-description {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ACTA-UI Button Test Suite</h1>
+    <p>Run tests on the ACTA-UI buttons to verify all functionality is working correctly.</p>
+    
+    <div class="test-suite">
+        <h2>1. Button Functionality Test</h2>
+        <div class="test-description">
+            Tests if all UI buttons are present and functioning correctly (Generate, Send Approval, Word, Preview, PDF).
+        </div>
+        <div class="test-panel">
+            <button id="run-button-functionality" class="test-button">Run Button Functionality Test</button>
+            <div id="button-functionality-status"></div>
+            <div id="button-functionality-results" class="results"></div>
+        </div>
+    </div>
+    
+    <div class="test-suite">
+        <h2>2. Navigation Button Test</h2>
+        <div class="test-description">
+            Verifies navigation buttons work correctly for moving between application views.
+        </div>
+        <div class="test-panel">
+            <button id="run-navigation-test" class="test-button">Run Navigation Button Test</button>
+            <div id="navigation-status"></div>
+            <div id="navigation-results" class="results"></div>
+        </div>
+    </div>
+    
+    <div class="test-suite">
+        <h2>3. Production Readiness Validation</h2>
+        <div class="test-description">
+            Comprehensive test of all UI systems for production readiness, including button functionality.
+        </div>
+        <div class="test-panel">
+            <button id="run-production-test" class="test-button">Run Production Readiness Test</button>
+            <div id="production-status"></div>
+            <div id="production-results" class="results"></div>
+        </div>
+    </div>
+    
+    <div class="test-suite">
+        <h2>4. Comprehensive Auth & API Test</h2>
+        <div class="test-description">
+            Tests authentication and API integrations including button action effects.
+        </div>
+        <div class="test-panel">
+            <button id="run-auth-api-test" class="test-button">Run Auth & API Test</button>
+            <div id="auth-api-status"></div>
+            <div id="auth-api-results" class="results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to load and run a test script
+        function loadAndRunTest(scriptUrl, resultId, statusId) {
+            const statusEl = document.getElementById(statusId);
+            const resultEl = document.getElementById(resultId);
+            
+            statusEl.innerHTML = '<span class="status-indicator status-running"></span> Running test...';
+            resultEl.textContent = 'Loading test script...';
+            
+            // Create a script element
+            const script = document.createElement('script');
+            script.src = scriptUrl;
+            script.onerror = () => {
+                statusEl.innerHTML = '<span class="status-indicator status-fail"></span> Test failed to load';
+                resultEl.textContent = `Error loading test script from ${scriptUrl}. Make sure the file exists.`;
+            };
+            
+            // Capture console.log output
+            const originalConsoleLog = console.log;
+            const logs = [];
+            
+            console.log = function() {
+                logs.push(Array.from(arguments).join(' '));
+                originalConsoleLog.apply(console, arguments);
+            };
+            
+            script.onload = () => {
+                // Wait for test to complete
+                setTimeout(() => {
+                    // Display captured logs
+                    resultEl.textContent = logs.join('\n');
+                    
+                    // Check for success/failure indicators in logs
+                    const success = logs.some(log => log.includes('✅ ALL') || log.includes('PASS') || log.includes('test passed'));
+                    const failure = logs.some(log => log.includes('❌') || log.includes('FAIL') || log.includes('ISSUES DETECTED'));
+                    
+                    if (success && !failure) {
+                        statusEl.innerHTML = '<span class="status-indicator status-success"></span> Test completed successfully!';
+                    } else if (failure) {
+                        statusEl.innerHTML = '<span class="status-indicator status-fail"></span> Test completed with issues';
+                    } else {
+                        statusEl.innerHTML = '<span class="status-indicator status-success"></span> Test completed';
+                    }
+                    
+                    // Restore console.log
+                    console.log = originalConsoleLog;
+                }, 2000);
+            };
+            
+            document.body.appendChild(script);
+        }
+        
+        // Button Functionality Test
+        document.getElementById('run-button-functionality').addEventListener('click', () => {
+            loadAndRunTest('/public/button-functionality-test.js', 'button-functionality-results', 'button-functionality-status');
+        });
+        
+        // Navigation Button Test
+        document.getElementById('run-navigation-test').addEventListener('click', () => {
+            loadAndRunTest('/public/navigation-button-test.js', 'navigation-results', 'navigation-status');
+        });
+        
+        // Production Readiness Test
+        document.getElementById('run-production-test').addEventListener('click', () => {
+            loadAndRunTest('/public/production-readiness-validation.js', 'production-results', 'production-status');
+        });
+        
+        // Auth & API Test
+        document.getElementById('run-auth-api-test').addEventListener('click', () => {
+            loadAndRunTest('/public/comprehensive-auth-api-test.js', 'auth-api-results', 'auth-api-status');
+        });
+    </script>
+</body>
+</html>

@@ -1,14 +1,12 @@
 // src/utils/fetchWrapper.ts
-import { fetchAuthSession } from 'aws-amplify/auth';
-import { mockApiInterceptor, shouldUseMockApi } from './mockApiServer';
+import { fetchAuthSession } from '@aws-amplify/auth';
+import { skipAuth } from '@/env.variables';
 
 /**
  * Get the current authentication token
  */
-async function getAuthToken(): Promise<string | null> {
-  // Import skip auth flag
-  const { skipAuth } = await import('@/env.variables');
-  
+export async function getAuthToken(): Promise<string | null> {
+  // Use static import for skipAuth
   // In skip auth mode, don't try to get real tokens
   if (skipAuth) {
     console.log('🔓 Skip auth mode: Using mock token');
@@ -37,12 +35,6 @@ export async function fetcher<T>(
 ): Promise<T> {
   const url = typeof input === 'string' ? input : input.url;
   
-  // Check if we should use mock API
-  if (shouldUseMockApi() && url.includes('/api/')) {
-    console.log('🎭 Using mock API for:', url);
-    return mockApiInterceptor<T>(url, init);
-  }
-
   // Get authentication token
   const token = await getAuthToken();
 

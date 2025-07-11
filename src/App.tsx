@@ -1,8 +1,7 @@
 // src/App.tsx
 
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
-import { Amplify } from 'aws-amplify';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession } from '@aws-amplify/auth';
 import { useEffect, useState } from 'react';
 // Conditional imports for development debugging components
 import { lazy, Suspense } from 'react';
@@ -17,13 +16,13 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 
-// Only load debug components in development
+// Only load debug components in development - with error boundaries
 const AuthDebugger = import.meta.env.DEV
-  ? lazy(() => import('@/components/AuthDebugger'))
+  ? lazy(() => import('@/components/AuthDebugger').catch(() => ({ default: () => null })))
   : null;
 
 const DashboardTester = import.meta.env.DEV
-  ? lazy(() => import('@/components/DashboardTester'))
+  ? lazy(() => import('@/components/DashboardTester').catch(() => ({ default: () => null })))
   : null;
 
 // Load test utilities only in development
@@ -32,10 +31,6 @@ if (import.meta.env.DEV) {
   import('@/utils/authFlowTest').catch(() => {}); // Import comprehensive auth flow tests
   import('@/utils/dashboardTesting').catch(() => {}); // Import dashboard button testing
 }
-
-import awsconfig from './aws-exports';
-
-Amplify.configure(awsconfig);
 
 export default function App() {
   useThemedFavicon();
@@ -209,7 +204,7 @@ export default function App() {
         }}
       />
       {import.meta.env.DEV && AuthDebugger && DashboardTester && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div>Loading debug tools...</div>}>
           <AuthDebugger />
           <DashboardTester />
         </Suspense>

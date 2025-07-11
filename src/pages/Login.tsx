@@ -110,12 +110,16 @@ export default function Login() {
       localStorage.setItem('ikusi.jwt', token);
       console.log('💾 Token saved to localStorage');
 
+      // Add a small delay to ensure localStorage is written
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Dispatch a custom event to notify App component
       window.dispatchEvent(new Event('auth-success'));
       console.log('📢 Auth success event dispatched');
 
-      console.log('🔄 Navigating to dashboard...');
-      nav('/dashboard');
+      // Force a page reload to ensure clean state
+      console.log('🔄 Reloading page to ensure clean authentication state...');
+      window.location.href = '/dashboard';
     } else {
       console.log('❌ Sign-in failed or incomplete');
     }

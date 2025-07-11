@@ -1,6 +1,7 @@
 // vite.config.ts
 import react from '@vitejs/plugin-react';
 import autoprefixer from 'autoprefixer';
+import fs from "fs";
 import path from 'path';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
@@ -9,7 +10,23 @@ import svgr from 'vite-plugin-svgr';
 export default defineConfig({
   root: '.',
   publicDir: 'public',
-  plugins: [react(), svgr()],
+  plugins: [
+    {
+      name: "copy-aws-exports",
+      closeBundle() {
+        console.log("📋 Copying browser-compatible aws-exports.js to dist folder...");
+        if (fs.existsSync("public/aws-exports.js")) {
+          // Ensure dist directory exists
+          if (!fs.existsSync("dist")) {
+            fs.mkdirSync("dist", { recursive: true });
+          }
+          fs.copyFileSync("public/aws-exports.js", "dist/aws-exports.js");
+          console.log("✅ Browser-compatible aws-exports.js copied successfully!");
+        } else {
+          console.log("❌ public/aws-exports.js not found!");
+        }
+      }
+    },react(), svgr()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -20,7 +37,9 @@ export default defineConfig({
   },
   css: {
     postcss: {
-      plugins: [tailwindcss(), autoprefixer()],
+      plugins: [
+        tailwindcss(), autoprefixer()
+      ],
     },
   },
   server: {

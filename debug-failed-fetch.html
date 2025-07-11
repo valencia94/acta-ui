@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Failed Fetch Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Debug Failed Fetch Issue</h1>
+    <p>This page will help diagnose the "Failed to fetch" error in the extract-project-place endpoint.</p>
+    
+    <div>
+        <button onclick="testBasicFetch()">1. Test Basic Fetch</button>
+        <button onclick="testWithoutAuth()">2. Test Without Auth</button>
+        <button onclick="testCorsPreflightOnly()">3. Test CORS Preflight Only</button>
+        <button onclick="testNetworkConnectivity()">4. Test Network Connectivity</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <div id="logs"></div>
+
+    <script>
+        const API_BASE = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
+        const CLOUDFRONT_ORIGIN = 'https://d7t9x3j66yd8k.cloudfront.net';
+        
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        async function testBasicFetch() {
+            log('🧪 Testing basic fetch to extract-project-place endpoint...', 'info');
+            
+            try {
+                // Test 1: Simple GET to health endpoint first
+                log('Step 1: Testing health endpoint...', 'info');
+                const healthResponse = await fetch(`${API_BASE}/health`);
+                log(`Health endpoint status: ${healthResponse.status}`, healthResponse.ok ? 'success' : 'error');
+                
+                // Test 2: Try the actual endpoint with minimal setup
+                log('Step 2: Testing extract-project-place endpoint...', 'info');
+                const testUrl = `${API_BASE}/extract-project-place/1000000055914011`;
+                
+                const response = await fetch(testUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer dummy-token-for-test'
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                log(`Extract endpoint status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`Error response: ${errorText}`, 'error');
+                } else {
+                    const data = await response.json();
+                    log(`Success response: ${JSON.stringify(data)}`, 'success');
+                }
+                
+            } catch (error) {
+                log(`❌ Basic fetch failed: ${error.name}: ${error.message}`, 'error');
+                log(`Error details: ${JSON.stringify({
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack?.split('\n')[0]
+                })}`, 'error');
+            }
+        }
+
+        async function testWithoutAuth() {
+            log('🧪 Testing without authentication headers...', 'info');
+            
+            try {
+                const testUrl = `${API_BASE}/extract-project-place/1000000055914011`;
+                
+                const response = await fetch(testUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                log(`No-auth response status: ${response.status}`, 'info');
+                log(`Expected 401 Unauthorized, got: ${response.status} ${response.statusText}`, 'info');
+                
+            } catch (error) {
+                log(`❌ No-auth test failed: ${error.name}: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCorsPreflightOnly() {
+            log('🧪 Testing CORS preflight only...', 'info');
+            
+            try {
+                const testUrl = `${API_BASE}/extract-project-place/1000000055914011`;
+                
+                const response = await fetch(testUrl, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': CLOUDFRONT_ORIGIN,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'authorization,content-type'
+                    }
+                });
+                
+                log(`CORS preflight status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                // Check CORS headers
+                const corsHeaders = {
+                    'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+                    'access-control-allow-credentials': response.headers.get('access-control-allow-credentials'),
+                    'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
+                    'access-control-allow-headers': response.headers.get('access-control-allow-headers')
+                };
+                
+                log(`CORS headers: ${JSON.stringify(corsHeaders, null, 2)}`, 'info');
+                
+            } catch (error) {
+                log(`❌ CORS preflight failed: ${error.name}: ${error.message}`, 'error');
+            }
+        }
+
+        async function testNetworkConnectivity() {
+            log('🧪 Testing network connectivity...', 'info');
+            
+            // Test 1: Can we reach the API Gateway at all?
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                log(`✅ Can reach API Gateway (health): ${response.status}`, 'success');
+            } catch (error) {
+                log(`❌ Cannot reach API Gateway: ${error.message}`, 'error');
+                return;
+            }
+
+            // Test 2: DNS resolution
+            try {
+                const hostname = new URL(API_BASE).hostname;
+                log(`🔍 API hostname: ${hostname}`, 'info');
+                
+                // Try to get the IP (this will work in modern browsers)
+                const dnsTest = await fetch(`https://dns.google/resolve?name=${hostname}&type=A`);
+                if (dnsTest.ok) {
+                    const dnsData = await dnsTest.json();
+                    log(`✅ DNS resolves to: ${JSON.stringify(dnsData.Answer?.map(a => a.data) || ['Unknown'])}`, 'success');
+                }
+            } catch (error) {
+                log(`⚠️ DNS test failed: ${error.message}`, 'info');
+            }
+
+            // Test 3: Check if we're on HTTPS
+            log(`🔒 Current protocol: ${window.location.protocol}`, 'info');
+            log(`🌐 Current origin: ${window.location.origin}`, 'info');
+            
+            // Test 4: Browser environment checks
+            log(`🔧 User agent: ${navigator.userAgent}`, 'info');
+            log(`🔧 Browser online: ${navigator.onLine}`, 'info');
+        }
+
+        async function runAllTests() {
+            clearLogs();
+            log('🚀 Running comprehensive diagnostics...', 'info');
+            
+            await testNetworkConnectivity();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testCorsPreflightOnly();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testWithoutAuth();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testBasicFetch();
+            
+            log('✅ All diagnostics completed!', 'success');
+        }
+
+        // Auto-run on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🔧 Diagnostic page loaded. Click buttons to run tests.', 'info');
+            log(`🌐 Running from: ${window.location.origin}`, 'info');
+            log(`🎯 Testing API: ${API_BASE}`, 'info');
+        });
+    </script>
+</body>
+</html>

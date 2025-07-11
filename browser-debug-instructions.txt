@@ -1,0 +1,38 @@
+🔍 ACTA-UI Fetch Error Debugging Instructions
+
+1. Open your browser's developer tools:
+   - Chrome/Edge: F12 or Ctrl+Shift+I (Cmd+Option+I on Mac)
+   - Firefox: F12 or Ctrl+Shift+I (Cmd+Option+I on Mac)
+   - Safari: Cmd+Option+I
+
+2. Go to the Network tab and check "Preserve log"
+
+3. Open this URL in your browser:
+   https://d7t9x3j66yd8k.cloudfront.net/?debug=true
+
+4. Look for any failed network requests (red text)
+   - Check if they're CORS related (look for CORS errors in Console tab)
+   - Check if authentication is failing
+
+5. In the Console tab, add this line to load the debugging script:
+   
+   const script = document.createElement('script'); 
+   script.src = 'https://d7t9x3j66yd8k.cloudfront.net/debug-fetch-error.js'; 
+   document.head.appendChild(script);
+
+6. Watch the console for detailed logs about each fetch request and response
+
+7. Common issues to look for:
+   - CORS errors: Check if the API is returning proper CORS headers
+   - Authentication errors: Check if tokens are being sent correctly
+   - Network errors: Check if the API endpoint is accessible
+   - AWS Exports missing: Check if aws-exports.js is properly included
+
+8. If you see CORS errors, run the fix-all-cors.sh script:
+   ./scripts/fix-all-cors.sh
+
+9. If you see authentication errors, check the Cognito configuration:
+   ./fix-aws-exports-cognito-domain.sh
+
+10. After making changes, deploy and invalidate the CloudFront cache:
+    ./enhanced-deploy-production.sh
