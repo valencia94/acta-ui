@@ -1,17 +1,16 @@
-// src/aws-exports.js
-// ES module version for imports within the application
+// AWS Amplify v6 Configuration for Acta-UI (Browser-compatible version)
+// This file sets window.awsmobile for browser consumption
 
-const awsmobile = {
+window.awsmobile = {
   aws_project_region: 'us-east-2',
-  aws_cognito_region: 'us-east-2',
-  aws_user_pools_id: 'us-east-2_FyHLtOhiY',
-  aws_user_pools_web_client_id: 'dshos5iou44tuach7ta3ici5m',
-  aws_cognito_identity_pool_id: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
+  
+  // ── Amplify v6 Auth Configuration ──────────────────────────────────────────
   Auth: {
     Cognito: {
       userPoolId: 'us-east-2_FyHLtOhiY',
       userPoolClientId: 'dshos5iou44tuach7ta3ici5m',
       identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
+      signUpVerificationMethod: 'code',
       loginWith: {
         email: true,
         phone: false,
@@ -24,7 +23,6 @@ const awsmobile = {
           responseType: 'code',
         },
       },
-      signUpVerificationMethod: 'code',
       userAttributes: {
         email: {
           required: true,
@@ -39,20 +37,24 @@ const awsmobile = {
       },
     },
   },
+
+  // ── API Gateway v6 Configuration ───────────────────────────────────────────
   API: {
     REST: {
       ActaAPI: {
         endpoint: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod',
-        region: 'us-east-2'
-      }
-    }
+        region: 'us-east-2',
+      },
+    },
   },
+
+  // ── S3 Storage Configuration ───────────────────────────────────────────────
   Storage: {
     S3: {
       bucket: 'projectplace-dv-2025-x9a7b',
-      region: 'us-east-2'
-    }
-  }
+      region: 'us-east-2',
+    },
+  },
 };
 
-export default awsmobile;
+console.log('✅ AWS Cognito config loaded successfully!');
