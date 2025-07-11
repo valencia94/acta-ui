@@ -1,7 +1,8 @@
 // src/lib/api.ts
 
 import { apiBaseUrl } from '@/env.variables';
-import { get, post } from '@/utils/fetchWrapper';
+import { get, post, getAuthToken } from '@/utils/fetchWrapper';
+import { apiGet, apiPost, getCurrentUser } from './api-amplify';
 
 const BASE = apiBaseUrl;
 
@@ -24,12 +25,12 @@ export interface TimelineEvent {
 
 /** ---------- SUMMARY ---------- */
 export function getSummary(id: string): Promise<ProjectSummary> {
-  return get<ProjectSummary>(`${BASE}/project-summary/${id}`);
+  return apiGet<ProjectSummary>(`${BASE}/project-summary/${id}`);
 }
 
 /** ---------- TIMELINE ---------- */
 export function getTimeline(id: string): Promise<TimelineEvent[]> {
-  return get<TimelineEvent[]>(`${BASE}/timeline/${id}`);
+  return apiGet<TimelineEvent[]>(`${BASE}/timeline/${id}`);
 }
 
 /** ---------- ACTA DOWNLOAD (302 redirect) ---------- */
@@ -39,29 +40,32 @@ export async function getDownloadUrl(
 ): Promise<string> {
   const endpoint = `${BASE}/download-acta/${id}?format=${format}`;
   console.log(`🌐 Requesting download URL: ${endpoint}`);
-  
+
   const res = await fetch(endpoint, {
     method: 'GET',
     redirect: 'manual',
   });
-  
+
   console.log(`📡 Download API response: ${res.status} ${res.statusText}`);
-  console.log(`📋 Response headers:`, Object.fromEntries(res.headers.entries()));
-  
+  console.log(
+    '📋 Response headers:',
+    Object.fromEntries(res.headers.entries())
+  );
+
   if (res.status !== 302) {
     const errText = await res.text().catch(() => res.statusText);
     console.error(`❌ Download API error: ${res.status} - ${errText}`);
     throw new Error(`Download endpoint returned ${res.status}: ${errText}`);
   }
-  
+
   const url = res.headers.get('Location');
-  console.log(`📍 Location header:`, url);
-  
+  console.log('📍 Location header:', url);
+
   if (!url) {
     console.error('❌ Missing Location header in 302 response');
     throw new Error('Download endpoint missing Location header');
   }
-  
+
   return url;
 }
 
@@ -70,7 +74,7 @@ export function sendApprovalEmail(
   actaId: string,
   clientEmail: string
 ): Promise<{ message: string; token: string }> {
-  return post<{ message: string; token: string }>(
+  return apiPost<{ message: string; token: string }>(
     `${BASE}/send-approval-email`,
     { actaId, clientEmail }
   );
@@ -78,7 +82,7 @@ export function sendApprovalEmail(
 
 /** ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
 export function extractProjectPlaceData(projectId: string): Promise<unknown> {
-  return post<unknown>(`${BASE}/extract-project-place/${projectId}`);
+  return apiPost<unknown>(`${BASE}/extract-project-place/${projectId}`);
 }
 
 /** ---------- ENHANCED S3 INTEGRATION FOR LAMBDA WORKFLOW ---------- */
@@ -86,7 +90,7 @@ export function extractProjectPlaceData(projectId: string): Promise<unknown> {
 // S3 bucket configuration
 const S3_BUCKET = 'projectplace-dv-2025-x9a7b';
 
-/** 
+/**
  * Generate ACTA document via Lambda
  * This triggers the Lambda function that:
  * 1. Fetches external project data
@@ -103,55 +107,37 @@ export async function generateActaDocument(
   s3Location?: string;
   documentId?: string;
 }> {
-  console.log(`🔄 Generating ACTA document for project: ${projectId}`);
-  console.log(`📦 Target S3 bucket: ${S3_BUCKET}`);
-  
-  try {
-    const response = await post<{
-      success: boolean;
-      message: string;
-      s3_location?: string;
-      document_id?: string;
-      bucket?: string;
-      key?: string;
-    }>(`${BASE}/extract-project-place/${projectId}`, {});
-    
-    console.log('✅ Document generation response:', response);
-    
-    // Check if the response indicates successful S3 storage
-    if (response.s3_location || response.bucket) {
-      console.log(`📁 Document stored in S3: ${response.s3_location || `s3://${response.bucket}/${response.key}`}`);
-    }
-    
-    return {
-      success: response.success || true,
-      message: response.message || 'Document generation completed',
-      s3Location: response.s3_location || (response.bucket && response.key ? `s3://${response.bucket}/${response.key}` : undefined),
-      documentId: response.document_id || projectId
-    };
-    
-  } catch (error) {
-    console.error('❌ Document generation failed:', error);
-    
-    // Enhanced error messages based on common issues
-    let errorMessage = 'Document generation failed';
-    if (error instanceof Error) {
-      if (error.message.includes('fetch')) {
-        errorMessage += ' - Network or API Gateway issue';
-      } else if (error.message.includes('500')) {
-        errorMessage += ' - Lambda function error or external data source unavailable';
-      } else if (error.message.includes('403')) {
-        errorMessage += ' - Insufficient permissions for S3 or external data access';
-      } else {
-        errorMessage += ` - ${error.message}`;
-      }
-    }
-    
-    return {
-      success: false,
-      message: errorMessage
-    };
-  }
+  console.log('🔄 Generating ACTA document for project:', projectId);
+  console.log('📦 Target S3 bucket:', import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b');
+
+  // CORRECT PAYLOAD STRUCTURE for ProjectPlaceDataExtractor
+  const payload = {
+    projectId: projectId,
+    pmEmail: userEmail,
+    userRole: userRole,
+    s3Bucket: import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b',
+    requestSource: 'acta-ui',
+    generateDocuments: true,
+    extractMetadata: true,
+    timestamp: new Date().toISOString()
+  };
+
+  console.log('📋 Payload structure:', payload);
+
+  const response = await apiPost<{
+    success: boolean;
+    message: string;
+    s3Location?: string;
+    documentId?: string;
+    projectData?: any;
+  }>(`${BASE}/extract-project-place/${projectId}`, payload);
+
+  return {
+    success: response.success || true,
+    message: response.message || 'Document generation completed',
+    s3Location: response.s3Location,
+    documentId: response.documentId || projectId,
+  };
 }
 
 /**
@@ -166,41 +152,48 @@ export async function checkDocumentInS3(
   size?: number;
   s3Key?: string;
 }> {
-  console.log(`🔍 Checking document availability in S3: ${projectId}.${format}`);
-  
+  console.log(
+    `🔍 Checking document availability in S3: ${projectId}.${format}`
+  );
+
   try {
     const response = await fetch(
-      `${BASE}/check-document/${projectId}?format=${format}`,
+      `${BASE}/document-validator/${projectId}?format=${format}`,
       {
         method: 'HEAD',
       }
     );
-    
-    console.log(`📊 S3 check response: ${response.status} ${response.statusText}`);
-    
+
+    console.log(
+      `📊 S3 check response: ${response.status} ${response.statusText}`
+    );
+
     if (response.ok) {
       const lastModified = response.headers.get('Last-Modified');
       const contentLength = response.headers.get('Content-Length');
       const size = contentLength ? parseInt(contentLength, 10) : undefined;
-      
-      console.log(`✅ Document found in S3 - Size: ${size} bytes, Modified: ${lastModified}`);
-      
+
+      console.log(
+        `✅ Document found in S3 - Size: ${size} bytes, Modified: ${lastModified}`
+      );
+
       return {
         available: true,
         lastModified: lastModified || undefined,
         size,
-        s3Key: `acta/${projectId}.${format}`
+        s3Key: `acta/${projectId}.${format}`,
       };
     }
-    
+
     if (response.status === 404) {
       console.log(`📄 Document not found in S3: ${projectId}.${format}`);
     } else {
-      console.warn(`⚠️ S3 check failed: ${response.status} ${response.statusText}`);
+      console.warn(
+        `⚠️ S3 check failed: ${response.status} ${response.statusText}`
+      );
     }
-    
+
     return { available: false };
-    
   } catch (error) {
     console.warn('❌ Error checking document availability in S3:', error);
     return { available: false };
@@ -224,48 +217,61 @@ export async function getS3DownloadUrl(
   };
 }> {
   console.log(`📥 Getting S3 download URL for: ${projectId}.${format}`);
-  console.log(`📦 Expected S3 path: s3://${S3_BUCKET}/acta/${projectId}.${format}`);
-  
+  console.log(
+    `📦 Expected S3 path: s3://${S3_BUCKET}/acta/${projectId}.${format}`
+  );
+
   try {
     const endpoint = `${BASE}/download-acta/${projectId}?format=${format}`;
     const response = await fetch(endpoint, {
       method: 'GET',
       redirect: 'manual',
     });
-    
-    console.log(`📊 Download API response: ${response.status} ${response.statusText}`);
-    console.log(`📋 Response headers:`, Object.fromEntries(response.headers.entries()));
-    
+
+    console.log(
+      `📊 Download API response: ${response.status} ${response.statusText}`
+    );
+    console.log(
+      '📋 Response headers:',
+      Object.fromEntries(response.headers.entries())
+    );
+
     if (response.status === 302) {
       const signedUrl = response.headers.get('Location');
-      
+
       if (signedUrl) {
         console.log(`🔗 Got S3 signed URL: ${signedUrl.substring(0, 100)}...`);
-        
+
         // Verify the signed URL is accessible
         try {
           const urlTest = await fetch(signedUrl, { method: 'HEAD' });
-          
+
           if (urlTest.ok) {
             console.log('✅ S3 signed URL is accessible');
-            console.log(`📂 Content-Type: ${urlTest.headers.get('Content-Type')}`);
-            console.log(`📏 Size: ${urlTest.headers.get('Content-Length')} bytes`);
-            
+            console.log(
+              `📂 Content-Type: ${urlTest.headers.get('Content-Type')}`
+            );
+            console.log(
+              `📏 Size: ${urlTest.headers.get('Content-Length')} bytes`
+            );
+
             return {
               success: true,
               downloadUrl: signedUrl,
               s3Info: {
                 bucket: S3_BUCKET,
                 key: `acta/${projectId}.${format}`,
-                signedUrl
-              }
+                signedUrl,
+              },
             };
           } else {
-            console.error(`❌ S3 signed URL not accessible: ${urlTest.status} ${urlTest.statusText}`);
+            console.error(
+              `❌ S3 signed URL not accessible: ${urlTest.status} ${urlTest.statusText}`
+            );
             return {
               success: false,
               error: `S3 signed URL not accessible (${urlTest.status})`,
-              downloadUrl: signedUrl // Return it anyway for debugging
+              downloadUrl: signedUrl, // Return it anyway for debugging
             };
           }
         } catch (urlError) {
@@ -273,44 +279,43 @@ export async function getS3DownloadUrl(
           return {
             success: false,
             error: 'Failed to verify S3 signed URL',
-            downloadUrl: signedUrl // Return it anyway for debugging
+            downloadUrl: signedUrl, // Return it anyway for debugging
           };
         }
       } else {
         console.error('❌ Missing Location header in 302 response');
         return {
           success: false,
-          error: 'Missing S3 signed URL in response'
+          error: 'Missing S3 signed URL in response',
         };
       }
     } else if (response.status === 404) {
       console.log('📄 Document not found in S3 - may need to generate first');
       return {
         success: false,
-        error: 'Document not found in S3 bucket'
+        error: 'Document not found in S3 bucket',
       };
     } else {
       const errorText = await response.text().catch(() => response.statusText);
       console.error(`❌ Download API error: ${response.status} - ${errorText}`);
-      
+
       let errorMessage = `Download failed (${response.status})`;
       if (response.status === 500) {
         errorMessage += ' - Lambda or S3 access error';
       } else if (response.status === 403) {
         errorMessage += ' - Insufficient permissions for S3 access';
       }
-      
+
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
       };
     }
-    
   } catch (error) {
     console.error('❌ Network error getting S3 download URL:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Network error'
+      error: error instanceof Error ? error.message : 'Network error',
     };
   }
 }
@@ -365,17 +370,18 @@ export async function getProjectsByPM(
   
   console.log('🌐 PM Projects endpoint:', endpoint);
   
-  return get<ProjectSummary[]>(endpoint);
+  return apiGet<ProjectSummary[]>(endpoint);
 }
 
 // Get all projects (admin only)
 export async function getAllProjects(): Promise<ProjectSummary[]> {
   console.log('📋 Loading all projects (admin access)');
   
+  // Use the admin endpoint to get all projects
   const endpoint = `${BASE}/pm-manager/all-projects`;
   console.log('🌐 All Projects endpoint:', endpoint);
   
-  return get<ProjectSummary[]>(endpoint);
+  return apiGet<ProjectSummary[]>(endpoint);
 }
 
 // Get enhanced PM projects with summary data
@@ -384,11 +390,11 @@ export async function getPMProjectsWithSummary(
 ): Promise<PMProjectsResponse> {
   // Handle admin access
   if (pmEmail === 'admin-all-access') {
-    return get<PMProjectsResponse>(`${BASE}/pm-projects/all-projects`);
+    return apiGet<PMProjectsResponse>(`${BASE}/pm-manager/all-projects`);
   }
 
-  return get<PMProjectsResponse>(
-    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
+  return apiGet<PMProjectsResponse>(
+    `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`
   );
 }
 
@@ -397,7 +403,7 @@ export async function getProjectSummaryForPM(
   projectId: string,
   pmEmail: string
 ): Promise<ProjectSummary & { pm_context?: PMProject }> {
-  return get<ProjectSummary & { pm_context?: PMProject }>(
+  return apiGet<ProjectSummary & { pm_context?: PMProject }>(
     `${BASE}/project-summary/${projectId}?pm_email=${encodeURIComponent(pmEmail)}`
   );
 }
@@ -408,7 +414,7 @@ export async function generateSummariesForPM(pmEmail: string): Promise<{
   failed: string[];
   total: number;
 }> {
-  return post<{ success: string[]; failed: string[]; total: number }>(
+  return apiPost<{ success: string[]; failed: string[]; total: number }>(
     `${BASE}/bulk-generate-summaries`,
     { pm_email: pmEmail }
   );
@@ -421,7 +427,7 @@ export async function checkDocumentAvailability(
 ): Promise<{ available: boolean; lastModified?: string }> {
   try {
     const response = await fetch(
-      `${BASE}/check-document/${id}?format=${format}`,
+      `${BASE}/document-validator/${id}?format=${format}`,
       {
         method: 'HEAD',
       }
@@ -439,4 +445,15 @@ export async function checkDocumentAvailability(
     console.warn('Error checking document availability:', error);
     return { available: false };
   }
+}
+
+// Attach critical API functions to window for test-production.js visibility
+if (typeof window !== 'undefined') {
+  window.getSummary = getSummary;
+  window.getTimeline = getTimeline;
+  window.getDownloadUrl = getDownloadUrl;
+  window.sendApprovalEmail = sendApprovalEmail;
+  window.fetchWrapper = apiGet; // Expose Cognito-authenticated GET as fetchWrapper for test
+  window.getAuthToken = getAuthToken; // Keep for backward compatibility
+  (window as any).getCurrentUser = getCurrentUser; // Add Cognito user info
 }

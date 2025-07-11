@@ -81,6 +81,121 @@ export function extractProjectPlaceData(projectId: string): Promise<unknown> {
   return post<unknown>(`${BASE}/extract-project-place/${projectId}`);
 }
 
+/** ---------- PM PROJECT MANAGEMENT (via Metadata Enricher) ---------- */
+export interface PMProject {
+  project_id: string;
+  project_name: string;
+  pm_email: string;
+  project_status?: string;
+  last_updated?: string;
+  has_acta_document?: boolean;
+  acta_last_generated?: string;
+  // Enhanced metadata from enricher
+  external_project_data?: {
+    timeline_events?: number;
+    completion_percentage?: number;
+    budget_status?: string;
+  };
+  timeline_summary?: {
+    total_milestones?: number;
+    completed?: number;
+    upcoming?: number;
+  };
+  days_since_update?: number;
+  acta_status?: 'current' | 'outdated' | 'missing';
+  priority_level?: 'low' | 'medium' | 'high';
+}
+
+export interface PMProjectsResponse {
+  pm_email: string;
+  total_projects: number;
+  projects: PMProject[];
+  summary: {
+    with_acta: number;
+    without_acta: number;
+    recently_updated: number;
+  };
+}
+
+// Get all projects assigned to a PM by email (via metadata enricher)
+export async function getProjectsByPM(pmEmail: string): Promise<PMProject[]> {
+  // Handle admin access - get all projects
+  if (pmEmail === 'admin-all-access') {
+    const response = await get<PMProjectsResponse>(
+      `${BASE}/pm-projects/all-projects`
+    );
+    return response.projects;
+  }
+
+  const response = await get<PMProjectsResponse>(
+    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
+  );
+  return response.projects;
+}
+
+// Get enhanced PM projects with summary data
+export async function getPMProjectsWithSummary(
+  pmEmail: string
+): Promise<PMProjectsResponse> {
+  // Handle admin access
+  if (pmEmail === 'admin-all-access') {
+    return get<PMProjectsResponse>(`${BASE}/pm-projects/all-projects`);
+  }
+
+  return get<PMProjectsResponse>(
+    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
+  );
+}
+
+// Get project summary (enhanced with PM context)
+export async function getProjectSummaryForPM(
+  projectId: string,
+  pmEmail: string
+): Promise<ProjectSummary & { pm_context?: PMProject }> {
+  return get<ProjectSummary & { pm_context?: PMProject }>(
+    `${BASE}/project-summary/${projectId}?pm_email=${encodeURIComponent(pmEmail)}`
+  );
+}
+
+// Bulk generate summaries for all PM projects
+export async function generateSummariesForPM(pmEmail: string): Promise<{
+  success: string[];
+  failed: string[];
+  total: number;
+}> {
+  return post<{ success: string[]; failed: string[]; total: number }>(
+    `${BASE}/bulk-generate-summaries`,
+    { pm_email: pmEmail }
+  );
+}
+
+/** ---------- CHECK DOCUMENT AVAILABILITY ---------- */
+export async function checkDocumentAvailability(
+  id: string,
+  format: 'pdf' | 'docx'
+): Promise<{ available: boolean; lastModified?: string }> {
+  try {
+    const response = await fetch(
+      `${BASE}/check-document/${id}?format=${format}`,
+      {
+        method: 'HEAD',
+      }
+    );
+
+    if (response.ok) {
+      return {
+        available: true,
+        lastModified: response.headers.get('Last-Modified') || undefined,
+      };
+    }
+
+    return { available: false };
+  } catch (error) {
+    console.warn('Error checking document availability:', error);
+    return { available: false };
+  }
+}
+
 /** ---------- ENHANCED S3 INTEGRATION FOR LAMBDA WORKFLOW ---------- */
 
 // S3 bucket configuration
@@ -93,11 +208,7 @@ const S3_BUCKET = 'projectplace-dv-2025-x9a7b';
  * 2. Generates DOCX document
  * 3. Stores in S3 bucket projectplace-dv-2025-x9a7b
  */
-export async function generateActaDocument(
-  projectId: string,
-  userEmail: string,
-  userRole: 'admin' | 'pm' = 'pm'
-): Promise<{
+export async function generateActaDocument(projectId: string): Promise<{
   success: boolean;
   message: string;
   s3Location?: string;
@@ -315,128 +426,105 @@ export async function getS3DownloadUrl(
   }
 }
 
-/** ---------- PM PROJECT MANAGEMENT (via Metadata Enricher) ---------- */
-export interface PMProject {
-  project_id: string;
-  project_name: string;
-  pm_email: string;
-  project_status?: string;
-  last_updated?: string;
-  has_acta_document?: boolean;
-  acta_last_generated?: string;
-  // Enhanced metadata from enricher
-  external_project_data?: {
-    timeline_events?: number;
-    completion_percentage?: number;
-    budget_status?: string;
+/**
+ * Convert DOCX to PDF on-demand
+ * This function retrieves the DOCX from S3 and converts it to PDF
+ * More efficient than storing both formats in S3
+ */
+export async function convertDocxToPdf(projectId: string): Promise<{
+  success: boolean;
+  pdfUrl?: string;
+  error?: string;
+  conversionInfo?: {
+    sourceDocx: string;
+    pdfSize?: number;
+    conversionTime?: number;
   };
-  timeline_summary?: {
-    total_milestones?: number;
-    completed?: number;
-    upcoming?: number;
-  };
-  days_since_update?: number;
-  acta_status?: 'current' | 'outdated' | 'missing';
-  priority_level?: 'low' | 'medium' | 'high';
-}
-
-export interface PMProjectsResponse {
-  pm_email: string;
-  total_projects: number;
-  projects: PMProject[];
-  summary: {
-    with_acta: number;
-    without_acta: number;
-    recently_updated: number;
-  };
-}
-
-// Get all projects assigned to a PM by email (via metadata enricher)
-export async function getProjectsByPM(
-  pmEmail: string,
-  isAdmin: boolean = false
-): Promise<ProjectSummary[]> {
-  console.log('📋 Loading projects for PM:', pmEmail, 'Admin:', isAdmin);
-  
-  // Use correct endpoint that matches projectMetadataEnricher
-  const endpoint = isAdmin 
-    ? `${BASE}/pm-manager/all-projects`
-    : `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`;
-  
-  console.log('🌐 PM Projects endpoint:', endpoint);
-  
-  return get<ProjectSummary[]>(endpoint);
-}
-
-// Get all projects (admin only)
-export async function getAllProjects(): Promise<ProjectSummary[]> {
-  console.log('📋 Loading all projects (admin access)');
-  
-  const endpoint = `${BASE}/pm-manager/all-projects`;
-  console.log('🌐 All Projects endpoint:', endpoint);
-  
-  return get<ProjectSummary[]>(endpoint);
-}
-
-// Get enhanced PM projects with summary data
-export async function getPMProjectsWithSummary(
-  pmEmail: string
-): Promise<PMProjectsResponse> {
-  // Handle admin access
-  if (pmEmail === 'admin-all-access') {
-    return get<PMProjectsResponse>(`${BASE}/pm-projects/all-projects`);
-  }
-
-  return get<PMProjectsResponse>(
-    `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`
-  );
-}
-
-// Get project summary (enhanced with PM context)
-export async function getProjectSummaryForPM(
-  projectId: string,
-  pmEmail: string
-): Promise<ProjectSummary & { pm_context?: PMProject }> {
-  return get<ProjectSummary & { pm_context?: PMProject }>(
-    `${BASE}/project-summary/${projectId}?pm_email=${encodeURIComponent(pmEmail)}`
-  );
-}
-
-// Bulk generate summaries for all PM projects
-export async function generateSummariesForPM(pmEmail: string): Promise<{
-  success: string[];
-  failed: string[];
-  total: number;
 }> {
-  return post<{ success: string[]; failed: string[]; total: number }>(
-    `${BASE}/bulk-generate-summaries`,
-    { pm_email: pmEmail }
-  );
-}
-
-/** ---------- CHECK DOCUMENT AVAILABILITY ---------- */
-export async function checkDocumentAvailability(
-  id: string,
-  format: 'pdf' | 'docx'
-): Promise<{ available: boolean; lastModified?: string }> {
+  console.log(`📄→📕 Converting DOCX to PDF for project: ${projectId}`);
+  console.log(`📦 Source: s3://${S3_BUCKET}/acta/${projectId}.docx`);
+  
   try {
-    const response = await fetch(
-      `${BASE}/check-document/${id}?format=${format}`,
-      {
-        method: 'HEAD',
+    const startTime = Date.now();
+    
+    // Call the PDF conversion API endpoint
+    const response = await fetch(`${BASE}/convert-to-pdf/${projectId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      redirect: 'manual'
+    });
+    
+    const endTime = Date.now();
+    const conversionTime = endTime - startTime;
+    
+    console.log(`📊 PDF conversion response: ${response.status} ${response.statusText}`);
+    console.log(`⏱️ Conversion time: ${conversionTime}ms`);
+    console.log(`📋 Response headers:`, Object.fromEntries(response.headers.entries()));
+    
+    if (response.status === 302) {
+      // Successful conversion, get the PDF download URL
+      const pdfUrl = response.headers.get('Location');
+      
+      if (pdfUrl) {
+        console.log(`✅ PDF conversion successful: ${pdfUrl.substring(0, 100)}...`);
+        
+        // Verify the PDF URL is accessible
+        try {
+          const pdfTest = await fetch(pdfUrl, { method: 'HEAD' });
+          const pdfSize = pdfTest.headers.get('Content-Length');
+          
+          if (pdfTest.ok) {
+            console.log(`📄 PDF ready for download - Size: ${pdfSize} bytes`);
+            
+            return {
+              success: true,
+              pdfUrl,
+              conversionInfo: {
+                sourceDocx: `s3://${S3_BUCKET}/acta/${projectId}.docx`,
+                pdfSize: pdfSize ? parseInt(pdfSize, 10) : undefined,
+                conversionTime
+              }
+            };
+          } else {
+            console.error(`❌ PDF URL not accessible: ${pdfTest.status} ${pdfTest.statusText}`);
+            return {
+              success: false,
+              error: `PDF not accessible (${pdfTest.status})`
+            };
+          }
+        } catch (pdfError) {
+          console.error('❌ Error testing PDF URL:', pdfError);
+          return {
+            success: false,
+            error: 'Failed to verify PDF URL'
+          };
+        }
+      } else {
+        console.log('📄 DOCX signed URL is accessible, PDF conversion not requested');
+        return {
+          success: true,
+          downloadUrl: signedUrl,
+          s3Info: {
+            bucket: S3_BUCKET,
+            key: `acta/${projectId}.docx`,
+            signedUrl
+          }
+        };
       }
-    );
-
-    if (response.ok) {
+    } catch (error) {
+      console.error('❌ Network error getting S3 download URL:', error);
       return {
-        available: true,
-        lastModified: response.headers.get('Last-Modified') || undefined,
+        success: false,
+        error: error instanceof Error ? error.message : 'Network error'
       };
     }
-
-    return { available: false };
   } catch (error) {
-    console.warn('Error checking document availability:', error);
-    return { available: false };
+    console.error('❌ Error in S3 download process:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'S3 download failed'
+    };
   }
 }
