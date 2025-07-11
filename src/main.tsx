@@ -44,45 +44,20 @@ const configureAmplify = async () => {
   if (window.awsmobile) {
     console.log('✅ AWS config found, configuring Amplify:', window.awsmobile);
     
-    // AWS Amplify v6 requires specific configuration structure
+    // Minimal AWS Amplify v6 configuration - exactly what worked on July 9th
     const amplifyConfig = {
       Auth: {
         Cognito: {
-          userPoolId: window.awsmobile.aws_user_pools_id || 'us-east-2_FyHLtOhiY',
-          userPoolClientId: window.awsmobile.aws_user_pools_web_client_id || 'dshos5iou44tuach7ta3ici5m',
-          identityPoolId: window.awsmobile.aws_cognito_identity_pool_id || 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-          loginWith: {
-            username: true,
-            email: true
-          },
-          signUpVerificationMethod: 'code' as const,
-          userAttributes: {
-            email: {
-              required: true
-            }
-          },
-          allowGuestAccess: true
-        }
-      },
-      API: {
-        REST: {
-          ActaAPI: {
-            endpoint: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod',
-            region: 'us-east-2'
-          }
-        }
-      },
-      Storage: {
-        S3: {
-          bucket: 'projectplace-dv-2025-x9a7b',
-          region: 'us-east-2'
+          userPoolId: 'us-east-2_FyHLtOhiY',
+          userPoolClientId: 'dshos5iou44tuach7ta3ici5m',
+          identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35'
         }
       }
     };
     
     try {
       Amplify.configure(amplifyConfig);
-      console.log('✅ Amplify configured successfully with v6 structure');
+      console.log('✅ Amplify configured successfully - minimal config');
     } catch (err) {
       console.error('❌ Failed to configure Amplify:', err);
     }
