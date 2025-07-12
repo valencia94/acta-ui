@@ -38,81 +38,72 @@ export default function DynamoProjectsView({
     fetchCognitoUser();
   }, []);
 
-  useEffect(() => {
-    async function fetchProjects() {
-      if (!userEmail) return;
-      
-      setLoading(true);
-      setError(null);
-      
-      try {
-        console.log('📋 Fetching projects with Cognito authentication...');
-        console.log('👤 User email:', userEmail);
-        console.log('🔐 Cognito user:', cognitoUser);
-        console.log('🛡️ Admin mode:', isAdmin);
-        
-        const projectSummaries = await getProjectsByPM(userEmail, isAdmin);
-        console.log('✅ Projects loaded:', projectSummaries);
-        
-        // Transform ProjectSummary to Project interface for the table
-        const projects: Project[] = projectSummaries.map((summary, index) => ({
-          id: parseInt(summary.project_id) || (index + 1), // Convert to number
-          name: summary.project_name,
-          pm: summary.pm || summary.project_manager || 'Unknown',
-          status: 'Active', // Default status since ProjectSummary doesn't have status
-        }));
-        
-        setProjects(projects);
-        console.log('📊 Projects transformed for table:', projects);
-      } catch (err) {
-        console.error('❌ Failed to load projects:', err);
-        setError('Failed to load projects. Please check your authentication.');
-      } finally {
-        setLoading(false);
-      }
+  const loadProjects = async () => {
+    if (!userEmail) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('📋 Fetching projects with Cognito authentication...');
+      console.log('👤 User email:', userEmail);
+      console.log('🔐 Cognito user:', cognitoUser);
+      console.log('🛡️ Admin mode:', isAdmin);
+
+      const projectSummaries = await getProjectsByPM(userEmail, isAdmin);
+      console.log('✅ Projects loaded:', projectSummaries);
+
+      const projects: Project[] = projectSummaries.map((summary, index) => ({
+        id: parseInt(summary.project_id) || index + 1,
+        name: summary.project_name,
+        pm: summary.pm || summary.project_manager || 'Unknown',
+        status: 'Active',
+      }));
+
+      setProjects(projects);
+    } catch (err) {
+      console.error('❌ Failed to load projects:', err);
+      setError('Failed to load projects. Please check your authentication.');
+    } finally {
+      setLoading(false);
     }
-    
-    fetchProjects();
+  };
+
+  useEffect(() => {
+    loadProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userEmail, isAdmin, cognitoUser]);
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
-          <span className="text-gray-600">Loading projects with Cognito authentication...</span>
-        </div>
+      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 flex items-center justify-center gap-3">
+        <div className="h-6 w-6 border-b-2 border-blue-500 rounded-full animate-spin" />
+        <span className="text-gray-600">Loading projects…</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-red-200">
-        <div className="text-red-500 text-center">
-          <p className="font-medium">{error}</p>
-          <p className="text-sm mt-2">
-            Authentication status: {cognitoUser ? '✅ Authenticated' : '❌ Not authenticated'}
-          </p>
-          {cognitoUser && (
-            <p className="text-sm mt-1 text-gray-600">
-              Signed in as: {cognitoUser.email}
-            </p>
-          )}
-        </div>
+      <div className="bg-white rounded-2xl shadow-sm p-6 border border-red-200 text-center space-y-2">
+        <p className="text-red-600 font-semibold">{error}</p>
+        <p className="text-sm text-gray-500">
+          {cognitoUser ? `Signed in as ${cognitoUser.email}` : 'Not authenticated'}
+        </p>
+        <button
+          onClick={loadProjects}
+          className="mt-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   if (!projects.length) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
-        <div className="text-center text-gray-500">
-          <p>No projects found.</p>
-          <p className="text-sm mt-2">
-            User: {userEmail} | Cognito: {cognitoUser?.email || 'Not loaded'}
-          </p>
-        </div>
+      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 text-center text-gray-500">
+        <p>No projects found.</p>
       </div>
     );
   }
