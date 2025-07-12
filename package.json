@@ -36,17 +36,22 @@
     "update:minor": "pnpm exec npm-check-updates -u --target minor --packageManager pnpm",
     "update:patch": "pnpm exec npm-check-updates -u --target patch --packageManager pnpm",
     "check:env": "node scripts/check-env.cjs",
-    "predeploy": "pnpm run build",
-    "predeploy:check": "node scripts/predeploy-verify.cjs",
-    "deploy": "pnpm run predeploy && pnpm run predeploy:check && aws s3 sync dist/ s3://acta-ui-frontend-prod/ --region us-east-2 && aws cloudfront create-invalidation --distribution-id EPQU7PVDLQXUA --paths '/*'"
+    "validate:production": "node validate-production-complete.js",
+    "validate:auth": "node test-production-auth.js",
+    "test:cognito": "node test-cognito-login.js",
+    "test:cognito:browser": "node test-cognito-auth.js",
+    "deploy:manual": "aws s3 sync dist/ s3://acta-ui-frontend-prod/ --region us-east-2 && aws cloudfront create-invalidation --distribution-id EPQU7PVDLQXUA --paths '/*'"
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.13.3",
     "@aws-amplify/ui-react": "^6.11.2",
+    "@aws-sdk/client-cognito-identity": "^3.844.0",
+    "@aws-sdk/credential-provider-cognito-identity": "^3.844.0",
     "@headlessui/react": "^1.7.19",
     "@mui/material": "^6.5.0",
     "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.4.9",
     "@mui/styled-engine-sc": "^6.4.9",
+    "amazon-cognito-identity-js": "^6.3.15",
     "aws-amplify": "^6.15.3",
     "aws-sdk": "^2.1692.0",
     "react": "^18.3.1",
@@ -89,6 +94,7 @@
     "@types/node": "^22.16.3",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
+    "@types/testing-library__jest-dom": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-basic-ssl": "^1.2.0",
@@ -124,7 +130,7 @@
     "vite-bundle-visualizer": "^1.2.1",
     "vite-plugin-chunk-split": "^0.5.0",
     "vite-plugin-svgr": "^4.3.0",
-    "vitest": "^3.2.4"
+    "vitest": "^2.1.9"
   },
   "pnpm": {
     "overrides": {
