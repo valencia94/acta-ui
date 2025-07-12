@@ -19,32 +19,49 @@ import PMProjectManager from '@/components/PMProjectManager';
 import { useAuth } from '@/hooks/useAuth';
 import { quickBackendDiagnostic } from '@/utils/backendDiagnostic';
 
+interface Stats {
+  totalProjects: number;
+  activeUsers: number;
+  completedActas: number;
+  pendingApprovals: number;
+}
+
+function StatCard({ label, value, icon, bg, color }: {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  bg: string;
+  color: string;
+}) {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+      <div className="flex items-center">
+        <div className={`p-3 ${bg} rounded-xl`}>{icon}</div>
+        <div className="ml-4">
+          <p className="text-sm font-medium text-gray-600">{label}</p>
+          <p className={`text-2xl font-bold ${color}`}>{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<Stats>({
     totalProjects: 0,
     activeUsers: 0,
     completedActas: 0,
     pendingApprovals: 0,
   });
 
-  // Check if user has admin access
   const isAdmin =
     user?.email?.includes('admin') ||
     user?.email?.includes('valencia94') ||
     user?.email?.endsWith('@ikusi.com') ||
     user?.email?.endsWith('@company.com');
 
-  // Debug admin access
-  console.log('AdminDashboard - Debug info:', {
-    user: user?.email,
-    authLoading,
-    isAdmin,
-    userObj: user,
-  });
-
   useEffect(() => {
-    // Don't redirect while auth is still loading
     if (authLoading) return;
 
     if (!isAdmin) {
@@ -53,37 +70,34 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Run backend diagnostic on load
     const runDiagnostic = async () => {
-      const isBackendWorking = await quickBackendDiagnostic();
-      if (!isBackendWorking) {
-        toast.error(
-          'Backend API connectivity issues detected. Check system status.',
-          { duration: 8000 }
-        );
+      try {
+        const isBackendWorking = await quickBackendDiagnostic();
+        if (!isBackendWorking) {
+          toast.error(
+            'Backend API connectivity issues detected. Check system status.',
+            { duration: 8000 }
+          );
+        }
+      } catch (e) {
+        console.error('Diagnostic error:', e);
+        toast.error('Failed to run backend diagnostic');
       }
     };
 
     runDiagnostic();
   }, [isAdmin, authLoading]);
 
-  // Fetch real stats from API
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // In a real implementation, these would be separate API calls
-        // For now, we'll use realistic calculated values
-        const totalProjects = 156; // This should come from API
-        const activeUsers = 12; // This should come from API
-        const completedActas = Math.floor(totalProjects * 0.65); // ~65% completion rate
-        const pendingApprovals = Math.floor(totalProjects * 0.15); // ~15% pending
-        
-        setStats({
-          totalProjects,
-          activeUsers,
-          completedActas,
-          pendingApprovals,
-        });
+        // TODO: Replace with real API calls
+        const totalProjects = 156;
+        const activeUsers = 12;
+        const completedActas = Math.floor(totalProjects * 0.65);
+        const pendingApprovals = Math.floor(totalProjects * 0.15);
+
+        setStats({ totalProjects, activeUsers, completedActas, pendingApprovals });
       } catch (error) {
         console.error('Error fetching admin stats:', error);
         toast.error('Failed to load admin statistics');
@@ -105,41 +119,27 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-          <p className="text-indigo-600 font-medium">
-            Loading Admin Dashboard...
-          </p>
+          <p className="text-indigo-600 font-medium">Loading Admin Dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return null; // Will redirect
-  }
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Admin Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center mb-4">
             <Shield className="h-8 w-8 text-indigo-600 mr-3" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Admin Dashboard
-              </h1>
-              <p className="text-gray-600">
-                System administration and project management
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600">System administration and project management</p>
             </div>
           </div>
-
           <div className="flex items-center bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2">
             <Shield className="h-5 w-5 text-indigo-600 mr-2" />
             <span className="text-sm font-medium text-indigo-800">
@@ -148,133 +148,39 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
 
-        {/* System Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        >
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-3 bg-indigo-100 rounded-xl">
-                <Database className="h-6 w-6 text-indigo-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Total Projects
-                </p>
-                <p className="text-2xl font-bold text-indigo-600">
-                  {stats.totalProjects}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-3 bg-emerald-100 rounded-xl">
-                <Users className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Active Users
-                </p>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {stats.activeUsers}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <FileText className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Completed Actas
-                </p>
-                <p className="text-2xl font-bold text-green-600">
-                  {stats.completedActas}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-3 bg-amber-100 rounded-xl">
-                <Send className="h-6 w-6 text-amber-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Pending Approvals
-                </p>
-                <p className="text-2xl font-bold text-amber-600">
-                  {stats.pendingApprovals}
-                </p>
-              </div>
-            </div>
-          </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard label="Total Projects" value={stats.totalProjects} icon={<Database className="h-6 w-6 text-indigo-600" />} bg="bg-indigo-100" color="text-indigo-600" />
+          <StatCard label="Active Users" value={stats.activeUsers} icon={<Users className="h-6 w-6 text-emerald-600" />} bg="bg-emerald-100" color="text-emerald-600" />
+          <StatCard label="Completed Actas" value={stats.completedActas} icon={<FileText className="h-6 w-6 text-green-600" />} bg="bg-green-100" color="text-green-600" />
+          <StatCard label="Pending Approvals" value={stats.pendingApprovals} icon={<Send className="h-6 w-6 text-amber-600" />} bg="bg-amber-100" color="text-amber-600" />
         </motion.div>
 
-        {/* System Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 mb-8">
           <div className="flex items-center mb-6">
             <Settings className="h-7 w-7 text-indigo-600" />
-            <h2 className="text-2xl font-bold text-gray-900 ml-3">
-              System Actions
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 ml-3">System Actions</h2>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <button
-              onClick={() => handleSystemAction('Backend Diagnostic')}
-              className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200"
-            >
+            <button onClick={() => handleSystemAction('Backend Diagnostic')} className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200">
               <Activity className="h-5 w-5 text-blue-600 mr-3" />
               <span className="font-medium text-blue-800">Run Diagnostic</span>
             </button>
-
-            <button
-              onClick={() => handleSystemAction('Refresh Cache')}
-              className="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors border border-green-200"
-            >
+            <button onClick={() => handleSystemAction('Refresh Cache')} className="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors border border-green-200">
               <RefreshCw className="h-5 w-5 text-green-600 mr-3" />
               <span className="font-medium text-green-800">Refresh Cache</span>
             </button>
-
-            <button
-              onClick={() => handleSystemAction('Export Logs')}
-              className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors border border-purple-200"
-            >
+            <button onClick={() => handleSystemAction('Export Logs')} className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors border border-purple-200">
               <Download className="h-5 w-5 text-purple-600 mr-3" />
               <span className="font-medium text-purple-800">Export Logs</span>
             </button>
           </div>
         </motion.div>
 
-        {/* PM Project Manager - Full Admin Access */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200">
           <div className="flex items-center mb-6">
             <Database className="h-7 w-7 text-indigo-600" />
-            <h2 className="text-2xl font-bold text-gray-900 ml-3">
-              All Projects Management
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 ml-3">All Projects Management</h2>
           </div>
-
           <PMProjectManager isAdminView={true} />
         </motion.div>
       </main>
