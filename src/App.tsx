@@ -16,6 +16,8 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 
+console.log('VITE ENV:', import.meta.env);
+
 // Only load debug components in development - with error boundaries
 const AuthDebugger = import.meta.env.DEV
   ? lazy(() => import('@/components/AuthDebugger').catch(() => ({ default: () => null })))
