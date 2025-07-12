@@ -16,7 +16,6 @@ export default defineConfig({
       closeBundle() {
         console.log("📋 Copying browser-compatible aws-exports.js to dist folder...");
         if (fs.existsSync("public/aws-exports.js")) {
-          // Ensure dist directory exists
           if (!fs.existsSync("dist")) {
             fs.mkdirSync("dist", { recursive: true });
           }
@@ -26,7 +25,10 @@ export default defineConfig({
           console.log("❌ public/aws-exports.js not found!");
         }
       }
-    },react(), svgr()],
+    },
+    react(),
+    svgr(),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -38,7 +40,8 @@ export default defineConfig({
   css: {
     postcss: {
       plugins: [
-        tailwindcss(), autoprefixer()
+        tailwindcss(),
+        autoprefixer(),
       ],
     },
   },
@@ -72,13 +75,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Separate PDF.js into its own chunk
           'pdf-viewer': ['react-pdf'],
-          // Separate other large dependencies
           vendor: ['react', 'react-dom'],
           ui: ['framer-motion', 'lucide-react'],
         },
-        // Add timestamp to chunk names for better cache busting
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId
             ? path.basename(chunkInfo.facadeModuleId, path.extname(chunkInfo.facadeModuleId))
@@ -89,7 +89,6 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    // Increase chunk size warning limit for PDF.js
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1024,
   },
 });
