@@ -1,4 +1,9 @@
-import { getCurrentUser, signIn, signOut, fetchAuthSession } from 'aws-amplify/auth';
+import {
+  getCurrentUser,
+  signIn,
+  signOut as amplifySignOut,
+  fetchAuthSession,
+} from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { skipAuth } from '@/env.variables';
 
@@ -76,7 +81,7 @@ export function useAuth() {
     };
   }, []);
 
-  const signOut = async () => {
+  const signOutUser = async () => {
     try {
       // Clear localStorage token
       localStorage.removeItem('ikusi.jwt');
@@ -89,7 +94,7 @@ export function useAuth() {
       }
 
       // Use Amplify v6 syntax for sign out
-      await signOut();
+      await amplifySignOut();
       setUser(null);
     } catch (error) {
       console.error('🔍 useAuth: Error signing out:', error);
@@ -98,5 +103,5 @@ export function useAuth() {
     }
   };
 
-  return { user, loading, signOut };
+  return { user, loading, signOut: signOutUser };
 }
