@@ -3,9 +3,16 @@
 
 window.awsmobile = {
   aws_project_region: 'us-east-2',
-  
+
   // ── Amplify v6 Auth Configuration ──────────────────────────────────────────
   Auth: {
+    // Top-level fields allow Amplify to work with either v5 or v6 format
+    userPoolId: 'us-east-2_FyHLtOhiY',
+    userPoolWebClientId: 'dshos5iou44tuach7ta3ici5m',
+    identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
+    region: 'us-east-2',
+
+    // Nested Cognito block is the structure expected by Amplify v6
     Cognito: {
       userPoolId: 'us-east-2_FyHLtOhiY',
       userPoolClientId: 'dshos5iou44tuach7ta3ici5m',

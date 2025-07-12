@@ -43,15 +43,15 @@ const configureAmplify = async () => {
   
   if (window.awsmobile) {
     console.log('✅ AWS config found, configuring Amplify:', window.awsmobile);
-    
+
     // Ensure Identity Pool configuration is included
-    if (!window.awsmobile.aws_cognito_identity_pool_id) {
+    if (!window.awsmobile.Auth?.identityPoolId && !window.awsmobile.aws_cognito_identity_pool_id) {
       console.warn('⚠️ Identity Pool ID not found in window.awsmobile, might affect DynamoDB access');
     }
-    
+
     // Ensure Auth configuration is included
-    if (!window.awsmobile.Auth) {
-      console.warn('⚠️ Auth configuration not found in window.awsmobile');
+    if (!window.awsmobile.Auth || !window.awsmobile.Auth.Cognito) {
+      console.warn('⚠️ Auth configuration incomplete in window.awsmobile');
     }
     
     try {
