@@ -162,7 +162,7 @@ export default function Login() {
         console.log('💾 Token saved to localStorage');
 
         // Dispatch a custom event to notify App component
-        window.dispatchEvent(new Event('auth-success'));
+        window.dispatchEvent(new CustomEvent('auth-success', { detail: { user: email } }));
         console.log('📢 Auth success event dispatched');
 
         console.log('🔄 Navigating to dashboard...');
