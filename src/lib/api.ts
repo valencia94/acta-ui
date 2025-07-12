@@ -363,39 +363,59 @@ export async function getProjectsByPM(
 ): Promise<ProjectSummary[]> {
   console.log('📋 Loading projects for PM:', pmEmail, 'Admin:', isAdmin);
   
-  // Use correct endpoint that matches projectMetadataEnricher
-  const endpoint = isAdmin 
-    ? `${BASE}/pm-manager/all-projects`
-    : `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`;
-  
-  console.log('🌐 PM Projects endpoint:', endpoint);
-  
-  return apiGet<ProjectSummary[]>(endpoint);
+  // Based on the API Gateway spec, try /projects first, fallback to pm-manager endpoints
+  try {
+    console.log('🌐 Trying /projects endpoint first');
+    const endpoint = `${BASE}/projects`;
+    console.log('🌐 Projects endpoint:', endpoint);
+    
+    const result = await apiGet<ProjectSummary[]>(endpoint);
+    console.log('✅ /projects endpoint successful, got', result.length, 'projects');
+    return result;
+  } catch (error) {
+    console.warn('⚠️ /projects endpoint failed, trying pm-manager endpoints', error);
+    
+    // Fallback to pm-manager endpoints
+    const endpoint = isAdmin 
+      ? `${BASE}/pm-manager/all-projects`
+      : `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`;
+    
+    console.log('🌐 PM Projects endpoint (fallback):', endpoint);
+    
+    return apiGet<ProjectSummary[]>(endpoint);
+  }
 }
 
-// Get all projects (admin only)
+// Get all projects (admin only) - uses the pm-manager/all-projects endpoint
 export async function getAllProjects(): Promise<ProjectSummary[]> {
   console.log('📋 Loading all projects (admin access)');
   
-  // Use the admin endpoint to get all projects
-  const endpoint = `${BASE}/pm-manager/all-projects`;
-  console.log('🌐 All Projects endpoint:', endpoint);
-  
-  return apiGet<ProjectSummary[]>(endpoint);
+  // Try /projects first, then fallback to pm-manager/all-projects
+  try {
+    console.log('🌐 Trying /projects endpoint first');
+    const endpoint = `${BASE}/projects`;
+    console.log('🌐 Projects endpoint:', endpoint);
+    
+    const result = await apiGet<ProjectSummary[]>(endpoint);
+    console.log('✅ /projects endpoint successful, got', result.length, 'projects');
+    return result;
+  } catch (error) {
+    console.warn('⚠️ /projects endpoint failed, trying pm-manager/all-projects', error);
+    
+    // Fallback to pm-manager endpoint
+    const endpoint = `${BASE}/pm-manager/all-projects`;
+    console.log('🌐 All Projects endpoint (fallback):', endpoint);
+    
+    return apiGet<ProjectSummary[]>(endpoint);
+  }
 }
 
-// Get enhanced PM projects with summary data
+// Get enhanced PM projects with summary data - uses the pm-manager endpoints
 export async function getPMProjectsWithSummary(
   pmEmail: string
 ): Promise<PMProjectsResponse> {
-  // Handle admin access
-  if (pmEmail === 'admin-all-access') {
-    return apiGet<PMProjectsResponse>(`${BASE}/pm-manager/all-projects`);
-  }
-
-  return apiGet<PMProjectsResponse>(
-    `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`
-  );
+  // Use the correct endpoint that matches the actual API Gateway spec
+  return apiGet<PMProjectsResponse>(`${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`);
 }
 
 // Get project summary (enhanced with PM context)
@@ -422,14 +442,19 @@ export async function generateSummariesForPM(pmEmail: string): Promise<{
 
 /** ---------- CHECK DOCUMENT AVAILABILITY ---------- */
 export async function checkDocumentAvailability(
-  id: string,
+  projectId: string,
   format: 'pdf' | 'docx'
 ): Promise<{ available: boolean; lastModified?: string }> {
   try {
+    // Use the correct endpoint that matches the API Gateway spec
     const response = await fetch(
-      `${BASE}/document-validator/${id}?format=${format}`,
+      `${BASE}/check-document/${projectId}?format=${format}`,
       {
-        method: 'HEAD',
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${await getAuthToken()}`,
+          'Content-Type': 'application/json'
+        }
       }
     );
 

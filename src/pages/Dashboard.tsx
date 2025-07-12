@@ -66,8 +66,17 @@ export default function Dashboard() {
     setError(null);
     
     try {
-      console.log('📋 Fetching projects from DynamoDB...');
+      console.log('📋 Fetching projects from API using /projects endpoint...');
+      console.log('🔐 User email:', user.email, 'Admin access:', isAdmin);
+      
       const projectData = await getProjectsByPM(user.email, isAdmin);
+      console.log('📊 Raw project data received:', projectData);
+      
+      if (!Array.isArray(projectData)) {
+        console.warn('⚠️ Project data is not an array:', projectData);
+        throw new Error('Invalid project data format received from API');
+      }
+      
       setProjects(projectData);
       
       const totalProjects = projectData.length;
@@ -77,11 +86,30 @@ export default function Dashboard() {
       
       setStats({ total: totalProjects, pending: pendingProjects, inProgress: inProgressProjects, completed: completedProjects });
       setLastUpdated(new Date().toLocaleTimeString());
-      console.log('✅ Projects loaded successfully:', projectData.length);
-    } catch (error) {
+      console.log('✅ Projects loaded successfully:', projectData.length, 'projects');
+      
+      if (projectData.length === 0) {
+        console.log('ℹ️ No projects found for user. This might be expected for new users.');
+      }
+    } catch (error: any) {
       console.error('❌ Error fetching projects:', error);
-      setError('Failed to load projects from DynamoDB');
-      toast.error('Failed to load projects');
+      
+      // Enhanced error handling with specific messages
+      let errorMessage = 'Failed to load projects from API';
+      if (error.message?.includes('Failed to fetch')) {
+        errorMessage = 'Network error: Unable to connect to the API. Please check your connection and try again.';
+      } else if (error.message?.includes('401')) {
+        errorMessage = 'Authentication error: Please log out and log back in.';
+      } else if (error.message?.includes('403')) {
+        errorMessage = 'Access denied: You don\'t have permission to view projects.';
+      } else if (error.message?.includes('500')) {
+        errorMessage = 'Server error: The API is experiencing issues. Please try again later.';
+      } else if (error.message) {
+        errorMessage = `API Error: ${error.message}`;
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
