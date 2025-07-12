@@ -1,6 +1,7 @@
-// AWS Amplify Configuration for ACTA-UI (Fallback ES Module Import)
+// aws-exports.js
+// This file is valid as both a module and as a browser script.
 
-const awsmobile = window?.awsmobile || {
+const awsmobile = {
   aws_project_region: "us-east-2",
   aws_cognito_region: "us-east-2",
   aws_user_pools_id: "us-east-2_FyHLtOhiY",
@@ -74,5 +75,10 @@ const awsmobile = window?.awsmobile || {
     }
   }
 };
+
+// Assign to window.awsmobile in browser
+if (typeof window !== "undefined") {
+  window.awsmobile = awsmobile;
+}
 
 export default awsmobile;
