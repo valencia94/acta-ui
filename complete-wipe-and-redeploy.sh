@@ -7,13 +7,24 @@ S3_BUCKET="acta-ui-frontend-prod"
 CLOUDFRONT_DISTRIBUTION_ID="EPQU7PVDLQXUA"
 AWS_REGION="us-east-2"
 
-# 🧬 Environment Variables for Vite Build
-export VITE_API_BASE_URL="https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
-export VITE_COGNITO_REGION="us-east-2"
-export VITE_COGNITO_POOL_ID="us-east-2_FyHLtOhiY"
-export VITE_COGNITO_WEB_CLIENT="dshos5iou44tuach7ta3ici5m"
-export VITE_SKIP_AUTH="false"
-export VITE_USE_MOCK_API="false"
+# 🧬 Load Environment Variables from .env.production
+if [ -f ".env.production" ]; then
+  echo "📋 Loading environment variables from .env.production..."
+  set -a  # Automatically export variables
+  source .env.production
+  set +a  # Stop automatically exporting
+  echo "✅ Environment variables loaded!"
+else
+  echo "❌ .env.production file not found!"
+  exit 1
+fi
+
+# Verify critical environment variables are set
+echo "🔍 Verifying environment variables..."
+echo "   VITE_API_BASE_URL: ${VITE_API_BASE_URL:-'NOT SET'}"
+echo "   VITE_COGNITO_REGION: ${VITE_COGNITO_REGION:-'NOT SET'}"
+echo "   VITE_COGNITO_POOL_ID: ${VITE_COGNITO_POOL_ID:-'NOT SET'}"
+echo "   VITE_COGNITO_WEB_CLIENT_ID: ${VITE_COGNITO_WEB_CLIENT_ID:-'NOT SET'}"
 
 echo "⚠️ WIPING S3 Bucket: $S3_BUCKET in 3 seconds..."
 sleep 3
@@ -46,6 +57,19 @@ if ! grep -q "q2b9avfwv5.execute-api.us-east-2.amazonaws.com" dist/assets/*.js; 
   exit 1
 fi
 
+# Check that aws-exports.js is present and referenced
+if [ ! -f "dist/aws-exports.js" ]; then
+  echo "❌ aws-exports.js not found in build directory"
+  exit 1
+fi
+
+if ! grep -q '<script src="/aws-exports.js"></script>' dist/index.html; then
+  echo "❌ aws-exports.js script tag not found in index.html"
+  exit 1
+fi
+
+echo "✅ aws-exports.js properly included in build"
+
 BUILD_SIZE=$(du -sh dist | cut -f1)
 FILE_COUNT=$(find dist -type f | wc -l)
 
@@ -74,6 +98,11 @@ aws s3 cp dist/ s3://$S3_BUCKET/ \
   --include "*.json" \
   --cache-control "no-cache, no-store, must-revalidate" \
   --content-type "application/json"
+
+# AWS exports file with JavaScript content type
+aws s3 cp dist/aws-exports.js s3://$S3_BUCKET/aws-exports.js \
+  --cache-control "no-cache, no-store, must-revalidate" \
+  --content-type "application/javascript"
 
 echo "✅ Upload complete."
 

@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@aws-amplify/auth';
+import { getCurrentUser, signIn, signOut, fetchAuthSession } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 import { skipAuth } from '@/env.variables';
 
@@ -76,5 +76,27 @@ export function useAuth() {
     };
   }, []);
 
-  return { user, loading };
+  const signOut = async () => {
+    try {
+      // Clear localStorage token
+      localStorage.removeItem('ikusi.jwt');
+      
+      // Skip auth mode - just clear the user
+      if (skipAuth) {
+        console.log('🔓 Skip auth mode: Clearing mock user');
+        setUser(null);
+        return;
+      }
+
+      // Use Amplify v6 syntax for sign out
+      await signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('🔍 useAuth: Error signing out:', error);
+      // Clear user anyway
+      setUser(null);
+    }
+  };
+
+  return { user, loading, signOut };
 }

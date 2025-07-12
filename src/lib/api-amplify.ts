@@ -1,7 +1,7 @@
-// src/lib/api-amplify.ts
+// import { Auth } from 'aws-amplify';rc/lib/api-amplify.ts
 // Enhanced API client with AWS Amplify authentication integration
 
-import { fetchAuthSession } from '@aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { 
   apiBaseUrl,
   skipAuth 

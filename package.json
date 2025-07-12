@@ -40,13 +40,13 @@
     "deploy": "bash scripts/push-spa-routes.sh"
   },
   "dependencies": {
-    "@aws-amplify/auth": "^6.13.3",
-    "@aws-amplify/ui-react": "^6",
+    "@aws-amplify/auth": "^6.0.0",
+    "@aws-amplify/ui-react": "^6.0.0",
     "@headlessui/react": "^1.7.19",
     "@mui/material": "^6.4.12",
     "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.4.9",
     "@mui/styled-engine-sc": "^6.4.9",
-    "aws-amplify": "^6",
+    "aws-amplify": "^6.0.0",
     "aws-sdk": "^2.1692.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

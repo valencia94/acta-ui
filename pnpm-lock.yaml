@@ -51,11 +51,11 @@ importers:
   .:
     dependencies:
       '@aws-amplify/auth':
-        specifier: ^6.13.3
-        version: 6.13.3(@aws-amplify/core@6.12.1)
+        specifier: ^6.0.0
+        version: 6.13.3(@aws-amplify/core@6.12.3)
       '@aws-amplify/ui-react':
-        specifier: ^6
-        version: 6.11.2(@aws-amplify/core@6.12.1)(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(aws-amplify@6.15.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(xstate@4.38.3)
+        specifier: ^6.0.0
+        version: 6.11.2(@aws-amplify/core@6.12.3)(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(aws-amplify@6.15.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(xstate@4.38.3)
       '@headlessui/react':
         specifier: ^1.7.19
         version: 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -69,8 +69,8 @@ importers:
         specifier: ^6.4.9
         version: 6.4.9(styled-components@6.1.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       aws-amplify:
-        specifier: ^6
-        version: 6.15.1
+        specifier: ^6.0.0
+        version: 6.15.3
       aws-sdk:
         specifier: ^2.1692.0
         version: 2.1692.0
@@ -134,7 +134,7 @@ importers:
         version: 5.2.6
       '@julr/vite-plugin-validate-env':
         specifier: ^1.3.0
-        version: 1.3.0(vite@5.4.19(@types/node@22.16.0))(zod@3.25.72)
+        version: 1.3.0(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))(zod@3.25.72)
       '@playwright/test':
         specifier: ^1.53.2
         version: 1.53.2
@@ -158,7 +158,7 @@ importers:
         version: 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(prettier@3.6.2)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.6.14(prettier@3.6.2))(typescript@5.8.3)
       '@storybook/react-vite':
         specifier: ^8.6.14
-        version: 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(prettier@3.6.2)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.44.0)(storybook@8.6.14(prettier@3.6.2))(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0))
+        version: 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(prettier@3.6.2)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.44.0)(storybook@8.6.14(prettier@3.6.2))(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))
       '@storybook/test':
         specifier: ^8.6.14
         version: 8.6.14(storybook@8.6.14(prettier@3.6.2))
@@ -200,10 +200,10 @@ importers:
         version: 7.18.0(eslint@8.57.1)(typescript@5.8.3)
       '@vitejs/plugin-basic-ssl':
         specifier: ^1.2.0
-        version: 1.2.0(vite@5.4.19(@types/node@22.16.0))
+        version: 1.2.0(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))
       '@vitejs/plugin-react':
         specifier: ^4.6.0
-        version: 4.6.0(vite@5.4.19(@types/node@22.16.0))
+        version: 4.6.0(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))
       '@vitest/coverage-v8':
         specifier: ^2.1.9
         version: 2.1.9(vitest@2.1.9)
@@ -287,19 +287,19 @@ importers:
         version: 5.8.3
       vite:
         specifier: ^5.4.19
-        version: 5.4.19(@types/node@22.16.0)
+        version: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
       vite-bundle-visualizer:
         specifier: ^1.2.1
         version: 1.2.1(rollup@4.44.0)
       vite-plugin-chunk-split:
         specifier: ^0.5.0
-        version: 0.5.0(vite@5.4.19(@types/node@22.16.0))
+        version: 0.5.0(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))
       vite-plugin-svgr:
         specifier: ^4.3.0
-        version: 4.3.0(rollup@4.44.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0))
+        version: 4.3.0(rollup@4.44.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))
       vitest:
         specifier: ^2.1.9
-        version: 2.1.9(@types/node@22.16.0)(@vitest/ui@3.2.4)
+        version: 2.1.9(@types/node@22.16.0)(@vitest/ui@3.2.4)(terser@5.43.1)
 
 packages:
 
@@ -323,26 +323,21 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@aws-amplify/analytics@7.0.82':
-    resolution: {integrity: sha512-zqZz5ro2hwFk+3fDoECJ5jrnAUH1wHkl5+wPgRK3x9OBTEgtjVv9ONb/+gMsaAxYMbbE8MLFemTH8DMdntkmyg==}
+  '@aws-amplify/analytics@7.0.84':
+    resolution: {integrity: sha512-5QABzUE/kDg2rXilz70/inbPobXzaRnWkHveiXlQVH7KUl9am8LfH6qVgBekTpSVtRfVidMTacvPIyqrRbqYhA==}
     peerDependencies:
       '@aws-amplify/core': ^6.1.0
 
-  '@aws-amplify/api-graphql@4.7.17':
-    resolution: {integrity: sha512-KKKQ2dpj53AbrEz8HPWJ0NoLd0P9foQCTImFaRD30EVgYQGp3rVK7c5cz3K9kWJvaW79H0UB6fh4vQfa6XyZIA==}
+  '@aws-amplify/api-graphql@4.7.19':
+    resolution: {integrity: sha512-A6+HvhdLwPnvEFe9giGSDgCNH1hXHTvyGrOzJXikp9X6QHBq7PyJJhqrhDMDp2AN/u9VcKu5Xt9stugne1BcUg==}
 
-  '@aws-amplify/api-rest@4.1.6':
-    resolution: {integrity: sha512-CK3e6MBEORZLScv4tYqxfgd3EhXq1/TJeSoPuxGzn6yyezY4gQOjCy+DpBdRIRrpu7ApTIn/3EqPCwxLQVSukg==}
+  '@aws-amplify/api-rest@4.1.8':
+    resolution: {integrity: sha512-rWvZyQRFSeH9cPLGxNu76Mw1t4/qt7PZjo23MJEtPVetaIpGAOzIT7AH0ZKiBTZTTDkzwWXiJHtuMVRa7N/oRg==}
     peerDependencies:
       '@aws-amplify/core': ^6.1.0
 
-  '@aws-amplify/api@6.3.13':
-    resolution: {integrity: sha512-oaRsktroGyW0eThHsTEErd1BZObQIttTxbfa/MfjTdBgpnxIUfrnMn34xfZZAnz5iMZG7TxQG4oSP2fSxSwFZA==}
-    peerDependencies:
-      '@aws-amplify/core': ^6.1.0
-
-  '@aws-amplify/auth@6.13.1':
-    resolution: {integrity: sha512-AGSJe6rvrVYgI4JmYg7sd6/I4Z7r8rPoYrlA/x4vzjo/fTm56a3R5HIhrqq+cFJUTTrbWPSvjk9X/S8xIq7hAw==}
+  '@aws-amplify/api@6.3.15':
+    resolution: {integrity: sha512-urJR04tP97NUZ6jbhlZXzKqbHCUm2V2B4CAtQQ1viVs46gY1JiS1Ad7IMvrZca8TPxWWGspR7JTr8+mLSEsbbQ==}
     peerDependencies:
       '@aws-amplify/core': ^6.1.0
 
@@ -351,27 +346,27 @@ packages:
     peerDependencies:
       '@aws-amplify/core': ^6.1.0
 
-  '@aws-amplify/core@6.12.1':
-    resolution: {integrity: sha512-4+l7+vD5S5e/c3uFxilDuR49K5c7HEBgSANPz9aBesd/BdfhyIsCuwk3snv4/i7PTuSKVVF3loFHonUoEuTGQg==}
+  '@aws-amplify/core@6.12.3':
+    resolution: {integrity: sha512-n5cFIANzlFMNZoe6F386UVhmxg65QK6XvcKERow2KeJHnVKPvXKJ1uZeJeaInxtI+xw3qbbBP60NYWUny+nWnQ==}
 
   '@aws-amplify/data-schema-types@1.2.0':
     resolution: {integrity: sha512-1hy2r7jl3hQ5J/CGjhmPhFPcdGSakfme1ZLjlTMJZILfYifZLSlGRKNCelMb3J5N9203hyeT5XDi5yR47JL1TQ==}
 
-  '@aws-amplify/data-schema@1.21.0':
-    resolution: {integrity: sha512-3SU6zHrvMVOLUiD574aWcVYPVdZ3sPVwQNTPBg5B3DEOkkZ4bGyuiCCKUQiV7AbdSv/1OcZVnPuRFdv+8CW34A==}
+  '@aws-amplify/data-schema@1.21.1':
+    resolution: {integrity: sha512-ZR7zHcjW9NKlCI39F03Ou/q//fobYNRe0w++3Ne75FU2eGGpi7MCIYEP5Hghued/PZkAuarF5dRt79aQt76V8w==}
 
-  '@aws-amplify/datastore@5.0.84':
-    resolution: {integrity: sha512-aPv8obH+10XiARUeXpQtOZyB0MEZHg5j5v8zw53emwlz1K8bH5AhRca7S6pA66C3WLcWkuBn5YATTyBwtMlpfA==}
+  '@aws-amplify/datastore@5.0.86':
+    resolution: {integrity: sha512-5kga6ATJq5qcwNlOMlQ1cRmdyJKEvW47pJzs3bdLWqFijiY50B1Igv8bNyfsmdiqXHpkfv8tCZkUMa8CuejEng==}
     peerDependencies:
       '@aws-amplify/core': ^6.1.0
 
-  '@aws-amplify/notifications@2.0.82':
-    resolution: {integrity: sha512-s3KxMSdd19Zv/qUobdRGxYdaupRawMiWo86FUWkaOXK6d0nhDHgXcF0TffcVxDHuka/dwWgxuJR8ePZuNfyYJA==}
+  '@aws-amplify/notifications@2.0.84':
+    resolution: {integrity: sha512-BCQRCWQ/Qp+ZJotSjbWn/08dPp9RDc1fhp4blHHBWOTTt+lwXbvBo97ViZHNOE7lM9CK9zBotIybneoDjCQOqw==}
     peerDependencies:
       '@aws-amplify/core': ^6.1.0
 
-  '@aws-amplify/storage@6.9.1':
-    resolution: {integrity: sha512-dICBRoZkBUX1tosHea93mvHSpD0Z1GTaYB9YfclksdKvAkSXqr5EOcedzMnbAtLrHA8XbVbE3FRxIMkmz9RAEg==}
+  '@aws-amplify/storage@6.9.3':
+    resolution: {integrity: sha512-b3wY9K5FX3aA8OARSIFClFrKxlCAcCpxV/8jJrKaLwfmtCqIF6ComGYnOoi62GIgB6wlzJZwO5r/lg64+QljWw==}
     peerDependencies:
       '@aws-amplify/core': ^6.1.0
 
@@ -518,6 +513,10 @@ packages:
   '@aws-sdk/types@3.609.0':
     resolution: {integrity: sha512-+Tqnh9w0h2LcrUsdXyT1F8mNhXz+tVYBtP19LpeEGntmvHwa2XzvLUCWpoIAIVsHp5+HdB2X9Sn0KAtmbFXc2Q==}
     engines: {node: '>=16.0.0'}
+
+  '@aws-sdk/types@3.840.0':
+    resolution: {integrity: sha512-xliuHaUFZxEx1NSXeLLZ9Dyu6+EJVQKEoD+yM+zqUo3YDZ7medKJWY6fIOKiPX/N7XbLdBYwajb15Q7IL8KkeA==}
+    engines: {node: '>=18.0.0'}
 
   '@aws-sdk/util-endpoints@3.614.0':
     resolution: {integrity: sha512-wK2cdrXHH4oz4IomV/yrGkftU9A+ITB6nFL+rxxyO78is2ifHJpFdV4aqk4LSkXYPi6CXWNru/Dqc7yiKXgJPw==}
@@ -1031,14 +1030,23 @@ packages:
   '@floating-ui/core@1.7.1':
     resolution: {integrity: sha512-azI0DrjMMfIug/ExbBaeDVJXcY0a7EPvPjb2xAJPa4HeimBX+Z18HK8QQR3jb6356SnDDdxx+hinMLcJEDdOjw==}
 
+  '@floating-ui/core@1.7.2':
+    resolution: {integrity: sha512-wNB5ooIKHQc+Kui96jE/n69rHFWAVoxn5CAzL1Xdd8FG03cgY3MLO+GF9U3W737fYDSgPWA6MReKhBQBop6Pcw==}
+
   '@floating-ui/dom@1.7.1':
     resolution: {integrity: sha512-cwsmW/zyw5ltYTUeeYJ60CnQuPqmGwuGVhG9w0PRaRKkAyi38BT5CKrpIbb+jtahSwUl04cWzSx9ZOIxeS6RsQ==}
 
-  '@floating-ui/react-dom@2.1.3':
-    resolution: {integrity: sha512-huMBfiU9UnQ2oBwIhgzyIiSpVgvlDstU8CX0AF+wS+KzmYMs0J2a3GwuFHV1Lz+jlrQGeC1fF+Nv0QoumyV0bA==}
+  '@floating-ui/dom@1.7.2':
+    resolution: {integrity: sha512-7cfaOQuCS27HD7DX+6ib2OrnW+b4ZBwDNnCcT0uTyidcmyWb03FnQqJybDBoCnpdxwBSfA94UAYlRCt7mV+TbA==}
+
+  '@floating-ui/react-dom@2.1.4':
+    resolution: {integrity: sha512-JbbpPhp38UmXDDAu60RJmbeme37Jbgsm7NrHGgzYYFKmblzRUh6Pa641dII6LsjwF4XlScDrde2UAzDo/b9KPw==}
     peerDependencies:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
+
+  '@floating-ui/utils@0.2.10':
+    resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
@@ -1106,6 +1114,9 @@ packages:
   '@jridgewell/set-array@1.2.1':
     resolution: {integrity: sha512-R8gLRTZeyp03ymzP/6Lil/28tGeGEzhx1q2k703KGWRAI1VdvPIXdG70VJc2pAMw3NA6JKL5hhFu1sJX0Mnn/A==}
     engines: {node: '>=6.0.0'}
+
+  '@jridgewell/source-map@0.3.10':
+    resolution: {integrity: sha512-0pPkgz9dY+bijgistcTTJ5mR+ocqRXLuhXHYdzoMmmoJ2C9S46RCm2GMUbatPEUK9Yjy26IrAy8D/M00lLkv+Q==}
 
   '@jridgewell/sourcemap-codec@1.5.0':
     resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
@@ -1878,6 +1889,10 @@ packages:
   '@smithy/types@3.7.2':
     resolution: {integrity: sha512-bNwBYYmN8Eh9RyjS1p2gW6MIhSO2rl7X9QeLM8iTdcGRP+eDiIWDt66c9IysCc22gefKszZv+ubV9qZc7hdESg==}
     engines: {node: '>=16.0.0'}
+
+  '@smithy/types@4.3.1':
+    resolution: {integrity: sha512-UqKOQBL2x6+HWl3P+3QqFD4ncKq0I8Nuz9QItGv5WuKuMHuuwlhvqcZCoXGfc+P1QmfJE7VieykoYYmrOoFJxA==}
+    engines: {node: '>=18.0.0'}
 
   '@smithy/url-parser@3.0.11':
     resolution: {integrity: sha512-TmlqXkSk8ZPhfc+SQutjmFr5FjC0av3GZP4B/10caK1SbRwe/v+Wzu/R6xEKxoNqL+8nY18s1byiy6HqPG37Aw==}
@@ -2818,8 +2833,8 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  aws-amplify@6.15.1:
-    resolution: {integrity: sha512-tp15Gpl90aqZDmTCT0dSd4VWpUoVACvqPfaiH5HVk5TyIKyNYWXAHuhpZQnKk+15aqtIoudp7lxDP1oBsXtK0Q==}
+  aws-amplify@6.15.3:
+    resolution: {integrity: sha512-i4UrDRpN1fM0XsAbPEYgXVNLqsPuuz2rUhspBxoQ2HwGh+TeFxztSSzEQcRVlm1xwEHGHDMvDvsm43el1mIkgQ==}
 
   aws-sdk@2.1692.0:
     resolution: {integrity: sha512-x511uiJ/57FIsbgUe5csJ13k3uzu25uWQE+XqfBis/sB0SFoiElJWXRkgEAUh0U6n40eT3ay5Ue4oPkRMu1LYw==}
@@ -2911,6 +2926,9 @@ packages:
 
   buffer-crc32@0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
+
+  buffer-from@1.1.2:
+    resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
   buffer@4.9.2:
     resolution: {integrity: sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==}
@@ -3062,6 +3080,9 @@ packages:
   commander@13.1.0:
     resolution: {integrity: sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw==}
     engines: {node: '>=18'}
+
+  commander@2.20.3:
+    resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
 
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
@@ -4926,6 +4947,9 @@ packages:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
 
+  source-map-support@0.5.21:
+    resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
+
   source-map@0.5.7:
     resolution: {integrity: sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ==}
     engines: {node: '>=0.10.0'}
@@ -5086,6 +5110,11 @@ packages:
   terminal-size@4.0.0:
     resolution: {integrity: sha512-rcdty1xZ2/BkWa4ANjWRp4JGpda2quksXIHgn5TMjNBPZfwzJIgR68DKfSYiTL+CZWowDX/sbOo5ME/FRURvYQ==}
     engines: {node: '>=18'}
+
+  terser@5.43.1:
+    resolution: {integrity: sha512-+6erLbBm0+LROX2sPXlUYx/ux5PyE9K/a92Wrt6oA+WDAoFTdpHE5tCYCI5PNzq2y8df4rA+QgHLJuR4jNymsg==}
+    engines: {node: '>=10'}
+    hasBin: true
 
   test-exclude@7.0.1:
     resolution: {integrity: sha512-pFYqmTw68LXVjeWJMST4+borgQP2AyMNbg1BpZh9LbyhUeNkeaPF9gzfPGUAnSMV3qPYdWUwDIjjCLiSDOl7vg==}
@@ -5296,6 +5325,10 @@ packages:
 
   util@0.12.5:
     resolution: {integrity: sha512-kZf/K6hEIrWHI6XqOFUiiMa+79wE/D8Q+NCNAWclkyg3b4d2k7s0QGepNjiABc+aR3N1PAyHL7p6UcLY6LmrnA==}
+
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
 
   uuid@8.0.0:
     resolution: {integrity: sha512-jOXGuXZAWdsTH7eZLtyXMqUb9EcWMGZNbL9YcGBJl4MH4nrxHmZJhEHvyLFrkxo+28uLb/NYRcStH48fnD0Vzw==}
@@ -5613,9 +5646,9 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@aws-amplify/analytics@7.0.82(@aws-amplify/core@6.12.1)':
+  '@aws-amplify/analytics@7.0.84(@aws-amplify/core@6.12.3)':
     dependencies:
-      '@aws-amplify/core': 6.12.1
+      '@aws-amplify/core': 6.12.3
       '@aws-sdk/client-firehose': 3.621.0
       '@aws-sdk/client-kinesis': 3.621.0
       '@aws-sdk/client-personalize-events': 3.621.0
@@ -5624,46 +5657,39 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-amplify/api-graphql@4.7.17':
+  '@aws-amplify/api-graphql@4.7.19':
     dependencies:
-      '@aws-amplify/api-rest': 4.1.6(@aws-amplify/core@6.12.1)
-      '@aws-amplify/core': 6.12.1
-      '@aws-amplify/data-schema': 1.21.0
+      '@aws-amplify/api-rest': 4.1.8(@aws-amplify/core@6.12.3)
+      '@aws-amplify/core': 6.12.3
+      '@aws-amplify/data-schema': 1.21.1
       '@aws-sdk/types': 3.387.0
       graphql: 15.8.0
       rxjs: 7.8.2
       tslib: 2.8.1
-      uuid: 9.0.1
+      uuid: 11.1.0
 
-  '@aws-amplify/api-rest@4.1.6(@aws-amplify/core@6.12.1)':
+  '@aws-amplify/api-rest@4.1.8(@aws-amplify/core@6.12.3)':
     dependencies:
-      '@aws-amplify/core': 6.12.1
+      '@aws-amplify/core': 6.12.3
       tslib: 2.8.1
 
-  '@aws-amplify/api@6.3.13(@aws-amplify/core@6.12.1)':
+  '@aws-amplify/api@6.3.15(@aws-amplify/core@6.12.3)':
     dependencies:
-      '@aws-amplify/api-graphql': 4.7.17
-      '@aws-amplify/api-rest': 4.1.6(@aws-amplify/core@6.12.1)
-      '@aws-amplify/core': 6.12.1
-      '@aws-amplify/data-schema': 1.21.0
+      '@aws-amplify/api-graphql': 4.7.19
+      '@aws-amplify/api-rest': 4.1.8(@aws-amplify/core@6.12.3)
+      '@aws-amplify/core': 6.12.3
+      '@aws-amplify/data-schema': 1.21.1
       rxjs: 7.8.2
       tslib: 2.8.1
 
-  '@aws-amplify/auth@6.13.1(@aws-amplify/core@6.12.1)':
+  '@aws-amplify/auth@6.13.3(@aws-amplify/core@6.12.3)':
     dependencies:
-      '@aws-amplify/core': 6.12.1
+      '@aws-amplify/core': 6.12.3
       '@aws-crypto/sha256-js': 5.2.0
       '@smithy/types': 3.7.2
       tslib: 2.8.1
 
-  '@aws-amplify/auth@6.13.3(@aws-amplify/core@6.12.1)':
-    dependencies:
-      '@aws-amplify/core': 6.12.1
-      '@aws-crypto/sha256-js': 5.2.0
-      '@smithy/types': 3.7.2
-      tslib: 2.8.1
-
-  '@aws-amplify/core@6.12.1':
+  '@aws-amplify/core@6.12.3':
     dependencies:
       '@aws-crypto/sha256-js': 5.2.0
       '@aws-sdk/types': 3.398.0
@@ -5672,14 +5698,14 @@ snapshots:
       js-cookie: 3.0.5
       rxjs: 7.8.2
       tslib: 2.8.1
-      uuid: 9.0.1
+      uuid: 11.1.0
 
   '@aws-amplify/data-schema-types@1.2.0':
     dependencies:
       graphql: 15.8.0
       rxjs: 7.8.2
 
-  '@aws-amplify/data-schema@1.21.0':
+  '@aws-amplify/data-schema@1.21.1':
     dependencies:
       '@aws-amplify/data-schema-types': 1.2.0
       '@smithy/util-base64': 3.0.0
@@ -5687,27 +5713,27 @@ snapshots:
       '@types/json-schema': 7.0.15
       rxjs: 7.8.2
 
-  '@aws-amplify/datastore@5.0.84(@aws-amplify/core@6.12.1)':
+  '@aws-amplify/datastore@5.0.86(@aws-amplify/core@6.12.3)':
     dependencies:
-      '@aws-amplify/api': 6.3.13(@aws-amplify/core@6.12.1)
-      '@aws-amplify/api-graphql': 4.7.17
-      '@aws-amplify/core': 6.12.1
+      '@aws-amplify/api': 6.3.15(@aws-amplify/core@6.12.3)
+      '@aws-amplify/api-graphql': 4.7.19
+      '@aws-amplify/core': 6.12.3
       buffer: 4.9.2
       idb: 5.0.6
       immer: 9.0.6
       rxjs: 7.8.2
       ulid: 2.4.0
 
-  '@aws-amplify/notifications@2.0.82(@aws-amplify/core@6.12.1)':
+  '@aws-amplify/notifications@2.0.84(@aws-amplify/core@6.12.3)':
     dependencies:
-      '@aws-amplify/core': 6.12.1
+      '@aws-amplify/core': 6.12.3
       '@aws-sdk/types': 3.398.0
       lodash: 4.17.21
       tslib: 2.8.1
 
-  '@aws-amplify/storage@6.9.1(@aws-amplify/core@6.12.1)':
+  '@aws-amplify/storage@6.9.3(@aws-amplify/core@6.12.3)':
     dependencies:
-      '@aws-amplify/core': 6.12.1
+      '@aws-amplify/core': 6.12.3
       '@aws-sdk/types': 3.398.0
       '@smithy/md5-js': 2.0.7
       buffer: 4.9.2
@@ -5715,11 +5741,11 @@ snapshots:
       fast-xml-parser: 4.5.3
       tslib: 2.8.1
 
-  '@aws-amplify/ui-react-core@3.4.3(@aws-amplify/core@6.12.1)(@types/react@18.3.23)(aws-amplify@6.15.1)(react@18.3.1)':
+  '@aws-amplify/ui-react-core@3.4.3(@aws-amplify/core@6.12.3)(@types/react@18.3.23)(aws-amplify@6.15.3)(react@18.3.1)':
     dependencies:
-      '@aws-amplify/ui': 6.10.3(@aws-amplify/core@6.12.1)(aws-amplify@6.15.1)(xstate@4.38.3)
+      '@aws-amplify/ui': 6.10.3(@aws-amplify/core@6.12.3)(aws-amplify@6.15.3)(xstate@4.38.3)
       '@xstate/react': 3.2.2(@types/react@18.3.23)(react@18.3.1)(xstate@4.38.3)
-      aws-amplify: 6.15.1
+      aws-amplify: 6.15.3
       lodash: 4.17.21
       react: 18.3.1
       react-hook-form: 7.59.0(react@18.3.1)
@@ -5729,11 +5755,11 @@ snapshots:
       - '@types/react'
       - '@xstate/fsm'
 
-  '@aws-amplify/ui-react@6.11.2(@aws-amplify/core@6.12.1)(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(aws-amplify@6.15.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(xstate@4.38.3)':
+  '@aws-amplify/ui-react@6.11.2(@aws-amplify/core@6.12.3)(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(aws-amplify@6.15.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(xstate@4.38.3)':
     dependencies:
-      '@aws-amplify/core': 6.12.1
-      '@aws-amplify/ui': 6.10.3(@aws-amplify/core@6.12.1)(aws-amplify@6.15.1)(xstate@4.38.3)
-      '@aws-amplify/ui-react-core': 3.4.3(@aws-amplify/core@6.12.1)(@types/react@18.3.23)(aws-amplify@6.15.1)(react@18.3.1)
+      '@aws-amplify/core': 6.12.3
+      '@aws-amplify/ui': 6.10.3(@aws-amplify/core@6.12.3)(aws-amplify@6.15.3)(xstate@4.38.3)
+      '@aws-amplify/ui-react-core': 3.4.3(@aws-amplify/core@6.12.3)(@types/react@18.3.23)(aws-amplify@6.15.3)(react@18.3.1)
       '@radix-ui/react-direction': 1.1.1(@types/react@18.3.23)(react@18.3.1)
       '@radix-ui/react-dropdown-menu': 2.1.15(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-slider': 1.3.5(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -5744,17 +5770,17 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       tslib: 2.8.1
     optionalDependencies:
-      aws-amplify: 6.15.1
+      aws-amplify: 6.15.3
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
       - '@xstate/fsm'
       - xstate
 
-  '@aws-amplify/ui@6.10.3(@aws-amplify/core@6.12.1)(aws-amplify@6.15.1)(xstate@4.38.3)':
+  '@aws-amplify/ui@6.10.3(@aws-amplify/core@6.12.3)(aws-amplify@6.15.3)(xstate@4.38.3)':
     dependencies:
-      '@aws-amplify/core': 6.12.1
-      aws-amplify: 6.15.1
+      '@aws-amplify/core': 6.12.3
+      aws-amplify: 6.15.3
       csstype: 3.1.3
       lodash: 4.17.21
       tslib: 2.8.1
@@ -5774,13 +5800,13 @@ snapshots:
       '@aws-crypto/util': 5.2.0
       '@aws-sdk/types': 3.609.0
       '@aws-sdk/util-locate-window': 3.804.0
-      '@smithy/util-utf8': 2.3.0
+      '@smithy/util-utf8': 2.0.0
       tslib: 2.8.1
 
   '@aws-crypto/sha256-js@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.609.0
+      '@aws-sdk/types': 3.840.0
       tslib: 2.8.1
 
   '@aws-crypto/supports-web-crypto@5.2.0':
@@ -5789,7 +5815,7 @@ snapshots:
 
   '@aws-crypto/util@5.2.0':
     dependencies:
-      '@aws-sdk/types': 3.609.0
+      '@aws-sdk/types': 3.840.0
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
@@ -6224,6 +6250,11 @@ snapshots:
   '@aws-sdk/types@3.609.0':
     dependencies:
       '@smithy/types': 3.7.2
+      tslib: 2.8.1
+
+  '@aws-sdk/types@3.840.0':
+    dependencies:
+      '@smithy/types': 4.3.1
       tslib: 2.8.1
 
   '@aws-sdk/util-endpoints@3.614.0':
@@ -6798,16 +6829,27 @@ snapshots:
     dependencies:
       '@floating-ui/utils': 0.2.9
 
+  '@floating-ui/core@1.7.2':
+    dependencies:
+      '@floating-ui/utils': 0.2.10
+
   '@floating-ui/dom@1.7.1':
     dependencies:
       '@floating-ui/core': 1.7.1
       '@floating-ui/utils': 0.2.9
 
-  '@floating-ui/react-dom@2.1.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@floating-ui/dom@1.7.2':
     dependencies:
-      '@floating-ui/dom': 1.7.1
+      '@floating-ui/core': 1.7.2
+      '@floating-ui/utils': 0.2.10
+
+  '@floating-ui/react-dom@2.1.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@floating-ui/dom': 1.7.2
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+
+  '@floating-ui/utils@0.2.10': {}
 
   '@floating-ui/utils@0.2.9': {}
 
@@ -6857,12 +6899,12 @@ snapshots:
 
   '@istanbuljs/schema@0.1.3': {}
 
-  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0))':
+  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))':
     dependencies:
       glob: 10.4.5
       magic-string: 0.27.0
       react-docgen-typescript: 2.4.0(typescript@5.8.3)
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
     optionalDependencies:
       typescript: 5.8.3
 
@@ -6876,6 +6918,12 @@ snapshots:
 
   '@jridgewell/set-array@1.2.1': {}
 
+  '@jridgewell/source-map@0.3.10':
+    dependencies:
+      '@jridgewell/gen-mapping': 0.3.8
+      '@jridgewell/trace-mapping': 0.3.25
+    optional: true
+
   '@jridgewell/sourcemap-codec@1.5.0': {}
 
   '@jridgewell/trace-mapping@0.3.25':
@@ -6888,12 +6936,12 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@julr/vite-plugin-validate-env@1.3.0(vite@5.4.19(@types/node@22.16.0))(zod@3.25.72)':
+  '@julr/vite-plugin-validate-env@1.3.0(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))(zod@3.25.72)':
     dependencies:
       '@poppinss/cliui': 6.4.3
       '@poppinss/validator-lite': 1.0.3
       unconfig: 0.6.1
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
     optionalDependencies:
       zod: 3.25.72
     transitivePeerDependencies:
@@ -7228,7 +7276,7 @@ snapshots:
 
   '@radix-ui/react-popper@1.2.7(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@floating-ui/react-dom': 2.1.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@floating-ui/react-dom': 2.1.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-arrow': 1.1.7(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-compose-refs': 1.1.2(@types/react@18.3.23)(react@18.3.1)
       '@radix-ui/react-context': 1.1.2(@types/react@18.3.23)(react@18.3.1)
@@ -7680,6 +7728,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@smithy/types@4.3.1':
+    dependencies:
+      tslib: 2.8.1
+
   '@smithy/url-parser@3.0.11':
     dependencies:
       '@smithy/querystring-parser': 3.0.11
@@ -7897,13 +7949,13 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@storybook/builder-vite@8.6.14(storybook@8.6.14(prettier@3.6.2))(vite@5.4.19(@types/node@22.16.0))':
+  '@storybook/builder-vite@8.6.14(storybook@8.6.14(prettier@3.6.2))(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))':
     dependencies:
       '@storybook/csf-plugin': 8.6.14(storybook@8.6.14(prettier@3.6.2))
       browser-assert: 1.2.1
       storybook: 8.6.14(prettier@3.6.2)
       ts-dedent: 2.2.0
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
 
   '@storybook/components@8.6.14(storybook@8.6.14(prettier@3.6.2))':
     dependencies:
@@ -7962,11 +8014,11 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       storybook: 8.6.14(prettier@3.6.2)
 
-  '@storybook/react-vite@8.6.14(@storybook/test@8.6.14(storybook@8.6.14(prettier@3.6.2)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.44.0)(storybook@8.6.14(prettier@3.6.2))(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0))':
+  '@storybook/react-vite@8.6.14(@storybook/test@8.6.14(storybook@8.6.14(prettier@3.6.2)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.44.0)(storybook@8.6.14(prettier@3.6.2))(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))':
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0))
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))
       '@rollup/pluginutils': 5.2.0(rollup@4.44.0)
-      '@storybook/builder-vite': 8.6.14(storybook@8.6.14(prettier@3.6.2))(vite@5.4.19(@types/node@22.16.0))
+      '@storybook/builder-vite': 8.6.14(storybook@8.6.14(prettier@3.6.2))(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))
       '@storybook/react': 8.6.14(@storybook/test@8.6.14(storybook@8.6.14(prettier@3.6.2)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(storybook@8.6.14(prettier@3.6.2))(typescript@5.8.3)
       find-up: 5.0.0
       magic-string: 0.30.17
@@ -7976,7 +8028,7 @@ snapshots:
       resolve: 1.22.10
       storybook: 8.6.14(prettier@3.6.2)
       tsconfig-paths: 4.2.0
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
     optionalDependencies:
       '@storybook/test': 8.6.14(storybook@8.6.14(prettier@3.6.2))
     transitivePeerDependencies:
@@ -8339,11 +8391,11 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-basic-ssl@1.2.0(vite@5.4.19(@types/node@22.16.0))':
+  '@vitejs/plugin-basic-ssl@1.2.0(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))':
     dependencies:
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
 
-  '@vitejs/plugin-react@4.6.0(vite@5.4.19(@types/node@22.16.0))':
+  '@vitejs/plugin-react@4.6.0(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))':
     dependencies:
       '@babel/core': 7.27.4
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.27.4)
@@ -8351,7 +8403,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.19
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -8369,7 +8421,7 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@22.16.0)(@vitest/ui@3.2.4)
+      vitest: 2.1.9(@types/node@22.16.0)(@vitest/ui@3.2.4)(terser@5.43.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -8380,13 +8432,13 @@ snapshots:
       chai: 5.2.0
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.9(vite@5.4.19(@types/node@22.16.0))':
+  '@vitest/mocker@2.1.9(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))':
     dependencies:
       '@vitest/spy': 2.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
 
   '@vitest/pretty-format@2.1.9':
     dependencies:
@@ -8424,7 +8476,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
-      vitest: 2.1.9(@types/node@22.16.0)(@vitest/ui@3.2.4)
+      vitest: 2.1.9(@types/node@22.16.0)(@vitest/ui@3.2.4)(terser@5.43.1)
 
   '@vitest/utils@2.1.9':
     dependencies:
@@ -9049,15 +9101,15 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  aws-amplify@6.15.1:
+  aws-amplify@6.15.3:
     dependencies:
-      '@aws-amplify/analytics': 7.0.82(@aws-amplify/core@6.12.1)
-      '@aws-amplify/api': 6.3.13(@aws-amplify/core@6.12.1)
-      '@aws-amplify/auth': 6.13.1(@aws-amplify/core@6.12.1)
-      '@aws-amplify/core': 6.12.1
-      '@aws-amplify/datastore': 5.0.84(@aws-amplify/core@6.12.1)
-      '@aws-amplify/notifications': 2.0.82(@aws-amplify/core@6.12.1)
-      '@aws-amplify/storage': 6.9.1(@aws-amplify/core@6.12.1)
+      '@aws-amplify/analytics': 7.0.84(@aws-amplify/core@6.12.3)
+      '@aws-amplify/api': 6.3.15(@aws-amplify/core@6.12.3)
+      '@aws-amplify/auth': 6.13.3(@aws-amplify/core@6.12.3)
+      '@aws-amplify/core': 6.12.3
+      '@aws-amplify/datastore': 5.0.86(@aws-amplify/core@6.12.3)
+      '@aws-amplify/notifications': 2.0.84(@aws-amplify/core@6.12.3)
+      '@aws-amplify/storage': 6.9.3(@aws-amplify/core@6.12.3)
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
@@ -9156,6 +9208,9 @@ snapshots:
       update-browserslist-db: 1.1.3(browserslist@4.25.0)
 
   buffer-crc32@0.2.13: {}
+
+  buffer-from@1.1.2:
+    optional: true
 
   buffer@4.9.2:
     dependencies:
@@ -9304,6 +9359,9 @@ snapshots:
   commander@10.0.1: {}
 
   commander@13.1.0: {}
+
+  commander@2.20.3:
+    optional: true
 
   commander@4.1.1: {}
 
@@ -11131,6 +11189,12 @@ snapshots:
 
   source-map-js@1.2.1: {}
 
+  source-map-support@0.5.21:
+    dependencies:
+      buffer-from: 1.1.2
+      source-map: 0.6.1
+    optional: true
+
   source-map@0.5.7: {}
 
   source-map@0.6.1: {}
@@ -11328,6 +11392,14 @@ snapshots:
 
   terminal-size@4.0.0: {}
 
+  terser@5.43.1:
+    dependencies:
+      '@jridgewell/source-map': 0.3.10
+      acorn: 8.15.0
+      commander: 2.20.3
+      source-map-support: 0.5.21
+    optional: true
+
   test-exclude@7.0.1:
     dependencies:
       '@istanbuljs/schema': 0.1.3
@@ -11513,6 +11585,8 @@ snapshots:
       is-typed-array: 1.1.15
       which-typed-array: 1.1.19
 
+  uuid@11.1.0: {}
+
   uuid@8.0.0: {}
 
   uuid@9.0.1: {}
@@ -11532,13 +11606,13 @@ snapshots:
       - rollup
       - supports-color
 
-  vite-node@2.1.9(@types/node@22.16.0):
+  vite-node@2.1.9(@types/node@22.16.0)(terser@5.43.1):
     dependencies:
       cac: 6.7.14
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 1.1.2
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -11550,25 +11624,25 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-chunk-split@0.5.0(vite@5.4.19(@types/node@22.16.0)):
+  vite-plugin-chunk-split@0.5.0(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1)):
     dependencies:
       es-module-lexer: 1.7.0
       import-meta-resolve: 4.1.0
       magic-string: 0.30.17
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
 
-  vite-plugin-svgr@4.3.0(rollup@4.44.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0)):
+  vite-plugin-svgr@4.3.0(rollup@4.44.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1)):
     dependencies:
       '@rollup/pluginutils': 5.2.0(rollup@4.44.0)
       '@svgr/core': 8.1.0(typescript@5.8.3)
       '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0(typescript@5.8.3))
-      vite: 5.4.19(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
     transitivePeerDependencies:
       - rollup
       - supports-color
       - typescript
 
-  vite@5.4.19(@types/node@22.16.0):
+  vite@5.4.19(@types/node@22.16.0)(terser@5.43.1):
     dependencies:
       esbuild: 0.25.5
       postcss: 8.5.6
@@ -11576,11 +11650,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.16.0
       fsevents: 2.3.3
+      terser: 5.43.1
 
-  vitest@2.1.9(@types/node@22.16.0)(@vitest/ui@3.2.4):
+  vitest@2.1.9(@types/node@22.16.0)(@vitest/ui@3.2.4)(terser@5.43.1):
     dependencies:
       '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@5.4.19(@types/node@22.16.0))
+      '@vitest/mocker': 2.1.9(vite@5.4.19(@types/node@22.16.0)(terser@5.43.1))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.9
       '@vitest/snapshot': 2.1.9
@@ -11596,8 +11671,8 @@ snapshots:
       tinyexec: 0.3.2
       tinypool: 1.1.1
       tinyrainbow: 1.2.0
-      vite: 5.4.19(@types/node@22.16.0)
-      vite-node: 2.1.9(@types/node@22.16.0)
+      vite: 5.4.19(@types/node@22.16.0)(terser@5.43.1)
+      vite-node: 2.1.9(@types/node@22.16.0)(terser@5.43.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.16.0

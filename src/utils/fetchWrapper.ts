@@ -89,7 +89,6 @@ export async function fetcher<T>(
     } else if (res.status === 404) {
       errorMessage += ' (Endpoint not found - check API Gateway routes)';
     }
-
     console.error('❌ Fetch error:', errorMessage);
     throw new Error(errorMessage);
   }

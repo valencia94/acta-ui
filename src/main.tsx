@@ -44,43 +44,20 @@ const configureAmplify = async () => {
   if (window.awsmobile) {
     console.log('✅ AWS config found, configuring Amplify:', window.awsmobile);
     
-    // Complete AWS Amplify v6 dual-flow configuration (User Pool + Identity Pool + API + Storage)
-    const amplifyConfig = {
-      Auth: {
-        Cognito: {
-          userPoolId: 'us-east-2_FyHLtOhiY',
-          userPoolClientId: 'dshos5iou44tuach7ta3ici5m',
-          identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-          loginWith: {
-            oauth: {
-              domain: 'us-east-2-fyhltohiy.auth.us-east-2.amazoncognito.com',
-              scopes: ['email', 'openid', 'profile'],
-              redirectSignIn: ['https://d7t9x3j66yd8k.cloudfront.net/'],
-              redirectSignOut: ['https://d7t9x3j66yd8k.cloudfront.net/login'],
-              responseType: 'code' as const
-            }
-          }
-        }
-      },
-      API: {
-        REST: {
-          ActaAPI: {
-            endpoint: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod',
-            region: 'us-east-2'
-          }
-        }
-      },
-      Storage: {
-        S3: {
-          bucket: 'projectplace-dv-2025-x9a7b',
-          region: 'us-east-2'
-        }
-      }
-    };
+    // Ensure Identity Pool configuration is included
+    if (!window.awsmobile.aws_cognito_identity_pool_id) {
+      console.warn('⚠️ Identity Pool ID not found in window.awsmobile, might affect DynamoDB access');
+    }
+    
+    // Ensure Auth configuration is included
+    if (!window.awsmobile.Auth) {
+      console.warn('⚠️ Auth configuration not found in window.awsmobile');
+    }
     
     try {
-      Amplify.configure(amplifyConfig);
-      console.log('✅ Amplify configured successfully with dual-flow (User Pool + Identity Pool + API + Storage)');
+      // AWS Amplify v6 configuration - using the new v6 structure
+      Amplify.configure(window.awsmobile);
+      console.log('✅ Amplify configured successfully with both User Pool and Identity Pool');
     } catch (err) {
       console.error('❌ Failed to configure Amplify:', err);
     }

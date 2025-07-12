@@ -1,6 +1,10 @@
-// tailwind.config.js
 module.exports = {
-  content: ['./index.html', './src/**/*.{ts,tsx,html}'],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}', './src/**/*.css'],
+  safelist: [
+    'peer', 'peer-focus', 'peer-placeholder-shown',
+    'peer-[:not(:placeholder-shown)]', 'peer-[&:not(:placeholder-shown)]',
+    'text-xs', 'top-2', 'text-green-600', 'rounded-xl', 'bg-white', 'text-gray-900', 'h-12'
+  ],
   theme: {
     extend: {
       colors: {

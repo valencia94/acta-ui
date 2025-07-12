@@ -7,13 +7,14 @@ import {
   signIn,
   signOut,
   signUp,
-} from '@aws-amplify/auth';
+} from 'aws-amplify/auth';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import { skipAuth } from '@/env.variables';
+import awsExports from '@/aws-exports';
 
 interface FormData {
   email: string;
@@ -96,32 +97,101 @@ export default function Login() {
 
   async function handleSignIn({ email, password }: FormData) {
     console.log('🔐 Starting sign-in process...');
-    const result = await signIn({ username: email, password });
-    console.log('🔐 Sign-in result:', result);
+    try {
+      // Use module import for AWS Amplify config
+      if (!awsExports || !awsExports.aws_user_pools_id || !awsExports.aws_user_pools_web_client_id) {
+        console.error('❌ AWS Amplify configuration not found or incomplete!', awsExports);
+        setError('Authentication configuration not loaded. Please refresh the page or contact support.');
+        return;
+      }
 
-    if (result.isSignedIn) {
-      console.log('✅ User is signed in, fetching session...');
-      const session = await fetchAuthSession();
-      console.log('🎫 Session:', session);
+      // Log configuration for debugging
+      console.log('📋 AWS Configuration:', {
+        region: awsExports.aws_project_region,
+        userPoolId: awsExports.aws_user_pools_id,
+        identityPoolId: awsExports.aws_cognito_identity_pool_id,
+        oauth: awsExports.oauth?.domain ? 'Configured' : 'Not configured'
+      });
 
-      const token = session.tokens?.idToken?.toString() ?? '';
-      console.log('🎫 Token length:', token.length);
+      const result = await signIn({ username: email, password });
+      console.log('🔐 Sign-in result:', result);
 
-      localStorage.setItem('ikusi.jwt', token);
-      console.log('💾 Token saved to localStorage');
+      if (result.isSignedIn) {
+        console.log('✅ User is signed in, fetching session...');
+        // Get a fresh session with tokens
+        const session = await fetchAuthSession({ forceRefresh: true });
+        console.log('🎫 Session data:', {
+          hasTokens: !!session.tokens,
+          hasIdToken: !!session.tokens?.idToken,
+          hasAccessToken: !!session.tokens?.accessToken,
+          hasCredentials: !!session.credentials,
+        });
 
-      // Add a small delay to ensure localStorage is written
-      await new Promise(resolve => setTimeout(resolve, 100));
+        // Additional check for Identity Pool credentials which are needed for DynamoDB
+        if (!session.credentials) {
+          console.warn('⚠️ No AWS credentials in session - Identity Pool may not be configured correctly');
+        }
 
-      // Dispatch a custom event to notify App component
-      window.dispatchEvent(new Event('auth-success'));
-      console.log('📢 Auth success event dispatched');
+        if (!session.tokens?.idToken) {
+          console.error('❌ No ID token in session after login!');
+          setError('Login successful but no token received. Please try again.');
+          return;
+        }
 
-      // Force a page reload to ensure clean state
-      console.log('🔄 Reloading page to ensure clean authentication state...');
-      window.location.href = '/dashboard';
-    } else {
-      console.log('❌ Sign-in failed or incomplete');
+        const token = session.tokens.idToken.toString();
+        console.log('🎫 Token received, length:', token.length);
+
+        // Log token details for debugging
+        try {
+          const tokenParts = token.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            console.log('🔍 Token payload:', {
+              sub: payload.sub,
+              email: payload.email,
+              exp: new Date(payload.exp * 1000).toISOString(),
+              groups: payload['cognito:groups'] || 'None',
+            });
+          }
+        } catch (e) {
+          console.log('⚠️ Could not parse token parts');
+        }
+
+        // Store token in localStorage
+        localStorage.setItem('ikusi.jwt', token);
+        console.log('💾 Token saved to localStorage');
+
+        // Dispatch a custom event to notify App component
+        window.dispatchEvent(new Event('auth-success'));
+        console.log('📢 Auth success event dispatched');
+
+        console.log('🔄 Navigating to dashboard...');
+        nav('/dashboard');
+      } else {
+        console.log('❌ Sign-in failed or incomplete');
+        setError('Login was not completed. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      let errorMessage = 'Login failed: Unknown error';
+      if (error instanceof Error) {
+        if (error.message.includes('UserPool')) {
+          errorMessage = 'Authentication service not configured correctly. Please try again later or contact support.';
+        } else if (error.message.includes('UserNotConfirmed')) {
+          errorMessage = 'Email not verified. Please check your email for a verification code.';
+          setAuthMode('confirm');
+          setUserEmail(email);
+        } else if (error.message.includes('NotAuthorizedException')) {
+          errorMessage = 'Incorrect username or password.';
+        } else if (error.message.includes('UserNotFoundException')) {
+          errorMessage = 'Account not found. Please check your email address.';
+        } else if (error.message.includes('TooManyRequestsException')) {
+          errorMessage = 'Too many attempts. Please try again later.';
+        } else {
+          errorMessage = `Login failed: ${error.message}`;
+        }
+      }
+      setError(errorMessage);
     }
   }
 
