@@ -5,6 +5,7 @@ import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import Header from '@/components/Header';
+import DynamoProjectsView from '@/components/DynamoProjectsView';
 import { useAuth } from '@/hooks/useAuth';
 import { getProjectsByPM, generateActaDocument, getS3DownloadUrl, sendApprovalEmail, checkDocumentInS3, ProjectSummary } from '@/lib/api';
 import { getCurrentUser } from '@/lib/api-amplify';
@@ -20,6 +21,10 @@ interface ProjectStats {
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
+  const isAdmin =
+    user?.email === 'admin@ikusi.com' ||
+    user?.email === 'christian.valencia@ikusi.com' ||
+    user?.email === 'valencia942003@gmail.com';
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +67,6 @@ export default function Dashboard() {
     
     try {
       console.log('📋 Fetching projects from DynamoDB...');
-      const isAdmin = user.email === 'admin@ikusi.com' || user.email === 'christian.valencia@ikusi.com' || user.email === 'valencia942003@gmail.com';
       const projectData = await getProjectsByPM(user.email, isAdmin);
       setProjects(projectData);
       
@@ -299,6 +303,9 @@ export default function Dashboard() {
             </div>
           )}
         </motion.div>
+        <div className="my-10">
+          <DynamoProjectsView userEmail={user?.email || ''} isAdmin={isAdmin} />
+        </div>
       </div>
 
       {pdfPreviewUrl && (
