@@ -40,12 +40,6 @@
     "predeploy:check": "node scripts/predeploy-verify.cjs",
     "deploy": "pnpm run predeploy && pnpm run predeploy:check && aws s3 sync dist/ s3://acta-ui-frontend-prod/ --region us-east-2 && aws cloudfront create-invalidation --distribution-id EPQU7PVDLQXUA --paths '/*'"
   },
-  "dependencies": { ... },
-  "devDependencies": { ... },
-  "pnpm": { "overrides": { ... } }
-}
-
-  },
   "dependencies": {
     "@aws-amplify/auth": "^6.13.3",
     "@aws-amplify/ui-react": "^6.11.2",
