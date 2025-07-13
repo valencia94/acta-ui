@@ -6,7 +6,7 @@ import {
   resetPassword,
   signIn,
   signUp,
-} from '@aws-amplify/auth';
+} from 'aws-amplify/auth';
 
 // Test account creation
 export async function testCreateAccount() {
