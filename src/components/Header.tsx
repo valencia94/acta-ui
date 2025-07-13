@@ -1,5 +1,5 @@
 // src/components/Header.tsx
-import { signOut } from '@aws-amplify/auth';
+import { signOut } from 'aws-amplify/auth';
 import clsx from 'clsx';
 import { Grid, LogOut, Menu, Shield, User } from 'lucide-react';
 import { useState } from 'react';

@@ -1,5 +1,5 @@
 // src/utils/fetchWrapper.ts
-import { fetchAuthSession } from '@aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { skipAuth } from '@/env.variables';
 
 /**

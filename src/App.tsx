@@ -1,7 +1,7 @@
 // src/App.tsx
 
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
-import { fetchAuthSession } from '@aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 // Conditional imports for development debugging components
 import { lazy, Suspense } from 'react';

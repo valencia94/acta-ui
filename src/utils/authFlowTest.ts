@@ -4,7 +4,7 @@ import {
   getCurrentUser,
   signIn,
   signUp,
-} from '@aws-amplify/auth';
+} from 'aws-amplify/auth';
 
 console.log('🚀 Starting comprehensive authentication test...');
 

@@ -1,6 +1,6 @@
 // src/components/AuthDebugger.tsx
-import type { AuthSession, AuthUser } from '@aws-amplify/auth';
-import { fetchAuthSession, getCurrentUser } from '@aws-amplify/auth';
+import type { AuthSession, AuthUser } from 'aws-amplify/auth';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 
 export default function AuthDebugger() {
