@@ -1,0 +1,346 @@
+# ACTA-UI Pre-Deployment Configuration
+# Clean, comprehensive configuration for end-to-end production deployment
+# Date: July 12, 2025
+
+# Project Information
+project:
+  name: "ACTA-UI"
+  version: "1.0.0"
+  environment: "production"
+  region: "us-east-2"
+
+# AWS Infrastructure Configuration
+aws:
+  region: "us-east-2"
+  
+  # S3 Configuration
+  s3:
+    frontend_bucket: "acta-ui-frontend-prod"
+    storage_bucket: "projectplace-dv-2025-x9a7b"
+    versioning_enabled: true
+    public_read_access: true
+    
+  # CloudFront Configuration
+  cloudfront:
+    distribution_id: "EPQU7PVDLQXUA"
+    domain: "https://d7t9x3j66yd8k.cloudfront.net"
+    cache_behaviors:
+      - path_pattern: "*.js"
+        ttl: 86400
+      - path_pattern: "*.css"
+        ttl: 86400
+      - path_pattern: "*.html"
+        ttl: 300
+    
+  # API Gateway Configuration
+  api_gateway:
+    base_url: "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
+    stage: "prod"
+    cors_enabled: true
+    cors_origins:
+      - "https://d7t9x3j66yd8k.cloudfront.net"
+    
+  # Cognito Configuration
+  cognito:
+    user_pool_id: "us-east-2_FyHLtOhiY"
+    user_pool_client_id: "6l9bcpfvprkfpbj8oqshpn2bu1"
+    identity_pool_id: "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35"
+    domain: "acta-ui-prod.auth.us-east-2.amazoncognito.com"
+    
+  # DynamoDB Configuration
+  dynamodb:
+    table_name: "ProjectPlace_DataExtrator_landing_table_v2"
+    region: "us-east-2"
+    
+  # Lambda Functions
+  lambda:
+    functions:
+      - name: "acta-document-generator"
+        runtime: "python3.9"
+        timeout: 300
+      - name: "acta-email-service"
+        runtime: "python3.9"
+        timeout: 60
+      - name: "acta-pm-manager"
+        runtime: "python3.9"
+        timeout: 30
+
+# Frontend Build Configuration
+frontend:
+  framework: "React + Vite"
+  build_command: "pnpm run build"
+  build_directory: "dist"
+  
+  # Critical Dependencies
+  dependencies:
+    amplify: "^6.0.0"
+    react: "^18.3.1"
+    tailwind: "^3.4.0"
+    framer_motion: "^12.0.0"
+    
+  # Environment Variables (Production)
+  environment_variables:
+    VITE_API_BASE_URL: "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod"
+    VITE_COGNITO_POOL_ID: "us-east-2_FyHLtOhiY"
+    VITE_COGNITO_POOL_CLIENT_ID: "6l9bcpfvprkfpbj8oqshpn2bu1"
+    VITE_COGNITO_IDENTITY_POOL_ID: "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35"
+    VITE_COGNITO_DOMAIN: "acta-ui-prod.auth.us-east-2.amazoncognito.com"
+    VITE_CLOUDFRONT_URL: "https://d7t9x3j66yd8k.cloudfront.net"
+    VITE_CLOUDFRONT_DISTRIBUTION_ID: "EPQU7PVDLQXUA"
+    VITE_S3_STORAGE_BUCKET: "projectplace-dv-2025-x9a7b"
+    FRONTEND_DEPLOYMENT_BUCKET: "acta-ui-frontend-prod"
+    
+  # Critical Files
+  critical_files:
+    - "src/main.tsx"
+    - "src/App.tsx"
+    - "src/aws-exports.js"
+    - "public/index.html"
+    - "src/styles/variables.css"
+    - "src/tailwind.css"
+    - "src/styles/amplify-overrides.css"
+
+# Pre-Deployment Checks
+pre_deployment_checks:
+  
+  # Environment Verification
+  environment:
+    - check: "AWS CLI configured"
+      command: "aws sts get-caller-identity"
+      expected: "Account ID returned"
+      
+    - check: "Node.js version"
+      command: "node --version"
+      expected: "v18.x.x or higher"
+      
+    - check: "PNPM installed"
+      command: "pnpm --version"
+      expected: "Version returned"
+      
+  # Build Verification
+  build:
+    - check: "Dependencies installed"
+      command: "test -d node_modules"
+      expected: "Directory exists"
+      
+    - check: "Build succeeds"
+      command: "pnpm run build"
+      expected: "Build completes without errors"
+      
+    - check: "Build output exists"
+      command: "test -d dist"
+      expected: "Dist directory exists"
+      
+    - check: "Critical files present"
+      files:
+        - "dist/index.html"
+        - "dist/aws-exports.js"
+        - "dist/assets/index*.js"
+        - "dist/assets/index*.css"
+        
+  # AWS Infrastructure Verification
+  aws_infrastructure:
+    - check: "S3 bucket accessible"
+      command: "aws s3 ls s3://acta-ui-frontend-prod"
+      expected: "Bucket accessible"
+      
+    - check: "CloudFront distribution active"
+      command: "aws cloudfront get-distribution --id EPQU7PVDLQXUA"
+      expected: "Distribution status: Deployed"
+      
+    - check: "API Gateway accessible"
+      command: "curl -s https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/health"
+      expected: "HTTP 200 response"
+      
+    - check: "Cognito User Pool exists"
+      command: "aws cognito-idp describe-user-pool --user-pool-id us-east-2_FyHLtOhiY"
+      expected: "User pool details returned"
+      
+    - check: "DynamoDB table accessible"
+      command: "aws dynamodb describe-table --table-name ProjectPlace_DataExtrator_landing_table_v2"
+      expected: "Table status: ACTIVE"
+
+# Deployment Steps
+deployment_steps:
+  
+  # Step 1: Pre-deployment validation
+  - step: "pre_validation"
+    description: "Run all pre-deployment checks"
+    commands:
+      - "echo 'Starting pre-deployment validation...'"
+      - "pnpm run type-check"
+      - "pnpm run lint"
+      
+  # Step 2: Build application
+  - step: "build"
+    description: "Build the application for production"
+    commands:
+      - "echo 'Building application...'"
+      - "pnpm run build"
+      - "ls -la dist/"
+      
+  # Step 3: Deploy to S3
+  - step: "deploy_s3"
+    description: "Deploy built files to S3"
+    commands:
+      - "echo 'Deploying to S3...'"
+      - "aws s3 sync dist/ s3://acta-ui-frontend-prod --delete"
+      - "aws s3 cp dist/aws-exports.js s3://acta-ui-frontend-prod/aws-exports.js"
+      
+  # Step 4: Invalidate CloudFront
+  - step: "invalidate_cloudfront"
+    description: "Invalidate CloudFront cache"
+    commands:
+      - "echo 'Invalidating CloudFront...'"
+      - "aws cloudfront create-invalidation --distribution-id EPQU7PVDLQXUA --paths '/*'"
+      
+  # Step 5: Post-deployment verification
+  - step: "post_validation"
+    description: "Verify deployment success"
+    commands:
+      - "echo 'Verifying deployment...'"
+      - "curl -s https://d7t9x3j66yd8k.cloudfront.net | grep -q 'ACTA-UI'"
+      - "curl -s https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/health"
+
+# Critical UI Components
+ui_components:
+  
+  # Authentication Flow
+  authentication:
+    - component: "Login page"
+      file: "src/pages/Login.tsx"
+      dependencies: ["Cognito User Pool", "JWT tokens"]
+      
+    - component: "Auth context"
+      file: "src/hooks/useAuth.tsx"
+      dependencies: ["Amplify Auth", "Token management"]
+      
+  # Dashboard Components
+  dashboard:
+    - component: "Main Dashboard"
+      file: "src/pages/Dashboard.tsx"
+      dependencies: ["DynamoDB", "API Gateway", "S3"]
+      
+    - component: "Project Manager"
+      file: "src/components/DynamoProjectsView.tsx"
+      dependencies: ["DynamoDB", "Project data"]
+      
+    - component: "Action Buttons"
+      functionality: ["Generate", "Download PDF", "Download DOCX", "Send Email", "Copy ID"]
+      dependencies: ["API Gateway", "S3", "Lambda functions"]
+      
+  # Admin Components
+  admin:
+    - component: "Admin Dashboard"
+      file: "src/pages/AdminDashboard.tsx"
+      dependencies: ["Admin permissions", "All projects access"]
+
+# API Endpoints Required
+api_endpoints:
+  - endpoint: "/health"
+    method: "GET"
+    auth_required: false
+    description: "Health check endpoint"
+    
+  - endpoint: "/api/pm-manager/all-projects"
+    method: "GET"
+    auth_required: true
+    description: "Get all projects for PM"
+    
+  - endpoint: "/api/generate-acta"
+    method: "POST"
+    auth_required: true
+    description: "Generate ACTA document"
+    
+  - endpoint: "/api/download-acta/{id}"
+    method: "GET"
+    auth_required: true
+    description: "Download ACTA document"
+    
+  - endpoint: "/api/send-approval-email"
+    method: "POST"
+    auth_required: true
+    description: "Send approval email"
+    
+  - endpoint: "/api/project-summary/{id}"
+    method: "GET"
+    auth_required: true
+    description: "Get project summary"
+
+# Success Criteria
+success_criteria:
+  
+  # Build Success
+  build:
+    - "Build completes without errors"
+    - "All TypeScript checks pass"
+    - "All ESLint checks pass"
+    - "Bundle size under 2MB"
+    - "All CSS properly bundled"
+    
+  # Deployment Success
+  deployment:
+    - "All files uploaded to S3"
+    - "CloudFront cache invalidated"
+    - "Website accessible via CloudFront URL"
+    - "All static assets loading"
+    
+  # Functionality Success
+  functionality:
+    - "Login page loads and accepts credentials"
+    - "Dashboard loads with project data"
+    - "All 5 action buttons functional"
+    - "API calls return expected responses"
+    - "Document generation works"
+    - "Email sending works"
+    - "Downloads work correctly"
+    
+  # Performance Success
+  performance:
+    - "Initial page load under 3 seconds"
+    - "Interactive within 5 seconds"
+    - "API responses under 2 seconds"
+    - "No console errors"
+
+# Rollback Plan
+rollback:
+  triggers:
+    - "Build failures"
+    - "Deployment errors"
+    - "Functionality failures"
+    - "Performance degradation"
+    
+  steps:
+    - "Stop current deployment"
+    - "Restore previous S3 version"
+    - "Invalidate CloudFront cache"
+    - "Verify rollback success"
+    - "Notify stakeholders"
+
+# Monitoring & Alerts
+monitoring:
+  - metric: "CloudFront cache hit ratio"
+    threshold: "> 80%"
+    
+  - metric: "API Gateway error rate"
+    threshold: "< 5%"
+    
+  - metric: "Lambda function duration"
+    threshold: "< 30 seconds"
+    
+  - metric: "DynamoDB throttling"
+    threshold: "0 throttles"
+
+# Documentation
+documentation:
+  - file: "README.md"
+    content: "Project overview and setup instructions"
+    
+  - file: "DEPLOYMENT.md"
+    content: "Deployment procedures and troubleshooting"
+    
+  - file: "API.md"
+    content: "API endpoint documentation"
+    
+  - file: "BUTTON_CONNECTIVITY_VALIDATION.md"
+    content: "Button functionality validation results"
