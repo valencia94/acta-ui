@@ -2,7 +2,7 @@
 // 🖌️ CRITICAL: Import global styles & design tokens FIRST
 import "@/styles/variables.css"; // CSS custom props (color, spacing, etc.)
 import "@/tailwind.css"; // Tailwind utilities
-import "aws-amplify/ui-react/styles.css"; // Amplify UI default styles
+import "@aws-amplify/ui-react/styles.css"; // Amplify UI default styles
 import "@/styles/amplify-overrides.css"; // Amplify UI theme overrides
 
 // Import critical functions to ensure they're included in the build
