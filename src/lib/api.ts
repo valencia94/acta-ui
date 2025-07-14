@@ -6,6 +6,86 @@ import { apiGet, apiPost, getCurrentUser } from './api-amplify';
 
 const BASE = apiBaseUrl;
 
+/** Basic API helpers used by the Dashboard buttons */
+export async function generateActa(projectId: string): Promise<any> {
+  const token = await getAuthToken();
+  const res = await fetch(`${BASE}/extract-project-place/${projectId}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => res.statusText);
+    throw new Error(`generateActa failed: ${txt}`);
+  }
+  return res.json();
+}
+
+export async function getDownloadUrl(
+  projectId: string,
+  fmt: 'pdf' | 'docx'
+): Promise<string> {
+  const token = await getAuthToken();
+  const res = await fetch(
+    `${BASE}/download-acta/${projectId}?format=${fmt}`,
+    {
+      method: 'GET',
+      redirect: 'manual',
+      headers: {
+        Authorization: `Bearer ${token || ''}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+  if (res.status !== 302) {
+    const txt = await res.text().catch(() => res.statusText);
+    throw new Error(`Download failed: ${txt}`);
+  }
+  const url = res.headers.get('Location');
+  if (!url) throw new Error('Missing download URL');
+  return url;
+}
+
+export async function sendApprovalEmail(
+  actaId: string,
+  clientEmail: string
+): Promise<any> {
+  const token = await getAuthToken();
+  const res = await fetch(`${BASE}/send-approval-email`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ actaId, clientEmail }),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => res.statusText);
+    throw new Error(`sendApprovalEmail failed: ${txt}`);
+  }
+  return res.json();
+}
+
+export async function checkDocument(
+  projectId: string,
+  fmt: 'pdf' | 'docx'
+): Promise<boolean> {
+  const token = await getAuthToken();
+  const res = await fetch(
+    `${BASE}/check-document/${projectId}?format=${fmt}`,
+    {
+      method: 'HEAD',
+      headers: {
+        Authorization: `Bearer ${token || ''}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+  return res.ok;
+}
+
 /** Project summary as returned by your API */
 export interface ProjectSummary {
   project_id: string;
@@ -33,52 +113,7 @@ export function getTimeline(id: string): Promise<TimelineEvent[]> {
   return apiGet<TimelineEvent[]>(`${BASE}/timeline/${id}`);
 }
 
-/** ---------- ACTA DOWNLOAD (302 redirect) ---------- */
-export async function getDownloadUrl(
-  id: string,
-  format: 'pdf' | 'docx'
-): Promise<string> {
-  const endpoint = `${BASE}/download-acta/${id}?format=${format}`;
-  console.log(`🌐 Requesting download URL: ${endpoint}`);
 
-  const res = await fetch(endpoint, {
-    method: 'GET',
-    redirect: 'manual',
-  });
-
-  console.log(`📡 Download API response: ${res.status} ${res.statusText}`);
-  console.log(
-    '📋 Response headers:',
-    Object.fromEntries(res.headers.entries())
-  );
-
-  if (res.status !== 302) {
-    const errText = await res.text().catch(() => res.statusText);
-    console.error(`❌ Download API error: ${res.status} - ${errText}`);
-    throw new Error(`Download endpoint returned ${res.status}: ${errText}`);
-  }
-
-  const url = res.headers.get('Location');
-  console.log('📍 Location header:', url);
-
-  if (!url) {
-    console.error('❌ Missing Location header in 302 response');
-    throw new Error('Download endpoint missing Location header');
-  }
-
-  return url;
-}
-
-/** ---------- APPROVAL E-MAIL ---------- */
-export function sendApprovalEmail(
-  actaId: string,
-  clientEmail: string
-): Promise<{ message: string; token: string }> {
-  return apiPost<{ message: string; token: string }>(
-    `${BASE}/send-approval-email`,
-    { actaId, clientEmail }
-  );
-}
 
 /** ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
 export function extractProjectPlaceData(projectId: string): Promise<unknown> {
