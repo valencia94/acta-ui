@@ -1,126 +1,105 @@
-// src/main.tsx
-// 🖌️ CRITICAL: Import global styles & design tokens FIRST
-import "@/styles/variables.css"; // CSS custom props (color, spacing, etc.)
-import "@/tailwind.css"; // Tailwind utilities
-import "@aws-amplify/ui-react/styles.css"; // Amplify UI default styles
-import "@/styles/amplify-overrides.css"; // Amplify UI theme overrides
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import svgr from 'vite-plugin-svgr';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
+import fs from 'fs';
+import path from 'path';
 
-// Import critical functions to ensure they're included in the build
-import {
-  getSummary,
-  getTimeline,
-  getDownloadUrl,
-  sendApprovalEmail,
-  getProjectsByPM,
-  getAllProjects,
-} from "@/lib/api";
-import { fetcher, getAuthToken } from "@/utils/fetchWrapper";
+export default defineConfig({
+  root: '.',
+  publicDir: 'public',
 
-// 🔐 Amplify core import & configuration
-import { Amplify } from "aws-amplify";
-import React from "react";
-import ReactDOM from "react-dom/client";
+  /* ───────────────────────────────────────────────────────── plugins ── */
+  plugins: [
+    /* Copies the browser-compatible aws-exports.js produced by Amplify
+       into the final /dist so the app can fetch it at runtime. */
+    {
+      name: 'copy-aws-exports',
+      closeBundle() {
+        console.log('📋 Copying browser-compatible aws-exports.js to dist …');
+        if (fs.existsSync('public/aws-exports.js')) {
+          fs.mkdirSync('dist', { recursive: true });
+          fs.copyFileSync('public/aws-exports.js', 'dist/aws-exports.js');
+          console.log('✅ aws-exports.js copied!');
+        } else {
+          console.warn('⚠️  public/aws-exports.js not found – skipping copy');
+        }
+      }
+    },
 
-// Import hooks
-import "@/hooks/useAuth";
-import "@/hooks/useIdleLogout";
-import "@/hooks/useThemedFavicon";
+    react(),
+    svgr()
+  ],
 
-// AWS configuration is loaded via script tag in index.html
-declare global {
-  interface Window {
-    getSummary: typeof getSummary;
-    getTimeline: typeof getTimeline;
-    getDownloadUrl: typeof getDownloadUrl;
-    sendApprovalEmail: typeof sendApprovalEmail;
-    getProjectsByPM: typeof getProjectsByPM;
-    getAllProjects: typeof getAllProjects;
-    fetchWrapper: typeof fetcher;
-    getAuthToken: typeof getAuthToken;
-  }
-}
+  /* ──────────────────────────────────────────────── path resolution ── */
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
 
-// Declare awsmobile separately to avoid conflicts
-declare const awsmobile: any;
-let amplifyConfigured = false;
-
-// Enhanced Amplify configuration with proper waiting
-const configureAmplify = async () => {
-  if (amplifyConfigured) {
-    console.log("ℹ️ Amplify already configured");
-    return;
-  }
-  console.log("🔧 Attempting to configure Amplify...");
-
-  // Wait for aws-exports.js to load
-  let attempts = 0;
-  while (!window.awsmobile && attempts < 50) {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    attempts++;
-  }
-
-  if (window.awsmobile) {
-    console.log("✅ AWS config found, configuring Amplify:", window.awsmobile);
-
-    // Ensure Identity Pool configuration is included
-    if (
-      !window.awsmobile.Auth?.identityPoolId &&
-      !window.awsmobile.aws_cognito_identity_pool_id
-    ) {
-      console.warn(
-        "⚠️ Identity Pool ID not found in window.awsmobile, might affect DynamoDB access",
-      );
+      /* 🔑 Amplify v6 umbrella package alias
+         When any code does `import "@aws-amplify/core"` we point Vite to
+         the monolithic `aws-amplify` package that actually ships the code.
+         Remove this once you migrate fully to the new scoped packages. */
+      '@aws-amplify/core': 'aws-amplify'
     }
+  },
 
-    // Ensure Auth configuration is included
-    if (!window.awsmobile.Auth || !window.awsmobile.Auth.Cognito) {
-      console.warn("⚠️ Auth configuration incomplete in window.awsmobile");
+  /* ─────────────────────────────────────────────────── global defs ── */
+  define: {
+    __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString())
+  },
+
+  /* ────────────────────────────────────────────────────── CSS / PostCSS ── */
+  css: {
+    postcss: {
+      plugins: [tailwindcss(), autoprefixer()]
     }
+  },
 
-    try {
-      // AWS Amplify v6 configuration - using the new v6 structure
-      Amplify.configure(window.awsmobile);
-      amplifyConfigured = true;
-      console.log(
-        "✅ Amplify configured successfully with both User Pool and Identity Pool",
-      );
-    } catch (err) {
-      console.error("❌ Failed to configure Amplify:", err);
+  /* ───────────────────────────────────────────────────────── dev server ── */
+  server: {
+    host: true,
+    port: 3000,
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod',
+        changeOrigin: true,
+        rewrite: p => p.replace(/^\/api/, ''),
+        configure: proxy => {
+          proxy.on('error', (err, _req, _res) => console.log('proxy error', err));
+          proxy.on('proxyReq', (proxyReq, req) =>
+            console.log('→', req.method, req.url));
+          proxy.on('proxyRes', (proxyRes, req) =>
+            console.log('←', proxyRes.statusCode, req.url));
+        }
+      }
     }
-  } else {
-    console.error("❌ aws-exports.js failed to load after 5 seconds");
+  },
 
-    // Fallback to local import if window.awsmobile isn't available
-    try {
-      console.log("⚠️ Falling back to imported aws-exports.js...");
-      const awsExports = await import("@/aws-exports");
-      Amplify.configure(awsExports.default);
-      amplifyConfigured = true;
-      console.log("✅ Amplify configured with imported aws-exports.js");
-    } catch (err) {
-      console.error("❌ Failed to configure Amplify:", err);
+  preview: { port: 5000 },
+
+  /* ────────────────────────────────────────────────────────── build ── */
+  build: {
+    chunkSizeWarningLimit: 1024,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'pdf-viewer': ['react-pdf'],
+          vendor: ['react', 'react-dom'],
+          ui: ['framer-motion', 'lucide-react']
+        },
+        chunkFileNames: chunk => {
+          const name = chunk.facadeModuleId
+            ? path.basename(chunk.facadeModuleId, path.extname(chunk.facadeModuleId))
+            : 'chunk';
+          return `assets/${name}-[hash].js`;
+        },
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
     }
   }
-};
-
-//  Your root App component
-import App from "@/App";
-
-// Configure Amplify before rendering
-configureAmplify().then(() => {
-  ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  );
 });
-
-// Export critical functions to global window for testing
-window.getSummary = getSummary;
-window.getTimeline = getTimeline;
-window.getDownloadUrl = getDownloadUrl;
-window.sendApprovalEmail = sendApprovalEmail;
-window.getProjectsByPM = getProjectsByPM;
-window.getAllProjects = getAllProjects;
-window.fetchWrapper = fetcher;
-window.getAuthToken = getAuthToken;
