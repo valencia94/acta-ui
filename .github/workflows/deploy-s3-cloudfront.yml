@@ -43,10 +43,10 @@ jobs:
         with:
           version: 9.15.9
 
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: 'pnpm'
 
       - name: 📦 Install dependencies
