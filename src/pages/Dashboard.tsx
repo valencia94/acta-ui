@@ -14,7 +14,10 @@ import {
   getDownloadUrl,
   sendApprovalEmail,
   checkDocumentAvailability,
-} from '@/lib/api';
+  getProjectsByPM,
+  getSummary,
+  getTimeline,
+} from '@/lib/actaDataService';
 import { getCurrentUser } from '@/lib/api-amplify';
 
 // Lazy load PDF preview for better performance
