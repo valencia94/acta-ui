@@ -1,9 +1,9 @@
-// src/lib/api.ts – Unified API helper for ACTA‑UI buttons
+// src/lib/api.ts – Unified API helper for ACTA‑UI buttons
 // -----------------------------------------------------------
 // This **replaces** every previous version of api.ts in the repo. It wires the
 // five priority endpoints (Generate, Download PDF/DOCX, Preview PDF, Send
 // Approval, Check status) and makes sure all requests include a fresh Cognito
-// JWT.  Any component can now just import the functions below.
+// JWT. Any component can now just import the functions below.
 // -----------------------------------------------------------
 
 import {
@@ -17,19 +17,18 @@ import { getAuthToken } from '@/utils/fetchWrapper';
 
 /**
  * ---------------------------------------------------------------------------
- *  🔧 GLOBAL CONSTANTS
+ *  🔧 GLOBAL CONSTANTS
  * ---------------------------------------------------------------------------
  */
 export const BASE =
   apiBaseUrl ||
-  // fallback directly to prod Gateway (hard‑coded so staging still works)
   'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
 
 export const S3_BUCKET = s3Bucket || 'projectplace-dv-2025-x9a7b';
 export const AWS_REGION = s3Region || 'us-east-2';
 
 /** -------------------------------------------------------------------------
- * 🛠️ Utility – signed / authorised fetch
+ * 🛠️ Utility – signed / authorised fetch
  * --------------------------------------------------------------------------*/
 async function request<T = unknown>(
   endpoint: string,
@@ -40,7 +39,6 @@ async function request<T = unknown>(
     ...(options.headers || {}),
   };
 
-  // attach JWT when desired (default on)
   if (options.auth !== false) {
     const token = await getAuthToken().catch(() => undefined);
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -53,17 +51,16 @@ async function request<T = unknown>(
 
   if (!res.ok) {
     const txt = await res.text().catch(() => res.statusText);
-    throw new Error(`${endpoint} → ${res.status}: ${txt}`);
+    throw new Error(`${endpoint} → ${res.status}: ${txt}`);
   }
 
-  // "HEAD" responses have no body
   if (options.method === 'HEAD') return undefined as unknown as T;
-  if (options.redirect === 'manual') return res as unknown as T; // caller handles
+  if (options.redirect === 'manual') return res as unknown as T;
   return (await res.json()) as T;
 }
 
 /** -------------------------------------------------------------------------
- * 📘 Project metadata helpers (optional – kept for completeness)
+ * 📘 Project metadata helpers (optional)
  * --------------------------------------------------------------------------*/
 export interface ProjectSummary {
   project_id: string;
@@ -84,7 +81,7 @@ export const getTimeline = (id: string) =>
   request<TimelineEvent[]>(`/timeline/${id}`);
 
 /** -------------------------------------------------------------------------
- * 🏗️ 1. Generate ACTA (DOCX+PDF)
+ * 🏗️ 1. Generate ACTA (DOCX+PDF)
  * --------------------------------------------------------------------------*/
 export async function generateActaDocument(
   projectId: string,
@@ -115,8 +112,7 @@ export async function generateActaDocument(
 }
 
 /** -------------------------------------------------------------------------
- * 🏗️ 2 & 3. Download DOCX / PDF (and PDF Preview uses same URL)
- *   – returns a pre‑signed CloudFront URL via 302 → Location header
+ * 🏗️ 2 & 3. Download DOCX / PDF
  * --------------------------------------------------------------------------*/
 export async function getSignedDownloadUrl(
   projectId: string,
@@ -128,7 +124,7 @@ export async function getSignedDownloadUrl(
       method: 'GET',
       redirect: 'manual',
     }
-  )) as Response; // manual redirect branch
+  )) as Response;
 
   if (res.status !== 302) {
     const txt = await res.text().catch(() => res.statusText);
@@ -141,7 +137,7 @@ export async function getSignedDownloadUrl(
 }
 
 /** -------------------------------------------------------------------------
- * 🏗️ 4. Send approval e‑mail to client
+ * 🏗️ 4. Send approval e‑mail to client
  * --------------------------------------------------------------------------*/
 export const sendApprovalEmail = (actaId: string, clientEmail: string) =>
   request<{ message: string }>(`/send-approval-email`, {
@@ -150,7 +146,7 @@ export const sendApprovalEmail = (actaId: string, clientEmail: string) =>
   });
 
 /** -------------------------------------------------------------------------
- * 🏗️ 5. HEAD check → is document already in S3/CloudFront?
+ * 🏗️ 5. HEAD check → is document already in S3/CloudFront?
  * --------------------------------------------------------------------------*/
 export async function documentExists(
   projectId: string,
@@ -167,25 +163,19 @@ export async function documentExists(
 }
 
 /** -------------------------------------------------------------------------
- * ⭐ Convenience wrappers used by Dashboard buttons
+ * ⭐ Convenience wrappers used by Dashboard buttons
  * --------------------------------------------------------------------------*/
 export const api = {
-  // Health‑check (public)
   ping: () => request<{ status: string }>('/health', { auth: false }),
-  // Generate
   generateActaDocument,
-  // Download helpers
   getSignedDownloadUrl,
   documentExists,
-  // E‑mail
   sendApprovalEmail,
-  // Optional metadata
   getSummary,
   getTimeline,
 };
 
-// Make debug helpers available in the browser console (dev only)
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  // @ts-ignore – intentionally exposing for debugging
+  // @ts-ignore
   window.__actaApi = api;
 }
