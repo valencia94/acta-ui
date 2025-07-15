@@ -1,33 +1,39 @@
-// vite.config.ts
 import react from '@vitejs/plugin-react';
 import autoprefixer from 'autoprefixer';
-import fs from 'fs';
-import path from 'path';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 import svgr from 'vite-plugin-svgr';
+import path from 'path';
 
 export default defineConfig({
   root: '.',
   publicDir: 'public',
   plugins: [
+    react(),
+    svgr(),
     {
       name: 'copy-aws-exports',
-      closeBundle() {
-        console.log('📋 Copying browser-compatible aws-exports.js to dist folder...');
-        if (fs.existsSync('public/aws-exports.js')) {
-          if (!fs.existsSync('dist')) {
-            fs.mkdirSync('dist', { recursive: true });
+      closeBundle: async () => {
+        try {
+          if (typeof process !== 'undefined' && process.versions?.node) {
+            const fs = await import('fs');
+            console.log('📋 Copying browser-compatible aws-exports.js to dist folder...');
+
+            if (fs.existsSync('public/aws-exports.js')) {
+              if (!fs.existsSync('dist')) {
+                fs.mkdirSync('dist', { recursive: true });
+              }
+              fs.copyFileSync('public/aws-exports.js', 'dist/aws-exports.js');
+              console.log('✅ Browser-compatible aws-exports.js copied successfully!');
+            } else {
+              console.warn('❌ public/aws-exports.js not found!');
+            }
           }
-          fs.copyFileSync('public/aws-exports.js', 'dist/aws-exports.js');
-          console.log('✅ Browser-compatible aws-exports.js copied successfully!');
-        } else {
-          console.log('❌ public/aws-exports.js not found!');
+        } catch (err) {
+          console.warn('⚠️ Skipped aws-exports copy (likely non-Node build):', err.message);
         }
       }
     },
-    react(),
-    svgr(),
   ],
   resolve: {
     alias: {
@@ -39,10 +45,7 @@ export default defineConfig({
   },
   css: {
     postcss: {
-      plugins: [
-        tailwindcss(),
-        autoprefixer(),
-      ],
+      plugins: [tailwindcss(), autoprefixer()],
     },
   },
   server: {
@@ -59,10 +62,10 @@ export default defineConfig({
             console.log('proxy error', err);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
+            console.log('Sending Request to Target:', req.method, req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+            console.log('Received Response from Target:', proxyRes.statusCode, req.url);
           });
         },
       },
@@ -73,7 +76,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['fsevents'], // ✅ Prevent CI build error
+      external: ['fsevents'], // ✅ Avoid node-native conflicts
       output: {
         manualChunks: {
           'pdf-viewer': ['react-pdf'],
@@ -81,10 +84,10 @@ export default defineConfig({
           ui: ['framer-motion', 'lucide-react'],
         },
         chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId
+          const id = chunkInfo.facadeModuleId
             ? path.basename(chunkInfo.facadeModuleId, path.extname(chunkInfo.facadeModuleId))
             : 'chunk';
-          return `assets/${facadeModuleId}-[hash].js`;
+          return `assets/${id}-[hash].js`;
         },
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
@@ -93,4 +96,3 @@ export default defineConfig({
     chunkSizeWarningLimit: 1024,
   },
 });
-
