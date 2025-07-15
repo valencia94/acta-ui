@@ -1,7 +1,7 @@
 // vite.config.ts
 import react from '@vitejs/plugin-react';
 import autoprefixer from 'autoprefixer';
-import fs from "fs";
+import fs from 'fs';
 import path from 'path';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
@@ -12,17 +12,17 @@ export default defineConfig({
   publicDir: 'public',
   plugins: [
     {
-      name: "copy-aws-exports",
+      name: 'copy-aws-exports',
       closeBundle() {
-        console.log("📋 Copying browser-compatible aws-exports.js to dist folder...");
-        if (fs.existsSync("public/aws-exports.js")) {
-          if (!fs.existsSync("dist")) {
-            fs.mkdirSync("dist", { recursive: true });
+        console.log('📋 Copying browser-compatible aws-exports.js to dist folder...');
+        if (fs.existsSync('public/aws-exports.js')) {
+          if (!fs.existsSync('dist')) {
+            fs.mkdirSync('dist', { recursive: true });
           }
-          fs.copyFileSync("public/aws-exports.js", "dist/aws-exports.js");
-          console.log("✅ Browser-compatible aws-exports.js copied successfully!");
+          fs.copyFileSync('public/aws-exports.js', 'dist/aws-exports.js');
+          console.log('✅ Browser-compatible aws-exports.js copied successfully!');
         } else {
-          console.log("❌ public/aws-exports.js not found!");
+          console.log('❌ public/aws-exports.js not found!');
         }
       }
     },
@@ -65,14 +65,15 @@ export default defineConfig({
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
           });
         },
-      }
-    }
+      },
+    },
   },
   preview: {
     port: 5000,
   },
   build: {
     rollupOptions: {
+      external: ['fsevents'], // ✅ Prevent CI build error
       output: {
         manualChunks: {
           'pdf-viewer': ['react-pdf'],
@@ -92,3 +93,4 @@ export default defineConfig({
     chunkSizeWarningLimit: 1024,
   },
 });
+
