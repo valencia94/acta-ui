@@ -1,14 +1,25 @@
-import { defineConfig } from 'vitest/config';
+// vitest.config.ts
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   test: {
-    include: [
-      'src/**/*.{test,spec}.{ts,tsx}',
-      'tests/**/*.{test,spec}.{ts,tsx}',
-      '__tests__/**/*.{test,spec}.{ts,tsx}',
-    ],
-    exclude: ['tests/e2e.spec.ts', 'tests/e2e.live.spec.ts', 'node_modules/**'],
+    environment: 'jsdom',
     globals: true,
     setupFiles: ['tests/setup-vitest.ts'],
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'tests/**/*.test.{ts,tsx}',
+      '**/__tests__/**/*.{ts,tsx}',
+    ],
+    exclude: [
+      'node_modules',
+      'dist',
+      '**/e2e/**',
+      '**/playwright.*',
+    ],
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: './coverage',
+    },
   },
 });
