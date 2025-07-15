@@ -24,8 +24,6 @@
     "type-check": "tsc --noEmit",
     "check:env": "node scripts/check-env.cjs",
     "prepare": "node scripts/prepare.cjs"
-}
-
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.13.3",
