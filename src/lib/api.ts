@@ -79,7 +79,6 @@ export async function checkDocument(
       method: 'HEAD',
       headers: {
         Authorization: `Bearer ${token || ''}`,
-        'Content-Type': 'application/json',
       },
     }
   );
