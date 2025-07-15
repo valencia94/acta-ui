@@ -63,6 +63,8 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "vite": "5.0.12",
+    "rollup": "4.11.0",
     "@chakra-ui/form-control": "^2.2.0",
     "@chakra-ui/input": "^2.1.2",
     "@chakra-ui/react": "^3.22.0",
