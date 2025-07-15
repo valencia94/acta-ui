@@ -23,9 +23,9 @@
     "test": "vitest run",
     "type-check": "tsc --noEmit",
     "check:env": "node scripts/check-env.cjs",
-    "prepare": "node scripts/prepare.cjs"
+    "prepare": "node scripts/prepare.cjs",
     "test:cognito": "node test-cognito-login.js",
-    "test:cognito:browser": "node test-cognito-auth.js"
+    "test:cognito:browser": "node test-cognito-auth.js",
     "check-aws": "bash scripts/hashcheck-aws.sh",
     "predeploy": "pnpm run check-aws && pnpm run build && bash scripts/push-spa-routes.sh"
   },
