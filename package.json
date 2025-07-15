@@ -40,7 +40,7 @@
     "validate:auth": "node test-production-auth.js",
     "test:cognito": "node test-cognito-login.js",
     "test:cognito:browser": "node test-cognito-auth.js",
-    "deploy:manual": "aws s3 sync dist/ s3://acta-ui-frontend-prod/ --region us-east-2 && aws cloudfront create-invalidation --distribution-id EPQU7PVDLQXUA --paths '/*'"
+    "deploy": "bash scripts/push-spa-routes.sh"
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.13.3",
