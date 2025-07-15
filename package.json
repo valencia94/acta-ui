@@ -13,9 +13,6 @@
     "ci:check": "pnpm exec tsc --noEmit && pnpm exec eslint . --fix",
     "ci:test": "pnpm exec vitest --run --coverage",
     "ci": "pnpm run ci:check && pnpm run ci:test",
-    "build": "vite build",
-    "predeploy": "pnpm run build",
-    "deploy": "BUCKET=acta-ui-frontend-prod AWS_REGION=us-east-2 CLOUDFRONT_DIST_ID=EPQU7PVDLQXUA bash scripts/push-spa-routes.sh",
     "preview": "vite preview",
     "dev": "vite",
     "lint": "tsc --noEmit && eslint .",
@@ -27,7 +24,9 @@
     "test:cognito": "node test-cognito-login.js",
     "test:cognito:browser": "node test-cognito-auth.js",
     "check-aws": "bash scripts/hashcheck-aws.sh",
-    "predeploy": "pnpm run check-aws && pnpm run build && bash scripts/push-spa-routes.sh"
+    "build": "vite build",
+    "predeploy": "pnpm run check-aws && pnpm run build && bash scripts/push-spa-routes.sh",
+    "deploy": "pnpm run predeploy"
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.13.3",
