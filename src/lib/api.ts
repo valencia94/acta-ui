@@ -34,7 +34,7 @@ async function request<T = unknown>(
   endpoint: string,
   options: RequestInit & { auth?: boolean } = {}
 ): Promise<T> {
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
@@ -163,19 +163,63 @@ export async function documentExists(
 }
 
 /** -------------------------------------------------------------------------
- * ⭐ Convenience wrappers used by Dashboard buttons
+ * ⭐ Additional ACTA Project Helpers
  * --------------------------------------------------------------------------*/
-export const api = {
-  ping: () => request<{ status: string }>('/health', { auth: false }),
-  generateActaDocument,
-  getSignedDownloadUrl,
-  documentExists,
-  sendApprovalEmail,
-  getSummary,
-  getTimeline,
-};
+export interface PMProject {
+  id: string;
+  name: string;
+  pm: string;
+  status: string;
+  [k: string]: unknown;
+}
 
+export const checkDocumentInS3 = documentExists;
+export const getDownloadUrl = getSignedDownloadUrl;
+export const checkDocumentAvailability = documentExists;
+
+export async function getProjectsByPM(pmEmail: string, isAdmin: boolean): Promise<PMProject[]> {
+  return request<PMProject[]>(
+    `/projects-for-pm?email=${encodeURIComponent(pmEmail)}&admin=${isAdmin}`
+  );
+}
+
+export async function generateSummariesForPM(pmEmail: string): Promise<ProjectSummary[]> {
+  return request<ProjectSummary[]>(
+    `/project-summaries?email=${encodeURIComponent(pmEmail)}`
+  );
+}
+
+export async function getAllProjects(): Promise<PMProject[]> {
+  return request<PMProject[]>(`/all-projects`);
+}
+
+export async function getProjectSummaryForPM(projectId: string): Promise<ProjectSummary> {
+  return request<ProjectSummary>(`/project-summary/${projectId}`);
+}
+
+export async function getPMProjectsWithSummary(pmEmail: string): Promise<ProjectSummary[]> {
+  return request<ProjectSummary[]>(
+    `/projects-with-summary?email=${encodeURIComponent(pmEmail)}`
+  );
+}
+
+/** -------------------------------------------------------------------------
+ * 🧪 Dev Tools – expose helpers to browser
+ * --------------------------------------------------------------------------*/
 if (import.meta.env.DEV && typeof window !== 'undefined') {
   // @ts-ignore
-  window.__actaApi = api;
+  window.__actaApi = {
+    ping: () => request<{ status: string }>('/health', { auth: false }),
+    generateActaDocument,
+    getSignedDownloadUrl,
+    documentExists,
+    sendApprovalEmail,
+    getSummary,
+    getTimeline,
+    getProjectsByPM,
+    generateSummariesForPM,
+    getAllProjects,
+    getProjectSummaryForPM,
+    getPMProjectsWithSummary,
+  };
 }
