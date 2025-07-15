@@ -10,21 +10,20 @@
   },
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-"scripts": {
-  "ci:check": "pnpm exec tsc --noEmit && pnpm exec eslint . --fix",
-  "ci:test": "pnpm exec vitest --run --coverage",
-  "ci": "pnpm run ci:check && pnpm run ci:test",
-  "build": "vite build",
-  "predeploy": "pnpm run build",
-  "deploy": "BUCKET=acta-ui-frontend-prod AWS_REGION=us-east-2 CLOUDFRONT_DIST_ID=EPQU7PVDLQXUA bash scripts/push-spa-routes.sh",
-  "preview": "vite preview",
-  "dev": "vite",
-  "lint": "tsc --noEmit && eslint .",
-  "format": "prettier --write .",
-  "test": "vitest run",
-  "type-check": "tsc --noEmit",
-  "check:env": "node scripts/check-env.cjs",
-  "prepare": "node scripts/prepare.cjs"
+    "ci:check": "pnpm exec tsc --noEmit && pnpm exec eslint . --fix",
+    "ci:test": "pnpm exec vitest --run --coverage",
+    "ci": "pnpm run ci:check && pnpm run ci:test",
+    "build": "vite build",
+    "predeploy": "pnpm run build",
+    "deploy": "BUCKET=acta-ui-frontend-prod AWS_REGION=us-east-2 CLOUDFRONT_DIST_ID=EPQU7PVDLQXUA bash scripts/push-spa-routes.sh",
+    "preview": "vite preview",
+    "dev": "vite",
+    "lint": "tsc --noEmit && eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "type-check": "tsc --noEmit",
+    "check:env": "node scripts/check-env.cjs",
+    "prepare": "node scripts/prepare.cjs"
 }
 
   },
