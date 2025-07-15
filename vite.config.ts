@@ -1,64 +1,53 @@
 // vite.config.ts
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import svgr from 'vite-plugin-svgr';
-import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
 import fs from 'fs';
 import path from 'path';
+import tailwindcss from 'tailwindcss';
+import { defineConfig } from 'vite';
+import svgr from 'vite-plugin-svgr';
 
 export default defineConfig({
   root: '.',
   publicDir: 'public',
-
-  /* ───────────────────────────────────────────────────────── plugins ── */
   plugins: [
-    /* Copies the browser-compatible aws-exports.js produced by Amplify
-       into the final /dist so the app can fetch it at runtime. */
     {
       name: 'copy-aws-exports',
       closeBundle() {
-        console.log('📋 Copying browser-compatible aws-exports.js to dist …');
-        if (fs.existsSync('public/aws-exports.js')) {
-          fs.mkdirSync('dist', { recursive: true });
-          fs.copyFileSync('public/aws-exports.js', 'dist/aws-exports.js');
+        console.log('📋 Copying browser-compatible aws-exports.js to dist folder...');
+        const srcPath = 'public/aws-exports.js';
+        const destPath = 'dist/aws-exports.js';
+
+        if (fs.existsSync(srcPath)) {
+          if (!fs.existsSync('dist')) {
+            fs.mkdirSync('dist', { recursive: true });
+          }
+          fs.copyFileSync(srcPath, destPath);
           console.log('✅ aws-exports.js copied!');
         } else {
-          console.warn('⚠️  public/aws-exports.js not found – skipping copy');
+          console.warn('⚠️ aws-exports.js not found in public/. Skipping copy.');
         }
-      }
+      },
     },
-
     react(),
-    svgr()
+    svgr(),
   ],
-
-  /* ──────────────────────────────────────────────── path resolution ── */
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-
-      /* 🔑 Amplify v6 umbrella package alias
-         When any code does `import "@aws-amplify/core"` we point Vite to
-         the monolithic `aws-amplify` package that actually ships the code.
-         Remove this once you migrate fully to the new scoped packages. */
-      '@aws-amplify/core': 'aws-amplify'
-    }
+    },
   },
-
-  /* ─────────────────────────────────────────────────── global defs ── */
   define: {
-    __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString())
+    __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
   },
-
-  /* ────────────────────────────────────────────────────── CSS / PostCSS ── */
   css: {
     postcss: {
-      plugins: [tailwindcss(), autoprefixer()]
-    }
+      plugins: [
+        tailwindcss(),
+        autoprefixer(),
+      ],
+    },
   },
-
-  /* ───────────────────────────────────────────────────────── dev server ── */
   server: {
     host: true,
     port: 3000,
@@ -67,39 +56,46 @@ export default defineConfig({
       '/api': {
         target: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod',
         changeOrigin: true,
-        rewrite: p => p.replace(/^\/api/, ''),
-        configure: proxy => {
-          proxy.on('error', (err, _req, _res) => console.log('proxy error', err));
-          proxy.on('proxyReq', (proxyReq, req) =>
-            console.log('→', req.method, req.url));
-          proxy.on('proxyRes', (proxyRes, req) =>
-            console.log('←', proxyRes.statusCode, req.url));
-        }
-      }
-    }
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.error('🔴 Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req) => {
+            console.log('➡️ Sending request:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log('⬅️ Received response:', proxyRes.statusCode, req.url);
+          });
+        },
+      },
+    },
   },
-
-  preview: { port: 5000 },
-
-  /* ────────────────────────────────────────────────────────── build ── */
+  preview: {
+    port: 5000,
+  },
   build: {
-    chunkSizeWarningLimit: 1024,
     rollupOptions: {
+      external: ['fsevents'], // ✅ Prevents CI crashes
       output: {
         manualChunks: {
           'pdf-viewer': ['react-pdf'],
           vendor: ['react', 'react-dom'],
-          ui: ['framer-motion', 'lucide-react']
+          ui: ['framer-motion', 'lucide-react'],
         },
-        chunkFileNames: chunk => {
-          const name = chunk.facadeModuleId
-            ? path.basename(chunk.facadeModuleId, path.extname(chunk.facadeModuleId))
+        chunkFileNames: (chunkInfo) => {
+          const id = chunkInfo.facadeModuleId
+            ? path.basename(chunkInfo.facadeModuleId, path.extname(chunkInfo.facadeModuleId))
             : 'chunk';
-          return `assets/${name}-[hash].js`;
+          return `assets/${id}-[hash].js`;
         },
         entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
-      }
-    }
-  }
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+      },
+    },
+    chunkSizeWarningLimit: 1024,
+  },
+  ssr: {
+    noExternal: ['aws-amplify'], // ✅ Fix for deep import issues
+  },
 });
