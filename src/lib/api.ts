@@ -36,12 +36,12 @@ async function request<T = unknown>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers || {}),
+    ...(options.headers as Record<string, string>),
   };
-
+  
   if (options.auth !== false) {
     const token = await getAuthToken().catch(() => undefined);
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (token) headers['Authorization'] = `Bearer ${token}`;
   }
 
   const res = await fetch(`${BASE}${endpoint}`, {
