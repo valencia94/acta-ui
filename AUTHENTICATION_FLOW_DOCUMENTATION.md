@@ -19,7 +19,18 @@ User Login → Cognito User Pool → JWT Tokens → Dual Module Flow → API Gat
      ↓              ↓               ↓              ↓               ↓            ↓
   Frontend      Identity Pool   Access Token   PM Validation   Lambda       Data Access
   CloudFront    Credentials     ID Token       Admin Check     Functions    Authorization
-```
+
+
+# 🔐 COGNITO AUTHENTICATION - CORRECTED CLIENT ID
+# ═══════════════════════════════════════════════════════════
+VITE_COGNITO_REGION=us-east-2
+VITE_COGNITO_POOL_ID=us-east-2_FyHLtOhiY
+VITE_COGNITO_WEB_CLIENT_ID=dshos5iou44tuach7ta3ici5m
+VITE_COGNITO_DOMAIN=us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com
+
+# Legacy naming for backward compatibility
+VITE_COGNITO_POOL_ID=us-east-2_FyHLtOhiY
+VITE_COGNITO_WEB_CLIENT_ID=dshos5iou44tuach7ta3ici5m```
 
 ## 🔄 DUAL MODULE APPROVAL FLOW
 
@@ -59,8 +70,8 @@ interface CognitoConfig {
   Auth: {
     Cognito: {
       userPoolId: "us-east-2_FyHLtOhiY";
-      userPoolClientId: "6l9bcpfvprkfpbj8oqshpn2bu1";
-      identityPoolId: "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35";
+      userPoolClientId: "$VITE_COGNITO_WEB_CLIENT_ID";
+      identityPoolId: "$VITE_COGNITO_WEB_CLIENT_ID";
       loginWith: {
         email: true;
         username: false;
@@ -552,8 +563,8 @@ interface FallbackMechanisms {
 ### **Pre-Deployment Verification**
 
 - ✅ **Cognito User Pool**: `us-east-2_FyHLtOhiY` configured and active
-- ✅ **Cognito Client**: `6l9bcpfvprkfpbj8oqshpn2bu1` properly configured
-- ✅ **Identity Pool**: `us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35` linked
+- ✅ **Cognito Client**: `$VITE_COGNITO_WEB_CLIENT_ID properly configured
+- ✅ **Identity Pool**: `$VITE_COGNITO_POOL_ID` linked
 - ✅ **IAM Roles**: Authenticated and unauthenticated roles configured
 - ✅ **API Gateway**: JWT authorizer configured and tested
 - ✅ **CloudFront**: CORS and caching policies set

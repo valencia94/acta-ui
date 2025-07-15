@@ -10,10 +10,10 @@ import { EmailInputDialog } from '@/components/EmailInputDialog';
 import Header from '@/components/Header';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  checkDocumentInS3,
   generateActaDocument,
-  getS3DownloadUrl,
+  getDownloadUrl,
   sendApprovalEmail,
+  checkDocumentAvailability,
 } from '@/lib/api';
 import { getCurrentUser } from '@/lib/api-amplify';
 
@@ -31,7 +31,6 @@ export default function Dashboard() {
   
   // Email dialog state
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [currentDocumentUrl, setCurrentDocumentUrl] = useState<string>('');
   const [currentProjectName, setCurrentProjectName] = useState<string>('');
 
   // Initialize user data
@@ -53,6 +52,7 @@ export default function Dashboard() {
   // Handle project selection from DynamoProjectsView
   const handleProjectSelect = (projectId: string) => {
     setSelectedProjectId(projectId);
+    setCurrentProjectName(projectId);
     toast.success(`Selected project: ${projectId}`);
   };
 
@@ -70,18 +70,13 @@ export default function Dashboard() {
 
     setActionLoading(true);
     try {
-      const result = await generateActaDocument(selectedProjectId, user.email, 'pm');
-      
-      if (result.success) {
-        toast.success('ACTA document generated successfully!');
-        setCurrentDocumentUrl(result.s3Location || '');
-        setCurrentProjectName(selectedProjectId);
-      } else {
-        toast.error(`Failed to generate ACTA: ${result.message}`);
-      }
-    } catch (error) {
+      await generateActaDocument(selectedProjectId, user.email, 'pm');
+      toast.success(
+        'ACTA generation started – you\u2019ll get an e-mail when it\u2019s ready.'
+      );
+    } catch (error: any) {
       console.error('Error generating ACTA:', error);
-      toast.error('Failed to generate ACTA document');
+      toast.error(error?.message || 'Failed to generate ACTA');
     } finally {
       setActionLoading(false);
     }
@@ -96,22 +91,15 @@ export default function Dashboard() {
 
     setActionLoading(true);
     try {
-      const result = await getS3DownloadUrl(selectedProjectId, format);
-      
-      if (result.success && result.downloadUrl) {
-        const link = document.createElement('a');
-        link.href = result.downloadUrl;
-        link.download = `acta-${selectedProjectId}.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success(`${format.toUpperCase()} downloaded successfully!`);
-      } else {
-        toast.error(`${format.toUpperCase()} not available. Generate ACTA first.`);
-      }
-    } catch (error) {
+      const url = await getDownloadUrl(selectedProjectId, format);
+      window.open(url, '_blank');
+    } catch (error: any) {
       console.error(`Error downloading ${format}:`, error);
-      toast.error(`Failed to download ${format.toUpperCase()}`);
+      if (error?.message?.includes('404')) {
+        toast.error('Document not ready, try Generate first.');
+      } else {
+        toast.error(error?.message || `Failed to download ${format.toUpperCase()}`);
+      }
     } finally {
       setActionLoading(false);
     }
@@ -126,22 +114,17 @@ export default function Dashboard() {
 
     setActionLoading(true);
     try {
-      const documentCheck = await checkDocumentInS3(selectedProjectId, 'pdf');
-      
-      if (documentCheck.available) {
-        const result = await getS3DownloadUrl(selectedProjectId, 'pdf');
-        if (result.success && result.downloadUrl) {
-          setPdfPreviewUrl(result.downloadUrl);
-          setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
-        } else {
-          toast.error('Failed to get preview URL');
-        }
-      } else {
-        toast.error('Document not found. Generate ACTA first.');
+      const check = await checkDocumentAvailability(selectedProjectId, 'pdf');
+      if (!check.available) {
+        toast.error('Document not ready, try Generate first.');
+        return;
       }
-    } catch (error) {
+      const url = await getDownloadUrl(selectedProjectId, 'pdf');
+      setPdfPreviewUrl(url);
+      setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
+    } catch (error: any) {
       console.error('Error previewing PDF:', error);
-      toast.error('Failed to preview document');
+      toast.error(error?.message || 'Failed to preview document');
     } finally {
       setActionLoading(false);
     }
@@ -157,16 +140,15 @@ export default function Dashboard() {
     setActionLoading(true);
     try {
       const result = await sendApprovalEmail(selectedProjectId, email);
-      
       if (result.message) {
         toast.success('Approval email sent successfully!');
         setIsEmailDialogOpen(false);
       } else {
         toast.error('Failed to send approval email');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending approval email:', error);
-      toast.error('Failed to send approval email');
+      toast.error(error?.message || 'Failed to send approval email');
     } finally {
       setActionLoading(false);
     }
