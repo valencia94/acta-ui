@@ -1,0 +1,32 @@
+# Exclude SDK logic (critical formatting must not break typed clients)
+src/lib/awsDataService.ts
+
+# Skip temporary or generated files
+dist
+node_modules
+coverage
+storybook-static
+test-results
+public-backup/
+archive/
+
+# Skip internal tooling directories
+.idea
+.github
+.husky
+.run
+.storybook
+
+# Ignore test scripts and dev-only JS
+public/*.js
+test-api*.js
+api-connectivity*.js
+tests/playwright.preload.js
+*.test.js
+scripts/
+
+# Keep config and typed files pretty
+!vite.config.ts
+!vitest.config.ts
+!*.config.js
+
