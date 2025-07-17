@@ -18,7 +18,9 @@ export const apiGatewayId = import.meta.env.VITE_API_GATEWAY_ID || 'q2b9avfwv5';
 export const apiStage = import.meta.env.VITE_API_STAGE || 'prod';
 
 // Authentication
-export const skipAuth = import.meta.env.VITE_SKIP_AUTH === 'true';
+// Production requires full authentication
+export const skipAuth = false;
+export const isDemo = false;
 export const authDebug = import.meta.env.VITE_AUTH_DEBUG === 'true';
 
 // AWS Configuration
@@ -62,7 +64,8 @@ export const cloudwatchPolicyId =
   import.meta.env.CLOUDWATCH_POLICY_ID || 'WDnzkPmx3dKaEAQgFKx2jj';
 
 // Environment Flags
-export const isProduction = import.meta.env.PROD;
+// Indicate production build
+export const isProduction = true;
 export const isDevelopment = import.meta.env.DEV;
 
 // Debug logging for environment variables (only in development)
@@ -76,6 +79,7 @@ if (isDevelopment || authDebug) {
     'Cognito Pool ID': cognitoPoolId,
     'Auth Debug': authDebug,
     'Skip Auth': skipAuth,
+    'Is Demo': isDemo,
     'Is Production': isProduction,
   });
 }
