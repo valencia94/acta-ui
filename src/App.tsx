@@ -27,9 +27,10 @@ const DashboardTester = import.meta.env.DEV
 
 // 🧪 Load testing utilities only in development
 if (import.meta.env.DEV) {
-  import('@/utils/authTesting').catch(() => {});
-  import('@/utils/authFlowTest').catch(() => {});
-  import('@/utils/dashboardTesting').catch(() => {});
+  // Development testing modules (commented out for production build)
+  // import('@/utils/authTesting').catch(() => {});
+  // import('@/utils/authFlowTest').catch(() => {});
+  // import('@/utils/dashboardTesting').catch(() => {});
 }
 
 export default function App() {
