@@ -17,7 +17,7 @@ import {
   getProjectsByPM,
   getSummary,
   getTimeline,
-} from '@/lib/actaDataService';
+} from '@/api';
 import { getCurrentUser } from '@/lib/api-amplify';
 
 // Lazy load PDF preview for better performance

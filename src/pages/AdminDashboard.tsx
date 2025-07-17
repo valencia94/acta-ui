@@ -91,7 +91,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // TODO: Replace with real API calls
+        // TODO: Replace with real API calls when backend stats endpoints are available
+        // These are temporary hardcoded values for demonstration purposes
         const totalProjects = 156;
         const activeUsers = 12;
         const completedActas = Math.floor(totalProjects * 0.65);
