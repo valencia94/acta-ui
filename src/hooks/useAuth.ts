@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@aws-amplify/auth';
+import { getCurrentUser } from '@/api-amplify';
 import { useEffect, useState } from 'react';
 import { skipAuth } from '@/env.variables';
 
@@ -14,7 +14,11 @@ export function useAuth() {
           return;
         }
         const current = await getCurrentUser();
-        setUser({ email: current.signInDetails?.loginId || '' });
+        if (current && current.email) {
+          setUser({ email: current.email });
+        } else {
+          setUser(null);
+        }
       } catch {
         if (skipAuth) setUser({ email: 'admin@ikusi.com' });
         else setUser(null);

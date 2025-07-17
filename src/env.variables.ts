@@ -40,7 +40,7 @@ export const cognitoWebClientId =
   'dshos5iou44tuach7ta3ici5m';
 export const cognitoDomain =
   import.meta.env.VITE_COGNITO_DOMAIN ||
-  'us-east-2fyhltohiy.auth.us-east-2.amazoncognito.com';
+  'us-east-2-fyhltohiy.auth.us-east-2.amazoncognito.com';
 
 // S3 Configuration
 export const s3Bucket = import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b';
