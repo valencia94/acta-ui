@@ -5,23 +5,27 @@ Based on the actual CloudFormation template `amplify.yml`, here are the exact AP
 ## API Gateway Endpoints (From CloudFormation)
 
 ### 1. Document Generation
+
 - **Endpoint**: `/documents/generate`
 - **Method**: POST
 - **Lambda**: `DocumentGeneratorPDF`
 - **Purpose**: Generate ACTA documents and store in S3
 
 **Request Payload**:
+
 ```json
 {
-  "project_id": "string",      // Required
-  "pm_email": "string",        // Required
-  "acta_type": "standard",     // Optional: standard|consolidated|summary
-  "format_preferences": {      // Optional
+  "project_id": "string", // Required
+  "pm_email": "string", // Required
+  "acta_type": "standard", // Optional: standard|consolidated|summary
+  "format_preferences": {
+    // Optional
     "include_timeline": true,
     "include_budget": true,
     "include_attachments": false
   },
-  "approval_workflow": {       // Optional
+  "approval_workflow": {
+    // Optional
     "enable_approval": false,
     "approver_emails": [],
     "deadline_days": 7
@@ -30,6 +34,7 @@ Based on the actual CloudFormation template `amplify.yml`, here are the exact AP
 ```
 
 **Response**:
+
 ```json
 {
   "document_id": "string",
@@ -42,12 +47,14 @@ Based on the actual CloudFormation template `amplify.yml`, here are the exact AP
 ```
 
 ### 2. PM Projects Management
+
 - **Endpoint**: `/pm-projects/{pmEmail}`
 - **Method**: GET
 - **Lambda**: `projectMetadataEnricher`
 - **Purpose**: Get projects assigned to a PM with enhanced metadata
 
 **Response**:
+
 ```json
 {
   "pm_email": "string",
@@ -55,7 +62,7 @@ Based on the actual CloudFormation template `amplify.yml`, here are the exact AP
   "projects": [
     {
       "project_id": "string",
-      "project_name": "string", 
+      "project_name": "string",
       "pm_email": "string",
       "project_status": "string",
       "has_acta_document": false,
@@ -66,25 +73,28 @@ Based on the actual CloudFormation template `amplify.yml`, here are the exact AP
   ],
   "summary": {
     "with_acta": 0,
-    "without_acta": 0, 
+    "without_acta": 0,
     "recently_updated": 0
   }
 }
 ```
 
 ### 3. All Projects (Admin)
+
 - **Endpoint**: `/pm-projects/all-projects`
 - **Method**: GET
 - **Lambda**: `projectMetadataEnricher`
 - **Purpose**: Get all projects for admin users
 
 ### 4. Document Status Check
+
 - **Endpoint**: `/documents/{documentId}`
 - **Method**: GET
 - **Lambda**: `DocumentGeneratorPDF`
 - **Purpose**: Check document generation status
 
 ### 5. Legacy Endpoints (Still Active)
+
 - **Endpoint**: `/project-summary/{id}`
 - **Method**: GET
 - **Lambda**: `generateSummary`
@@ -109,7 +119,7 @@ Based on the actual CloudFormation template `amplify.yml`, here are the exact AP
 
 ### Updated api.ts Functions:
 
-1. **generateActaDocument()**: 
+1. **generateActaDocument()**:
    - Endpoint: `/documents/generate`
    - Payload: Simplified, focused on required fields
    - Response: CloudFront URLs and S3 locations
@@ -140,6 +150,7 @@ Based on the actual CloudFormation template `amplify.yml`, here are the exact AP
 ## Testing Verification:
 
 Run these endpoints to verify the mapping:
+
 - `GET /pm-projects/{pmEmail}` - Should return PM project list
 - `POST /documents/generate` - Should trigger document generation
 - `GET /documents/{documentId}` - Should return document status

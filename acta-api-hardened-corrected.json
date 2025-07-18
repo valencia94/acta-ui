@@ -91,18 +91,18 @@
         "summary": "Get projects for authenticated user",
         "description": "Retrieves projects accessible to the authenticated user",
         "tags": ["Projects"],
-        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "security": [{ "CognitoUserPoolAuthorizer": [] }],
         "responses": {
           "200": {
             "description": "List of projects",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
-          "401": {"$ref": "#/responses/Unauthorized"},
-          "403": {"$ref": "#/responses/Forbidden"},
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "401": { "$ref": "#/responses/Unauthorized" },
+          "403": { "$ref": "#/responses/Forbidden" },
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -118,9 +118,9 @@
           "200": {
             "description": "CORS preflight successful",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Methods": {"type": "string"},
-              "Access-Control-Allow-Headers": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Methods": { "type": "string" },
+              "Access-Control-Allow-Headers": { "type": "string" }
             }
           }
         },
@@ -161,19 +161,19 @@
     "Unauthorized": {
       "description": "Unauthorized - Invalid or missing JWT token",
       "headers": {
-        "Access-Control-Allow-Origin": {"type": "string"}
+        "Access-Control-Allow-Origin": { "type": "string" }
       }
     },
     "Forbidden": {
       "description": "Forbidden - Valid token but insufficient permissions",
       "headers": {
-        "Access-Control-Allow-Origin": {"type": "string"}
+        "Access-Control-Allow-Origin": { "type": "string" }
       }
     },
     "InternalServerError": {
       "description": "Internal server error",
       "headers": {
-        "Access-Control-Allow-Origin": {"type": "string"}
+        "Access-Control-Allow-Origin": { "type": "string" }
       }
     }
   },

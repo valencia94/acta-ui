@@ -1,6 +1,6 @@
 // src/utils/fetchWrapper.ts
-import { fetchAuthSession } from 'aws-amplify/auth';
-import { skipAuth } from '@/env.variables';
+import { fetchAuthSession } from "aws-amplify/auth";
+import { skipAuth } from "@/env.variables";
 
 /**
  * Get the current authentication token
@@ -9,30 +9,30 @@ export async function getAuthToken(): Promise<string | null> {
   // Use static import for skipAuth
   // In skip auth mode, don't try to get real tokens
   if (skipAuth) {
-    console.log('🔓 Skip auth mode: Using mock token');
-    return 'mock-auth-token-skip-mode';
+    console.log("🔓 Skip auth mode: Using mock token");
+    return "mock-auth-token-skip-mode";
   }
 
   try {
-    console.log('🔐 Attempting to fetch auth session...');
+    console.log("🔐 Attempting to fetch auth session...");
     const session = await fetchAuthSession();
-    console.log('📡 Auth session response:', {
+    console.log("📡 Auth session response:", {
       hasTokens: !!session.tokens,
       hasIdToken: !!session.tokens?.idToken,
       hasAccessToken: !!session.tokens?.accessToken,
-      credentials: !!session.credentials
+      credentials: !!session.credentials,
     });
-    
+
     const token = session.tokens?.idToken?.toString();
     if (token) {
-      console.log('✅ Successfully extracted ID token');
+      console.log("✅ Successfully extracted ID token");
       return token;
     } else {
-      console.warn('⚠️ No ID token found in session');
+      console.warn("⚠️ No ID token found in session");
       return null;
     }
   } catch (error) {
-    console.error('❌ Failed to fetch authentication session:', error);
+    console.error("❌ Failed to fetch authentication session:", error);
     return null;
   }
 }
@@ -46,10 +46,10 @@ export async function getAuthToken(): Promise<string | null> {
  */
 export async function fetcher<T>(
   input: RequestInfo,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<T> {
-  const url = typeof input === 'string' ? input : input.url;
-  
+  const url = typeof input === "string" ? input : input.url;
+
   // Get authentication token
   const token = await getAuthToken();
 
@@ -58,22 +58,22 @@ export async function fetcher<T>(
 
   // Add authentication header if token is available
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   // Add default headers
-  if (!headers.has('Content-Type') && init?.method !== 'GET') {
-    headers.set('Content-Type', 'application/json');
+  if (!headers.has("Content-Type") && init?.method !== "GET") {
+    headers.set("Content-Type", "application/json");
   }
 
   const enhancedInit: RequestInit = {
     ...init,
     headers,
-    credentials: 'include', // Include cookies for session management
+    credentials: "include", // Include cookies for session management
   };
 
   console.log(`🌐 Fetching: ${input}`, {
-    method: enhancedInit.method || 'GET',
+    method: enhancedInit.method || "GET",
     hasAuth: !!token,
     headers: Object.fromEntries(headers.entries()),
   });
@@ -97,25 +97,25 @@ export async function fetcher<T>(
 
     // Add context for common error scenarios
     if (res.status === 403) {
-      errorMessage += ' (Authentication required or insufficient permissions)';
+      errorMessage += " (Authentication required or insufficient permissions)";
     } else if (res.status === 502) {
       errorMessage +=
-        ' (Backend Lambda function error - check CloudWatch logs)';
+        " (Backend Lambda function error - check CloudWatch logs)";
     } else if (res.status === 404) {
-      errorMessage += ' (Endpoint not found - check API Gateway routes)';
+      errorMessage += " (Endpoint not found - check API Gateway routes)";
     }
-    console.error('❌ Fetch error:', errorMessage);
+    console.error("❌ Fetch error:", errorMessage);
     throw new Error(errorMessage);
   }
 
   // Parse JSON response
   try {
     const data = await res.json();
-    console.log('✅ Response data:', data);
+    console.log("✅ Response data:", data);
     return data as T;
   } catch (error) {
-    console.error('❌ Failed to parse JSON response:', error);
-    throw new Error('Invalid JSON response from server');
+    console.error("❌ Failed to parse JSON response:", error);
+    throw new Error("Invalid JSON response from server");
   }
 }
 
@@ -124,7 +124,7 @@ export async function fetcher<T>(
  */
 export function get<T>(url: string): Promise<T> {
   return fetcher<T>(url, {
-    credentials: 'include',
+    credentials: "include",
   });
 }
 
@@ -133,10 +133,10 @@ export function get<T>(url: string): Promise<T> {
  */
 export function post<T>(url: string, body?: unknown): Promise<T> {
   return fetcher<T>(url, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });

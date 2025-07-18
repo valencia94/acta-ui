@@ -1,286 +1,307 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ACTA UI Dashboard Buttons Test</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      line-height: 1.6;
-    }
-    h1 {
-      color: #0d9488;
-      text-align: center;
-    }
-    .logo {
-      display: block;
-      margin: 0 auto;
-      max-width: 150px;
-    }
-    .test-section {
-      background-color: #f3f4f6;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-    .test-section h2 {
-      margin-top: 0;
-      border-bottom: 1px solid #d1d5db;
-      padding-bottom: 10px;
-    }
-    button {
-      background-color: #0d9488;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 5px;
-    }
-    button:hover {
-      background-color: #0f766e;
-    }
-    #console {
-      background-color: #1e293b;
-      color: #e2e8f0;
-      padding: 15px;
-      border-radius: 4px;
-      white-space: pre-wrap;
-      font-family: monospace;
-      height: 300px;
-      overflow-y: auto;
-      margin-top: 20px;
-    }
-    .status {
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    .pass {
-      color: #10b981;
-    }
-    .fail {
-      color: #ef4444;
-    }
-    .warning {
-      color: #f59e0b;
-    }
-    .info {
-      color: #3b82f6;
-    }
-  </style>
-</head>
-<body>
-  <img src="/assets/ikusi-logo.png" alt="Ikusi Logo" class="logo">
-  <h1>ACTA UI Dashboard Buttons Test</h1>
-  
-  <div class="test-section">
-    <h2>Login Information</h2>
-    <p>Test User: <strong>christian.valencia@ikusi.com</strong></p>
-    <p>Password: <strong>PdYb7TU7HvBhYP7$!</strong></p>
-    <div class="status">Status: <span id="authStatus" class="warning">Not authenticated</span></div>
-    <button id="loginButton">Login</button>
-    <button id="logoutButton">Logout</button>
-  </div>
-
-  <div class="test-section">
-    <h2>Dashboard Button Tests</h2>
-    <p>Test each button functionality to verify API connectivity and proper operation:</p>
-    <div>
-      <button id="healthButton">Test Health Endpoint</button>
-      <button id="projectsButton">Test Projects Fetch</button>
-      <button id="generateButton">Test Generate ACTA</button>
-      <button id="pdfButton">Test PDF Download</button>
-      <button id="docxButton">Test DOCX Download</button>
-      <button id="approvalButton">Test Send Approval</button>
-      <button id="runAllButton">Run All Tests</button>
-    </div>
-  </div>
-  
-  <h2>Test Console</h2>
-  <div id="console">// Test output will appear here
-  </div>
-
-  <script>
-    // API Endpoints and configuration
-    const API_BASE = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
-    const HEALTH_ENDPOINT = `${API_BASE}/health`;
-    const PROJECT_ENDPOINT = `${API_BASE}/extract-project-place`;
-    const AUTH_TEST_ENDPOINT = `${API_BASE}/check-document/1000000049842296`;
-
-    // Project IDs (the 7 required ones)
-    const testProjectIds = [
-      '1000000049842296',
-      '1000000055914011',
-      '1000000058814819',
-      '1000000060272603',
-      '1000000061690051', 
-      '1000000063154415',
-      '1000000064013473'
-    ];
-
-    // State
-    let idToken = null;
-    let isAuthenticated = false;
-    
-    // DOM elements
-    const consoleOutput = document.getElementById('console');
-    const authStatus = document.getElementById('authStatus');
-    
-    // Log to console
-    function log(message) {
-      const timestamp = new Date().toLocaleTimeString();
-      consoleOutput.textContent += `[${timestamp}] ${message}\n`;
-      consoleOutput.scrollTop = consoleOutput.scrollHeight;
-    }
-    
-    // Update authentication status
-    function updateAuthStatus() {
-      if (isAuthenticated) {
-        authStatus.textContent = 'Authenticated';
-        authStatus.className = 'pass';
-      } else {
-        authStatus.textContent = 'Not authenticated';
-        authStatus.className = 'warning';
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACTA UI Dashboard Buttons Test</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
       }
-    }
-    
-    // Test functions
-    const tests = {
-      // Test health endpoint
-      testHealthEndpoint: async function() {
-        log('🧪 Testing health endpoint...');
-        try {
-          const response = await fetch(HEALTH_ENDPOINT);
-          const data = await response.json();
-          log(`✅ Health check response: ${JSON.stringify(data)}`);
-          return response.ok;
-        } catch (error) {
-          log(`❌ Health check failed: ${error.message}`);
-          return false;
+      h1 {
+        color: #0d9488;
+        text-align: center;
+      }
+      .logo {
+        display: block;
+        margin: 0 auto;
+        max-width: 150px;
+      }
+      .test-section {
+        background-color: #f3f4f6;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      .test-section h2 {
+        margin-top: 0;
+        border-bottom: 1px solid #d1d5db;
+        padding-bottom: 10px;
+      }
+      button {
+        background-color: #0d9488;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 5px;
+      }
+      button:hover {
+        background-color: #0f766e;
+      }
+      #console {
+        background-color: #1e293b;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        height: 300px;
+        overflow-y: auto;
+        margin-top: 20px;
+      }
+      .status {
+        font-weight: bold;
+        margin: 10px 0;
+      }
+      .pass {
+        color: #10b981;
+      }
+      .fail {
+        color: #ef4444;
+      }
+      .warning {
+        color: #f59e0b;
+      }
+      .info {
+        color: #3b82f6;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/assets/ikusi-logo.png" alt="Ikusi Logo" class="logo" />
+    <h1>ACTA UI Dashboard Buttons Test</h1>
+
+    <div class="test-section">
+      <h2>Login Information</h2>
+      <p>Test User: <strong>christian.valencia@ikusi.com</strong></p>
+      <p>Password: <strong>PdYb7TU7HvBhYP7$!</strong></p>
+      <div class="status">
+        Status: <span id="authStatus" class="warning">Not authenticated</span>
+      </div>
+      <button id="loginButton">Login</button>
+      <button id="logoutButton">Logout</button>
+    </div>
+
+    <div class="test-section">
+      <h2>Dashboard Button Tests</h2>
+      <p>
+        Test each button functionality to verify API connectivity and proper
+        operation:
+      </p>
+      <div>
+        <button id="healthButton">Test Health Endpoint</button>
+        <button id="projectsButton">Test Projects Fetch</button>
+        <button id="generateButton">Test Generate ACTA</button>
+        <button id="pdfButton">Test PDF Download</button>
+        <button id="docxButton">Test DOCX Download</button>
+        <button id="approvalButton">Test Send Approval</button>
+        <button id="runAllButton">Run All Tests</button>
+      </div>
+    </div>
+
+    <h2>Test Console</h2>
+    <div id="console">// Test output will appear here</div>
+
+    <script>
+      // API Endpoints and configuration
+      const API_BASE =
+        "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod";
+      const HEALTH_ENDPOINT = `${API_BASE}/health`;
+      const PROJECT_ENDPOINT = `${API_BASE}/extract-project-place`;
+      const AUTH_TEST_ENDPOINT = `${API_BASE}/check-document/1000000049842296`;
+
+      // Project IDs (the 7 required ones)
+      const testProjectIds = [
+        "1000000049842296",
+        "1000000055914011",
+        "1000000058814819",
+        "1000000060272603",
+        "1000000061690051",
+        "1000000063154415",
+        "1000000064013473",
+      ];
+
+      // State
+      let idToken = null;
+      let isAuthenticated = false;
+
+      // DOM elements
+      const consoleOutput = document.getElementById("console");
+      const authStatus = document.getElementById("authStatus");
+
+      // Log to console
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        consoleOutput.textContent += `[${timestamp}] ${message}\n`;
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+      }
+
+      // Update authentication status
+      function updateAuthStatus() {
+        if (isAuthenticated) {
+          authStatus.textContent = "Authenticated";
+          authStatus.className = "pass";
+        } else {
+          authStatus.textContent = "Not authenticated";
+          authStatus.className = "warning";
         }
-      },
-      
-      // Test authentication
-      testAuth: async function() {
-        log('🧪 Testing authentication...');
-        try {
-          const response = await fetch(AUTH_TEST_ENDPOINT, {
-            headers: {
-              'Authorization': idToken,
-              'Content-Type': 'application/json'
+      }
+
+      // Test functions
+      const tests = {
+        // Test health endpoint
+        testHealthEndpoint: async function () {
+          log("🧪 Testing health endpoint...");
+          try {
+            const response = await fetch(HEALTH_ENDPOINT);
+            const data = await response.json();
+            log(`✅ Health check response: ${JSON.stringify(data)}`);
+            return response.ok;
+          } catch (error) {
+            log(`❌ Health check failed: ${error.message}`);
+            return false;
+          }
+        },
+
+        // Test authentication
+        testAuth: async function () {
+          log("🧪 Testing authentication...");
+          try {
+            const response = await fetch(AUTH_TEST_ENDPOINT, {
+              headers: {
+                Authorization: idToken,
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (response.ok) {
+              log("✅ Authentication successful");
+              isAuthenticated = true;
+              updateAuthStatus();
+              return true;
+            } else {
+              log(
+                `❌ Authentication failed: ${response.status} ${response.statusText}`,
+              );
+              isAuthenticated = false;
+              updateAuthStatus();
+              return false;
             }
-          });
-          
-          if (response.ok) {
-            log('✅ Authentication successful');
-            isAuthenticated = true;
-            updateAuthStatus();
-            return true;
-          } else {
-            log(`❌ Authentication failed: ${response.status} ${response.statusText}`);
+          } catch (error) {
+            log(`❌ Authentication error: ${error.message}`);
             isAuthenticated = false;
             updateAuthStatus();
             return false;
           }
-        } catch (error) {
-          log(`❌ Authentication error: ${error.message}`);
-          isAuthenticated = false;
-          updateAuthStatus();
-          return false;
-        }
-      },
-      
-      // Test fetching projects
-      testProjectsFetch: async function() {
-        log('🧪 Testing project fetch...');
-        
-        if (!idToken) {
-          log('❌ No authentication token - please login first');
-          return false;
-        }
-        
-        try {
-          // For each of our 7 test project IDs, try to fetch data
-          let successCount = 0;
-          
-          for (const projectId of testProjectIds) {
-            log(`📋 Testing project ID: ${projectId}`);
-            
-            const response = await fetch(`${PROJECT_ENDPOINT}/${projectId}`, {
-              headers: {
-                'Authorization': idToken,
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            if (!response.ok) {
-              log(`❌ Failed to fetch project ${projectId}: ${response.status} ${response.statusText}`);
-              continue;
-            }
-            
-            const data = await response.json();
-            log(`✅ Project data retrieved for ${projectId}`);
-            log(`   Title: ${data.title || 'N/A'}`);
-            log(`   PM: ${data.pm_name || 'N/A'}`);
-            log(`   Planlet: ${data.planlet_name || data.planlet || 'N/A'}`);
-            successCount++;
+        },
+
+        // Test fetching projects
+        testProjectsFetch: async function () {
+          log("🧪 Testing project fetch...");
+
+          if (!idToken) {
+            log("❌ No authentication token - please login first");
+            return false;
           }
-          
-          log(`✅ Successfully fetched ${successCount} out of 7 projects`);
-          return successCount > 0;
-        } catch (error) {
-          log(`❌ Error fetching projects: ${error.message}`);
-          return false;
-        }
-      },
-      
-      // Additional test functions for other buttons would go here
-      // ...
-    };
-    
-    // Button event listeners
-    document.getElementById('loginButton').addEventListener('click', async () => {
-      log('🔑 Simulating login (in real app would use Cognito)...');
-      
-      // In a real implementation, we would call Cognito APIs
-      // For now, just simulate authentication for testing
-      idToken = 'simulated-token-for-testing';
-      
-      // Try to use the token to check authentication
-      await tests.testAuth();
-    });
-    
-    document.getElementById('logoutButton').addEventListener('click', () => {
-      log('🚪 Logging out...');
-      idToken = null;
-      isAuthenticated = false;
-      updateAuthStatus();
-    });
-    
-    document.getElementById('healthButton').addEventListener('click', async () => {
-      const result = await tests.testHealthEndpoint();
-      log(`${result ? '✅' : '❌'} Health endpoint test ${result ? 'PASSED' : 'FAILED'}`);
-    });
-    
-    document.getElementById('projectsButton').addEventListener('click', async () => {
-      const result = await tests.testProjectsFetch();
-      log(`${result ? '✅' : '❌'} Projects fetch test ${result ? 'PASSED' : 'FAILED'}`);
-    });
-    
-    // Initialize
-    log('🚀 Test console initialized');
-    log('📋 Ready to run dashboard button tests');
-    log('ℹ️ Please click "Login" to begin testing');
-    
-    // Load script for additional tests
-    const script = document.createElement('script');
-    script.src = 'test-dashboard-buttons.js';
-    document.body.appendChild(script);
-  </script>
-</body>
+
+          try {
+            // For each of our 7 test project IDs, try to fetch data
+            let successCount = 0;
+
+            for (const projectId of testProjectIds) {
+              log(`📋 Testing project ID: ${projectId}`);
+
+              const response = await fetch(`${PROJECT_ENDPOINT}/${projectId}`, {
+                headers: {
+                  Authorization: idToken,
+                  "Content-Type": "application/json",
+                },
+              });
+
+              if (!response.ok) {
+                log(
+                  `❌ Failed to fetch project ${projectId}: ${response.status} ${response.statusText}`,
+                );
+                continue;
+              }
+
+              const data = await response.json();
+              log(`✅ Project data retrieved for ${projectId}`);
+              log(`   Title: ${data.title || "N/A"}`);
+              log(`   PM: ${data.pm_name || "N/A"}`);
+              log(`   Planlet: ${data.planlet_name || data.planlet || "N/A"}`);
+              successCount++;
+            }
+
+            log(`✅ Successfully fetched ${successCount} out of 7 projects`);
+            return successCount > 0;
+          } catch (error) {
+            log(`❌ Error fetching projects: ${error.message}`);
+            return false;
+          }
+        },
+
+        // Additional test functions for other buttons would go here
+        // ...
+      };
+
+      // Button event listeners
+      document
+        .getElementById("loginButton")
+        .addEventListener("click", async () => {
+          log("🔑 Simulating login (in real app would use Cognito)...");
+
+          // In a real implementation, we would call Cognito APIs
+          // For now, just simulate authentication for testing
+          idToken = "simulated-token-for-testing";
+
+          // Try to use the token to check authentication
+          await tests.testAuth();
+        });
+
+      document.getElementById("logoutButton").addEventListener("click", () => {
+        log("🚪 Logging out...");
+        idToken = null;
+        isAuthenticated = false;
+        updateAuthStatus();
+      });
+
+      document
+        .getElementById("healthButton")
+        .addEventListener("click", async () => {
+          const result = await tests.testHealthEndpoint();
+          log(
+            `${result ? "✅" : "❌"} Health endpoint test ${result ? "PASSED" : "FAILED"}`,
+          );
+        });
+
+      document
+        .getElementById("projectsButton")
+        .addEventListener("click", async () => {
+          const result = await tests.testProjectsFetch();
+          log(
+            `${result ? "✅" : "❌"} Projects fetch test ${result ? "PASSED" : "FAILED"}`,
+          );
+        });
+
+      // Initialize
+      log("🚀 Test console initialized");
+      log("📋 Ready to run dashboard button tests");
+      log('ℹ️ Please click "Login" to begin testing');
+
+      // Load script for additional tests
+      const script = document.createElement("script");
+      script.src = "test-dashboard-buttons.js";
+      document.body.appendChild(script);
+    </script>
+  </body>
 </html>

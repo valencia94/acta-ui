@@ -1,7 +1,7 @@
 // src/components/ActaButtons.tsx
-import { Download, Eye, FileText, Send } from 'lucide-react';
+import { Download, Eye, FileText, Send } from "lucide-react";
 
-import Button from '@/components/Button';
+import Button from "@/components/Button";
 
 interface ActaButtonsProps {
   onGenerate: () => void;
@@ -35,7 +35,7 @@ export default function ActaButtons({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
         {/* Primary Actions Row */}
         <Button
-          onClick={() => handleClick(onGenerate, 'Generate Acta')}
+          onClick={() => handleClick(onGenerate, "Generate Acta")}
           disabled={disabled}
           className="
             flex items-center justify-center gap-2.5
@@ -55,7 +55,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onSendForApproval, 'Send for Approval')}
+          onClick={() => handleClick(onSendForApproval, "Send for Approval")}
           disabled={disabled}
           className="
             flex items-center justify-center gap-2.5
@@ -78,7 +78,7 @@ export default function ActaButtons({
       {/* Secondary Actions Row - responsive grid */}
       <div className="grid grid-cols-3 gap-2 w-full mt-3">
         <Button
-          onClick={() => handleClick(onDownloadWord, 'Download Word')}
+          onClick={() => handleClick(onDownloadWord, "Download Word")}
           disabled={disabled}
           className="
             flex items-center justify-center gap-1.5 sm:gap-2
@@ -99,7 +99,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onPreviewPdf, 'Preview PDF')}
+          onClick={() => handleClick(onPreviewPdf, "Preview PDF")}
           disabled={disabled}
           className="
             flex items-center justify-center gap-1.5 sm:gap-2
@@ -119,7 +119,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onDownloadPdf, 'Download PDF')}
+          onClick={() => handleClick(onDownloadPdf, "Download PDF")}
           disabled={disabled}
           className="
             flex items-center justify-center gap-1.5 sm:gap-2
@@ -142,10 +142,9 @@ export default function ActaButtons({
       {/* Action Hint */}
       <div className="mt-3 text-center">
         <p className="text-xs text-gray-500 font-medium">
-          {disabled 
-            ? 'Select a project to enable ACTA actions'
-            : 'Generate first, then preview, download or send for approval'
-          }
+          {disabled
+            ? "Select a project to enable ACTA actions"
+            : "Generate first, then preview, download or send for approval"}
         </p>
       </div>
     </div>

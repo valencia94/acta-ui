@@ -1,6 +1,6 @@
 // src/sendProjectsForPM.ts
-import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
-import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 
 const db = new DynamoDBClient({});
 
@@ -14,7 +14,7 @@ export const handler = async (event) => {
   if (!pmEmail) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Missing pm_email' }),
+      body: JSON.stringify({ error: "Missing pm_email" }),
     };
   }
 
@@ -22,17 +22,17 @@ export const handler = async (event) => {
   const out = await db.send(
     new QueryCommand({
       TableName: process.env.TABLE,
-      IndexName: process.env.PM_EMAIL_INDEX ?? 'pm_email-index',
-      KeyConditionExpression: 'pm_email = :email',
+      IndexName: process.env.PM_EMAIL_INDEX ?? "pm_email-index",
+      KeyConditionExpression: "pm_email = :email",
       ExpressionAttributeValues: {
-        ':email': { S: pmEmail },
+        ":email": { S: pmEmail },
       },
       ProjectionExpression:
-        'project_id, #proj.title, pm_name, pm_email, approval_status',
-      ExpressionAttributeNames: { '#proj': 'project' },
+        "project_id, #proj.title, pm_name, pm_email, approval_status",
+      ExpressionAttributeNames: { "#proj": "project" },
       ScanIndexForward: true, // oldest first; false = newest first
       // remove Limit completely so you get *all* projects
-    })
+    }),
   );
 
   // 3️⃣ If no items found, return an empty array
@@ -41,15 +41,15 @@ export const handler = async (event) => {
   // 4️⃣ Shape your response
   const projects = items.map((i) => ({
     project_id: i.project_id,
-    project_name: i.project?.title ?? '(unnamed)',
+    project_name: i.project?.title ?? "(unnamed)",
     pm_name: i.pm_name,
     pm_email: i.pm_email,
-    status: i.approval_status ?? 'n/a',
+    status: i.approval_status ?? "n/a",
   }));
 
   return {
     statusCode: 200,
-    headers: { 'Access-Control-Allow-Origin': '*' },
+    headers: { "Access-Control-Allow-Origin": "*" },
     body: JSON.stringify(projects),
   };
 };

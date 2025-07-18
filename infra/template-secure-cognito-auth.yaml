@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: SECURE API Gateway with proper Cognito User Pool authorization for all protected endpoints
 
 Parameters:
@@ -106,7 +106,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref TimelineResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   TimelineMethod:
     Type: AWS::ApiGateway::Method
@@ -135,7 +135,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ProjectSummaryResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   ProjectSummaryMethod:
     Type: AWS::ApiGateway::Method
@@ -164,7 +164,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref DownloadActaResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   DownloadActaMethod:
     Type: AWS::ApiGateway::Method
@@ -192,7 +192,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ExtractProjectPlaceResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   ExtractProjectPlaceMethod:
     Type: AWS::ApiGateway::Method
@@ -283,7 +283,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref PMProjectsResource
-      PathPart: '{pmEmail}'
+      PathPart: "{pmEmail}"
 
   PMProjectsEmailMethod:
     Type: AWS::ApiGateway::Method
@@ -311,7 +311,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref CheckDocumentResource
-      PathPart: '{projectId}'
+      PathPart: "{projectId}"
 
   CheckDocumentMethod:
     Type: AWS::ApiGateway::Method
@@ -427,7 +427,7 @@ Resources:
       - CheckDocumentHeadMethod
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub 'SECURE API deployment with Cognito authorization - ${AWS::StackName}'
+      Description: !Sub "SECURE API deployment with Cognito authorization - ${AWS::StackName}"
       StageName: prod
 
 Outputs:
@@ -437,16 +437,16 @@ Outputs:
 
   CognitoAuthorizerInfo:
     Description: Cognito User Pool Authorizer details
-    Value: !Sub 'Authorizer ID: ${CognitoAuthorizer}, User Pool: ${CognitoUserPoolArn}'
+    Value: !Sub "Authorizer ID: ${CognitoAuthorizer}, User Pool: ${CognitoUserPoolArn}"
 
   SecurityStatus:
     Description: Security configuration status
-    Value: 'ALL endpoints now properly protected with Cognito User Pool authorization'
+    Value: "ALL endpoints now properly protected with Cognito User Pool authorization"
 
   PublicEndpoints:
     Description: Endpoints that remain public (no auth required)
-    Value: 'health'
+    Value: "health"
 
   ProtectedEndpoints:
     Description: Endpoints that require Cognito authentication
-    Value: 'timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email, projects, pm-projects/*, check-document/{id}'
+    Value: "timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email, projects, pm-projects/*, check-document/{id}"

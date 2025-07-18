@@ -10,42 +10,42 @@ This document serves as a guide for maintaining the ACTA-UI application. It cove
 
 ### Authentication Configuration Files
 
-| File | Purpose | Format | Notes |
-|------|---------|--------|-------|
-| `src/aws-exports.js` | ES module version for imports | ES Module (`export default`) | Used by imports in the application |
-| `public/aws-exports.js` | Browser-compatible version | Global assignment (`window.awsmobile =`) | Loaded directly via script tag |
-| `dist/aws-exports.js` | Deployed browser-compatible version | Global assignment (`window.awsmobile =`) | Must be copied from public/ during build |
+| File                    | Purpose                             | Format                                   | Notes                                    |
+| ----------------------- | ----------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| `src/aws-exports.js`    | ES module version for imports       | ES Module (`export default`)             | Used by imports in the application       |
+| `public/aws-exports.js` | Browser-compatible version          | Global assignment (`window.awsmobile =`) | Loaded directly via script tag           |
+| `dist/aws-exports.js`   | Deployed browser-compatible version | Global assignment (`window.awsmobile =`) | Must be copied from public/ during build |
 
 ### Core Application Files
 
-| File | Purpose |
-|------|---------|
-| `index.html` | HTML entry point with script loading order |
-| `src/main.tsx` | Application entry point with Amplify configuration |
-| `src/App.tsx` | Main React component with routing |
-| `src/lib/api.ts` | API functions for backend integration |
-| `src/utils/fetchWrapper.ts` | Authentication-aware fetch wrapper |
-| `src/hooks/useAuth.ts` | Authentication hook for React components |
+| File                        | Purpose                                            |
+| --------------------------- | -------------------------------------------------- |
+| `index.html`                | HTML entry point with script loading order         |
+| `src/main.tsx`              | Application entry point with Amplify configuration |
+| `src/App.tsx`               | Main React component with routing                  |
+| `src/lib/api.ts`            | API functions for backend integration              |
+| `src/utils/fetchWrapper.ts` | Authentication-aware fetch wrapper                 |
+| `src/hooks/useAuth.ts`      | Authentication hook for React components           |
 
 ### Configuration Files
 
-| File | Purpose |
-|------|---------|
-| `vite.config.ts` | Build configuration including plugins |
-| `.env` | Environment variables for development |
-| `.env.production` | Environment variables for production |
-| `tsconfig.json` | TypeScript compiler configuration |
-| `tailwind.config.js` | Tailwind CSS configuration |
+| File                 | Purpose                               |
+| -------------------- | ------------------------------------- |
+| `vite.config.ts`     | Build configuration including plugins |
+| `.env`               | Environment variables for development |
+| `.env.production`    | Environment variables for production  |
+| `tsconfig.json`      | TypeScript compiler configuration     |
+| `tailwind.config.js` | Tailwind CSS configuration            |
 
 ### Deployment Scripts
 
-| File | Purpose |
-|------|---------|
-| `fix-auth-config.sh` | Ensures proper authentication configuration |
-| `fix-aws-exports-browser.sh` | Creates browser-compatible aws-exports.js |
-| `deploy-production.sh` | Builds and deploys to S3/CloudFront |
-| `test-auth-flow.sh` | Validates authentication configuration |
-| `test-production.js` | Comprehensive production validation |
+| File                         | Purpose                                     |
+| ---------------------------- | ------------------------------------------- |
+| `fix-auth-config.sh`         | Ensures proper authentication configuration |
+| `fix-aws-exports-browser.sh` | Creates browser-compatible aws-exports.js   |
+| `deploy-production.sh`       | Builds and deploys to S3/CloudFront         |
+| `test-auth-flow.sh`          | Validates authentication configuration      |
+| `test-production.js`         | Comprehensive production validation         |
 
 ## Authentication Maintenance
 
@@ -105,11 +105,13 @@ If you need to update the authentication configuration:
 ### "Auth UserPool not configured" Error
 
 **Possible Causes:**
+
 - aws-exports.js not loaded before Amplify configuration
 - aws-exports.js using ES module syntax in browser context
 - Missing or incorrect User Pool configuration
 
 **Solutions:**
+
 - Verify aws-exports.js is loaded in the head section of index.html
 - Ensure public/aws-exports.js uses window.awsmobile assignment
 - Run `./fix-auth-config.sh` to reset authentication configuration
@@ -117,20 +119,24 @@ If you need to update the authentication configuration:
 ### "Unexpected token 'export'" Error
 
 **Possible Causes:**
+
 - ES module syntax in a file loaded via direct script tag
 
 **Solutions:**
+
 - Use browser-compatible version with `window.awsmobile =` instead of `export default`
 - Run `./fix-aws-exports-browser.sh` to create the correct version
 
 ### 401 Unauthorized API Errors
 
 **Possible Causes:**
+
 - Missing or incorrect Identity Pool configuration
 - Issues with token acquisition or renewal
 - CORS configuration issues
 
 **Solutions:**
+
 - Verify complete Auth configuration in aws-exports.js
 - Check browser console for authentication errors
 - Inspect network requests for proper Authorization headers
@@ -138,10 +144,12 @@ If you need to update the authentication configuration:
 ### Missing or Incorrect aws-exports.js in Build
 
 **Possible Causes:**
+
 - Build plugin not correctly copying the file
 - Wrong version of aws-exports.js being copied
 
 **Solutions:**
+
 - Verify vite.config.ts includes the copy-aws-exports plugin
 - Ensure plugin copies from public/ (browser-compatible version)
 - Manually verify dist/aws-exports.js after build

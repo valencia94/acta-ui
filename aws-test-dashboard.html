@@ -1,340 +1,416 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AWS API Live Testing Dashboard</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .test-section {
-            margin: 20px 0;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        .test-result {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 10px 0;
-            font-family: monospace;
-            font-size: 14px;
-            white-space: pre-wrap;
-        }
-        .success { border-left: 4px solid #28a745; }
-        .error { border-left: 4px solid #dc3545; }
-        .warning { border-left: 4px solid #ffc107; }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:hover { background: #0056b3; }
-        button:disabled { background: #6c757d; cursor: not-allowed; }
-        .input-group {
-            margin: 10px 0;
-        }
-        input[type="text"] {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 200px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        .status-ok { background: #28a745; }
-        .status-error { background: #dc3545; }
-        .status-warning { background: #ffc107; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+      }
+      .test-result {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+      }
+      .success {
+        border-left: 4px solid #28a745;
+      }
+      .error {
+        border-left: 4px solid #dc3545;
+      }
+      .warning {
+        border-left: 4px solid #ffc107;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .input-group {
+        margin: 10px 0;
+      }
+      input[type="text"] {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 200px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .status-ok {
+        background: #28a745;
+      }
+      .status-error {
+        background: #dc3545;
+      }
+      .status-warning {
+        background: #ffc107;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>🧪 AWS API Live Testing Dashboard</h1>
-            <p>Test actual AWS API calls with real authentication tokens</p>
+      <div class="header">
+        <h1>🧪 AWS API Live Testing Dashboard</h1>
+        <p>Test actual AWS API calls with real authentication tokens</p>
+      </div>
+
+      <div class="test-section">
+        <h2>🔐 Authentication Status</h2>
+        <div id="auth-status">
+          <span class="status-indicator status-warning"></span>
+          <span>Checking authentication...</span>
+        </div>
+        <button onclick="checkAuthentication()">Check Auth Token</button>
+        <div id="auth-result" class="test-result" style="display: none"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>🎯 API Endpoint Tests</h2>
+        <div class="input-group">
+          <label>Project ID: </label>
+          <input
+            type="text"
+            id="projectId"
+            value="1000000064013473"
+            placeholder="Enter Project ID"
+          />
         </div>
 
-        <div class="test-section">
-            <h2>🔐 Authentication Status</h2>
-            <div id="auth-status">
-                <span class="status-indicator status-warning"></span>
-                <span>Checking authentication...</span>
-            </div>
-            <button onclick="checkAuthentication()">Check Auth Token</button>
-            <div id="auth-result" class="test-result" style="display: none;"></div>
-        </div>
+        <button onclick="testHealthEndpoint()">Test Health (Public)</button>
+        <button onclick="testProjectSummary()">Test Project Summary</button>
+        <button onclick="testTimeline()">Test Timeline</button>
+        <button onclick="testGenerateACTA()">🚀 Test Generate ACTA</button>
+        <button onclick="testDownloadPDF()">Test Download PDF</button>
+        <button onclick="testSendApproval()">Test Send Approval</button>
+        <button onclick="runAllTests()" style="background: #28a745">
+          Run All Tests
+        </button>
 
-        <div class="test-section">
-            <h2>🎯 API Endpoint Tests</h2>
-            <div class="input-group">
-                <label>Project ID: </label>
-                <input type="text" id="projectId" value="1000000064013473" placeholder="Enter Project ID">
-            </div>
-            
-            <button onclick="testHealthEndpoint()">Test Health (Public)</button>
-            <button onclick="testProjectSummary()">Test Project Summary</button>
-            <button onclick="testTimeline()">Test Timeline</button>
-            <button onclick="testGenerateACTA()">🚀 Test Generate ACTA</button>
-            <button onclick="testDownloadPDF()">Test Download PDF</button>
-            <button onclick="testSendApproval()">Test Send Approval</button>
-            <button onclick="runAllTests()" style="background: #28a745;">Run All Tests</button>
-            
-            <div id="api-results"></div>
-        </div>
+        <div id="api-results"></div>
+      </div>
 
-        <div class="test-section">
-            <h2>📊 Test Results Summary</h2>
-            <div id="summary-results">
-                <p>Run tests to see results...</p>
-            </div>
+      <div class="test-section">
+        <h2>📊 Test Results Summary</h2>
+        <div id="summary-results">
+          <p>Run tests to see results...</p>
         </div>
+      </div>
     </div>
 
     <script>
-        const API_BASE = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
-        let authToken = null;
-        let testResults = {};
+      const API_BASE =
+        "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod";
+      let authToken = null;
+      let testResults = {};
 
-        // Get authentication token from localStorage
-        function getAuthToken() {
-            // Try multiple sources for auth token
-            const sources = [
-                // Amplify
-                () => {
-                    const amplifyData = localStorage.getItem('amplify-auto-track-session');
-                    if (amplifyData) {
-                        const session = JSON.parse(amplifyData);
-                        return session.idToken?.jwtToken || session.accessToken?.jwtToken;
-                    }
-                    return null;
-                },
-                // Direct Cognito
-                () => {
-                    const keys = Object.keys(localStorage);
-                    const cognitoKeys = keys.filter(key => 
-                        key.includes('CognitoIdentityServiceProvider') && 
-                        key.includes('idToken')
-                    );
-                    return cognitoKeys.length > 0 ? localStorage.getItem(cognitoKeys[0]) : null;
-                },
-                // Any JWT-like token
-                () => {
-                    const keys = Object.keys(localStorage);
-                    for (const key of keys) {
-                        const value = localStorage.getItem(key);
-                        if (value && value.includes('eyJ')) {
-                            return value;
-                        }
-                    }
-                    return null;
-                }
-            ];
-
-            for (const getToken of sources) {
-                const token = getToken();
-                if (token) return token;
+      // Get authentication token from localStorage
+      function getAuthToken() {
+        // Try multiple sources for auth token
+        const sources = [
+          // Amplify
+          () => {
+            const amplifyData = localStorage.getItem(
+              "amplify-auto-track-session",
+            );
+            if (amplifyData) {
+              const session = JSON.parse(amplifyData);
+              return session.idToken?.jwtToken || session.accessToken?.jwtToken;
             }
-            
             return null;
+          },
+          // Direct Cognito
+          () => {
+            const keys = Object.keys(localStorage);
+            const cognitoKeys = keys.filter(
+              (key) =>
+                key.includes("CognitoIdentityServiceProvider") &&
+                key.includes("idToken"),
+            );
+            return cognitoKeys.length > 0
+              ? localStorage.getItem(cognitoKeys[0])
+              : null;
+          },
+          // Any JWT-like token
+          () => {
+            const keys = Object.keys(localStorage);
+            for (const key of keys) {
+              const value = localStorage.getItem(key);
+              if (value && value.includes("eyJ")) {
+                return value;
+              }
+            }
+            return null;
+          },
+        ];
+
+        for (const getToken of sources) {
+          const token = getToken();
+          if (token) return token;
         }
 
-        // Generic API test function
-        async function testAPI(endpoint, method = 'GET', payload = null, description = '') {
-            const resultDiv = document.getElementById('api-results');
-            const testId = Date.now();
-            
-            // Add test entry
-            const testEntry = document.createElement('div');
-            testEntry.className = 'test-result';
-            testEntry.innerHTML = `🔄 Testing ${description || endpoint}...`;
-            resultDiv.appendChild(testEntry);
+        return null;
+      }
 
-            try {
-                const options = {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                };
+      // Generic API test function
+      async function testAPI(
+        endpoint,
+        method = "GET",
+        payload = null,
+        description = "",
+      ) {
+        const resultDiv = document.getElementById("api-results");
+        const testId = Date.now();
 
-                // Add auth header if we have a token
-                if (authToken) {
-                    options.headers['Authorization'] = `Bearer ${authToken}`;
-                }
+        // Add test entry
+        const testEntry = document.createElement("div");
+        testEntry.className = "test-result";
+        testEntry.innerHTML = `🔄 Testing ${description || endpoint}...`;
+        resultDiv.appendChild(testEntry);
 
-                if (payload && method !== 'GET') {
-                    options.body = JSON.stringify(payload);
-                }
+        try {
+          const options = {
+            method,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          };
 
-                const startTime = Date.now();
-                const response = await fetch(`${API_BASE}${endpoint}`, options);
-                const duration = Date.now() - startTime;
+          // Add auth header if we have a token
+          if (authToken) {
+            options.headers["Authorization"] = `Bearer ${authToken}`;
+          }
 
-                let result;
-                try {
-                    result = await response.json();
-                } catch (e) {
-                    result = await response.text();
-                }
+          if (payload && method !== "GET") {
+            options.body = JSON.stringify(payload);
+          }
 
-                const success = response.ok;
-                testEntry.className = `test-result ${success ? 'success' : 'error'}`;
-                
-                testEntry.innerHTML = `
-${success ? '✅' : '❌'} ${description || endpoint}
+          const startTime = Date.now();
+          const response = await fetch(`${API_BASE}${endpoint}`, options);
+          const duration = Date.now() - startTime;
+
+          let result;
+          try {
+            result = await response.json();
+          } catch (e) {
+            result = await response.text();
+          }
+
+          const success = response.ok;
+          testEntry.className = `test-result ${success ? "success" : "error"}`;
+
+          testEntry.innerHTML = `
+${success ? "✅" : "❌"} ${description || endpoint}
 Status: ${response.status} ${response.statusText} (${duration}ms)
-${payload ? `Payload: ${JSON.stringify(payload, null, 2)}` : ''}
+${payload ? `Payload: ${JSON.stringify(payload, null, 2)}` : ""}
 Response: ${JSON.stringify(result, null, 2)}
                 `;
 
-                testResults[description || endpoint] = { success, status: response.status, duration, result };
-                updateSummary();
+          testResults[description || endpoint] = {
+            success,
+            status: response.status,
+            duration,
+            result,
+          };
+          updateSummary();
 
-                return { success, result, status: response.status };
+          return { success, result, status: response.status };
+        } catch (error) {
+          testEntry.className = "test-result error";
+          testEntry.innerHTML = `❌ ${description || endpoint}\nError: ${error.message}`;
+          testResults[description || endpoint] = {
+            success: false,
+            error: error.message,
+          };
+          updateSummary();
+          return { success: false, error: error.message };
+        }
+      }
 
-            } catch (error) {
-                testEntry.className = 'test-result error';
-                testEntry.innerHTML = `❌ ${description || endpoint}\nError: ${error.message}`;
-                testResults[description || endpoint] = { success: false, error: error.message };
-                updateSummary();
-                return { success: false, error: error.message };
-            }
+      // Authentication check
+      async function checkAuthentication() {
+        authToken = getAuthToken();
+        const statusDiv = document.getElementById("auth-status");
+        const resultDiv = document.getElementById("auth-result");
+
+        if (!authToken) {
+          statusDiv.innerHTML =
+            '<span class="status-indicator status-error"></span>No authentication token found';
+          resultDiv.style.display = "block";
+          resultDiv.className = "test-result error";
+          resultDiv.textContent =
+            "Please log in to the ACTA UI application first to get authentication tokens.";
+          return false;
         }
 
-        // Authentication check
-        async function checkAuthentication() {
-            authToken = getAuthToken();
-            const statusDiv = document.getElementById('auth-status');
-            const resultDiv = document.getElementById('auth-result');
+        statusDiv.innerHTML =
+          '<span class="status-indicator status-ok"></span>Authentication token found';
+        resultDiv.style.display = "block";
+        resultDiv.className = "test-result success";
+        resultDiv.textContent = `Token: ${authToken.substring(0, 50)}...\nLength: ${authToken.length} characters`;
 
-            if (!authToken) {
-                statusDiv.innerHTML = '<span class="status-indicator status-error"></span>No authentication token found';
-                resultDiv.style.display = 'block';
-                resultDiv.className = 'test-result error';
-                resultDiv.textContent = 'Please log in to the ACTA UI application first to get authentication tokens.';
-                return false;
-            }
+        // Test with health endpoint
+        const healthTest = await testAPI(
+          "/health",
+          "GET",
+          null,
+          "Health Check",
+        );
+        return healthTest.success;
+      }
 
-            statusDiv.innerHTML = '<span class="status-indicator status-ok"></span>Authentication token found';
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'test-result success';
-            resultDiv.textContent = `Token: ${authToken.substring(0, 50)}...\nLength: ${authToken.length} characters`;
+      // Individual test functions
+      async function testHealthEndpoint() {
+        await testAPI("/health", "GET", null, "Health Endpoint");
+      }
 
-            // Test with health endpoint
-            const healthTest = await testAPI('/health', 'GET', null, 'Health Check');
-            return healthTest.success;
-        }
+      async function testProjectSummary() {
+        const projectId = document.getElementById("projectId").value;
+        await testAPI(
+          `/project-summary/${projectId}`,
+          "GET",
+          null,
+          "Project Summary",
+        );
+      }
 
-        // Individual test functions
-        async function testHealthEndpoint() {
-            await testAPI('/health', 'GET', null, 'Health Endpoint');
-        }
+      async function testTimeline() {
+        const projectId = document.getElementById("projectId").value;
+        await testAPI(`/timeline/${projectId}`, "GET", null, "Timeline");
+      }
 
-        async function testProjectSummary() {
-            const projectId = document.getElementById('projectId').value;
-            await testAPI(`/project-summary/${projectId}`, 'GET', null, 'Project Summary');
-        }
+      async function testGenerateACTA() {
+        const projectId = document.getElementById("projectId").value;
+        const payload = {
+          projectId: projectId,
+          pmEmail: "test@example.com",
+          userRole: "pm",
+          s3Bucket: "projectplace-dv-2025-x9a7b",
+          s3Region: "us-east-2",
+          cloudfrontDistributionId: "D7T9X3J66YD8K",
+          cloudfrontUrl: "https://d7t9x3j66yd8k.cloudfront.net",
+          requestSource: "acta-ui-test",
+          generateDocuments: true,
+          extractMetadata: true,
+          timestamp: new Date().toISOString(),
+        };
+        await testAPI(
+          `/extract-project-place/${projectId}`,
+          "POST",
+          payload,
+          "Generate ACTA",
+        );
+      }
 
-        async function testTimeline() {
-            const projectId = document.getElementById('projectId').value;
-            await testAPI(`/timeline/${projectId}`, 'GET', null, 'Timeline');
-        }
+      async function testDownloadPDF() {
+        const projectId = document.getElementById("projectId").value;
+        await testAPI(
+          `/download-acta/${projectId}?format=pdf`,
+          "GET",
+          null,
+          "Download PDF",
+        );
+      }
 
-        async function testGenerateACTA() {
-            const projectId = document.getElementById('projectId').value;
-            const payload = {
-                projectId: projectId,
-                pmEmail: 'test@example.com',
-                userRole: 'pm',
-                s3Bucket: 'projectplace-dv-2025-x9a7b',
-                s3Region: 'us-east-2',
-                cloudfrontDistributionId: 'D7T9X3J66YD8K',
-                cloudfrontUrl: 'https://d7t9x3j66yd8k.cloudfront.net',
-                requestSource: 'acta-ui-test',
-                generateDocuments: true,
-                extractMetadata: true,
-                timestamp: new Date().toISOString()
-            };
-            await testAPI(`/extract-project-place/${projectId}`, 'POST', payload, 'Generate ACTA');
-        }
+      async function testSendApproval() {
+        const projectId = document.getElementById("projectId").value;
+        const payload = {
+          actaId: projectId,
+          clientEmail: "test.client@example.com",
+        };
+        await testAPI(
+          "/send-approval-email",
+          "POST",
+          payload,
+          "Send Approval Email",
+        );
+      }
 
-        async function testDownloadPDF() {
-            const projectId = document.getElementById('projectId').value;
-            await testAPI(`/download-acta/${projectId}?format=pdf`, 'GET', null, 'Download PDF');
-        }
+      async function runAllTests() {
+        document.getElementById("api-results").innerHTML = "";
+        testResults = {};
 
-        async function testSendApproval() {
-            const projectId = document.getElementById('projectId').value;
-            const payload = {
-                actaId: projectId,
-                clientEmail: 'test.client@example.com'
-            };
-            await testAPI('/send-approval-email', 'POST', payload, 'Send Approval Email');
-        }
+        await checkAuthentication();
+        await testHealthEndpoint();
+        await testProjectSummary();
+        await testTimeline();
+        await testGenerateACTA();
+        await testDownloadPDF();
+        await testSendApproval();
+      }
 
-        async function runAllTests() {
-            document.getElementById('api-results').innerHTML = '';
-            testResults = {};
-            
-            await checkAuthentication();
-            await testHealthEndpoint();
-            await testProjectSummary();
-            await testTimeline();
-            await testGenerateACTA();
-            await testDownloadPDF();
-            await testSendApproval();
-        }
+      function updateSummary() {
+        const summaryDiv = document.getElementById("summary-results");
+        const total = Object.keys(testResults).length;
+        const passed = Object.values(testResults).filter(
+          (r) => r.success,
+        ).length;
+        const failed = total - passed;
 
-        function updateSummary() {
-            const summaryDiv = document.getElementById('summary-results');
-            const total = Object.keys(testResults).length;
-            const passed = Object.values(testResults).filter(r => r.success).length;
-            const failed = total - passed;
-
-            summaryDiv.innerHTML = `
+        summaryDiv.innerHTML = `
                 <h3>📊 Results: ${passed}/${total} tests passed</h3>
                 <div style="margin: 10px 0;">
                     <span class="status-indicator status-ok"></span> Passed: ${passed}
                     <span class="status-indicator status-error"></span> Failed: ${failed}
                 </div>
                 <div style="font-size: 14px; color: #666;">
-                    ${passed === total ? '🎉 All tests passing!' : 
-                      failed > 0 ? '⚠️ Some tests failed - check authentication and AWS resources' : 
-                      '🔄 Tests in progress...'}
+                    ${
+                      passed === total
+                        ? "🎉 All tests passing!"
+                        : failed > 0
+                          ? "⚠️ Some tests failed - check authentication and AWS resources"
+                          : "🔄 Tests in progress..."
+                    }
                 </div>
             `;
-        }
+      }
 
-        // Auto-check authentication on page load
-        window.addEventListener('load', () => {
-            setTimeout(checkAuthentication, 1000);
-        });
+      // Auto-check authentication on page load
+      window.addEventListener("load", () => {
+        setTimeout(checkAuthentication, 1000);
+      });
     </script>
-</body>
+  </body>
 </html>

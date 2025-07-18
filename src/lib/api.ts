@@ -12,8 +12,8 @@ import {
   s3Region,
   cloudfrontUrl,
   cloudfrontDistributionId,
-} from '@/env.variables';
-import { getAuthToken } from '@/utils/fetchWrapper';
+} from "@/env.variables";
+import { getAuthToken } from "@/utils/fetchWrapper";
 
 /**
  * ---------------------------------------------------------------------------
@@ -21,42 +21,41 @@ import { getAuthToken } from '@/utils/fetchWrapper';
  * ---------------------------------------------------------------------------
  */
 export const BASE =
-  apiBaseUrl ||
-  'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
+  apiBaseUrl || "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod";
 
-export const S3_BUCKET = s3Bucket || 'projectplace-dv-2025-x9a7b';
-export const AWS_REGION = s3Region || 'us-east-2';
+export const S3_BUCKET = s3Bucket || "projectplace-dv-2025-x9a7b";
+export const AWS_REGION = s3Region || "us-east-2";
 
 /** -------------------------------------------------------------------------
  * 🛠️ Utility – signed / authorised fetch
  * --------------------------------------------------------------------------*/
 async function request<T = unknown>(
   endpoint: string,
-  options: RequestInit & { auth?: boolean } = {}
+  options: RequestInit & { auth?: boolean } = {},
 ): Promise<T> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-  
+
   if (options.auth !== false) {
-    console.log('🔐 Attempting to get auth token for request to:', endpoint);
+    console.log("🔐 Attempting to get auth token for request to:", endpoint);
     try {
       const token = await getAuthToken();
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-        console.log('✅ Authorization header added to request');
+        headers["Authorization"] = `Bearer ${token}`;
+        console.log("✅ Authorization header added to request");
       } else {
-        console.warn('⚠️ No auth token available for request');
+        console.warn("⚠️ No auth token available for request");
       }
     } catch (error) {
-      console.error('❌ Failed to get auth token:', error);
+      console.error("❌ Failed to get auth token:", error);
     }
   }
 
-  console.log('🌐 Making request to:', `${BASE}${endpoint}`, {
-    method: options.method || 'GET',
-    hasAuth: !!headers['Authorization']
+  console.log("🌐 Making request to:", `${BASE}${endpoint}`, {
+    method: options.method || "GET",
+    hasAuth: !!headers["Authorization"],
   });
 
   const res = await fetch(`${BASE}${endpoint}`, {
@@ -64,20 +63,20 @@ async function request<T = unknown>(
     headers,
   });
 
-  console.log('📡 Request response:', {
+  console.log("📡 Request response:", {
     status: res.status,
     statusText: res.statusText,
-    ok: res.ok
+    ok: res.ok,
   });
 
   if (!res.ok) {
     const txt = await res.text().catch(() => res.statusText);
-    console.error('❌ Request failed:', `${endpoint} → ${res.status}: ${txt}`);
+    console.error("❌ Request failed:", `${endpoint} → ${res.status}: ${txt}`);
     throw new Error(`${endpoint} → ${res.status}: ${txt}`);
   }
 
-  if (options.method === 'HEAD') return undefined as unknown as T;
-  if (options.redirect === 'manual') return res as unknown as T;
+  if (options.method === "HEAD") return undefined as unknown as T;
+  if (options.redirect === "manual") return res as unknown as T;
   return (await res.json()) as T;
 }
 
@@ -108,7 +107,7 @@ export const getTimeline = (id: string) =>
 export async function generateActaDocument(
   projectId: string,
   userEmail: string,
-  userRole: 'pm' | 'admin' = 'pm'
+  userRole: "pm" | "admin" = "pm",
 ) {
   const payload = {
     projectId,
@@ -116,9 +115,9 @@ export async function generateActaDocument(
     userRole,
     s3Bucket: S3_BUCKET,
     s3Region: AWS_REGION,
-    cloudfrontDistributionId: cloudfrontDistributionId || 'EPQU7PVDLQXUA',
-    cloudfrontUrl: cloudfrontUrl || 'https://d7t9x3j66yd8k.cloudfront.net',
-    requestSource: 'acta-ui',
+    cloudfrontDistributionId: cloudfrontDistributionId || "EPQU7PVDLQXUA",
+    cloudfrontUrl: cloudfrontUrl || "https://d7t9x3j66yd8k.cloudfront.net",
+    requestSource: "acta-ui",
     generateDocuments: true,
     extractMetadata: true,
     timestamp: new Date().toISOString(),
@@ -127,9 +126,9 @@ export async function generateActaDocument(
   return request<{ message: string; success: boolean }>(
     `/extract-project-place/${projectId}`,
     {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(payload),
-    }
+    },
   );
 }
 
@@ -138,14 +137,14 @@ export async function generateActaDocument(
  * --------------------------------------------------------------------------*/
 export async function getSignedDownloadUrl(
   projectId: string,
-  format: 'pdf' | 'docx'
+  format: "pdf" | "docx",
 ): Promise<string> {
   const res = (await request<Response>(
     `/download-acta/${projectId}?format=${format}`,
     {
-      method: 'GET',
-      redirect: 'manual',
-    }
+      method: "GET",
+      redirect: "manual",
+    },
   )) as Response;
 
   if (res.status !== 302) {
@@ -153,8 +152,8 @@ export async function getSignedDownloadUrl(
     throw new Error(`Download‑endpoint error ${res.status}: ${txt}`);
   }
 
-  const url = res.headers.get('Location');
-  if (!url) throw new Error('Missing Location header in 302 response');
+  const url = res.headers.get("Location");
+  if (!url) throw new Error("Missing Location header in 302 response");
   return url;
 }
 
@@ -163,7 +162,7 @@ export async function getSignedDownloadUrl(
  * --------------------------------------------------------------------------*/
 export const sendApprovalEmail = (actaId: string, clientEmail: string) =>
   request<{ message: string }>(`/send-approval-email`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ actaId, clientEmail }),
   });
 
@@ -179,12 +178,15 @@ export interface DocumentCheckResult {
  * --------------------------------------------------------------------------*/
 export async function documentExists(
   projectId: string,
-  format: 'pdf' | 'docx'
+  format: "pdf" | "docx",
 ): Promise<DocumentCheckResult> {
   try {
-    const response = await request(`/check-document/${projectId}?format=${format}`, {
-      method: 'HEAD',
-    });
+    const response = await request(
+      `/check-document/${projectId}?format=${format}`,
+      {
+        method: "HEAD",
+      },
+    );
     return {
       available: true,
       // Add other properties if the API returns them
@@ -211,15 +213,20 @@ export const checkDocumentInS3 = documentExists;
 export const getDownloadUrl = getSignedDownloadUrl;
 export const checkDocumentAvailability = documentExists;
 
-export async function getProjectsByPM(pmEmail: string, isAdmin: boolean): Promise<PMProject[]> {
+export async function getProjectsByPM(
+  pmEmail: string,
+  isAdmin: boolean,
+): Promise<PMProject[]> {
   return request<PMProject[]>(
-    `/projects-for-pm?email=${encodeURIComponent(pmEmail)}&admin=${isAdmin}`
+    `/projects-for-pm?email=${encodeURIComponent(pmEmail)}&admin=${isAdmin}`,
   );
 }
 
-export async function generateSummariesForPM(pmEmail: string): Promise<ProjectSummary[]> {
+export async function generateSummariesForPM(
+  pmEmail: string,
+): Promise<ProjectSummary[]> {
   return request<ProjectSummary[]>(
-    `/project-summaries?email=${encodeURIComponent(pmEmail)}`
+    `/project-summaries?email=${encodeURIComponent(pmEmail)}`,
   );
 }
 
@@ -227,23 +234,27 @@ export async function getAllProjects(): Promise<PMProject[]> {
   return request<PMProject[]>(`/all-projects`);
 }
 
-export async function getProjectSummaryForPM(projectId: string): Promise<ProjectSummary> {
+export async function getProjectSummaryForPM(
+  projectId: string,
+): Promise<ProjectSummary> {
   return request<ProjectSummary>(`/project-summary/${projectId}`);
 }
 
-export async function getPMProjectsWithSummary(pmEmail: string): Promise<ProjectSummary[]> {
+export async function getPMProjectsWithSummary(
+  pmEmail: string,
+): Promise<ProjectSummary[]> {
   return request<ProjectSummary[]>(
-    `/projects-with-summary?email=${encodeURIComponent(pmEmail)}`
+    `/projects-with-summary?email=${encodeURIComponent(pmEmail)}`,
   );
 }
 
 /** -------------------------------------------------------------------------
  * 🧪 Dev Tools – expose helpers to browser
  * --------------------------------------------------------------------------*/
-if (import.meta.env.DEV && typeof window !== 'undefined') {
+if (import.meta.env.DEV && typeof window !== "undefined") {
   // @ts-ignore
   window.__actaApi = {
-    ping: () => request<{ status: string }>('/health', { auth: false }),
+    ping: () => request<{ status: string }>("/health", { auth: false }),
     generateActaDocument,
     getSignedDownloadUrl,
     documentExists,

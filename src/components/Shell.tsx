@@ -1,13 +1,13 @@
 // src/components/Shell.tsx
-import { motion } from 'framer-motion';
-import { LayoutDashboard, Menu as MenuIcon } from 'lucide-react';
-import { ReactNode } from 'react';
+import { motion } from "framer-motion";
+import { LayoutDashboard, Menu as MenuIcon } from "lucide-react";
+import { ReactNode } from "react";
 
 interface ShellProps {
   children: ReactNode;
 }
 
-const logoSrc = '/assets/ikusi-logo.png';
+const logoSrc = "/assets/ikusi-logo.png";
 
 export default function Shell({ children }: ShellProps) {
   return (

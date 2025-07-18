@@ -1,10 +1,10 @@
 // src/components/DynamoProjectsView.tsx
-import { useEffect, useState } from 'react';
-import { getProjectsByPM, PMProject } from '@/lib/api';
-import { getCurrentUser } from '@/lib/api-amplify';
-import ProjectTable, { Project } from './ProjectTable';
-import { ProjectTableSkeleton } from './LoadingSkeleton';
-import ErrorCallout from './ErrorCallout';
+import { useEffect, useState } from "react";
+import { getProjectsByPM, PMProject } from "@/lib/api";
+import { getCurrentUser } from "@/lib/api-amplify";
+import ProjectTable, { Project } from "./ProjectTable";
+import { ProjectTableSkeleton } from "./LoadingSkeleton";
+import ErrorCallout from "./ErrorCallout";
 
 interface DynamoProjectsViewProps {
   userEmail: string;
@@ -14,12 +14,12 @@ interface DynamoProjectsViewProps {
   isAdminMode?: boolean;
 }
 
-export default function DynamoProjectsView({ 
-  userEmail, 
-  isAdmin = false, 
-  onProjectSelect, 
+export default function DynamoProjectsView({
+  userEmail,
+  isAdmin = false,
+  onProjectSelect,
   selectedProjectId,
-  isAdminMode = false 
+  isAdminMode = false,
 }: DynamoProjectsViewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,9 +33,9 @@ export default function DynamoProjectsView({
       try {
         const user = await getCurrentUser();
         setCognitoUser(user);
-        console.log('🔐 Cognito user loaded:', user);
+        console.log("🔐 Cognito user loaded:", user);
       } catch (error) {
-        console.warn('⚠️ Could not load Cognito user:', error);
+        console.warn("⚠️ Could not load Cognito user:", error);
       }
     }
     fetchCognitoUser();
@@ -52,25 +52,30 @@ export default function DynamoProjectsView({
     setError(null);
 
     try {
-      console.log('📋 Fetching projects with Cognito authentication...');
-      console.log('👤 User email:', userEmail);
-      console.log('🔐 Cognito user:', cognitoUser);
-      console.log('🛡️ Admin mode:', isAdmin);
+      console.log("📋 Fetching projects with Cognito authentication...");
+      console.log("👤 User email:", userEmail);
+      console.log("🔐 Cognito user:", cognitoUser);
+      console.log("🛡️ Admin mode:", isAdmin);
 
       const projectSummaries = await getProjectsByPM(userEmail, isAdmin);
-      console.log('✅ Projects loaded:', projectSummaries);
+      console.log("✅ Projects loaded:", projectSummaries);
 
-      const projects: Project[] = projectSummaries.map((summary: PMProject, index: number) => ({
-        id: parseInt(summary.id) || index + 1,
-        name: summary.name || `Project ${summary.id}`,
-        pm: summary.pm || 'Unknown',
-        status: summary.status || 'Active',
-      }));
+      const projects: Project[] = projectSummaries.map(
+        (summary: PMProject, index: number) => ({
+          id: parseInt(summary.id) || index + 1,
+          name: summary.name || `Project ${summary.id}`,
+          pm: summary.pm || "Unknown",
+          status: summary.status || "Active",
+        }),
+      );
 
       setProjects(projects);
     } catch (err) {
-      console.error('❌ Failed to load projects:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load projects. Please check your authentication.';
+      console.error("❌ Failed to load projects:", err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to load projects. Please check your authentication.";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -117,7 +122,7 @@ export default function DynamoProjectsView({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {isAdminMode ? 'All Projects (Admin)' : 'Your Projects'}
+              {isAdminMode ? "All Projects (Admin)" : "Your Projects"}
             </h3>
             <p className="text-sm text-gray-500">
               {cognitoUser ? (
@@ -128,13 +133,13 @@ export default function DynamoProjectsView({
             </p>
           </div>
           <div className="text-sm text-gray-500">
-            {projects.length} project{projects.length !== 1 ? 's' : ''} found
+            {projects.length} project{projects.length !== 1 ? "s" : ""} found
           </div>
         </div>
       </div>
-      
+
       <div className="p-6">
-        <ProjectTable 
+        <ProjectTable
           data={projects}
           onProjectSelect={onProjectSelect}
           selectedProjectId={selectedProjectId}

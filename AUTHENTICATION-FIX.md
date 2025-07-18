@@ -35,56 +35,60 @@ Created a browser-compatible version of aws-exports.js that directly assigns to 
 // This version assigns directly to window.awsmobile instead of using module exports
 window.awsmobile = {
   // Region Configuration
-  aws_project_region: 'us-east-2',
-  
+  aws_project_region: "us-east-2",
+
   // User Pool Configuration (for authentication)
-  aws_user_pools_id: 'us-east-2_FyHLtOhiY',
-  aws_user_pools_web_client_id: 'dshos5iou44tuach7ta3ici5m',
-  
+  aws_user_pools_id: "us-east-2_FyHLtOhiY",
+  aws_user_pools_web_client_id: "dshos5iou44tuach7ta3ici5m",
+
   // Identity Pool Configuration (for AWS service access, especially DynamoDB)
-  aws_cognito_identity_pool_id: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-  aws_cognito_region: 'us-east-2',
-  
+  aws_cognito_identity_pool_id:
+    "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35",
+  aws_cognito_region: "us-east-2",
+
   // OAuth Configuration
   oauth: {
-    domain: 'us-east-2-fyhltohiy.auth.us-east-2.amazoncognito.com',
-    redirectSignIn: 'https://d7t9x3j66yd8k.cloudfront.net/',
-    redirectSignOut: 'https://d7t9x3j66yd8k.cloudfront.net/',
-    responseType: 'code',
-    scope: ['email', 'openid', 'profile'],
+    domain: "us-east-2-fyhltohiy.auth.us-east-2.amazoncognito.com",
+    redirectSignIn: "https://d7t9x3j66yd8k.cloudfront.net/",
+    redirectSignOut: "https://d7t9x3j66yd8k.cloudfront.net/",
+    responseType: "code",
+    scope: ["email", "openid", "profile"],
   },
-  
+
   // API Gateway Configuration
-  aws_cloud_logic_custom: [{
-    name: 'ActaAPI',
-    endpoint: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod',
-    region: 'us-east-2'
-  }],
-  
+  aws_cloud_logic_custom: [
+    {
+      name: "ActaAPI",
+      endpoint: "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod",
+      region: "us-east-2",
+    },
+  ],
+
   // Auth role configuration for IAM
-  aws_appsync_authenticationType: 'AMAZON_COGNITO_USER_POOLS',
-  aws_cognito_role_arn: 'arn:aws:iam::703671891952:role/ActaUI-DynamoDB-AuthenticatedRole',
-  
+  aws_appsync_authenticationType: "AMAZON_COGNITO_USER_POOLS",
+  aws_cognito_role_arn:
+    "arn:aws:iam::703671891952:role/ActaUI-DynamoDB-AuthenticatedRole",
+
   // Mandatory auth flow configuration for both User Pool and Identity Pool
   Auth: {
     // Authentication flow configuration for sign-in
-    authenticationFlowType: 'USER_SRP_AUTH',
-    
+    authenticationFlowType: "USER_SRP_AUTH",
+
     // Identity Pool configuration (for AWS service access, especially DynamoDB)
-    identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-    identityPoolRegion: 'us-east-2',
-    
+    identityPoolId: "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35",
+    identityPoolRegion: "us-east-2",
+
     // User Pool configuration (for authentication)
-    userPoolId: 'us-east-2_FyHLtOhiY',
-    userPoolWebClientId: 'dshos5iou44tuach7ta3ici5m',
-    
+    userPoolId: "us-east-2_FyHLtOhiY",
+    userPoolWebClientId: "dshos5iou44tuach7ta3ici5m",
+
     // Force sign-in to ensure credentials are available
     mandatorySignIn: true,
-    region: 'us-east-2'
-  }
+    region: "us-east-2",
+  },
 };
 
-console.log('✅ AWS Cognito config loaded successfully!');
+console.log("✅ AWS Cognito config loaded successfully!");
 ```
 
 ### 2. Fixed Script Loading Order
@@ -116,50 +120,56 @@ Added a more robust Amplify configuration in main.tsx with fallback mechanisms a
 ```typescript
 // Enhanced Amplify configuration with proper waiting
 const configureAmplify = async () => {
-  console.log('🔧 Attempting to configure Amplify...');
-  
+  console.log("🔧 Attempting to configure Amplify...");
+
   // Wait for aws-exports.js to load
   let attempts = 0;
   while (!window.awsmobile && attempts < 50) {
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     attempts++;
   }
-  
+
   if (window.awsmobile) {
-    console.log('✅ AWS config found, configuring Amplify:', window.awsmobile);
-    
+    console.log("✅ AWS config found, configuring Amplify:", window.awsmobile);
+
     // Ensure Identity Pool configuration is included
     if (!window.awsmobile.aws_cognito_identity_pool_id) {
-      console.warn('⚠️ Identity Pool ID not found in window.awsmobile, might affect DynamoDB access');
+      console.warn(
+        "⚠️ Identity Pool ID not found in window.awsmobile, might affect DynamoDB access",
+      );
     }
-    
+
     // Ensure Auth configuration is included
     if (!window.awsmobile.Auth) {
-      console.warn('⚠️ Auth configuration not found in window.awsmobile, adding it');
+      console.warn(
+        "⚠️ Auth configuration not found in window.awsmobile, adding it",
+      );
       window.awsmobile.Auth = {
-        authenticationFlowType: 'USER_SRP_AUTH',
-        identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-        identityPoolRegion: 'us-east-2',
-        userPoolId: 'us-east-2_FyHLtOhiY',
-        userPoolWebClientId: 'dshos5iou44tuach7ta3ici5m',
+        authenticationFlowType: "USER_SRP_AUTH",
+        identityPoolId: "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35",
+        identityPoolRegion: "us-east-2",
+        userPoolId: "us-east-2_FyHLtOhiY",
+        userPoolWebClientId: "dshos5iou44tuach7ta3ici5m",
         mandatorySignIn: true,
-        region: 'us-east-2'
+        region: "us-east-2",
       };
     }
-    
+
     Amplify.configure(window.awsmobile);
-    console.log('✅ Amplify configured successfully with both User Pool and Identity Pool');
+    console.log(
+      "✅ Amplify configured successfully with both User Pool and Identity Pool",
+    );
   } else {
-    console.error('❌ aws-exports.js failed to load after 5 seconds');
-    
+    console.error("❌ aws-exports.js failed to load after 5 seconds");
+
     // Fallback to local import if window.awsmobile isn't available
     try {
-      console.log('⚠️ Falling back to imported aws-exports.js...');
-      const awsExports = await import('@/aws-exports');
+      console.log("⚠️ Falling back to imported aws-exports.js...");
+      const awsExports = await import("@/aws-exports");
       Amplify.configure(awsExports.default);
-      console.log('✅ Amplify configured with imported aws-exports.js');
+      console.log("✅ Amplify configured with imported aws-exports.js");
     } catch (err) {
-      console.error('❌ Failed to configure Amplify:', err);
+      console.error("❌ Failed to configure Amplify:", err);
     }
   }
 };
@@ -171,7 +181,7 @@ Updated vite.config.ts to ensure aws-exports.js is properly copied to the dist f
 
 ```typescript
 plugins: [
-  react(), 
+  react(),
   svgr(),
   {
     name: 'copy-aws-exports',

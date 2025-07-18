@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: Custom domain configuration for existing Cognito User Pool
 
 Parameters:
@@ -6,12 +6,12 @@ Parameters:
     Type: String
     Default: us-east-2_FyHLtOhiY
     Description: Existing Cognito User Pool ID
-    
+
   DomainName:
     Type: String
     Default: acta-ui-prod
     Description: Custom domain prefix for Cognito (will create acta-ui-prod.auth.us-east-2.amazoncognito.com)
-    
+
   CertificateArn:
     Type: String
     Default: ""
@@ -29,7 +29,7 @@ Resources:
   # ═══════════════════════════════════════════════════════════════
   # COGNITO USER POOL DOMAIN
   # ═══════════════════════════════════════════════════════════════
-  
+
   CognitoUserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
@@ -44,7 +44,7 @@ Resources:
   # ═══════════════════════════════════════════════════════════════
   # COGNITO USER POOL CLIENT (Update existing or create new)
   # ═══════════════════════════════════════════════════════════════
-  
+
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -94,13 +94,13 @@ Resources:
   # ═══════════════════════════════════════════════════════════════
   # CLOUDWATCH LOGS CONFIGURATION FOR COGNITO
   # ═══════════════════════════════════════════════════════════════
-  
+
   CognitoLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub '/aws/cognito/userpool/${CognitoUserPoolId}'
+      LogGroupName: !Sub "/aws/cognito/userpool/${CognitoUserPoolId}"
       RetentionInDays: 14
-      
+
   CognitoLogStream:
     Type: AWS::Logs::LogStream
     Properties:
@@ -110,27 +110,27 @@ Resources:
 Outputs:
   CognitoDomainURL:
     Description: Cognito User Pool Domain URL
-    Value: !Sub 'https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com'
+    Value: !Sub "https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"
     Export:
-      Name: !Sub '${AWS::StackName}-CognitoDomainURL'
-      
+      Name: !Sub "${AWS::StackName}-CognitoDomainURL"
+
   CognitoUserPoolClientId:
     Description: Cognito User Pool Client ID
     Value: !Ref CognitoUserPoolClient
     Export:
-      Name: !Sub '${AWS::StackName}-UserPoolClientId'
-      
+      Name: !Sub "${AWS::StackName}-UserPoolClientId"
+
   CognitoLoginURL:
     Description: Cognito Hosted UI Login URL
-    Value: !Sub 'https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${CognitoUserPoolClient}&response_type=code&scope=email+openid+profile&redirect_uri=https://d7t9x3j66yd8k.cloudfront.net/'
+    Value: !Sub "https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${CognitoUserPoolClient}&response_type=code&scope=email+openid+profile&redirect_uri=https://d7t9x3j66yd8k.cloudfront.net/"
     Export:
-      Name: !Sub '${AWS::StackName}-LoginURL'
-      
+      Name: !Sub "${AWS::StackName}-LoginURL"
+
   CognitoLogoutURL:
-    Description: Cognito Hosted UI Logout URL  
-    Value: !Sub 'https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/logout?client_id=${CognitoUserPoolClient}&logout_uri=https://d7t9x3j66yd8k.cloudfront.net/login'
+    Description: Cognito Hosted UI Logout URL
+    Value: !Sub "https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com/logout?client_id=${CognitoUserPoolClient}&logout_uri=https://d7t9x3j66yd8k.cloudfront.net/login"
     Export:
-      Name: !Sub '${AWS::StackName}-LogoutURL'
+      Name: !Sub "${AWS::StackName}-LogoutURL"
 
   OAuthEndpoints:
     Description: OAuth 2.0 endpoints for the domain
@@ -157,4 +157,4 @@ Outputs:
     Description: CloudWatch Logs Policy ID for monitoring
     Value: !Ref CloudWatchLogsPolicyId
     Export:
-      Name: !Sub '${AWS::StackName}-CloudWatchPolicyId'
+      Name: !Sub "${AWS::StackName}-CloudWatchPolicyId"

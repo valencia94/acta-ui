@@ -1,14 +1,14 @@
 // src/components/Header.tsx
-import { signOut } from 'aws-amplify/auth';
-import clsx from 'clsx';
-import { Grid, LogOut, Menu, Shield, User } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { signOut } from "aws-amplify/auth";
+import clsx from "clsx";
+import { Grid, LogOut, Menu, Shield, User } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { skipAuth } from '@/env.variables';
-import { useAuth } from '@/hooks/useAuth';
+import { skipAuth } from "@/env.variables";
+import { useAuth } from "@/hooks/useAuth";
 
-const logoSrc = '/assets/ikusi-logo.png';
+const logoSrc = "/assets/ikusi-logo.png";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -18,10 +18,10 @@ export default function Header() {
 
   // Check if user has admin access
   const isAdmin =
-    user?.email?.includes('admin') ||
-    user?.email?.includes('valencia94') ||
-    user?.email?.endsWith('@ikusi.com') ||
-    user?.email?.endsWith('@company.com');
+    user?.email?.includes("admin") ||
+    user?.email?.includes("valencia94") ||
+    user?.email?.endsWith("@ikusi.com") ||
+    user?.email?.endsWith("@company.com");
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -40,15 +40,15 @@ export default function Header() {
       // Add a small delay to ensure signOut completes
       setTimeout(() => {
         // Force a complete page reload to login page specifically
-        window.location.href = '/login';
+        window.location.href = "/login";
       }, 100);
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       // Even if signOut fails, force navigation
       localStorage.clear();
       setOpen(false);
       setTimeout(() => {
-        window.location.href = '/login';
+        window.location.href = "/login";
       }, 100);
     }
   };
@@ -73,7 +73,7 @@ export default function Header() {
       {/* Center nav (hidden on mobile) */}
       <nav className="hidden md:flex items-center gap-8 text-white">
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate("/dashboard")}
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors font-medium"
         >
           <Grid className="h-5 w-5" />
@@ -81,7 +81,7 @@ export default function Header() {
         </button>
         {isAdmin && (
           <button
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate("/admin")}
             className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors font-medium"
           >
             <Shield className="h-5 w-5" />
@@ -103,8 +103,8 @@ export default function Header() {
         {open && (
           <div
             className={clsx(
-              'absolute right-0 top-full mt-2 w-48 rounded-lg bg-white py-1 shadow-lg',
-              'ring-1 ring-black ring-opacity-5 focus:outline-none z-50'
+              "absolute right-0 top-full mt-2 w-48 rounded-lg bg-white py-1 shadow-lg",
+              "ring-1 ring-black ring-opacity-5 focus:outline-none z-50",
             )}
           >
             {/* Dashboard Option */}
@@ -112,7 +112,7 @@ export default function Header() {
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
               onClick={() => {
                 setOpen(false);
-                navigate('/dashboard');
+                navigate("/dashboard");
               }}
             >
               <Grid className="mr-3 h-4 w-4" />
@@ -125,7 +125,7 @@ export default function Header() {
                 className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                 onClick={() => {
                   setOpen(false);
-                  navigate('/admin');
+                  navigate("/admin");
                 }}
               >
                 <Shield className="mr-3 h-4 w-4" />
@@ -138,7 +138,7 @@ export default function Header() {
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
               onClick={() => {
                 setOpen(false);
-                navigate('/profile');
+                navigate("/profile");
               }}
             >
               <User className="mr-3 h-4 w-4" />

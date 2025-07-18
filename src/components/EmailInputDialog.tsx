@@ -1,7 +1,7 @@
 // src/components/EmailInputDialog.tsx
-import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
-import { useState } from 'react';
+import { motion } from "framer-motion";
+import { X } from "lucide-react";
+import { useState } from "react";
 
 interface EmailInputDialogProps {
   isOpen: boolean;
@@ -18,22 +18,22 @@ export function EmailInputDialog({
   onClose,
   onSubmit,
   loading = false,
-  title = 'Send Email',
-  description = 'Enter the email address to send to:',
-  placeholder = 'Enter email address',
+  title = "Send Email",
+  description = "Enter the email address to send to:",
+  placeholder = "Enter email address",
 }: EmailInputDialogProps) {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) {
       onSubmit(email.trim());
-      setEmail('');
+      setEmail("");
     }
   };
 
   const handleClose = () => {
-    setEmail('');
+    setEmail("");
     onClose();
   };
 
@@ -87,7 +87,7 @@ export function EmailInputDialog({
               disabled={loading || !email.trim()}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Sending...' : 'Send'}
+              {loading ? "Sending..." : "Send"}
             </button>
           </div>
         </form>

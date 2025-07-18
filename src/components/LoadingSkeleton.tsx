@@ -1,11 +1,11 @@
 // src/components/LoadingSkeleton.tsx
-import React from 'react';
+import React from "react";
 
 interface SkeletonRowProps {
   className?: string;
 }
 
-export function SkeletonRow({ className = '' }: SkeletonRowProps) {
+export function SkeletonRow({ className = "" }: SkeletonRowProps) {
   return (
     <tr className={`animate-pulse ${className}`}>
       <td className="px-6 py-4">
@@ -42,16 +42,24 @@ export function ProjectTableSkeleton({ rows = 3 }: ProjectSkeletonProps) {
           </div>
         </div>
       </div>
-      
+
       <div className="p-4 sm:p-6">
         <div className="rounded-2xl shadow-lg overflow-auto">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-white sticky top-0">
               <tr>
-                <th className="px-4 sm:px-6 py-3 text-left font-semibold hidden sm:table-cell">ID</th>
-                <th className="px-4 sm:px-6 py-3 text-left font-semibold">Name</th>
-                <th className="px-4 sm:px-6 py-3 text-left font-semibold hidden md:table-cell">PM</th>
-                <th className="px-4 sm:px-6 py-3 text-left font-semibold">Status</th>
+                <th className="px-4 sm:px-6 py-3 text-left font-semibold hidden sm:table-cell">
+                  ID
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left font-semibold">
+                  Name
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left font-semibold hidden md:table-cell">
+                  PM
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left font-semibold">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -83,9 +91,11 @@ interface CardSkeletonProps {
   className?: string;
 }
 
-export function CardSkeleton({ className = '' }: CardSkeletonProps) {
+export function CardSkeleton({ className = "" }: CardSkeletonProps) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 animate-pulse ${className}`}>
+    <div
+      className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 animate-pulse ${className}`}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="h-6 bg-gray-200 rounded w-32"></div>
         <div className="h-4 bg-gray-200 rounded w-20"></div>

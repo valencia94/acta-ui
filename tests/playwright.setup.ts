@@ -1,4 +1,4 @@
-const jestSymbol = Symbol.for('$$jest-matchers-object');
+const jestSymbol = Symbol.for("$$jest-matchers-object");
 // Global setup runs before Playwright installs its expect globals.
 // Ensure any previous Vitest hooks are removed to prevent property redefinition errors.
 try {
