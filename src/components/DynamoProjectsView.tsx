@@ -1,6 +1,6 @@
 // src/components/DynamoProjectsView.tsx
 import { useEffect, useState } from 'react';
-import { getProjectsByPM } from '@/lib/api';
+import { getProjectsByPM } from '@/api';
 import { getCurrentUser } from '@/lib/api-amplify';
 import ProjectTable, { Project } from './ProjectTable';
 
@@ -54,9 +54,9 @@ export default function DynamoProjectsView({
       console.log('✅ Projects loaded:', projectSummaries);
 
       const projects: Project[] = projectSummaries.map((summary, index) => ({
-        id: parseInt(summary.project_id) || index + 1,
-        name: summary.project_name,
-        pm: summary.pm || summary.project_manager || 'Unknown',
+        id: parseInt(String(summary.project_id)) || index + 1,
+        name: String(summary.project_name),
+        pm: String(summary.pm || summary.project_manager || 'Unknown'),
         status: 'Active',
       }));
 

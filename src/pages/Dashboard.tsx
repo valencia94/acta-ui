@@ -13,11 +13,11 @@ import {
   generateActaDocument,
   getDownloadUrl,
   sendApprovalEmail,
-  checkDocumentAvailability,
+  checkDocumentInS3,
   getProjectsByPM,
   getSummary,
   getTimeline,
-} from '@/lib/api';
+} from '@/api';
 import { getCurrentUser } from '@/lib/api-amplify';
 
 // Lazy load PDF preview for better performance
@@ -117,7 +117,7 @@ export default function Dashboard() {
 
     setActionLoading(true);
     try {
-      const check = await checkDocumentAvailability(selectedProjectId, 'pdf');
+      const check = await checkDocumentInS3(selectedProjectId, 'pdf');
       if (!check.available) {
         toast.error('Document not ready, try Generate first.');
         return;

@@ -2,7 +2,7 @@
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { checkDocumentInS3 } from '@/lib/api';
+import { checkDocumentInS3 } from '@/api';
 
 interface DocumentStatusProps {
   projectId: string;
