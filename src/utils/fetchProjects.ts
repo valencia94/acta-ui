@@ -53,7 +53,7 @@ export async function fetchProjects({
       console.error(`❌ Attempt ${attempt} failed:`, lastError);
 
       // Only retry on TypeError (network/CORS issues), not on other errors like 403/401
-      if (attempt === 1 && lastError instanceof TypeError) {
+      if (attempt === 1 && err instanceof TypeError) {
         console.log("🔄 Network error detected, will retry with fresh JWT...");
         continue;
       }
