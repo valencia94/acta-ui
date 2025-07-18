@@ -40,17 +40,39 @@ async function request<T = unknown>(
   };
   
   if (options.auth !== false) {
-    const token = await getAuthToken().catch(() => undefined);
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    console.log('🔐 Attempting to get auth token for request to:', endpoint);
+    try {
+      const token = await getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('✅ Authorization header added to request');
+      } else {
+        console.warn('⚠️ No auth token available for request');
+      }
+    } catch (error) {
+      console.error('❌ Failed to get auth token:', error);
+    }
   }
+
+  console.log('🌐 Making request to:', `${BASE}${endpoint}`, {
+    method: options.method || 'GET',
+    hasAuth: !!headers['Authorization']
+  });
 
   const res = await fetch(`${BASE}${endpoint}`, {
     ...options,
     headers,
   });
 
+  console.log('📡 Request response:', {
+    status: res.status,
+    statusText: res.statusText,
+    ok: res.ok
+  });
+
   if (!res.ok) {
     const txt = await res.text().catch(() => res.statusText);
+    console.error('❌ Request failed:', `${endpoint} → ${res.status}: ${txt}`);
     throw new Error(`${endpoint} → ${res.status}: ${txt}`);
   }
 
