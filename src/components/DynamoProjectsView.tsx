@@ -110,30 +110,46 @@ export default function DynamoProjectsView({
 
   if (!projects.length) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 text-center text-gray-500">
-        <p>No projects found.</p>
+      <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-lg p-8 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+            <svg className="w-8 h-8 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p className="text-white/80 font-medium">No projects found.</p>
+          <p className="text-white/60 text-sm">Projects will appear here once they're assigned to you.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
-      <div className="p-6 border-b border-gray-200">
+    <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="p-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-bold text-white">
               {isAdminMode ? "All Projects (Admin)" : "Your Projects"}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-white/70 mt-1">
               {cognitoUser ? (
-                <>✅ Authenticated as {cognitoUser.email}</>
+                <span className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  Authenticated as {cognitoUser.email}
+                </span>
               ) : (
-                <>⚠️ Authentication status unknown</>
+                <span className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                  Authentication status unknown
+                </span>
               )}
             </p>
           </div>
-          <div className="text-sm text-gray-500">
-            {projects.length} project{projects.length !== 1 ? "s" : ""} found
+          <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-full px-3 py-1">
+            <div className="text-sm text-white/90 font-medium">
+              {projects.length} project{projects.length !== 1 ? "s" : ""} found
+            </div>
           </div>
         </div>
       </div>

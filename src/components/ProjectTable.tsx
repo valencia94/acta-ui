@@ -45,15 +45,15 @@ export default function ProjectTable({
   };
 
   return (
-    <div className="rounded-2xl shadow-lg overflow-auto">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-white sticky top-0">
+    <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10 shadow-xl">
+      <table className="min-w-full text-sm">
+        <thead className="backdrop-blur-md bg-white/10 border-b border-white/10 sticky top-0">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((h) => (
                 <th
                   key={h.id}
-                  className={`px-4 sm:px-6 py-3 text-left font-semibold text-gray-900 ${
+                  className={`px-4 sm:px-6 py-4 text-left font-bold text-white/90 tracking-wide ${
                     h.column.id === "id"
                       ? "hidden sm:table-cell"
                       : h.column.id === "pm"
@@ -67,7 +67,7 @@ export default function ProjectTable({
             </tr>
           ))}
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="divide-y divide-white/5">
           {table.getRowModel().rows.map((row) => {
             const project = row.original;
             const isSelected = selectedProjectId === project.id.toString();
@@ -77,18 +77,25 @@ export default function ProjectTable({
                 key={row.id}
                 onClick={() => handleRowClick(project)}
                 className={`
-                  transition-colors duration-200 cursor-pointer
+                  transition-all duration-300 cursor-pointer group relative
                   ${
                     isSelected
-                      ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
-                      : "hover:bg-gray-50"
+                      ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-l-4 border-blue-400"
+                      : "hover:bg-white/10"
                   }
                 `}
               >
+                {/* Selection Glow Effect */}
+                {isSelected && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg"></div>
+                )}
+                
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className={`px-4 sm:px-6 py-4 ${isSelected ? "text-blue-900" : "text-gray-900"} ${
+                    className={`relative px-4 sm:px-6 py-4 font-medium transition-colors duration-300 ${
+                      isSelected ? "text-white" : "text-white/80 group-hover:text-white"
+                    } ${
                       cell.column.id === "id"
                         ? "hidden sm:table-cell"
                         : cell.column.id === "pm"

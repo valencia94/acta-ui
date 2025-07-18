@@ -54,117 +54,127 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between bg-gradient-to-r from-green-500 to-teal-500 px-6 py-5 shadow-xl">
-      {/* Left: Enhanced logo + title */}
-      <div className="flex items-center gap-5">
-        <img
-          src={logoSrc}
-          alt="Ikusi logo"
-          className="h-12 w-auto drop-shadow-sm"
-        />
-        <div className="leading-tight text-white">
-          <h1 className="text-2xl font-bold tracking-tight">Acta Platform</h1>
-          <p className="text-sm opacity-90 font-medium">
-            invisible technology, visible transformation
-          </p>
+    <header className="sticky top-0 z-50 backdrop-blur-2xl bg-gradient-to-r from-slate-900/95 via-purple-900/95 to-slate-900/95 border-b border-white/10 shadow-2xl">
+      {/* Subtle Header Glow */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-green-500/10"></div>
+      
+      <div className="relative flex items-center justify-between px-6 py-4">
+        {/* Left: Enhanced logo + title */}
+        <div className="flex items-center gap-5">
+          <div className="relative">
+            <div className="absolute inset-0 bg-white/20 rounded-xl blur-sm"></div>
+            <img
+              src={logoSrc}
+              alt="Ikusi logo"
+              className="relative h-12 w-auto rounded-xl shadow-lg"
+            />
+          </div>
+          <div className="leading-tight text-white">
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
+              Acta Platform
+            </h1>
+            <p className="text-sm opacity-90 font-medium text-white/80">
+              invisible technology, visible transformation
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Center nav (hidden on mobile) */}
-      <nav className="hidden md:flex items-center gap-8 text-white">
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors font-medium"
-        >
-          <Grid className="h-5 w-5" />
-          Dashboard
-        </button>
-        {isAdmin && (
+        {/* Center nav (hidden on mobile) */}
+        <nav className="hidden md:flex items-center gap-2 text-white">
           <button
-            onClick={() => navigate("/admin")}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors font-medium"
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
           >
-            <Shield className="h-5 w-5" />
-            Admin
+            <Grid className="h-5 w-5" />
+            Dashboard
           </button>
-        )}
-      </nav>
-
-      {/* Right: mobile menu toggle */}
-      <div className="relative">
-        <button
-          onClick={() => setOpen((o) => !o)}
-          aria-label="Toggle menu"
-          className="text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
-
-        {open && (
-          <div
-            className={clsx(
-              "absolute right-0 top-full mt-2 w-48 rounded-lg bg-white py-1 shadow-lg",
-              "ring-1 ring-black ring-opacity-5 focus:outline-none z-50",
-            )}
-          >
-            {/* Dashboard Option */}
+          {isAdmin && (
             <button
-              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-              onClick={() => {
-                setOpen(false);
-                navigate("/dashboard");
-              }}
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl backdrop-blur-md bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <Grid className="mr-3 h-4 w-4" />
-              Dashboard
+              <Shield className="h-5 w-5" />
+              Admin
             </button>
+          )}
+        </nav>
 
-            {/* Admin Option (if admin) */}
-            {isAdmin && (
+        {/* Right: Enhanced mobile menu toggle */}
+        <div className="relative">
+          <button
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle menu"
+            className="backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-3 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          {open && (
+            <div
+              className={clsx(
+                "absolute right-0 top-full mt-3 w-56 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl z-50",
+                "ring-1 ring-white/10 focus:outline-none overflow-hidden",
+              )}
+            >
+              {/* Dashboard Option */}
               <button
-                className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                className="flex w-full items-center px-4 py-3 text-sm text-white hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-200 border-b border-white/10"
                 onClick={() => {
                   setOpen(false);
-                  navigate("/admin");
+                  navigate("/dashboard");
                 }}
               >
-                <Shield className="mr-3 h-4 w-4" />
-                Admin
+                <Grid className="mr-3 h-4 w-4" />
+                Dashboard
               </button>
-            )}
 
-            {/* Profile Option */}
-            <button
-              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-              onClick={() => {
-                setOpen(false);
-                navigate("/profile");
-              }}
-            >
-              <User className="mr-3 h-4 w-4" />
-              Profile
-            </button>
-
-            {/* Logout Option */}
-            <button
-              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none disabled:opacity-50"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-            >
-              {isLoggingOut ? (
-                <>
-                  <div className="mr-3 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
-                  Signing out...
-                </>
-              ) : (
-                <>
-                  <LogOut className="mr-3 h-4 w-4" />
-                  Log out
-                </>
+              {/* Admin Option (if admin) */}
+              {isAdmin && (
+                <button
+                  className="flex w-full items-center px-4 py-3 text-sm text-white hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-200 border-b border-white/10"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/admin");
+                  }}
+                >
+                  <Shield className="mr-3 h-4 w-4" />
+                  Admin
+                </button>
               )}
-            </button>
-          </div>
-        )}
+
+              {/* Profile Option */}
+              <button
+                className="flex w-full items-center px-4 py-3 text-sm text-white hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-200 border-b border-white/10"
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/profile");
+                }}
+              >
+                <User className="mr-3 h-4 w-4" />
+                Profile
+              </button>
+
+              {/* Logout Option */}
+              <button
+                className="flex w-full items-center px-4 py-3 text-sm text-white hover:bg-red-500/20 focus:bg-red-500/20 focus:outline-none disabled:opacity-50 transition-all duration-200"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? (
+                  <>
+                    <div className="mr-3 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+                    Signing out...
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="mr-3 h-4 w-4" />
+                    Log out
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
