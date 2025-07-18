@@ -154,16 +154,30 @@ export default function PMProjectManager({
 
       const result = await generateSummariesForPM(pmEmail);
 
-      toast.success(
-        `Bulk generation complete! Success: ${result.success.length}, Failed: ${result.failed.length}`,
-        { duration: 8000 },
-      );
+      // Enhanced feedback with detailed success/failure counts
+      const successCount = result.success?.length || 0;
+      const failureCount = result.failed?.length || 0;
+      const totalCount = successCount + failureCount;
 
-      if (result.failed.length > 0) {
-        console.warn("Failed projects:", result.failed);
-        toast.error(`Some projects failed: ${result.failed.join(", ")}`, {
-          duration: 10000,
-        });
+      if (successCount > 0 && failureCount === 0) {
+        toast.success(
+          `🎉 Bulk generation complete! Successfully processed all ${successCount} projects.`,
+          { duration: 8000 }
+        );
+      } else if (successCount > 0 && failureCount > 0) {
+        toast.success(
+          `⚡ Bulk generation complete! Success: ${successCount}, Failed: ${failureCount} out of ${totalCount} projects.`,
+          { duration: 10000 }
+        );
+        toast.error(
+          `❌ Failed projects: ${result.failed.join(", ")}. You can retry these individually.`,
+          { duration: 12000 }
+        );
+      } else {
+        toast.error(
+          `❌ Bulk generation failed for all ${failureCount} projects. Please check your connection and try again.`,
+          { duration: 10000 }
+        );
       }
 
       // Refresh project list

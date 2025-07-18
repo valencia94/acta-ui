@@ -81,8 +81,10 @@ export default defineConfig({
       output: {
         manualChunks: {
           "pdf-viewer": ["react-pdf"],
+          "aws-sdk": ["@aws-sdk/client-cognito-identity", "@aws-sdk/client-dynamodb", "@aws-sdk/client-s3", "@aws-sdk/credential-provider-cognito-identity", "@aws-sdk/s3-request-presigner"],
           vendor: ["react", "react-dom"],
           ui: ["framer-motion", "lucide-react"],
+          amplify: ["aws-amplify", "@aws-amplify/auth", "@aws-amplify/ui-react", "amazon-cognito-identity-js"],
         },
         chunkFileNames: (chunkInfo) => {
           const id = chunkInfo.facadeModuleId

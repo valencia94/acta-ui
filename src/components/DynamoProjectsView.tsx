@@ -97,15 +97,48 @@ export default function DynamoProjectsView({
   }
 
   if (error) {
+    const enhancedMessage = getEnhancedErrorMessage(error);
     return (
       <ErrorCallout
         title="Failed to load projects"
-        message={error}
+        message={enhancedMessage.message}
         onRetry={handleRetry}
         retryLoading={retryLoading}
         className="mx-auto max-w-2xl"
       />
     );
+  }
+
+  // Enhanced error message helper
+  function getEnhancedErrorMessage(error: string) {
+    if (error.includes('401') || error.includes('Unauthorized')) {
+      return {
+        message: "Authentication expired. Please log out and log back in to continue accessing your projects.",
+        type: 'auth'
+      };
+    }
+    if (error.includes('403') || error.includes('Forbidden')) {
+      return {
+        message: "You don't have permission to access these projects. Please contact your administrator if you believe this is an error.",
+        type: 'permission'
+      };
+    }
+    if (error.includes('5') || error.includes('Internal Server Error') || error.includes('Service Unavailable')) {
+      return {
+        message: "Our servers are experiencing issues. Please try again in a few moments, or contact support if the problem persists.",
+        type: 'server'
+      };
+    }
+    if (error.includes('Network Error') || error.includes('timeout')) {
+      return {
+        message: "Connection issues detected. Please check your internet connection and try again.",
+        type: 'network'
+      };
+    }
+    return {
+      message: error || "An unexpected error occurred while loading projects. Please try again.",
+      type: 'general'
+    };
   }
 
   if (!projects.length) {
