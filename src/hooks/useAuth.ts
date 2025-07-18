@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getCurrentUser } from '@/api-amplify';
+import { getCurrentUser } from '@/lib/api-amplify';
 import { skipAuth } from '@/env.variables';
 
 export function useAuth() {

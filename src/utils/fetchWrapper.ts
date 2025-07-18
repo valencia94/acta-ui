@@ -14,10 +14,25 @@ export async function getAuthToken(): Promise<string | null> {
   }
 
   try {
+    console.log('🔐 Attempting to fetch auth session...');
     const session = await fetchAuthSession();
-    return session.tokens?.idToken?.toString() || null;
+    console.log('📡 Auth session response:', {
+      hasTokens: !!session.tokens,
+      hasIdToken: !!session.tokens?.idToken,
+      hasAccessToken: !!session.tokens?.accessToken,
+      credentials: !!session.credentials
+    });
+    
+    const token = session.tokens?.idToken?.toString();
+    if (token) {
+      console.log('✅ Successfully extracted ID token');
+      return token;
+    } else {
+      console.warn('⚠️ No ID token found in session');
+      return null;
+    }
   } catch (error) {
-    console.warn('No authentication session found:', error);
+    console.error('❌ Failed to fetch authentication session:', error);
     return null;
   }
 }
