@@ -1,8 +1,10 @@
 // src/components/DynamoProjectsView.tsx
 import { useEffect, useState } from 'react';
-import { getProjectsByPM } from '@/lib/api';
+import { getProjectsByPM, PMProject } from '@/lib/api';
 import { getCurrentUser } from '@/lib/api-amplify';
 import ProjectTable, { Project } from './ProjectTable';
+import { ProjectTableSkeleton } from './LoadingSkeleton';
+import ErrorCallout from './ErrorCallout';
 
 interface DynamoProjectsViewProps {
   userEmail: string;
@@ -23,6 +25,7 @@ export default function DynamoProjectsView({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cognitoUser, setCognitoUser] = useState<any>(null);
+  const [retryLoading, setRetryLoading] = useState(false);
 
   // Get Cognito user info on mount
   useEffect(() => {
@@ -38,10 +41,14 @@ export default function DynamoProjectsView({
     fetchCognitoUser();
   }, []);
 
-  const loadProjects = async () => {
+  const loadProjects = async (isRetry = false) => {
     if (!userEmail) return;
 
-    setLoading(true);
+    if (isRetry) {
+      setRetryLoading(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -53,20 +60,26 @@ export default function DynamoProjectsView({
       const projectSummaries = await getProjectsByPM(userEmail, isAdmin);
       console.log('✅ Projects loaded:', projectSummaries);
 
-      const projects: Project[] = projectSummaries.map((summary, index) => ({
-        id: parseInt(summary.project_id) || index + 1,
-        name: summary.project_name,
-        pm: summary.pm || summary.project_manager || 'Unknown',
-        status: 'Active',
+      const projects: Project[] = projectSummaries.map((summary: PMProject, index: number) => ({
+        id: parseInt(summary.id) || index + 1,
+        name: summary.name || `Project ${summary.id}`,
+        pm: summary.pm || 'Unknown',
+        status: summary.status || 'Active',
       }));
 
       setProjects(projects);
     } catch (err) {
       console.error('❌ Failed to load projects:', err);
-      setError('Failed to load projects. Please check your authentication.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load projects. Please check your authentication.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
+      setRetryLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    loadProjects(true);
   };
 
   useEffect(() => {
@@ -74,29 +87,19 @@ export default function DynamoProjectsView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userEmail, isAdmin, cognitoUser]);
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 flex items-center justify-center gap-3">
-        <div className="h-6 w-6 border-b-2 border-blue-500 rounded-full animate-spin" />
-        <span className="text-gray-600">Loading projects…</span>
-      </div>
-    );
+  if (loading || retryLoading) {
+    return <ProjectTableSkeleton rows={3} />;
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-red-200 text-center space-y-2">
-        <p className="text-red-600 font-semibold">{error}</p>
-        <p className="text-sm text-gray-500">
-          {cognitoUser ? `Signed in as ${cognitoUser.email}` : 'Not authenticated'}
-        </p>
-        <button
-          onClick={loadProjects}
-          className="mt-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Retry
-        </button>
-      </div>
+      <ErrorCallout
+        title="Failed to load projects"
+        message={error}
+        onRetry={handleRetry}
+        retryLoading={retryLoading}
+        className="mx-auto max-w-2xl"
+      />
     );
   }
 
@@ -133,6 +136,8 @@ export default function DynamoProjectsView({
       <div className="p-6">
         <ProjectTable 
           data={projects}
+          onProjectSelect={onProjectSelect}
+          selectedProjectId={selectedProjectId}
         />
       </div>
     </div>

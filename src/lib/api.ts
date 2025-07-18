@@ -167,20 +167,32 @@ export const sendApprovalEmail = (actaId: string, clientEmail: string) =>
     body: JSON.stringify({ actaId, clientEmail }),
   });
 
+export interface DocumentCheckResult {
+  available: boolean;
+  lastModified?: string;
+  size?: number;
+  s3Key?: string;
+}
+
 /** -------------------------------------------------------------------------
  * 🏗️ 5. HEAD check → is document already in S3/CloudFront?
  * --------------------------------------------------------------------------*/
 export async function documentExists(
   projectId: string,
   format: 'pdf' | 'docx'
-): Promise<boolean> {
+): Promise<DocumentCheckResult> {
   try {
-    await request(`/check-document/${projectId}?format=${format}`, {
+    const response = await request(`/check-document/${projectId}?format=${format}`, {
       method: 'HEAD',
     });
-    return true;
+    return {
+      available: true,
+      // Add other properties if the API returns them
+    };
   } catch {
-    return false;
+    return {
+      available: false,
+    };
   }
 }
 

@@ -8,6 +8,7 @@ import ActaButtons from '@/components/ActaButtons/ActaButtons';
 import DynamoProjectsView from '@/components/DynamoProjectsView';
 import { EmailInputDialog } from '@/components/EmailInputDialog';
 import Header from '@/components/Header';
+import ResponsiveIndicator from '@/components/ResponsiveIndicator';
 import { useAuth } from '@/hooks/useAuth';
 import {
   generateActaDocument,
@@ -172,25 +173,25 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-white rounded-xl shadow-sm p-6 mb-8"
+          className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6 sm:mb-8"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Welcome back, {user?.email || 'User'}!
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 mt-1 text-sm sm:text-base">
                 Manage your projects and generate ACTA documents
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-500">
+              <div className="text-xs sm:text-sm text-gray-500">
                 Selected Project: {selectedProjectId || 'None'}
               </div>
             </div>
@@ -202,11 +203,11 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm p-6 mb-8"
+          className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6 sm:mb-8"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Your Projects</h2>
-            <div className="text-sm text-gray-500">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Your Projects</h2>
+            <div className="text-xs sm:text-sm text-gray-500">
               Click on a project to select it
             </div>
           </div>
@@ -223,11 +224,11 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-white rounded-xl shadow-sm p-4 sm:p-6"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">ACTA Actions</h2>
-            <div className="text-sm text-gray-500">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">ACTA Actions</h2>
+            <div className="text-xs sm:text-sm text-gray-500">
               {selectedProjectId ? `Project: ${selectedProjectId}` : 'No project selected'}
             </div>
           </div>
@@ -265,6 +266,9 @@ export default function Dashboard() {
         description={`Send approval request for project: ${currentProjectName}`}
         placeholder="Enter client email address"
       />
+
+      {/* Responsive Indicator (dev only) */}
+      <ResponsiveIndicator />
     </div>
   );
 }
