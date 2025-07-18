@@ -1,10 +1,10 @@
 // src/components/DynamoProjectsView.tsx
 import { useEffect, useState } from "react";
-import { getProjectsByPM, PMProject } from "@/lib/api";
 import { getCurrentUser } from "@/lib/api-amplify";
 import ProjectTable, { Project } from "./ProjectTable";
 import { ProjectTableSkeleton } from "./LoadingSkeleton";
 import ErrorCallout from "./ErrorCallout";
+import { fetchProjects } from "@/utils/fetchProjects";
 
 interface DynamoProjectsViewProps {
   userEmail: string;
@@ -52,30 +52,27 @@ export default function DynamoProjectsView({
     setError(null);
 
     try {
-      console.log("📋 Fetching projects with Cognito authentication...");
+      console.log("📋 Fetching projects with CORS-resilient logic...");
       console.log("👤 User email:", userEmail);
       console.log("🔐 Cognito user:", cognitoUser);
       console.log("🛡️ Admin mode:", isAdmin);
 
-      const projectSummaries = await getProjectsByPM(userEmail, isAdmin);
-      console.log("✅ Projects loaded:", projectSummaries);
-
-      const projects: Project[] = projectSummaries.map(
-        (summary: PMProject, index: number) => ({
-          id: parseInt(summary.id) || index + 1,
-          name: summary.name || `Project ${summary.id}`,
-          pm: summary.pm || "Unknown",
-          status: summary.status || "Active",
-        }),
-      );
+      const projects = await fetchProjects({
+        userEmail,
+        isAdmin,
+      });
 
       setProjects(projects);
     } catch (err) {
       console.error("❌ Failed to load projects:", err);
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to load projects. Please check your authentication.";
+      let errorMessage = "Failed to load projects. Please check your authentication.";
+      
+      if (err instanceof TypeError) {
+        errorMessage = "Still can't reach the API – please log out and back in.";
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);

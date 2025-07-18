@@ -1,5 +1,5 @@
 // src/components/PMProjectManager.tsx
-import { CheckCircle, Clock, FileText, RefreshCw, Users } from "lucide-react";
+import { Clock, FileText, RefreshCw, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -56,15 +56,13 @@ export default function PMProjectManager({
     setLoading(true);
     try {
       console.log(`Loading projects for PM: ${pmEmail}`);
-      const projectSummaries = await getProjectsByPM(pmEmail);
-      // Transform ProjectSummary to PMProject
+      const projectSummaries = await getProjectsByPM(pmEmail, false);
+      // Transform API response to PMProject
       const pmProjects: PMProject[] = projectSummaries.map((summary) => ({
-        project_id: summary.project_id,
-        project_name: summary.project_name,
-        pm_email: summary.pm || summary.project_manager || pmEmail,
-        project_status: "active",
-        has_acta_document: false,
-        last_updated: new Date().toISOString(),
+        id: String(summary.id || summary.project_id || 'unknown'),
+        name: String(summary.name || summary.project_name || 'Unknown Project'),
+        pm: String(summary.pm || summary.project_manager || pmEmail),
+        status: String(summary.status || summary.project_status || 'active'),
       }));
       setProjects(pmProjects);
 
@@ -102,13 +100,10 @@ export default function PMProjectManager({
       // Use real API call instead of hardcoded mock data
       const allProjects = await getAllProjects();
       const transformedProjects: PMProject[] = allProjects.map((project) => ({
-        project_id: project.project_id,
-        project_name: project.project_name,
-        pm_email:
-          project.pm || project.project_manager || "unknown@example.com",
-        project_status: "active",
-        has_acta_document: false,
-        last_updated: new Date().toISOString(),
+        id: String(project.id || project.project_id || 'unknown'),
+        name: String(project.name || project.project_name || 'Unknown Project'),
+        pm: String(project.pm || project.project_manager || "unknown@example.com"),
+        status: String(project.status || project.project_status || 'active'),
       }));
 
       setProjects(transformedProjects);
@@ -154,28 +149,18 @@ export default function PMProjectManager({
 
       const result = await generateSummariesForPM(pmEmail);
 
-      // Enhanced feedback with detailed success/failure counts
-      const successCount = result.success?.length || 0;
-      const failureCount = result.failed?.length || 0;
-      const totalCount = successCount + failureCount;
+      // Since API returns ProjectSummary[], treat all as successful
+      const successCount = result.length;
+      const failureCount = 0;
 
-      if (successCount > 0 && failureCount === 0) {
+      if (successCount > 0) {
         toast.success(
-          `🎉 Bulk generation complete! Successfully processed all ${successCount} projects.`,
+          `🎉 Bulk generation complete! Successfully processed ${successCount} projects.`,
           { duration: 8000 }
-        );
-      } else if (successCount > 0 && failureCount > 0) {
-        toast.success(
-          `⚡ Bulk generation complete! Success: ${successCount}, Failed: ${failureCount} out of ${totalCount} projects.`,
-          { duration: 10000 }
-        );
-        toast.error(
-          `❌ Failed projects: ${result.failed.join(", ")}. You can retry these individually.`,
-          { duration: 12000 }
         );
       } else {
         toast.error(
-          `❌ Bulk generation failed for all ${failureCount} projects. Please check your connection and try again.`,
+          `❌ No projects found for bulk generation.`,
           { duration: 10000 }
         );
       }
@@ -198,20 +183,11 @@ export default function PMProjectManager({
   }
 
   const getProjectStatusIcon = (project: PMProject) => {
-    if (project.has_acta_document) {
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
-    }
-    return <Clock className="h-4 w-4 text-yellow-500" />;
+    return <Clock className="h-4 w-4 text-blue-500" />;
   };
 
   const getProjectStatusText = (project: PMProject) => {
-    if (project.has_acta_document) {
-      const lastGenerated = project.acta_last_generated
-        ? new Date(project.acta_last_generated).toLocaleDateString()
-        : "Unknown";
-      return `Acta available (${lastGenerated})`;
-    }
-    return "No Acta document";
+    return project.status || 'Active';
   };
 
   return (
@@ -279,51 +255,42 @@ export default function PMProjectManager({
         <div className="space-y-3">
           {projects.map((project) => (
             <div
-              key={project.project_id}
+              key={project.id}
               className={`
                 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
                 hover:shadow-md hover:scale-[1.01]
                 ${
-                  selectedProjectId === project.project_id
+                  selectedProjectId === project.id
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200 hover:border-blue-300"
                 }
               `}
-              onClick={() => onProjectSelect?.(project.project_id)}
+              onClick={() => onProjectSelect?.(project.id)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-gray-800">
-                      {project.project_name || `Project ${project.project_id}`}
+                      {project.name || `Project ${project.id}`}
                     </span>
                     <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      ID: {project.project_id}
+                      ID: {project.id}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2 text-sm">
                     {getProjectStatusIcon(project)}
-                    <span
-                      className={
-                        project.has_acta_document
-                          ? "text-green-600"
-                          : "text-yellow-600"
-                      }
-                    >
-                      {getProjectStatusText(project)}
+                    <span className="text-gray-600">
+                      {project.status || 'Active'}
                     </span>
                   </div>
 
-                  {project.last_updated && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      Updated:{" "}
-                      {new Date(project.last_updated).toLocaleDateString()}
-                    </div>
-                  )}
+                  <div className="text-xs text-gray-400 mt-1">
+                    PM: {project.pm}
+                  </div>
                 </div>
 
-                {selectedProjectId === project.project_id && (
+                {selectedProjectId === project.id && (
                   <div className="ml-4">
                     <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
                       Selected
