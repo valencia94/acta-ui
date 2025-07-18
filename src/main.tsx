@@ -2,7 +2,7 @@
 
 // 🔐 AWS Amplify Setup
 import { Amplify } from 'aws-amplify';
-import awsExports from '@/aws-exports';
+import awsExports from '../aws-exports';
 
 // 🎨 Global Styles
 import '@/styles/variables.css';            // Design tokens (colors, spacing)

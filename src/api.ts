@@ -1,8 +1,8 @@
-// src/lib/api.ts
+// src/api.ts
 
 import { apiBaseUrl } from '@/env.variables';
 import { get, post, getAuthToken } from '@/utils/fetchWrapper';
-import { apiGet, apiPost, getCurrentUser } from './api-amplify';
+import { apiGet, apiPost, getCurrentUser } from './lib/api-amplify';
 
 const BASE = apiBaseUrl;
 
