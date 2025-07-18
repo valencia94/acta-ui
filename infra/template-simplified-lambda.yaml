@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: SIMPLIFIED API Gateway wiring - Route all PM endpoints to projectMetadataEnricher (v3-robust)
 
 Parameters:
@@ -24,7 +24,7 @@ Parameters:
 
   DeploymentTimestamp:
     Type: String
-    Default: '20250628-030500'
+    Default: "20250628-030500"
     Description: Deployment timestamp to force API Gateway redeployment
 
 Resources:
@@ -47,7 +47,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref SimplifiedPMProjectsResource
-      PathPart: '{pmEmail}'
+      PathPart: "{pmEmail}"
 
   SimplifiedCheckDocumentResource:
     Type: AWS::ApiGateway::Resource
@@ -61,7 +61,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref SimplifiedCheckDocumentResource
-      PathPart: '{projectId}'
+      PathPart: "{projectId}"
 
   SimplifiedProjectsResource:
     Type: AWS::ApiGateway::Resource
@@ -181,7 +181,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       StageName: prod
-      Description: !Sub 'Simplified backend deployment ${DeploymentTimestamp}'
+      Description: !Sub "Simplified backend deployment ${DeploymentTimestamp}"
 
 Outputs:
   APIGatewayId:

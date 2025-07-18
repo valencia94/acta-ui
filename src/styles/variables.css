@@ -55,8 +55,8 @@
   --radius-lg: 1rem; /* 16px */
 
   /*── Typography ─────────────────────────────────────────────────────────────*/
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'Menlo', monospace;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "Menlo", monospace;
 
   /*── Transitions ────────────────────────────────────────────────────────────*/
   --transition-fast: 0.2s;

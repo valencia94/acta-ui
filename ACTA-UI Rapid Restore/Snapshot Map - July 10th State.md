@@ -1,4 +1,5 @@
 # ACTA UI Project Snapshot Map - July 10th State
+
 **Generated:** July 13, 2025 (Reconstructed)  
 **Reference Date:** July 10, 2025  
 **Note:** This map represents the project state as of July 10th based on available backup data and file timestamps
@@ -6,9 +7,10 @@
 ## 📁 Project Structure (July 10th)
 
 ### 🔧 Core Configuration
+
 ```text
 ├── package.json                    # Dependencies (pre-fixes state)
-├── pnpm-lock.yaml                 # Package lock file  
+├── pnpm-lock.yaml                 # Package lock file
 ├── tsconfig.json                  # TypeScript config
 ├── tailwind.config.js             # Tailwind CSS config
 ├── vite.config.ts                 # Vite build config
@@ -17,6 +19,7 @@
 ```
 
 ### 🎨 Source Code (`src/`) - July 10th State
+
 ```text
 src/
 ├── components/                    # React components
@@ -41,6 +44,7 @@ src/
 ```
 
 ### 🚀 Build & Deployment (July 10th)
+
 ```text
 ├── amplify.yml                   # AWS Amplify config
 ├── aws-exports.js                # AWS configuration (July 10th version)
@@ -54,6 +58,7 @@ src/
 ```
 
 ### 🧪 Testing (July 10th)
+
 ```text
 ├── tests/
 │   ├── smoke.test.ts            # Basic smoke tests
@@ -67,6 +72,7 @@ src/
 ## 🔑 Features Status (July 10th)
 
 ### ✅ Working Features
+
 - **Authentication**: AWS Cognito integration functional
 - **Dashboard**: Basic dashboard UI operational
 - **Project Selection**: DynamoProjectsView working
@@ -74,6 +80,7 @@ src/
 - **AWS Integration**: Amplify deployment configured
 
 ### ⚠️ Known Issues (July 10th State)
+
 - **Dependencies**: Some package version conflicts
 - **API Integration**: Import path issues with `@/lib/api-amplify`
 - **Build Errors**: Missing component exports
@@ -81,6 +88,7 @@ src/
 - **TypeScript**: Some type definition conflicts
 
 ### 🚧 In Progress (July 10th)
+
 - API endpoint stabilization
 - Component import fixes
 - Dependency resolution
@@ -89,18 +97,21 @@ src/
 ## 📊 Technical Debt (July 10th)
 
 ### 🔴 Critical Issues
+
 1. **Broken Imports**: `@/lib/api-amplify` module missing
 2. **Package Conflicts**: Version mismatches in dependencies
 3. **Build Failures**: Component export errors
 4. **Test Failures**: Configuration and setup issues
 
 ### 🟡 Medium Priority
+
 1. **Code Organization**: Some components in wrong directories
 2. **Type Safety**: Missing type definitions
 3. **Error Handling**: Incomplete error boundaries
 4. **Documentation**: Outdated component docs
 
 ### 🟢 Low Priority
+
 1. **Performance**: Bundle size optimization needed
 2. **UI Polish**: Minor styling inconsistencies
 3. **Accessibility**: ARIA labels missing
@@ -109,12 +120,14 @@ src/
 ## 🛠️ Dependencies Status (July 10th)
 
 ### Core Dependencies (Working)
+
 - React 18 + TypeScript ✅
 - Vite (build tool) ✅
 - Tailwind CSS ✅
 - AWS Amplify ✅
 
 ### Problematic Dependencies
+
 - `@/lib/api-amplify` ❌ (missing module)
 - Various version conflicts ⚠️
 - Test dependencies misconfigured ⚠️
@@ -122,19 +135,23 @@ src/
 ## 🚀 Recovery Instructions (From July 10th State)
 
 ### Immediate Fixes Needed
+
 1. **Fix Import Paths**:
+
    ```bash
    # Replace broken imports in Dashboard.tsx and DynamoProjectsView.tsx
    # Change @/lib/api-amplify to proper API imports
    ```
 
 2. **Resolve Dependencies**:
+
    ```bash
    pnpm install --force
    # Fix package.json conflicts
    ```
 
 3. **Component Fixes**:
+
    ```bash
    # Create missing StatusChip component
    # Fix API integration in lib/api.ts
@@ -149,6 +166,7 @@ src/
 ## 📈 Progress Made (July 10th → July 13th)
 
 ### ✅ Issues Resolved
+
 - ✅ Fixed broken imports (`@/lib/api-amplify` → proper API imports)
 - ✅ Resolved dependency conflicts in package.json
 - ✅ Created missing `StatusChip` component
@@ -157,17 +175,19 @@ src/
 - ✅ Cleaned up malformed package.json
 
 ### 🚧 Still In Progress
+
 - ⚠️ Vitest configuration adjustment needed
 - ⚠️ Complete test suite validation
 - 🎯 Full end-to-end testing
 - 🚀 Production deployment validation
 
 ---
+
 **July 10th State Summary**:  
 **Total Files**: ~200+ files  
 **Build Status**: ❌ Failing (dependency issues)  
 **Test Status**: ❌ Failing (config issues)  
 **Deploy Status**: ⚠️ Blocked by build failures  
-**Critical Issues**: 4 major blockers identified  
+**Critical Issues**: 4 major blockers identified
 
 **Recovery Effort**: 3 days of intensive debugging and fixes required to reach current stable state.

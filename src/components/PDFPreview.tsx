@@ -1,7 +1,7 @@
 // src/components/PDFPreview.tsx
-import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
-import { useState } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
+import { Download, X, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { useState } from "react";
 
 interface PDFPreviewProps {
   isOpen: boolean;
@@ -10,30 +10,35 @@ interface PDFPreviewProps {
   onClose: () => void;
 }
 
-export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPreviewProps) {
+export default function PDFPreview({
+  isOpen,
+  pdfUrl,
+  fileName,
+  onClose,
+}: PDFPreviewProps) {
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
 
   const handleDownload = () => {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = pdfUrl;
     link.download = fileName;
-    link.target = '_blank';
+    link.target = "_blank";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 25, 200));
+    setZoom((prev) => Math.min(prev + 25, 200));
   };
 
   const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 25, 50));
+    setZoom((prev) => Math.max(prev - 25, 50));
   };
 
   const handleRotate = () => {
-    setRotation(prev => (prev + 90) % 360);
+    setRotation((prev) => (prev + 90) % 360);
   };
 
   return (
@@ -48,7 +53,7 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={onClose}
           />
-          
+
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -58,10 +63,12 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold text-gray-900">PDF Preview</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  PDF Preview
+                </h2>
                 <span className="text-sm text-gray-500">{fileName}</span>
               </div>
-              
+
               {/* Controls */}
               <div className="flex items-center gap-2">
                 <button
@@ -71,11 +78,11 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
                 >
                   <ZoomOut className="h-4 w-4" />
                 </button>
-                
+
                 <span className="text-sm text-gray-600 min-w-[60px] text-center">
                   {zoom}%
                 </span>
-                
+
                 <button
                   onClick={handleZoomIn}
                   className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
@@ -83,9 +90,9 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
                 >
                   <ZoomIn className="h-4 w-4" />
                 </button>
-                
+
                 <div className="w-px h-6 bg-gray-300 mx-2" />
-                
+
                 <button
                   onClick={handleRotate}
                   className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
@@ -93,7 +100,7 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
                 >
                   <RotateCw className="h-4 w-4" />
                 </button>
-                
+
                 <button
                   onClick={handleDownload}
                   className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -101,7 +108,7 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
                   <Download className="h-4 w-4" />
                   Download
                 </button>
-                
+
                 <button
                   onClick={onClose}
                   className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
@@ -112,7 +119,7 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
               </div>
             </div>
           </motion.div>
-          
+
           {/* PDF Content */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -122,12 +129,12 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
             className="relative z-10 flex-1 p-6 overflow-auto bg-gray-100"
           >
             <div className="flex justify-center">
-              <div 
+              <div
                 className="bg-white shadow-2xl rounded-lg overflow-hidden"
                 style={{
                   transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
-                  transition: 'transform 0.2s ease-in-out'
+                  transformOrigin: "center center",
+                  transition: "transform 0.2s ease-in-out",
                 }}
               >
                 <iframe
@@ -138,7 +145,7 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
               </div>
             </div>
           </motion.div>
-          
+
           {/* Footer */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -148,11 +155,11 @@ export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPre
           >
             <div className="flex items-center justify-between text-sm text-gray-600">
               <div>
-                Press <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Esc</kbd> to close
+                Press{" "}
+                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Esc</kbd>{" "}
+                to close
               </div>
-              <div>
-                Use mouse wheel or zoom buttons to adjust size
-              </div>
+              <div>Use mouse wheel or zoom buttons to adjust size</div>
             </div>
           </motion.div>
         </div>

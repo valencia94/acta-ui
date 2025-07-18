@@ -10,7 +10,7 @@ This document memorializes the complete authentication architecture for ACTA-UI,
 
 ## 🏗️ AUTHENTICATION ARCHITECTURE OVERVIEW
 
-```
+````
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                        ACTA-UI AUTHENTICATION FLOW                             │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -50,20 +50,21 @@ const configureAmplify = async () => {
   if (window.awsmobile) {
     // Configure with both User Pool and Identity Pool
     Amplify.configure(window.awsmobile);
-    
+
     // Validation checks
     if (!window.awsmobile.Auth?.identityPoolId) {
       console.warn("⚠️ Identity Pool ID not found");
     }
-    
+
     if (!window.awsmobile.Auth?.Cognito) {
       console.warn("⚠️ Auth configuration incomplete");
     }
   }
 }
-```
+````
 
 **Configuration Details:**
+
 ```typescript
 // AWS Cognito Configuration (from aws-exports.js)
 interface CognitoConfig {
@@ -122,10 +123,10 @@ interface IdentityPoolConfig {
 
 ```typescript
 // 1. CSS and Styles Loading (Critical First)
-import "@/styles/variables.css";       // Design tokens
-import "@/tailwind.css";               // Utility styles
+import "@/styles/variables.css"; // Design tokens
+import "@/tailwind.css"; // Utility styles
 import "@aws-amplify/ui-react/styles.css"; // Amplify UI
-import "@/styles/amplify-overrides.css";   // Custom overrides
+import "@/styles/amplify-overrides.css"; // Custom overrides
 
 // 2. Critical Function Imports
 import {
@@ -145,6 +146,7 @@ import { Amplify } from "aws-amplify";
 ```
 
 **Configuration Timing:**
+
 ```typescript
 // Enhanced timing mechanism to prevent race conditions
 configureAmplify().then(() => {
@@ -175,18 +177,18 @@ interface LoginFlow {
 // Authentication State Management
 interface AuthState {
   user: {
-    email: string;              // Primary identifier
-    sub: string;                // Cognito User ID
-    groups?: string[];          // User groups (admin, pm, etc.)
-    email_verified: boolean;    // Email verification status
+    email: string; // Primary identifier
+    sub: string; // Cognito User ID
+    groups?: string[]; // User groups (admin, pm, etc.)
+    email_verified: boolean; // Email verification status
   } | null;
-  loading: boolean;             // Authentication loading state
-  error: string | null;         // Authentication errors
-  isAuthenticated: boolean;     // Authentication status
+  loading: boolean; // Authentication loading state
+  error: string | null; // Authentication errors
+  isAuthenticated: boolean; // Authentication status
   tokens: {
-    accessToken: string;        // API access token
-    idToken: string;            // Identity token
-    refreshToken: string;       // Token refresh
+    accessToken: string; // API access token
+    idToken: string; // Identity token
+    refreshToken: string; // Token refresh
   } | null;
 }
 ```
@@ -197,10 +199,10 @@ interface AuthState {
 
 ```typescript
 // PM Role Determination
-const isAdmin = 
-  user?.email === 'admin@ikusi.com' ||
-  user?.email?.includes('admin') ||
-  user?.groups?.includes('admin');
+const isAdmin =
+  user?.email === "admin@ikusi.com" ||
+  user?.email?.includes("admin") ||
+  user?.groups?.includes("admin");
 
 // PM Email Validation Flow
 interface PMValidationFlow {
@@ -229,18 +231,18 @@ interface DynamoDBAccessFlow {
 async function getProjectsByPM(pmEmail: string, isAdmin: boolean = false) {
   // Step 1: Get JWT token from current session
   const token = await getAuthToken();
-  
+
   // Step 2: Make authenticated API call
   const response = await fetch(`${API_BASE_URL}/api/pm-manager/all-projects`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'X-User-Email': pmEmail,        // PM identification
-      'X-Is-Admin': isAdmin.toString() // Admin flag
-    }
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "X-User-Email": pmEmail, // PM identification
+      "X-Is-Admin": isAdmin.toString(), // Admin flag
+    },
   });
-  
+
   // Step 3: Backend validates JWT and filters data
   return response.json();
 }
@@ -258,31 +260,26 @@ async function getProjectsByPM(pmEmail: string, isAdmin: boolean = false) {
 interface CloudFrontAuth {
   origin_request_policy: {
     // Forward authentication headers to origin
-    headers: [
-      "Authorization",
-      "X-User-Email", 
-      "X-Is-Admin",
-      "Content-Type"
-    ];
-    cookies: "none";  // JWT tokens in headers, not cookies
+    headers: ["Authorization", "X-User-Email", "X-Is-Admin", "Content-Type"];
+    cookies: "none"; // JWT tokens in headers, not cookies
     query_strings: "all";
   };
-  
+
   cache_policy: {
     // Cache authenticated responses appropriately
     ttl: {
-      default: 86400;     // 24 hours for static assets
-      minimum: 0;         // No caching for API responses
-      maximum: 31536000;  // 1 year for immutable assets
+      default: 86400; // 24 hours for static assets
+      minimum: 0; // No caching for API responses
+      maximum: 31536000; // 1 year for immutable assets
     };
-    
+
     cache_key_parameters: {
-      headers: ["Authorization"];  // Include auth in cache key
+      headers: ["Authorization"]; // Include auth in cache key
       cookies: "none";
       query_strings: "all";
     };
   };
-  
+
   origin_access_control: {
     // Secure S3 access
     signing_behavior: "always";
@@ -301,14 +298,14 @@ interface CORSConfig {
   allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
   allowed_headers: [
     "Authorization",
-    "Content-Type", 
+    "Content-Type",
     "X-User-Email",
     "X-Is-Admin",
     "X-Amz-Date",
-    "X-Api-Key"
+    "X-Api-Key",
   ];
-  credentials: true;  // Allow cookies/auth headers
-  max_age: 86400;     // Preflight cache duration
+  credentials: true; // Allow cookies/auth headers
+  max_age: 86400; // Preflight cache duration
 }
 ```
 
@@ -319,18 +316,18 @@ interface CORSConfig {
 ```typescript
 // Token Management (src/utils/fetchWrapper.ts)
 interface TokenManagement {
-  storage: "localStorage";  // Secure token storage
-  access_token_ttl: 3600;   // 1 hour
-  id_token_ttl: 3600;       // 1 hour  
+  storage: "localStorage"; // Secure token storage
+  access_token_ttl: 3600; // 1 hour
+  id_token_ttl: 3600; // 1 hour
   refresh_token_ttl: 2592000; // 30 days
-  
+
   refresh_strategy: "automatic"; // Auto-refresh on 401
-  refresh_threshold: 300;       // Refresh 5 min before expiry
-  
+  refresh_threshold: 300; // Refresh 5 min before expiry
+
   security: {
-    httpOnly: false;           // Client-side access needed
-    secure: true;              // HTTPS only
-    sameSite: "strict";        // CSRF protection
+    httpOnly: false; // Client-side access needed
+    secure: true; // HTTPS only
+    sameSite: "strict"; // CSRF protection
   };
 }
 
@@ -339,21 +336,21 @@ async function refreshTokens() {
   try {
     const currentSession = await getCurrentUser();
     const refreshToken = currentSession.getRefreshToken();
-    
-    const newSession = await Auth.refreshSession(
-      currentSession, 
-      refreshToken
-    );
-    
+
+    const newSession = await Auth.refreshSession(currentSession, refreshToken);
+
     // Update stored tokens
-    localStorage.setItem('accessToken', newSession.getAccessToken().getJwtToken());
-    localStorage.setItem('idToken', newSession.getIdToken().getJwtToken());
-    
+    localStorage.setItem(
+      "accessToken",
+      newSession.getAccessToken().getJwtToken(),
+    );
+    localStorage.setItem("idToken", newSession.getIdToken().getJwtToken());
+
     return newSession;
   } catch (error) {
     // Force re-authentication on refresh failure
     await signOut();
-    window.location.href = '/login';
+    window.location.href = "/login";
     throw error;
   }
 }
@@ -371,19 +368,19 @@ interface AuthSecurity {
     require_lowercase: true;
     require_numbers: true;
     require_special_chars: true;
-    prevent_reuse: 24;  // Last 24 passwords
+    prevent_reuse: 24; // Last 24 passwords
   };
-  
+
   session_security: {
-    idle_timeout: 3600;      // 1 hour idle logout
+    idle_timeout: 3600; // 1 hour idle logout
     absolute_timeout: 28800; // 8 hour max session
-    concurrent_sessions: 1;   // Single session per user
+    concurrent_sessions: 1; // Single session per user
   };
-  
+
   mfa_options: {
-    sms: true;               // SMS-based MFA
-    totp: true;              // App-based MFA
-    backup_codes: true;      // Emergency access codes
+    sms: true; // SMS-based MFA
+    totp: true; // App-based MFA
+    backup_codes: true; // Emergency access codes
   };
 }
 ```
@@ -398,14 +395,14 @@ interface APISecurity {
     requests_per_minute: 100;
     burst_capacity: 200;
   };
-  
+
   input_validation: {
     email_format: true;
     sql_injection_prevention: true;
     xss_prevention: true;
     request_size_limit: "10MB";
   };
-  
+
   audit_logging: {
     auth_events: true;
     api_calls: true;
@@ -428,49 +425,49 @@ interface PMAuthenticationSequence {
     process: "Cognito User Pool authentication";
     output: "JWT tokens (Access, ID, Refresh)";
   };
-  
+
   step2: {
     action: "Session Establishment";
     location: "src/hooks/useAuth.tsx";
     process: "Parse JWT, extract user info";
     output: "User object with email, sub, groups";
   };
-  
+
   step3: {
     action: "PM Role Determination";
     location: "src/pages/Dashboard.tsx";
     process: "Check email against admin patterns";
     output: "isAdmin boolean flag";
   };
-  
+
   step4: {
     action: "Project Data Request";
     location: "src/components/DynamoProjectsView.tsx";
     process: "Call getProjectsByPM API";
     output: "Filtered project list";
   };
-  
+
   step5: {
     action: "API Authentication";
     location: "src/lib/api.ts";
     process: "Include JWT token in Authorization header";
     output: "Authenticated API request";
   };
-  
+
   step6: {
     action: "Backend Validation";
     location: "API Gateway + Lambda";
     process: "Validate JWT, extract PM email";
     output: "Authorized access to DynamoDB";
   };
-  
+
   step7: {
     action: "DynamoDB Query";
     location: "Lambda Function";
     process: "Filter projects by PM email or admin access";
     output: "PM-specific project data";
   };
-  
+
   step8: {
     action: "Response Delivery";
     location: "CloudFront + Client";
@@ -490,15 +487,15 @@ interface DynamoDBAccessPatterns {
     scan_limit: 100;
     return_fields: ["project_id", "project_name", "pm", "project_manager"];
   };
-  
+
   admin_access: {
     filter: "ALL"; // No filtering for admin users
     scan_limit: 1000;
     return_fields: ["*"]; // All fields for admin
   };
-  
+
   query_optimization: {
-    use_gsi: true;  // Global Secondary Index on PM email
+    use_gsi: true; // Global Secondary Index on PM email
     projection_type: "INCLUDE";
     projected_attributes: ["project_id", "project_name", "pm"];
   };
@@ -518,14 +515,14 @@ interface AuthErrorHandling {
     mfa_required: "Show MFA challenge";
     session_expired: "Auto-refresh or force re-login";
   };
-  
+
   api_errors: {
     401_unauthorized: "Refresh tokens or force re-login";
     403_forbidden: "Show access denied message";
     429_rate_limited: "Show retry message with backoff";
     500_server_error: "Show generic error, log details";
   };
-  
+
   network_errors: {
     connection_failed: "Show offline message, enable retry";
     timeout: "Show timeout message, auto-retry";
@@ -543,13 +540,13 @@ interface FallbackMechanisms {
     fallback: "Dynamic import from @/aws-exports";
     timeout: "5 seconds before fallback";
   };
-  
+
   token_storage: {
     primary: "localStorage";
     fallback: "sessionStorage";
     last_resort: "memory (session only)";
   };
-  
+
   api_endpoints: {
     primary: "Production API Gateway";
     fallback: "Backup API endpoint (if configured)";
@@ -592,6 +589,7 @@ The ACTA-UI authentication architecture implements a robust dual-module approval
 2. **Module 2** (Identity Pool): AWS resource access with temporary credentials
 
 This architecture ensures:
+
 - ✅ Secure user authentication through Cognito
 - ✅ Proper PM-based data filtering in DynamoDB
 - ✅ Admin role escalation when authorized

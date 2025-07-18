@@ -3,6 +3,7 @@
 ## Key Differences Found in Working Version
 
 ### 1. AWS Exports Configuration
+
 ```javascript
 // ❌ BROKEN (current repo):
 oauth: {
@@ -16,30 +17,32 @@ oauth: {
 ```
 
 ### 2. Authentication Flow Patterns
+
 Based on the working bundle analysis, the successful auth flow uses:
 
 ```typescript
 // Import pattern (working):
-import { fetchAuthSession, signIn, signOut } from 'aws-amplify/auth';
+import { fetchAuthSession, signIn, signOut } from "aws-amplify/auth";
 
 // Session verification (working pattern):
 const { tokens } = await fetchAuthSession();
-const token = tokens?.idToken?.toString() ?? '';
+const token = tokens?.idToken?.toString() ?? "";
 
 // Sign-in pattern (working):
 await signIn({ username: email, password });
 
 // Token storage (working):
-localStorage.setItem('ikusi.jwt', token);
+localStorage.setItem("ikusi.jwt", token);
 ```
 
 ### 3. Configuration Loading
+
 The working version loads AWS configuration early in the app lifecycle:
 
 ```typescript
 // In main.tsx or App.tsx:
-import { Amplify } from 'aws-amplify';
-import awsExports from './aws-exports';
+import { Amplify } from "aws-amplify";
+import awsExports from "./aws-exports";
 
 Amplify.configure(awsExports);
 ```

@@ -58,29 +58,29 @@ If you prefer to run the tests directly in the browser console, you can:
 
 ```javascript
 // Load button functionality test
-var script = document.createElement('script');
-script.src = '/public/button-functionality-test.js';
+var script = document.createElement("script");
+script.src = "/public/button-functionality-test.js";
 document.head.appendChild(script);
 ```
 
 ```javascript
 // Load production readiness validation
-var script = document.createElement('script');
-script.src = '/public/production-readiness-validation.js';
+var script = document.createElement("script");
+script.src = "/public/production-readiness-validation.js";
 document.head.appendChild(script);
 ```
 
 ```javascript
 // Load navigation button test
-var script = document.createElement('script');
-script.src = '/public/navigation-button-test.js';
+var script = document.createElement("script");
+script.src = "/public/navigation-button-test.js";
 document.head.appendChild(script);
 ```
 
 ```javascript
 // Load comprehensive auth & API test
-var script = document.createElement('script');
-script.src = '/public/comprehensive-auth-api-test.js';
+var script = document.createElement("script");
+script.src = "/public/comprehensive-auth-api-test.js";
 document.head.appendChild(script);
 ```
 

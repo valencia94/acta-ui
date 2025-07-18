@@ -106,17 +106,17 @@ acta-ui/
 
 ### Key File Descriptions
 
-| File | Description |
-|------|-------------|
-| `src/aws-exports.js` | Contains AWS configuration for Cognito User Pool, Identity Pool, and API Gateway |
-| `public/aws-exports.js` | Browser-compatible version of AWS configuration that sets `window.awsmobile` |
-| `src/main.tsx` | Application entry point that configures AWS Amplify and renders the React app |
-| `src/App.tsx` | Main React component with routing logic |
-| `src/hooks/useAuth.ts` | Custom hook for authentication state and operations |
-| `src/lib/api.ts` | API functions for interacting with backend services |
-| `src/utils/fetchWrapper.ts` | Wrapper for fetch API with authentication handling |
-| `src/components/DynamoProjectsView.tsx` | Component for displaying projects from DynamoDB |
-| `src/pages/Dashboard.tsx` | Main dashboard page with project management functionality |
+| File                                    | Description                                                                      |
+| --------------------------------------- | -------------------------------------------------------------------------------- |
+| `src/aws-exports.js`                    | Contains AWS configuration for Cognito User Pool, Identity Pool, and API Gateway |
+| `public/aws-exports.js`                 | Browser-compatible version of AWS configuration that sets `window.awsmobile`     |
+| `src/main.tsx`                          | Application entry point that configures AWS Amplify and renders the React app    |
+| `src/App.tsx`                           | Main React component with routing logic                                          |
+| `src/hooks/useAuth.ts`                  | Custom hook for authentication state and operations                              |
+| `src/lib/api.ts`                        | API functions for interacting with backend services                              |
+| `src/utils/fetchWrapper.ts`             | Wrapper for fetch API with authentication handling                               |
+| `src/components/DynamoProjectsView.tsx` | Component for displaying projects from DynamoDB                                  |
+| `src/pages/Dashboard.tsx`               | Main dashboard page with project management functionality                        |
 
 ## Authentication Flow
 
@@ -133,28 +133,29 @@ The configuration for both User Pool and Identity Pool is in `aws-exports.js`:
 // Key authentication configuration
 const awsmobile = {
   // User Pool Configuration (for authentication)
-  aws_user_pools_id: 'us-east-2_FyHLtOhiY',
-  aws_user_pools_web_client_id: 'dshos5iou44tuach7ta3ici5m',
-  
+  aws_user_pools_id: "us-east-2_FyHLtOhiY",
+  aws_user_pools_web_client_id: "dshos5iou44tuach7ta3ici5m",
+
   // Identity Pool Configuration (for AWS service access)
-  aws_cognito_identity_pool_id: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-  aws_cognito_region: 'us-east-2',
-  
+  aws_cognito_identity_pool_id:
+    "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35",
+  aws_cognito_region: "us-east-2",
+
   // Auth section combining both flows
   Auth: {
     // User Pool configuration
-    userPoolId: 'us-east-2_FyHLtOhiY',
-    userPoolWebClientId: 'dshos5iou44tuach7ta3ici5m',
-    
+    userPoolId: "us-east-2_FyHLtOhiY",
+    userPoolWebClientId: "dshos5iou44tuach7ta3ici5m",
+
     // Identity Pool configuration
-    identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-    identityPoolRegion: 'us-east-2',
-    
+    identityPoolId: "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35",
+    identityPoolRegion: "us-east-2",
+
     // Authentication settings
-    authenticationFlowType: 'USER_SRP_AUTH',
+    authenticationFlowType: "USER_SRP_AUTH",
     mandatorySignIn: true,
-    region: 'us-east-2'
-  }
+    region: "us-east-2",
+  },
 };
 ```
 
@@ -190,6 +191,7 @@ The Dashboard is the main interface after login, featuring:
 ### DynamoProjectsView (`src/components/DynamoProjectsView.tsx`)
 
 This component:
+
 - Directly queries DynamoDB using credentials from the Cognito Identity Pool
 - Displays projects associated with the logged-in user
 - Provides filtering and sorting functionality
@@ -225,13 +227,13 @@ The API integration is centered around the following files:
 
 ### Key API Functions
 
-| Function | Description |
-|----------|-------------|
-| `getProjectsByPM` | Fetches projects associated with a PM |
+| Function               | Description                              |
+| ---------------------- | ---------------------------------------- |
+| `getProjectsByPM`      | Fetches projects associated with a PM    |
 | `generateActaDocument` | Generates an ACTA document for a project |
-| `getS3DownloadUrl` | Gets a signed URL for document download |
-| `checkDocumentInS3` | Verifies if a document exists in S3 |
-| `sendApprovalEmail` | Sends an approval email for a document |
+| `getS3DownloadUrl`     | Gets a signed URL for document download  |
+| `checkDocumentInS3`    | Verifies if a document exists in S3      |
+| `sendApprovalEmail`    | Sends an approval email for a document   |
 
 ### Authentication in API Calls
 
@@ -248,7 +250,7 @@ API calls use the following pattern for authentication:
 - **ID**: EPQU7PVDLQXUA
 - **Domain**: d7t9x3j66yd8k.cloudfront.net
 - **Origin**: S3 bucket (acta-ui-frontend-prod)
-- **Behaviors**: Default (*) points to S3, /api/* paths point to API Gateway
+- **Behaviors**: Default (_) points to S3, /api/_ paths point to API Gateway
 
 ### S3 Bucket
 
@@ -308,13 +310,15 @@ Environment variables are loaded from `.env` and `.env.production` files:
 ### Authentication Issues
 
 **Issue**: "Auth UserPool not configured" error
-**Solution**: 
+**Solution**:
+
 - Ensure aws-exports.js is loaded before main bundle
 - Make sure aws-exports.js uses window.awsmobile assignment, not ES module exports
 - Verify both User Pool and Identity Pool configuration is present
 
 **Issue**: "Unexpected token 'export'" error when loading aws-exports.js
 **Solution**:
+
 - Use browser-compatible version of aws-exports.js that assigns to window.awsmobile
 - Don't use ES module syntax in scripts loaded directly via script tags
 
@@ -322,12 +326,14 @@ Environment variables are loaded from `.env` and `.env.production` files:
 
 **Issue**: 401 Unauthorized when accessing API
 **Solution**:
+
 - Verify JWT token is correctly included in requests
 - Check Cognito User Pool configuration
 - Ensure API Gateway has proper CORS configuration
 
 **Issue**: CORS errors when accessing API
 **Solution**:
+
 - Add appropriate CORS headers to API Gateway responses
 - Set `credentials: 'include'` in fetch requests
 - Verify API Gateway CORS configuration includes the application domain
@@ -336,6 +342,7 @@ Environment variables are loaded from `.env` and `.env.production` files:
 
 **Issue**: Unable to download or preview documents
 **Solution**:
+
 - Verify Identity Pool permissions for S3 access
 - Check S3 bucket CORS settings
 - Ensure proper error handling in download functions

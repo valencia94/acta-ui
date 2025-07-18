@@ -5,6 +5,7 @@
 ## Dependency Validation
 
 All required dependencies are present in `package.json` and installed:
+
 - aws-amplify
 - react
 - framer-motion
@@ -19,6 +20,7 @@ All required dependencies are present in `package.json` and installed:
 ## Component Validation
 
 All key components listed in documentation are present and implemented:
+
 - Dashboard (`src/pages/Dashboard.tsx`)
 - DynamoProjectsView (`src/components/DynamoProjectsView.tsx`)
 - PDFPreview (`src/components/PDFPreview.tsx`)

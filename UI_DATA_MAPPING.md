@@ -23,6 +23,7 @@ User Interface → React Components → API Layer → AWS Services → Database
 ### **1. AUTHENTICATION FLOW**
 
 #### **Login Page** (`src/pages/Login.tsx`)
+
 ```typescript
 // Data Input
 interface LoginData {
@@ -35,6 +36,7 @@ Login Form → useAuth Hook → Cognito User Pool → JWT Token → Global State
 ```
 
 **Data Mapping:**
+
 - **Input Fields**: `email`, `password`
 - **Validation**: Email format, password requirements
 - **Processing**: Cognito authentication via AWS Amplify
@@ -43,6 +45,7 @@ Login Form → useAuth Hook → Cognito User Pool → JWT Token → Global State
 - **State Management**: Authentication context, loading states
 
 #### **useAuth Hook** (`src/hooks/useAuth.tsx`)
+
 ```typescript
 // Authentication State
 interface AuthState {
@@ -67,32 +70,35 @@ interface AuthState {
 #### **Main Dashboard** (`src/pages/Dashboard.tsx`)
 
 **Project Data State:**
+
 ```typescript
 interface ProjectData {
-  project_id: string;         // Primary key
-  project_name: string;       // Display name
-  pm: string;                 // Project manager email
-  project_manager: string;    // Alternative PM field
-  planet?: string;            // Project location
-  title?: string;             // Project title
+  project_id: string; // Primary key
+  project_name: string; // Display name
+  pm: string; // Project manager email
+  project_manager: string; // Alternative PM field
+  planet?: string; // Project location
+  title?: string; // Project title
 }
 
 interface DashboardState {
-  projects: ProjectData[];          // All projects
-  selectedProjectId: string;       // Currently selected project
-  loading: boolean;                 // Loading state
-  error: string | null;             // Error messages
+  projects: ProjectData[]; // All projects
+  selectedProjectId: string; // Currently selected project
+  loading: boolean; // Loading state
+  error: string | null; // Error messages
   actionLoading: Record<string, boolean>; // Button loading states
 }
 ```
 
 **Data Sources:**
+
 - **Primary**: DynamoDB via `getProjectsByPM(userEmail, isAdmin)`
 - **Authentication**: JWT token from Cognito
 - **Filtering**: PM email-based project filtering
 - **Real-time**: Manual refresh, no auto-refresh
 
 #### **Project Search & Selection**
+
 ```typescript
 // Search Input
 searchInput: string → selectedProjectId: string
@@ -104,6 +110,7 @@ Search Input → State Update → Highlight Project → Enable Action Buttons
 #### **Action Buttons Data Flow**
 
 **1. Copy ID Button**
+
 ```typescript
 // Data Flow
 selectedProjectId → navigator.clipboard.writeText() → Toast Notification
@@ -112,6 +119,7 @@ selectedProjectId → navigator.clipboard.writeText() → Toast Notification
 ```
 
 **2. Generate Document Button**
+
 ```typescript
 // Input Data
 {
@@ -128,6 +136,7 @@ Button Click → API Gateway → Lambda Function → Document Generation → S3 
 ```
 
 **3. Download PDF/DOCX Buttons**
+
 ```typescript
 // Input Data
 {
@@ -143,6 +152,7 @@ Button Click → API Gateway → Lambda Function → S3 Presigned URL → Browse
 ```
 
 **4. Preview Button**
+
 ```typescript
 // Input Data
 {
@@ -158,6 +168,7 @@ Button Click → API Gateway → S3 URL → PDF Modal → Iframe Display
 ```
 
 **5. Send Email Button**
+
 ```typescript
 // Input Data
 {
@@ -176,6 +187,7 @@ Button Click → Email Dialog → API Gateway → Lambda Function → SES → Em
 ### **3. ADMIN DASHBOARD** (`src/pages/AdminDashboard.tsx`)
 
 **Admin-Specific Data:**
+
 ```typescript
 interface AdminState {
   isAdmin: boolean;           // Admin access flag
@@ -196,6 +208,7 @@ interface AdminState {
 ### **4. PROJECT MANAGEMENT** (`src/components/DynamoProjectsView.tsx`)
 
 **Project Display Data:**
+
 ```typescript
 interface ProjectTableData {
   id: number;                 // Converted from project_id
@@ -217,6 +230,7 @@ ProjectSummary[] → ProjectTableData[]
 ### **API Functions** (`src/lib/api.ts`)
 
 #### **1. Project Data APIs**
+
 ```typescript
 // Get Projects by PM
 getProjectsByPM(pmEmail: string, isAdmin: boolean = false) → ProjectSummary[]
@@ -234,6 +248,7 @@ getAllProjects() → ProjectSummary[]
 ```
 
 #### **2. Document Generation APIs**
+
 ```typescript
 // Generate ACTA Document
 generateActaDocument(projectId: string, userEmail: string, userRole: string) → {
@@ -260,6 +275,7 @@ getS3DownloadUrl(projectId: string, format: 'pdf' | 'docx') → {
 ```
 
 #### **3. Email APIs**
+
 ```typescript
 // Send Approval Email
 sendApprovalEmail(projectId: string, recipientEmail: string) → {
@@ -276,6 +292,7 @@ sendApprovalEmail(projectId: string, recipientEmail: string) → {
 ## 🔐 AUTHENTICATION DATA FLOW
 
 ### **JWT Token Management**
+
 ```typescript
 // Token Storage
 localStorage.setItem('accessToken', token)
@@ -294,23 +311,25 @@ Headers: {
 ```
 
 ### **User Session Data**
+
 ```typescript
 interface UserSession {
-  accessToken: string;        // JWT access token
-  refreshToken: string;       // JWT refresh token
-  idToken: string;            // Cognito ID token
+  accessToken: string; // JWT access token
+  refreshToken: string; // JWT refresh token
+  idToken: string; // Cognito ID token
   user: {
-    email: string;            // User email
-    sub: string;              // Cognito user ID
-    groups?: string[];        // User groups
+    email: string; // User email
+    sub: string; // Cognito user ID
+    groups?: string[]; // User groups
   };
-  expiresAt: number;          // Token expiration
+  expiresAt: number; // Token expiration
 }
 ```
 
 ## 📊 DATABASE MAPPING
 
 ### **DynamoDB Table Structure**
+
 ```typescript
 // Primary Table: ProjectPlace_DataExtrator_landing_table_v2
 interface DynamoDBRecord {
@@ -331,6 +350,7 @@ interface DynamoDBRecord {
 ```
 
 ### **S3 Storage Structure**
+
 ```typescript
 // Document Storage Bucket: projectplace-dv-2025-x9a7b
 Structure:
@@ -350,6 +370,7 @@ Structure:
 ## 🎨 UI STATE MANAGEMENT
 
 ### **React State Architecture**
+
 ```typescript
 // Component State Hierarchy
 App
@@ -365,6 +386,7 @@ App
 ```
 
 ### **State Updates Flow**
+
 ```typescript
 // User Action → State Update → UI Re-render → API Call → State Update
 Click Generate → actionLoading[generate-{id}] = true → Button disabled → API call → Success/Error → actionLoading[generate-{id}] = false
@@ -373,6 +395,7 @@ Click Generate → actionLoading[generate-{id}] = true → Button disabled → A
 ## 🔄 ERROR HANDLING DATA FLOW
 
 ### **Error Types & Handling**
+
 ```typescript
 interface ErrorState {
   type: 'network' | 'auth' | 'validation' | 'server';
@@ -386,17 +409,19 @@ API Error → Error Boundary → Toast Notification → User Feedback → Option
 ```
 
 ### **Loading States**
+
 ```typescript
 interface LoadingStates {
-  globalLoading: boolean;     // Page-level loading
+  globalLoading: boolean; // Page-level loading
   actionLoading: Record<string, boolean>; // Per-action loading
-  dataLoading: boolean;       // Data fetching loading
+  dataLoading: boolean; // Data fetching loading
 }
 ```
 
 ## 🚀 PERFORMANCE OPTIMIZATIONS
 
 ### **Data Caching**
+
 ```typescript
 // API Response Caching
 - Project data: 5 minutes
@@ -410,6 +435,7 @@ interface LoadingStates {
 ```
 
 ### **Lazy Loading**
+
 ```typescript
 // Code Splitting
 const PDFPreview = lazy(() => import('@/components/PDFPreview'));
@@ -423,6 +449,7 @@ const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 ## 📝 DATA VALIDATION
 
 ### **Client-Side Validation**
+
 ```typescript
 // Form Validation
 - Email format validation
@@ -437,6 +464,7 @@ const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 ```
 
 ### **Server-Side Validation**
+
 ```typescript
 // API Validation
 - JWT token validation
@@ -448,6 +476,7 @@ const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 ## 🎯 MONITORING & ANALYTICS
 
 ### **Data Tracking**
+
 ```typescript
 // User Actions
 - Button clicks
@@ -469,18 +498,21 @@ const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 This UI data mapping provides a complete picture of how data flows through the ACTA-UI application, ensuring all components are properly connected and data is handled consistently throughout the system.
 
 **Key Data Flows:**
+
 - ✅ Authentication: Login → Cognito → JWT → Global State
 - ✅ Project Data: DynamoDB → API → React State → UI Display
 - ✅ Document Actions: UI → API → Lambda → S3 → User Download
 - ✅ Email Workflow: UI → API → Lambda → SES → Email Delivery
 
 **Data Integrity:**
+
 - ✅ Proper error handling at all levels
 - ✅ Loading states for all async operations
 - ✅ Input validation and sanitization
 - ✅ Secure token management
 
 **Performance:**
+
 - ✅ Optimized data fetching
 - ✅ Efficient state management
 - ✅ Proper caching strategies

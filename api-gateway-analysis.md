@@ -55,22 +55,26 @@
 ## 🔧 **FIXES IMPLEMENTED IN HARDENED VERSION**
 
 ### ✅ **Security Enhancements**
+
 - **Unified Authentication**: All protected endpoints now use `CognitoUserPoolAuthorizer`
 - **CORS Hardening**: Added `Access-Control-Allow-Credentials: true` for all responses
 - **Error Response CORS**: Gateway responses now include CORS headers for 4XX/5XX errors
 - **Request Validation**: Added basic request/response validation
 
 ### ✅ **Integration Standardization**
+
 - **AWS Proxy**: All integrations standardized to `aws_proxy` type
 - **Timeout Consistency**: Set 60-second timeout for all Lambda integrations
 - **Proper Content Handling**: Added appropriate content handling for file downloads
 
 ### ✅ **CORS Completeness**
+
 - **Preflight Support**: Standardized OPTIONS handling across all endpoints
 - **Comprehensive Headers**: Added all required CORS headers including credentials
 - **Error CORS**: CORS headers now included in error responses (UNAUTHORIZED, ACCESS_DENIED, 4XX, 5XX)
 
 ### ✅ **Path Cleanup**
+
 - **Removed**: Incomplete `/projects` endpoint
 - **Fixed**: `/handleApprovalCallback` now uses specific POST method instead of any-method
 - **Enhanced**: Added proper schemas and validation for request/response bodies
@@ -84,16 +88,18 @@
 ## 🚀 **DEPLOYMENT COMMANDS**
 
 ### **Option 1: Automated Script (Recommended)**
+
 ```bash
 ./deploy-hardened-api.sh
 ```
 
 ### **Option 2: Manual AWS CLI**
+
 ```bash
 # Backup current API
 aws apigateway get-export --rest-api-id q2b9avfwv5 --stage-name prod --export-type swagger backup.json
 
-# Deploy hardened configuration  
+# Deploy hardened configuration
 aws apigateway put-rest-api --rest-api-id q2b9avfwv5 --mode overwrite --body file://acta-backend-hardened.json
 
 # Create deployment
@@ -101,6 +107,7 @@ aws apigateway create-deployment --rest-api-id q2b9avfwv5 --stage-name prod
 ```
 
 ### **Option 3: AWS Console**
+
 1. Go to API Gateway console
 2. Select your API (q2b9avfwv5)
 3. Actions → Import API → Swagger/OpenAPI
@@ -110,6 +117,7 @@ aws apigateway create-deployment --rest-api-id q2b9avfwv5 --stage-name prod
 ## 🧪 **POST-DEPLOYMENT TESTING**
 
 ### **CORS Verification**
+
 ```bash
 # Test CORS preflight
 curl -X OPTIONS \
@@ -122,6 +130,7 @@ curl -X OPTIONS \
 ```
 
 ### **Authentication Testing**
+
 ```bash
 # Test protected endpoint (should return 401 without auth)
 curl https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/pm-manager/all-projects

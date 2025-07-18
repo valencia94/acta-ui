@@ -24,11 +24,11 @@
           "200": {
             "description": "API is healthy",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -47,18 +47,18 @@
         "summary": "Get projects for authenticated user",
         "description": "Retrieves projects accessible to the authenticated PM",
         "tags": ["Projects"],
-        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "security": [{ "CognitoUserPoolAuthorizer": [] }],
         "responses": {
           "200": {
             "description": "List of projects",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
-          "401": {"$ref": "#/responses/Unauthorized"},
-          "403": {"$ref": "#/responses/Forbidden"},
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "401": { "$ref": "#/responses/Unauthorized" },
+          "403": { "$ref": "#/responses/Forbidden" },
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -77,7 +77,7 @@
         "summary": "Get project summary by ID",
         "description": "Retrieves detailed summary for a specific project",
         "tags": ["Projects"],
-        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "security": [{ "CognitoUserPoolAuthorizer": [] }],
         "parameters": [
           {
             "name": "id",
@@ -91,14 +91,14 @@
           "200": {
             "description": "Project summary",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
-          "401": {"$ref": "#/responses/Unauthorized"},
-          "403": {"$ref": "#/responses/Forbidden"},
-          "404": {"$ref": "#/responses/NotFound"},
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "401": { "$ref": "#/responses/Unauthorized" },
+          "403": { "$ref": "#/responses/Forbidden" },
+          "404": { "$ref": "#/responses/NotFound" },
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -117,7 +117,7 @@
         "summary": "Check document status",
         "description": "Check the processing status of a project document",
         "tags": ["Documents"],
-        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "security": [{ "CognitoUserPoolAuthorizer": [] }],
         "parameters": [
           {
             "name": "projectId",
@@ -131,14 +131,14 @@
           "200": {
             "description": "Document status",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
-          "401": {"$ref": "#/responses/Unauthorized"},
-          "403": {"$ref": "#/responses/Forbidden"},
-          "404": {"$ref": "#/responses/NotFound"},
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "401": { "$ref": "#/responses/Unauthorized" },
+          "403": { "$ref": "#/responses/Forbidden" },
+          "404": { "$ref": "#/responses/NotFound" },
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -157,7 +157,7 @@
         "summary": "Extract project place data",
         "description": "Extract and process project place information",
         "tags": ["Data Extraction"],
-        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "security": [{ "CognitoUserPoolAuthorizer": [] }],
         "parameters": [
           {
             "name": "id",
@@ -171,14 +171,14 @@
           "200": {
             "description": "Extraction completed",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
-          "401": {"$ref": "#/responses/Unauthorized"},
-          "403": {"$ref": "#/responses/Forbidden"},
-          "404": {"$ref": "#/responses/NotFound"},
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "401": { "$ref": "#/responses/Unauthorized" },
+          "403": { "$ref": "#/responses/Forbidden" },
+          "404": { "$ref": "#/responses/NotFound" },
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -197,7 +197,7 @@
         "summary": "Download ACTA document",
         "description": "Download generated ACTA document for a project",
         "tags": ["Documents"],
-        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "security": [{ "CognitoUserPoolAuthorizer": [] }],
         "parameters": [
           {
             "name": "id",
@@ -211,17 +211,17 @@
           "200": {
             "description": "Document download initiated",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
           "302": {
             "description": "Redirect to download URL"
           },
-          "401": {"$ref": "#/responses/Unauthorized"},
-          "403": {"$ref": "#/responses/Forbidden"},
-          "404": {"$ref": "#/responses/NotFound"},
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "401": { "$ref": "#/responses/Unauthorized" },
+          "403": { "$ref": "#/responses/Forbidden" },
+          "404": { "$ref": "#/responses/NotFound" },
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -240,18 +240,18 @@
         "summary": "Send approval email",
         "description": "Send approval email notification",
         "tags": ["Notifications"],
-        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "security": [{ "CognitoUserPoolAuthorizer": [] }],
         "responses": {
           "200": {
             "description": "Email sent successfully",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
-          "401": {"$ref": "#/responses/Unauthorized"},
-          "403": {"$ref": "#/responses/Forbidden"},
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "401": { "$ref": "#/responses/Unauthorized" },
+          "403": { "$ref": "#/responses/Forbidden" },
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -270,7 +270,7 @@
         "summary": "Get project timeline",
         "description": "Retrieve timeline of events for a project",
         "tags": ["Projects"],
-        "security": [{"CognitoUserPoolAuthorizer": []}],
+        "security": [{ "CognitoUserPoolAuthorizer": [] }],
         "parameters": [
           {
             "name": "id",
@@ -284,14 +284,14 @@
           "200": {
             "description": "Project timeline",
             "headers": {
-              "Access-Control-Allow-Origin": {"type": "string"},
-              "Access-Control-Allow-Credentials": {"type": "string"}
+              "Access-Control-Allow-Origin": { "type": "string" },
+              "Access-Control-Allow-Credentials": { "type": "string" }
             }
           },
-          "401": {"$ref": "#/responses/Unauthorized"},
-          "403": {"$ref": "#/responses/Forbidden"},
-          "404": {"$ref": "#/responses/NotFound"},
-          "500": {"$ref": "#/responses/InternalServerError"}
+          "401": { "$ref": "#/responses/Unauthorized" },
+          "403": { "$ref": "#/responses/Forbidden" },
+          "404": { "$ref": "#/responses/NotFound" },
+          "500": { "$ref": "#/responses/InternalServerError" }
         },
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
@@ -324,29 +324,29 @@
     "Unauthorized": {
       "description": "Unauthorized - Invalid or missing JWT token",
       "headers": {
-        "Access-Control-Allow-Origin": {"type": "string"},
-        "Access-Control-Allow-Credentials": {"type": "string"}
+        "Access-Control-Allow-Origin": { "type": "string" },
+        "Access-Control-Allow-Credentials": { "type": "string" }
       }
     },
     "Forbidden": {
       "description": "Forbidden - Valid token but insufficient permissions",
       "headers": {
-        "Access-Control-Allow-Origin": {"type": "string"},
-        "Access-Control-Allow-Credentials": {"type": "string"}
+        "Access-Control-Allow-Origin": { "type": "string" },
+        "Access-Control-Allow-Credentials": { "type": "string" }
       }
     },
     "NotFound": {
       "description": "Resource not found",
       "headers": {
-        "Access-Control-Allow-Origin": {"type": "string"},
-        "Access-Control-Allow-Credentials": {"type": "string"}
+        "Access-Control-Allow-Origin": { "type": "string" },
+        "Access-Control-Allow-Credentials": { "type": "string" }
       }
     },
     "InternalServerError": {
       "description": "Internal server error",
       "headers": {
-        "Access-Control-Allow-Origin": {"type": "string"},
-        "Access-Control-Allow-Credentials": {"type": "string"}
+        "Access-Control-Allow-Origin": { "type": "string" },
+        "Access-Control-Allow-Credentials": { "type": "string" }
       }
     }
   },
@@ -363,9 +363,9 @@
         "200": {
           "description": "CORS preflight successful",
           "headers": {
-            "Access-Control-Allow-Origin": {"type": "string"},
-            "Access-Control-Allow-Methods": {"type": "string"},
-            "Access-Control-Allow-Headers": {"type": "string"}
+            "Access-Control-Allow-Origin": { "type": "string" },
+            "Access-Control-Allow-Methods": { "type": "string" },
+            "Access-Control-Allow-Headers": { "type": "string" }
           }
         }
       },
@@ -392,10 +392,10 @@
         "200": {
           "description": "CORS preflight successful",
           "headers": {
-            "Access-Control-Allow-Origin": {"type": "string"},
-            "Access-Control-Allow-Methods": {"type": "string"},
-            "Access-Control-Allow-Headers": {"type": "string"},
-            "Access-Control-Allow-Credentials": {"type": "string"}
+            "Access-Control-Allow-Origin": { "type": "string" },
+            "Access-Control-Allow-Methods": { "type": "string" },
+            "Access-Control-Allow-Headers": { "type": "string" },
+            "Access-Control-Allow-Credentials": { "type": "string" }
           }
         }
       },

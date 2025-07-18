@@ -1,16 +1,16 @@
 // src/components/Button/index.tsx
-import { Button as MUIButton } from '@mui/material';
+import { Button as MUIButton } from "@mui/material";
 
-import { ButtonProps } from './types';
+import { ButtonProps } from "./types";
 
 export function Button({
   onClick,
   children,
   className,
   disabled,
-  color = 'primary',
-  variant = 'contained',
-  type = 'button',
+  color = "primary",
+  variant = "contained",
+  type = "button",
 }: ButtonProps) {
   return (
     <MUIButton

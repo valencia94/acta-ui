@@ -1,20 +1,20 @@
 // src/components/LoadingMessage/index.stories.tsx
-import { Meta, StoryFn } from '@storybook/react';
+import { Meta, StoryFn } from "@storybook/react";
 
-import { LoadingMessage, LoadingMessageProps } from './';
+import { LoadingMessage, LoadingMessageProps } from "./";
 
 export default {
-  title: 'Components/LoadingMessage',
+  title: "Components/LoadingMessage",
   component: LoadingMessage,
 } as Meta<LoadingMessageProps>;
 
 const Template: StoryFn<LoadingMessageProps> = (args) => (
-  <div style={{ padding: '1rem', background: '#f9f9f9' }}>
+  <div style={{ padding: "1rem", background: "#f9f9f9" }}>
     <LoadingMessage {...args} />
   </div>
 );
 
 export const Default = Template.bind({});
 Default.args = {
-  message: 'Loading projects...',
+  message: "Loading projects...",
 };

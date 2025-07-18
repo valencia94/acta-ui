@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: CORRECTED API Gateway wiring - matches REAL Lambda functions + adds critical missing ones
 
 Parameters:
@@ -81,7 +81,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref TimelineResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   TimelineMethod:
     Type: AWS::ApiGateway::Method
@@ -109,7 +109,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ProjectSummaryResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   ProjectSummaryMethod:
     Type: AWS::ApiGateway::Method
@@ -137,7 +137,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref DownloadActaResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   DownloadActaMethod:
     Type: AWS::ApiGateway::Method
@@ -164,7 +164,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ExtractProjectPlaceResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   ExtractProjectPlaceMethod:
     Type: AWS::ApiGateway::Method
@@ -255,7 +255,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref PMProjectsResource
-      PathPart: '{pmEmail}'
+      PathPart: "{pmEmail}"
 
   PMProjectsEmailMethod:
     Type: AWS::ApiGateway::Method
@@ -282,7 +282,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref CheckDocumentResource
-      PathPart: '{projectId}'
+      PathPart: "{projectId}"
 
   CheckDocumentMethod:
     Type: AWS::ApiGateway::Method
@@ -395,7 +395,7 @@ Resources:
       - CheckDocumentHeadMethod
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub 'Corrected API deployment - ${AWS::StackName}'
+      Description: !Sub "Corrected API deployment - ${AWS::StackName}"
       StageName: prod
 
 Outputs:
@@ -405,12 +405,12 @@ Outputs:
 
   ExistingEndpoints:
     Description: Existing endpoints that should work after fixes
-    Value: 'health, timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email'
+    Value: "health, timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email"
 
   NewEndpoints:
     Description: New endpoints added for missing functionality
-    Value: 'projects, pm-projects/all-projects, pm-projects/{email}, check-document/{id}'
+    Value: "projects, pm-projects/all-projects, pm-projects/{email}, check-document/{id}"
 
   RequiredNewLambdas:
     Description: Lambda functions that need to be created
-    Value: 'ProjectsManager, DocumentStatus'
+    Value: "ProjectsManager, DocumentStatus"
