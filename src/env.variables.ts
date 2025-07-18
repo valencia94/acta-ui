@@ -18,9 +18,9 @@ export const apiGatewayId = import.meta.env.VITE_API_GATEWAY_ID || 'q2b9avfwv5';
 export const apiStage = import.meta.env.VITE_API_STAGE || 'prod';
 
 // Authentication
-// Production requires full authentication
-export const skipAuth = false;
-export const isDemo = false;
+// Skip authentication only if explicitly set to true in development
+export const skipAuth = import.meta.env.VITE_SKIP_AUTH === 'true' && import.meta.env.DEV;
+export const isDemo = import.meta.env.VITE_IS_DEMO === 'true';
 export const authDebug = import.meta.env.VITE_AUTH_DEBUG === 'true';
 
 // AWS Configuration

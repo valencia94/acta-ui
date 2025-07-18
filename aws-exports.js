@@ -24,17 +24,17 @@ const awsmobile = {
   aws_user_files_s3_bucket: "projectplace-dv-2025-x9a7b",
   aws_user_files_s3_bucket_region: "us-east-2",
   Auth: {
-    identityPoolId: 'us-east-2:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+    identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
     region: 'us-east-2',
-    userPoolId: 'us-east-2_xxxxxxxx',
-    userPoolWebClientId: 'xxxxxxxxxxxxxxxxxxxxxxxxxx',
+    userPoolId: 'us-east-2_FyHLtOhiY',
+    userPoolWebClientId: 'dshos5iou44tuach7ta3ici5m',
     identityPoolRegion: 'us-east-2',
     authenticationFlowType: "USER_SRP_AUTH",
     mandatorySignIn: true,
     Cognito: {
-      userPoolId: 'us-east-2_xxxxxxxx',
-      userPoolClientId: 'xxxxxxxxxxxxxxxxxxxxxxxxxx',
-      identityPoolId: 'us-east-2:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      userPoolId: 'us-east-2_FyHLtOhiY',
+      userPoolClientId: 'dshos5iou44tuach7ta3ici5m',
+      identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
       signUpVerificationMethod: "code",
       loginWith: {
         email: true,
