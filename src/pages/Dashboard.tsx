@@ -206,6 +206,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6 sm:mb-8"
+          data-testid="projects-section"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
