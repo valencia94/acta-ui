@@ -19,9 +19,11 @@ export const apiStage = import.meta.env.VITE_API_STAGE || "prod";
 
 // Authentication
 // Skip authentication only if explicitly set to true in development
-export const skipAuth =
-  import.meta.env.VITE_SKIP_AUTH === "true" && import.meta.env.DEV;
-export const isDemo = import.meta.env.VITE_IS_DEMO === "true";
+// export const skipAuth =
+//   import.meta.env.VITE_SKIP_AUTH === "true" && import.meta.env.DEV;
+export const skipAuth = false; // Disabled for production resilience
+// export const isDemo = import.meta.env.VITE_IS_DEMO === "true";
+export const isDemo = false; // Disabled for production resilience
 export const authDebug = import.meta.env.VITE_AUTH_DEBUG === "true";
 
 // AWS Configuration
@@ -59,7 +61,8 @@ export const appDomain =
 
 // Application Configuration
 export const appName = import.meta.env.VITE_APP_NAME || "Ikusi · Acta Platform";
-export const useMockApi = import.meta.env.VITE_USE_MOCK_API === "true";
+// export const useMockApi = import.meta.env.VITE_USE_MOCK_API === "true";
+export const useMockApi = false; // Disabled for production resilience
 export const ffmpegPath = import.meta.env.FFMPEG_PATH || "./bin/ffmpeg";
 
 // Monitoring

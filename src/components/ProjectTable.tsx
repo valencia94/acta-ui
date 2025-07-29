@@ -77,7 +77,7 @@ export default function ProjectTable({
                 key={row.id}
                 onClick={() => handleRowClick(project)}
                 className={`
-                  transition-colors duration-200 cursor-pointer
+                  project-card transition-colors duration-200 cursor-pointer
                   ${
                     isSelected
                       ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"

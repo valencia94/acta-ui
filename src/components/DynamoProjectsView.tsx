@@ -1,8 +1,10 @@
-
-import { useEffect, useState } from 'react';
-import { getProjectsByPM } from '@/api';
-import { getCurrentUser } from '@/lib/api-amplify';
-import ProjectTable, { Project } from './ProjectTable';
+// src/components/DynamoProjectsView.tsx
+import { useEffect, useState } from "react";
+import { getCurrentUser } from "@/lib/api-amplify";
+import ProjectTable, { Project } from "./ProjectTable";
+import { ProjectTableSkeleton } from "./LoadingSkeleton";
+import ErrorCallout from "./ErrorCallout";
+import { fetchProjects } from "@/utils/fetchProjects";
 
 interface DynamoProjectsViewProps {
   userEmail: string;
@@ -50,28 +52,27 @@ export default function DynamoProjectsView({
     setError(null);
 
     try {
-      console.log("📋 Fetching projects with Cognito authentication...");
+      console.log("📋 Fetching projects with CORS-resilient logic...");
       console.log("👤 User email:", userEmail);
       console.log("🔐 Cognito user:", cognitoUser);
       console.log("🛡️ Admin mode:", isAdmin);
 
-      const projectSummaries = await getProjectsByPM(userEmail, isAdmin);
-      console.log("✅ Projects loaded:", projectSummaries);
-
-      const projects: Project[] = projectSummaries.map((summary, index) => ({
-        id: parseInt(String(summary.project_id)) || index + 1,
-        name: String(summary.project_name),
-        pm: String(summary.pm || summary.project_manager || 'Unknown'),
-        status: 'Active',
-      }));
+      const projects = await fetchProjects({
+        userEmail,
+        isAdmin,
+      });
 
       setProjects(projects);
     } catch (err) {
       console.error("❌ Failed to load projects:", err);
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to load projects. Please check your authentication.";
+      let errorMessage = "Failed to load projects. Please check your authentication.";
+      
+      if (err instanceof TypeError) {
+        errorMessage = "Still can't reach the API – please log out and back in.";
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);

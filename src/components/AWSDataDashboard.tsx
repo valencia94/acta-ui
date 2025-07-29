@@ -1,5 +1,4 @@
-##src/components/AWSDataDashboard.tsx
-
+//src/components/AWSDataDashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { getAllProjects } from '../lib/awsDataService';
 
@@ -19,8 +18,7 @@ export const AWSDataDashboard: React.FC = () => {
       setAdminProjects(all);
 
       // 2. PM projects
-      // Mock PM projects since getProjectsByPM is not available in awsDataService
-      const pm: any[] = [];
+      const pm = await getProjectsByPM(TEST_PM_EMAIL, false);
       setPmProjects(pm);
 
       // Mock downloads since downloadDocument is not available
@@ -30,7 +28,7 @@ export const AWSDataDashboard: React.FC = () => {
       const downloads: string[] = [];
       if (pm.length >= 2) {
         for (let i = 0; i < 2; i++) {
-          const projectId = pm[i].project_id || pm[i].id;
+          const projectId = String(pm[i].id);
           try {
             const doc = await downloadDocument(projectId, "pdf");
             downloads.push(
