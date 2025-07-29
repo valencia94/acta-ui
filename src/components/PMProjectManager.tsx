@@ -3,12 +3,7 @@ import { Clock, FileText, RefreshCw, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
-import {
-  generateSummariesForPM,
-  getProjectsByPM,
-  getAllProjects,
-  PMProject,
-} from "@/lib/api";
+import { generateSummariesForPM, getProjectsByPM, getAllProjects, PMProject } from '@/api';
 
 import Button from "./Button";
 
@@ -57,8 +52,7 @@ export default function PMProjectManager({
     try {
       console.log(`Loading projects for PM: ${pmEmail}`);
       const projectSummaries = await getProjectsByPM(pmEmail, false);
-      // Transform API response to PMProject
-      const pmProjects: PMProject[] = projectSummaries.map((summary) => ({
+
         id: String(summary.id || summary.project_id || 'unknown'),
         name: String(summary.name || summary.project_name || 'Unknown Project'),
         pm: String(summary.pm || summary.project_manager || pmEmail),

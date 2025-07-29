@@ -1,11 +1,6 @@
-import React, { useEffect, useState } from "react";
-import {
-  getAllProjects,
-} from "../lib/awsDataService";
-import {
-  getProjectsByPM,
-  getDownloadUrl as downloadDocument,
-} from "../lib/api";
+//src/components/AWSDataDashboard.tsx
+import React, { useEffect, useState } from 'react';
+import { getAllProjects } from '../lib/awsDataService';
 
 const TEST_PM_EMAIL = "christian.valencia@ikusi.com";
 
@@ -26,6 +21,9 @@ export const AWSDataDashboard: React.FC = () => {
       const pm = await getProjectsByPM(TEST_PM_EMAIL, false);
       setPmProjects(pm);
 
+      // Mock downloads since downloadDocument is not available
+      const downloads: string[] = ['Download functionality disabled'];
+
       // 3. Download two documents
       const downloads: string[] = [];
       if (pm.length >= 2) {
@@ -41,6 +39,7 @@ export const AWSDataDashboard: React.FC = () => {
           }
         }
       }
+
       setDownloadResults(downloads);
       setLoading(false);
     }
