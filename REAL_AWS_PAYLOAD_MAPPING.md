@@ -9,20 +9,22 @@ This matrix maps the actual AWS Lambda functions, API Gateway endpoints, and exp
 ## 🏗️ **VERIFIED AWS INFRASTRUCTURE**
 
 ### **API Gateway**: `q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod`
+
 ### **Cognito User Pool**: `us-east-2_FyHLtOhiY`
+
 ### **Lambda Functions** (Actual names from CF template):
 
-| **Lambda Function** | **Purpose** | **API Endpoint** | **HTTP Method** |
-|-------------------|-------------|------------------|-----------------|
-| `ProjectPlaceDataExtractor` | Generate ACTA Document | `/extract-project-place/{id}` | `POST` |
-| `getDownloadActa` | Download Documents | `/download-acta/{id}` | `GET` |
-| `projectMetadataEnricher` | Project Summary/PM Data | `/project-summary/{id}` | `GET` |
-| `projectMetadataEnricher` | PM Projects List | `/pm-projects/{pmEmail}` | `GET` |
-| `projectMetadataEnricher` | All Projects (Admin) | `/pm-projects/all-projects` | `GET` |
-| `projectMetadataEnricher` | Document Status Check | `/check-document/{projectId}` | `GET/HEAD` |
-| `getTimeline` | Project Timeline | `/timeline/{id}` | `GET` |
-| `sendApprovalEmail` | Send Approval Email | `/send-approval-email` | `POST` |
-| `HealthCheck` | Health Status | `/health` | `GET` |
+| **Lambda Function**         | **Purpose**             | **API Endpoint**              | **HTTP Method** |
+| --------------------------- | ----------------------- | ----------------------------- | --------------- |
+| `ProjectPlaceDataExtractor` | Generate ACTA Document  | `/extract-project-place/{id}` | `POST`          |
+| `getDownloadActa`           | Download Documents      | `/download-acta/{id}`         | `GET`           |
+| `projectMetadataEnricher`   | Project Summary/PM Data | `/project-summary/{id}`       | `GET`           |
+| `projectMetadataEnricher`   | PM Projects List        | `/pm-projects/{pmEmail}`      | `GET`           |
+| `projectMetadataEnricher`   | All Projects (Admin)    | `/pm-projects/all-projects`   | `GET`           |
+| `projectMetadataEnricher`   | Document Status Check   | `/check-document/{projectId}` | `GET/HEAD`      |
+| `getTimeline`               | Project Timeline        | `/timeline/{id}`              | `GET`           |
+| `sendApprovalEmail`         | Send Approval Email     | `/send-approval-email`        | `POST`          |
+| `HealthCheck`               | Health Status           | `/health`                     | `GET`           |
 
 ---
 
@@ -30,59 +32,62 @@ This matrix maps the actual AWS Lambda functions, API Gateway endpoints, and exp
 
 ### **Frontend → API Gateway → Lambda Mapping**
 
-| **Frontend Payload** | **API Gateway Path** | **Lambda Function** | **Expected Lambda Input** |
-|---------------------|---------------------|---------------------|---------------------------|
-| `POST /extract-project-place/{projectId}` | `/{id}` path parameter | `ProjectPlaceDataExtractor` | `event.pathParameters.id` |
-| Payload in body | Request body | Function body | `event.body` (JSON string) |
+| **Frontend Payload**                      | **API Gateway Path**   | **Lambda Function**         | **Expected Lambda Input**  |
+| ----------------------------------------- | ---------------------- | --------------------------- | -------------------------- |
+| `POST /extract-project-place/{projectId}` | `/{id}` path parameter | `ProjectPlaceDataExtractor` | `event.pathParameters.id`  |
+| Payload in body                           | Request body           | Function body               | `event.body` (JSON string) |
 
 ### **Current Frontend Payload Structure:**
+
 ```typescript
 // Current frontend sends:
 const payload = {
-  projectId: projectId,          // ❌ REDUNDANT (already in path)
-  pmEmail: userEmail,           // ✅ Required for auth context
-  userRole: userRole,           // ✅ Required for permissions
-  s3Bucket: S3_BUCKET,         // ❌ Lambda should know this
-  s3Region: s3Region,          // ❌ Lambda should know this
+  projectId: projectId, // ❌ REDUNDANT (already in path)
+  pmEmail: userEmail, // ✅ Required for auth context
+  userRole: userRole, // ✅ Required for permissions
+  s3Bucket: S3_BUCKET, // ❌ Lambda should know this
+  s3Region: s3Region, // ❌ Lambda should know this
   cloudfrontDistributionId: cloudfrontDistributionId, // ❌ Lambda should know this
   cloudfrontUrl: cloudfrontUrl, // ❌ Lambda should know this
-  requestSource: 'acta-ui',     // ✅ Good for tracking
-  generateDocuments: true,      // ✅ Required flag
-  extractMetadata: true,        // ✅ Required flag
-  timestamp: new Date().toISOString() // ✅ Good for tracking
+  requestSource: "acta-ui", // ✅ Good for tracking
+  generateDocuments: true, // ✅ Required flag
+  extractMetadata: true, // ✅ Required flag
+  timestamp: new Date().toISOString(), // ✅ Good for tracking
 };
 ```
 
 ### **OPTIMIZED Payload (Based on Lambda Function Analysis):**
+
 ```typescript
 // Simplified payload - Lambda function likely expects:
 const optimizedPayload = {
-  pmEmail: userEmail,           // User context
-  userRole: userRole,           // Permission level
-  generateDocuments: true,      // Action flag
-  extractMetadata: true,        // Action flag
-  requestSource: 'acta-ui',     // Source tracking
-  timestamp: new Date().toISOString() // Request tracking
+  pmEmail: userEmail, // User context
+  userRole: userRole, // Permission level
+  generateDocuments: true, // Action flag
+  extractMetadata: true, // Action flag
+  requestSource: "acta-ui", // Source tracking
+  timestamp: new Date().toISOString(), // Request tracking
 };
 ```
 
 ### **Lambda Function Receives:**
+
 ```javascript
 // In ProjectPlaceDataExtractor Lambda:
 exports.handler = async (event) => {
-  const projectId = event.pathParameters.id;  // From URL path
-  const payload = JSON.parse(event.body);     // From request body
-  
+  const projectId = event.pathParameters.id; // From URL path
+  const payload = JSON.parse(event.body); // From request body
+
   // Expected payload fields:
   const {
-    pmEmail,              // ✅ User email
-    userRole,             // ✅ User role
-    generateDocuments,    // ✅ Action flag
-    extractMetadata,      // ✅ Action flag
-    requestSource,        // ✅ Source tracking
-    timestamp             // ✅ Request timestamp
+    pmEmail, // ✅ User email
+    userRole, // ✅ User role
+    generateDocuments, // ✅ Action flag
+    extractMetadata, // ✅ Action flag
+    requestSource, // ✅ Source tracking
+    timestamp, // ✅ Request timestamp
   } = payload;
-  
+
   // Lambda has access to AWS environment for:
   // - S3 bucket names (from environment variables)
   // - CloudFront distribution (from environment variables)
@@ -95,9 +100,12 @@ exports.handler = async (event) => {
 ## 🔍 **OTHER CRITICAL ENDPOINTS**
 
 ### **1. PM Projects List** (`/pm-projects/{pmEmail}`)
+
 ```typescript
 // Frontend call:
-await get<PMProjectsResponse>(`${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`);
+await get<PMProjectsResponse>(
+  `${BASE}/pm-projects/${encodeURIComponent(pmEmail)}`,
+);
 
 // Lambda receives:
 // event.pathParameters.pmEmail = "user@example.com"
@@ -105,6 +113,7 @@ await get<PMProjectsResponse>(`${BASE}/pm-projects/${encodeURIComponent(pmEmail)
 ```
 
 ### **2. Download Document** (`/download-acta/{id}`)
+
 ```typescript
 // Frontend call:
 await fetch(`${BASE}/download-acta/${projectId}?format=${format}`);
@@ -115,11 +124,12 @@ await fetch(`${BASE}/download-acta/${projectId}?format=${format}`);
 ```
 
 ### **3. Send Approval Email** (`/send-approval-email`)
+
 ```typescript
 // Frontend payload:
 const payload = {
-  actaId: string,        // Project ID
-  clientEmail: string    // Recipient email
+  actaId: string, // Project ID
+  clientEmail: string, // Recipient email
 };
 
 // Lambda receives:
@@ -127,9 +137,12 @@ const { actaId, clientEmail } = JSON.parse(event.body);
 ```
 
 ### **4. Check Document Status** (`/check-document/{projectId}`)
+
 ```typescript
 // Frontend call:
-await fetch(`${BASE}/check-document/${projectId}?format=${format}`, { method: 'HEAD' });
+await fetch(`${BASE}/check-document/${projectId}?format=${format}`, {
+  method: "HEAD",
+});
 
 // Lambda receives:
 // event.pathParameters.projectId = "1000000064013473"
@@ -151,6 +164,7 @@ await fetch(`${BASE}/check-document/${projectId}?format=${format}`, { method: 'H
    - `pmEmail`, `userRole`, `generateDocuments`, `extractMetadata`, `requestSource`, `timestamp`
 
 ### **Updated Frontend Function:**
+
 ```typescript
 export async function generateActaDocument(
   projectId: string,
@@ -168,7 +182,7 @@ export async function generateActaDocument(
   // OPTIMIZED payload - only send what Lambda needs
   const payload = {
     pmEmail: userEmail,           // ✅ User context
-    userRole: userRole,           // ✅ Permission level  
+    userRole: userRole,           // ✅ Permission level
     generateDocuments: true,      // ✅ Action flag
     extractMetadata: true,        // ✅ Action flag
     requestSource: 'acta-ui',     // ✅ Source tracking
@@ -186,7 +200,7 @@ export async function generateActaDocument(
       bucket?: string;
       key?: string;
     }>(`${BASE}/extract-project-place/${projectId}`, payload);
-    
+
     // ... rest of function
   }
 }
@@ -200,18 +214,19 @@ Based on actual infrastructure, update `env.variables.ts`:
 
 ```typescript
 // VERIFIED from CloudFormation template
-export const apiBaseUrl = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
+export const apiBaseUrl =
+  "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod";
 export const COGNITO_CONFIG = {
-  region: 'us-east-2',
-  userPoolId: 'us-east-2_FyHLtOhiY',
-  userPoolWebClientId: 'dshos5iou44tuach7ta3ici5m',
+  region: "us-east-2",
+  userPoolId: "us-east-2_FyHLtOhiY",
+  userPoolWebClientId: "dshos5iou44tuach7ta3ici5m",
 };
-export const CLOUDFRONT_DOMAIN = 'd7t9x3j66yd8k.cloudfront.net';
+export const CLOUDFRONT_DOMAIN = "d7t9x3j66yd8k.cloudfront.net";
 export const cloudfrontUrl = `https://${CLOUDFRONT_DOMAIN}`;
 
 // Document storage bucket (used by Lambda, not sent in payload)
-export const s3Bucket = 'projectplace-dv-2025-x9a7b';
-export const s3Region = 'us-east-2';
+export const s3Bucket = "projectplace-dv-2025-x9a7b";
+export const s3Region = "us-east-2";
 ```
 
 ---

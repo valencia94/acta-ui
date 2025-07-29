@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: >
   ACTA-UI Minimal Conflict-Free Stack for Enhanced projectMetadataEnricher Integration
 
@@ -53,7 +53,7 @@ Resources:
       AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { 'application/json': '{"statusCode": 200}' }
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
@@ -103,7 +103,7 @@ Resources:
       AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { 'application/json': '{"statusCode": 200}' }
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
@@ -122,7 +122,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref PMManagerResource
-      PathPart: '{pmEmail}'
+      PathPart: "{pmEmail}"
 
   PMManagerEmailGetMethod:
     Type: AWS::ApiGateway::Method
@@ -145,7 +145,7 @@ Resources:
       AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { 'application/json': '{"statusCode": 200}' }
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
@@ -172,7 +172,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref CheckDocRootResource
-      PathPart: '{projectId}'
+      PathPart: "{projectId}"
 
   CheckDocGetMethod:
     Type: AWS::ApiGateway::Method
@@ -207,7 +207,7 @@ Resources:
       AuthorizationType: NONE
       Integration:
         Type: MOCK
-        RequestTemplates: { 'application/json': '{"statusCode": 200}' }
+        RequestTemplates: { "application/json": '{"statusCode": 200}' }
         IntegrationResponses:
           - StatusCode: 200
             ResponseParameters:
@@ -331,7 +331,7 @@ Resources:
       - CheckDocIdOptionsMethod
     Properties:
       RestApiId: !Ref ExistingApiId
-      Description: !Sub 'ACTA-UI PM Enricher deployment ${DeploymentTimestamp}'
+      Description: !Sub "ACTA-UI PM Enricher deployment ${DeploymentTimestamp}"
 
   ConflictFreeProdStage:
     Type: AWS::ApiGateway::Stage
@@ -339,14 +339,14 @@ Resources:
       RestApiId: !Ref ExistingApiId
       DeploymentId: !Ref ConflictFreeApiGatewayDeployment
       StageName: prod
-      Description: !Sub 'Prod stage – ${DeploymentTimestamp}'
+      Description: !Sub "Prod stage – ${DeploymentTimestamp}"
 
 Outputs:
   ProjectsEndpoint:
-    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects'
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/projects"
   PMManagerAllEndpoint:
-    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/all-projects'
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/all-projects"
   PMManagerByEmailEndpoint:
-    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/{pmEmail}'
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/pm-manager/{pmEmail}"
   CheckDocumentEndpoint:
-    Value: !Sub 'https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}'
+    Value: !Sub "https://${ExistingApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/check-document/{projectId}"

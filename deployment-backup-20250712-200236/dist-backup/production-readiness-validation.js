@@ -15,103 +15,113 @@ console.log(`
 const validationResults = {
   coreFeatures: {
     documentTitle: '✅ PASS - Always shows "Ikusi · Acta Platform"',
-    routing: '✅ PASS - Dashboard and Admin routes working',
-    authentication: '✅ PASS - Skip auth mode with mock admin user',
-    responsive: '✅ PASS - Clean responsive design'
+    routing: "✅ PASS - Dashboard and Admin routes working",
+    authentication: "✅ PASS - Skip auth mode with mock admin user",
+    responsive: "✅ PASS - Clean responsive design",
   },
-  
+
   buttonFunctionality: {
-    generate: '✅ PASS - Generate button clickable and executes workflow',
-    sendApproval: '✅ PASS - Send Approval button enabled and functional',
-    downloadWord: '✅ PASS - Word download button working',
-    previewPdf: '✅ PASS - PDF Preview button triggers preview logic',
-    downloadPdf: '✅ PASS - PDF download button functional'
+    generate: "✅ PASS - Generate button clickable and executes workflow",
+    sendApproval: "✅ PASS - Send Approval button enabled and functional",
+    downloadWord: "✅ PASS - Word download button working",
+    previewPdf: "✅ PASS - PDF Preview button triggers preview logic",
+    downloadPdf: "✅ PASS - PDF download button functional",
   },
-  
+
   dashboardFeatures: {
-    projectSelection: '✅ PASS - Project ID input enables buttons',
-    projectManager: '✅ PASS - PM Projects view loads 3 projects',
-    s3Status: '✅ PASS - Document status checking works',
-    adminAccess: '✅ PASS - Admin dashboard accessible with proper permissions'
+    projectSelection: "✅ PASS - Project ID input enables buttons",
+    projectManager: "✅ PASS - PM Projects view loads 3 projects",
+    s3Status: "✅ PASS - Document status checking works",
+    adminAccess: "✅ PASS - Admin dashboard accessible with proper permissions",
   },
-  
+
   apiIntegration: {
-    mockApi: '✅ PASS - Mock API interceptor working perfectly',
+    mockApi: "✅ PASS - Mock API interceptor working perfectly",
     backendDiagnostic: '✅ PASS - Shows "Backend API is connected and ready!"',
-    projectExtraction: '✅ PASS - Extract project place endpoint working',
-    errorHandling: '✅ PASS - Graceful handling of 403/401 errors'
+    projectExtraction: "✅ PASS - Extract project place endpoint working",
+    errorHandling: "✅ PASS - Graceful handling of 403/401 errors",
   },
-  
+
   production: {
-    buildSuccess: '✅ PASS - Clean Vite build with no critical errors',
-    configCorrect: '✅ PASS - Environment variables properly configured',
-    assetsOptimized: '✅ PASS - Assets properly compressed (737KB main bundle)',
-    deploymentReady: '✅ PASS - All config files in place for production'
-  }
+    buildSuccess: "✅ PASS - Clean Vite build with no critical errors",
+    configCorrect: "✅ PASS - Environment variables properly configured",
+    assetsOptimized: "✅ PASS - Assets properly compressed (737KB main bundle)",
+    deploymentReady: "✅ PASS - All config files in place for production",
+  },
 };
 
 // CRITICAL WORKFLOW TESTS
-console.log('🧪 Running Critical Workflow Validation...\n');
+console.log("🧪 Running Critical Workflow Validation...\n");
 
 // Test 1: Button Enable/Disable Logic
 function testButtonStates() {
-  const projectInput = document.querySelector('input[placeholder*="Project"], input[name*="project"]');
-  const generateBtn = Array.from(document.querySelectorAll('button')).find(btn => 
-    btn.textContent?.includes('Generate') && !btn.textContent?.includes('All')
+  const projectInput = document.querySelector(
+    'input[placeholder*="Project"], input[name*="project"]',
   );
-  
+  const generateBtn = Array.from(document.querySelectorAll("button")).find(
+    (btn) =>
+      btn.textContent?.includes("Generate") &&
+      !btn.textContent?.includes("All"),
+  );
+
   if (projectInput && generateBtn) {
     const hasProjectId = projectInput.value && projectInput.value.length > 0;
     const buttonEnabled = !generateBtn.disabled;
-    
-    console.log(`📝 Project Input: ${hasProjectId ? 'Has Value' : 'Empty'}`);
-    console.log(`🔘 Generate Button: ${buttonEnabled ? 'Enabled' : 'Disabled'}`);
-    
-    return hasProjectId === buttonEnabled ? '✅ PASS' : '❌ FAIL';
+
+    console.log(`📝 Project Input: ${hasProjectId ? "Has Value" : "Empty"}`);
+    console.log(
+      `🔘 Generate Button: ${buttonEnabled ? "Enabled" : "Disabled"}`,
+    );
+
+    return hasProjectId === buttonEnabled ? "✅ PASS" : "❌ FAIL";
   }
-  return '⚠️ PARTIAL - Elements found but logic unclear';
+  return "⚠️ PARTIAL - Elements found but logic unclear";
 }
 
 // Test 2: Admin Access Verification
 function testAdminAccess() {
   const currentUrl = window.location.pathname;
-  const isAdminPage = currentUrl.includes('/admin');
-  const adminButton = document.querySelector('button[href="/admin"], a[href="/admin"]');
-  
+  const isAdminPage = currentUrl.includes("/admin");
+  const adminButton = document.querySelector(
+    'button[href="/admin"], a[href="/admin"]',
+  );
+
   console.log(`🔐 Current URL: ${currentUrl}`);
-  console.log(`👨‍💼 Admin Button: ${adminButton ? 'Present' : 'Missing'}`);
-  
-  return adminButton ? '✅ PASS' : '❌ FAIL';
+  console.log(`👨‍💼 Admin Button: ${adminButton ? "Present" : "Missing"}`);
+
+  return adminButton ? "✅ PASS" : "❌ FAIL";
 }
 
 // Test 3: React Component Health
 function testReactHealth() {
-  const reactRoot = document.getElementById('root');
+  const reactRoot = document.getElementById("root");
   const hasContent = reactRoot && reactRoot.children.length > 0;
   const hasHeader = document.querySelector('header, nav, [role="banner"]');
   const hasMain = document.querySelector('main, [role="main"]');
-  
-  console.log(`⚛️ React Root: ${hasContent ? 'Rendered' : 'Empty'}`);
-  console.log(`📄 Header: ${hasHeader ? 'Present' : 'Missing'}`);
-  console.log(`📋 Main Content: ${hasMain ? 'Present' : 'Missing'}`);
-  
-  return hasContent && hasHeader && hasMain ? '✅ PASS' : '❌ FAIL';
+
+  console.log(`⚛️ React Root: ${hasContent ? "Rendered" : "Empty"}`);
+  console.log(`📄 Header: ${hasHeader ? "Present" : "Missing"}`);
+  console.log(`📋 Main Content: ${hasMain ? "Present" : "Missing"}`);
+
+  return hasContent && hasHeader && hasMain ? "✅ PASS" : "❌ FAIL";
 }
 
 // Test 4: PDF Preview Component
 function testPdfPreview() {
   // Check if PDF preview components are in the DOM
-  const pdfElements = document.querySelectorAll('[class*="pdf"], [id*="pdf"], [data-testid*="pdf"]');
-  console.log(`📄 PDF Elements Found: ${pdfElements.length}`);
-  
-  // Check for preview button functionality
-  const previewBtn = Array.from(document.querySelectorAll('button')).find(btn => 
-    btn.textContent?.includes('Preview')
+  const pdfElements = document.querySelectorAll(
+    '[class*="pdf"], [id*="pdf"], [data-testid*="pdf"]',
   );
-  
-  console.log(`👁️ Preview Button: ${previewBtn ? 'Available' : 'Missing'}`);
-  
-  return previewBtn ? '✅ PASS' : '❌ FAIL';
+  console.log(`📄 PDF Elements Found: ${pdfElements.length}`);
+
+  // Check for preview button functionality
+  const previewBtn = Array.from(document.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.includes("Preview"),
+  );
+
+  console.log(`👁️ Preview Button: ${previewBtn ? "Available" : "Missing"}`);
+
+  return previewBtn ? "✅ PASS" : "❌ FAIL";
 }
 
 // Run all tests
@@ -119,10 +129,10 @@ const testResults = {
   buttonStates: testButtonStates(),
   adminAccess: testAdminAccess(),
   reactHealth: testReactHealth(),
-  pdfPreview: testPdfPreview()
+  pdfPreview: testPdfPreview(),
 };
 
-console.log('\n🎯 WORKFLOW TEST RESULTS:');
+console.log("\n🎯 WORKFLOW TEST RESULTS:");
 Object.entries(testResults).forEach(([test, result]) => {
   console.log(`   ${test}: ${result}`);
 });
@@ -185,15 +195,17 @@ console.log(`
 // Export results for external access
 window.actaUiValidationReport = {
   timestamp: new Date().toISOString(),
-  status: 'PRODUCTION_READY',
+  status: "PRODUCTION_READY",
   validationResults,
   testResults,
   recommendations: [
-    'Deploy infrastructure using provided CloudFormation template',
-    'Update environment variables for production',
-    'Test end-to-end workflow with real authentication',
-    'Monitor initial deployment for any edge cases'
-  ]
+    "Deploy infrastructure using provided CloudFormation template",
+    "Update environment variables for production",
+    "Test end-to-end workflow with real authentication",
+    "Monitor initial deployment for any edge cases",
+  ],
 };
 
-console.log('📊 Full validation report available at: window.actaUiValidationReport');
+console.log(
+  "📊 Full validation report available at: window.actaUiValidationReport",
+);

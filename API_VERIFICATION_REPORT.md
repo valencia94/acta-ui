@@ -2,27 +2,28 @@
 
 ## ✅ VERIFIED: Frontend API Calls vs CloudFormation Template
 
-| Frontend Function | API Call | CloudFormation Resource | Lambda Function | Status |
-|------------------|----------|------------------------|----------------|---------|
-| `generateActaDocument()` | `POST /extract-project-place/{id}` | `ExtractProjectPlaceMethod` | `ProjectPlaceDataExtractor` | ✅ **CORRECT** |
-| `getSummary()` | `GET /project-summary/{id}` | `ProjectSummaryMethod` | `projectMetadataEnricher` | ✅ **CORRECT** |
-| `getTimeline()` | `GET /timeline/{id}` | `TimelineMethod` | `getTimeline` | ✅ **CORRECT** |
-| `getDownloadUrl()` | `GET /download-acta/{id}` | `DownloadActaMethod` | `getDownloadActa` | ✅ **CORRECT** |
-| `sendApprovalEmail()` | `POST /send-approval-email` | `SendApprovalEmailMethod` | `sendApprovalEmail` | ✅ **CORRECT** |
-| `checkDocumentAvailability()` | `GET/HEAD /check-document/{id}` | `CheckDocumentMethod` | `projectMetadataEnricher` | ✅ **CORRECT** |
+| Frontend Function             | API Call                           | CloudFormation Resource     | Lambda Function             | Status         |
+| ----------------------------- | ---------------------------------- | --------------------------- | --------------------------- | -------------- |
+| `generateActaDocument()`      | `POST /extract-project-place/{id}` | `ExtractProjectPlaceMethod` | `ProjectPlaceDataExtractor` | ✅ **CORRECT** |
+| `getSummary()`                | `GET /project-summary/{id}`        | `ProjectSummaryMethod`      | `projectMetadataEnricher`   | ✅ **CORRECT** |
+| `getTimeline()`               | `GET /timeline/{id}`               | `TimelineMethod`            | `getTimeline`               | ✅ **CORRECT** |
+| `getDownloadUrl()`            | `GET /download-acta/{id}`          | `DownloadActaMethod`        | `getDownloadActa`           | ✅ **CORRECT** |
+| `sendApprovalEmail()`         | `POST /send-approval-email`        | `SendApprovalEmailMethod`   | `sendApprovalEmail`         | ✅ **CORRECT** |
+| `checkDocumentAvailability()` | `GET/HEAD /check-document/{id}`    | `CheckDocumentMethod`       | `projectMetadataEnricher`   | ✅ **CORRECT** |
 
 ## ⚠️ DISCREPANCIES FOUND
 
-| Frontend Function | Frontend Endpoint | CloudFormation Endpoint | Status |
-|------------------|------------------|------------------------|---------|
-| `getProjectsByPM()` | `/pm-projects/{pmEmail}` | Not found in CF template | ❌ **MISMATCH** |
-| `generateSummariesForPM()` | `/bulk-generate-summaries` | Not found in CF template | ❌ **MISSING** |
+| Frontend Function          | Frontend Endpoint          | CloudFormation Endpoint  | Status          |
+| -------------------------- | -------------------------- | ------------------------ | --------------- |
+| `getProjectsByPM()`        | `/pm-projects/{pmEmail}`   | Not found in CF template | ❌ **MISMATCH** |
+| `generateSummariesForPM()` | `/bulk-generate-summaries` | Not found in CF template | ❌ **MISSING**  |
 
 ## 🔧 CRITICAL FIX APPLIED
 
 **ISSUE FOUND**: The `generateActaDocument()` function was calling `/documents/generate` instead of `/extract-project-place/{id}`
 
-**FIX APPLIED**: 
+**FIX APPLIED**:
+
 - ✅ Changed endpoint from `/documents/generate` to `/extract-project-place/{projectId}`
 - ✅ Updated payload structure to match CloudFormation expectations
 - ✅ Fixed response parsing for correct field names
@@ -59,6 +60,7 @@ HEAD /check-document/{id}?format=pdf|docx
 ## 🎯 Payload Structure for Generate ACTA
 
 **Actual Payload Sent**:
+
 ```json
 {
   "projectId": "string",
@@ -92,6 +94,7 @@ HEAD /check-document/{id}?format=pdf|docx
 ## ✅ Trust & Verification
 
 You were absolutely right to question this. The API calls are now:
+
 1. **Verified against your CloudFormation template**
 2. **Fixed to match actual AWS resources**
 3. **Tested with proper payload structures**

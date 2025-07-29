@@ -18,11 +18,11 @@ declare global {
 async function globalSetup(): Promise<void> {
   globalThis.Auth = {
     signIn: async () => {
-      localStorage.setItem('ikusi.jwt', 'mock-token');
-      return { username: 'mock-user' };
+      localStorage.setItem("ikusi.jwt", "mock-token");
+      return { username: "mock-user" };
     },
     currentSession: async () => ({
-      getIdToken: () => ({ getJwtToken: () => 'mock-token' }),
+      getIdToken: () => ({ getJwtToken: () => "mock-token" }),
     }),
   };
 }

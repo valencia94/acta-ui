@@ -91,6 +91,7 @@
 ## 🔧 COMPONENT BREAKDOWN
 
 ### **1. HEADER COMPONENT** (`src/components/Header.tsx`)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  Component: Header                                                             │
@@ -105,6 +106,7 @@
 ```
 
 ### **2. WELCOME SECTION** (`src/pages/Dashboard.tsx` - Lines 195-210)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  Component: Welcome Banner                                                     │
@@ -122,6 +124,7 @@
 ```
 
 ### **3. PROJECT SEARCH SECTION** (`src/pages/Dashboard.tsx` - Lines 241-300)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  Component: Project Search & Manual Actions                                   │
@@ -149,6 +152,7 @@
 ```
 
 ### **4. PROJECTS TABLE** (`src/components/DynamoProjectsView.tsx`)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  Component: DynamoProjectsView                                                 │
@@ -178,6 +182,7 @@
 ```
 
 ### **5. ACTA ACTIONS SECTION** (`src/components/ActaButtons/ActaButtons.tsx`)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  Component: ActaButtons (Not currently used - Legacy)                         │
@@ -223,9 +228,9 @@
    │ User types  │ -> │ Input field │ -> │ State update│ -> │ Buttons     │
    │ project ID  │    │ onChange    │    │ selectedID  │    │ enabled     │
    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-   
+
    OR
-   
+
    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
    │ User clicks │ -> │ Table row   │ -> │ onProject   │ -> │ Buttons     │
    │ table row   │    │ onClick     │    │ Select()    │    │ enabled     │
@@ -253,6 +258,7 @@
 ## 🎨 VISUAL DESIGN ELEMENTS
 
 ### **Color Scheme:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  PRIMARY COLORS:                                                               │
@@ -270,6 +276,7 @@
 ```
 
 ### **Typography:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  FONT HIERARCHY:                                                               │
@@ -284,6 +291,7 @@
 ```
 
 ### **Spacing & Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  SPACING SYSTEM (Tailwind):                                                   │
@@ -304,6 +312,7 @@
 ## 🚀 ANIMATIONS & INTERACTIONS
 
 ### **Framer Motion Animations:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  SECTION ANIMATIONS:                                                           │

@@ -1,33 +1,33 @@
 {
-    "items": [
-        {
-            "id": "a7jeu9",
-            "name": "CognitoUserPoolAuthorizer",
-            "type": "COGNITO_USER_POOLS",
-            "providerARNs": [
-                "arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY"
-            ],
-            "authType": "cognito_user_pools",
-            "identitySource": "method.request.header.Authorization"
-        },
-        {
-            "id": "ash1ka",
-            "name": "AVPAuthorizer-WDnzkPmx3dKaEAQgFKx2jj",
-            "type": "REQUEST",
-            "authType": "custom",
-            "authorizerUri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:AVPAuthorizerLambda-WDnzkPmx3dKaEAQgFKx2jj/invocations",
-            "identitySource": "method.request.header.Authorization,context.httpMethod,context.path",
-            "authorizerResultTtlInSeconds": 120
-        },
-        {
-            "id": "xsqilx",
-            "name": "ActaUiCognitoAuthorizer",
-            "type": "COGNITO_USER_POOLS",
-            "providerARNs": [
-                "arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY"
-            ],
-            "authType": "cognito_user_pools",
-            "identitySource": "method.request.header.Authorization"
-        }
-    ]
+  "items": [
+    {
+      "id": "a7jeu9",
+      "name": "CognitoUserPoolAuthorizer",
+      "type": "COGNITO_USER_POOLS",
+      "providerARNs": [
+        "arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY"
+      ],
+      "authType": "cognito_user_pools",
+      "identitySource": "method.request.header.Authorization"
+    },
+    {
+      "id": "ash1ka",
+      "name": "AVPAuthorizer-WDnzkPmx3dKaEAQgFKx2jj",
+      "type": "REQUEST",
+      "authType": "custom",
+      "authorizerUri": "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-2:703671891952:function:AVPAuthorizerLambda-WDnzkPmx3dKaEAQgFKx2jj/invocations",
+      "identitySource": "method.request.header.Authorization,context.httpMethod,context.path",
+      "authorizerResultTtlInSeconds": 120
+    },
+    {
+      "id": "xsqilx",
+      "name": "ActaUiCognitoAuthorizer",
+      "type": "COGNITO_USER_POOLS",
+      "providerARNs": [
+        "arn:aws:cognito-idp:us-east-2:703671891952:userpool/us-east-2_FyHLtOhiY"
+      ],
+      "authType": "cognito_user_pools",
+      "identitySource": "method.request.header.Authorization"
+    }
+  ]
 }

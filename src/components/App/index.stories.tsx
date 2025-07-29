@@ -1,10 +1,10 @@
 // src/components/App/index.stories.tsx
-import { Meta, StoryFn } from '@storybook/react';
+import { Meta, StoryFn } from "@storybook/react";
 
-import { App } from './';
+import { App } from "./";
 
 export default {
-  title: 'Components/App',
+  title: "Components/App",
   component: App,
 } as Meta;
 

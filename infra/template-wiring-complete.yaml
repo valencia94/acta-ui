@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: UPDATED API Gateway wiring with missing endpoints for ACTA-UI frontend
 
 Parameters:
@@ -48,7 +48,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref TimelineResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   # Download Acta Resources
   DownloadActaResource:
@@ -63,7 +63,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref DownloadActaResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   # Project Summary Resources
   ProjectSummaryResource:
@@ -78,7 +78,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ProjectSummaryResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   # Send Approval Email Resource
   SendApprovalEmailResource:
@@ -101,7 +101,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref ExtractProjectPlaceResource
-      PathPart: '{id}'
+      PathPart: "{id}"
 
   # Health Resource
   HealthResource:
@@ -143,7 +143,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref PMProjectsResource
-      PathPart: '{pmEmail}'
+      PathPart: "{pmEmail}"
 
   # Document Status Check Resources
   CheckDocumentResource:
@@ -158,7 +158,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref CheckDocumentResource
-      PathPart: '{projectId}'
+      PathPart: "{projectId}"
 
   # S3 Download URL Resources
   S3DownloadUrlResource:
@@ -173,7 +173,7 @@ Resources:
     Properties:
       RestApiId: !Ref ExistingApiId
       ParentId: !Ref S3DownloadUrlResource
-      PathPart: '{projectId}'
+      PathPart: "{projectId}"
 
   # ═══════════════════════════════════════════════════════════════
   # EXISTING METHODS (unchanged)
@@ -443,8 +443,8 @@ Outputs:
 
   MissingEndpointsAdded:
     Description: Summary of endpoints added in this update
-    Value: 'projects, pm-projects/*, check-document/{id}, s3-download-url/{id}'
+    Value: "projects, pm-projects/*, check-document/{id}, s3-download-url/{id}"
 
   RequiredLambdaFunctions:
     Description: New Lambda functions that need to be created
-    Value: 'GetProjectsListArn, CheckDocumentStatusArn, GetS3DownloadUrlArn'
+    Value: "GetProjectsListArn, CheckDocumentStatusArn, GetS3DownloadUrlArn"

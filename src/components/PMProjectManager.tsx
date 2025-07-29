@@ -1,11 +1,12 @@
 // src/components/PMProjectManager.tsx
-import { CheckCircle, Clock, FileText, RefreshCw, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { CheckCircle, Clock, FileText, RefreshCw, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 import { generateSummariesForPM, getProjectsByPM, getAllProjects, PMProject } from '@/api';
 
-import Button from './Button';
+
+import Button from "./Button";
 
 interface PMProjectManagerProps {
   pmEmail?: string;
@@ -27,7 +28,7 @@ export default function PMProjectManager({
   const [bulkGenerating, setBulkGenerating] = useState(false);
 
   useEffect(() => {
-    console.log('PMProjectManager effect triggered:', {
+    console.log("PMProjectManager effect triggered:", {
       pmEmail,
       isAdminView,
       isAdminMode,
@@ -53,11 +54,11 @@ export default function PMProjectManager({
       console.log(`Loading projects for PM: ${pmEmail}`);
       const projectSummaries = await getProjectsByPM(pmEmail, false);
       // Transform ProjectSummary to PMProject
-      const pmProjects: PMProject[] = projectSummaries.map(summary => ({
+      const pmProjects: PMProject[] = projectSummaries.map((summary) => ({
         project_id: summary.project_id,
         project_name: summary.project_name,
         pm_email: summary.pm || summary.project_manager || pmEmail,
-        project_status: 'active',
+        project_status: "active",
         has_acta_document: false,
         last_updated: new Date().toISOString(),
       }));
@@ -65,23 +66,23 @@ export default function PMProjectManager({
 
       if (pmProjects.length > 0) {
         toast.success(
-          `Found ${pmProjects.length} projects${isAdminMode ? ' (admin access)' : ' assigned to you'}`
+          `Found ${pmProjects.length} projects${isAdminMode ? " (admin access)" : " assigned to you"}`,
         );
       } else {
         const message = isAdminMode
-          ? 'No projects found in the system. Backend may not be configured yet.'
-          : 'No projects found for your email. You can still enter Project IDs manually.';
+          ? "No projects found in the system. Backend may not be configured yet."
+          : "No projects found for your email. You can still enter Project IDs manually.";
 
         toast(message, {
-          icon: isAdminMode ? '⚠️' : '💡',
+          icon: isAdminMode ? "⚠️" : "💡",
           duration: 5000,
         });
       }
     } catch (error) {
-      console.error('Error loading PM projects:', error);
+      console.error("Error loading PM projects:", error);
       const message = isAdminMode
-        ? 'Could not load projects. Backend endpoints may not be implemented yet.'
-        : 'Could not load your assigned projects. You can still enter Project IDs manually.';
+        ? "Could not load projects. Backend endpoints may not be implemented yet."
+        : "Could not load your assigned projects. You can still enter Project IDs manually.";
 
       toast.error(message);
     } finally {
@@ -92,26 +93,29 @@ export default function PMProjectManager({
   async function loadAllProjects() {
     setLoading(true);
     try {
-      console.log('Loading all projects for admin view');
-      
+      console.log("Loading all projects for admin view");
+
       // Use real API call instead of hardcoded mock data
       const allProjects = await getAllProjects();
-      const transformedProjects: PMProject[] = allProjects.map(project => ({
+      const transformedProjects: PMProject[] = allProjects.map((project) => ({
         project_id: project.project_id,
         project_name: project.project_name,
-        pm_email: project.pm || project.project_manager || 'unknown@example.com',
-        project_status: 'active',
+        pm_email:
+          project.pm || project.project_manager || "unknown@example.com",
+        project_status: "active",
         has_acta_document: false,
         last_updated: new Date().toISOString(),
       }));
 
       setProjects(transformedProjects);
-      const adminLabel = isAdminView ? '(admin dashboard)' : '(admin access)';
-      toast.success(`Loaded ${transformedProjects.length} projects ${adminLabel}`);
+      const adminLabel = isAdminView ? "(admin dashboard)" : "(admin access)";
+      toast.success(
+        `Loaded ${transformedProjects.length} projects ${adminLabel}`,
+      );
     } catch (error) {
-      console.error('Error loading all projects:', error);
+      console.error("Error loading all projects:", error);
       toast.error(
-        'Could not load projects. Backend endpoints may not be implemented yet.'
+        "Could not load projects. Backend endpoints may not be implemented yet.",
       );
     } finally {
       setLoading(false);
@@ -120,16 +124,16 @@ export default function PMProjectManager({
 
   async function handleBulkGenerate() {
     if (!pmEmail) {
-      toast.error('Email address required for bulk generation');
+      toast.error("Email address required for bulk generation");
       return;
     }
 
     if (projects.length === 0) {
       toast.error(
-        'No projects available for bulk generation. Please load projects first or use manual entry.',
+        "No projects available for bulk generation. Please load projects first or use manual entry.",
         {
           duration: 6000,
-        }
+        },
       );
       return;
     }
@@ -137,25 +141,39 @@ export default function PMProjectManager({
     setBulkGenerating(true);
     try {
       toast(
-        'Starting bulk Acta generation for all your projects... This may take several minutes.',
+        "Starting bulk Acta generation for all your projects... This may take several minutes.",
         {
-          icon: '⚡',
+          icon: "⚡",
           duration: 6000,
-        }
+        },
       );
 
       const result = await generateSummariesForPM(pmEmail);
 
-      toast.success(
-        `Bulk generation complete! Success: ${result.success.length}, Failed: ${result.failed.length}`,
-        { duration: 8000 }
-      );
+      // Enhanced feedback with detailed success/failure counts
+      const successCount = result.success?.length || 0;
+      const failureCount = result.failed?.length || 0;
+      const totalCount = successCount + failureCount;
 
-      if (result.failed.length > 0) {
-        console.warn('Failed projects:', result.failed);
-        toast.error(`Some projects failed: ${result.failed.join(', ')}`, {
-          duration: 10000,
-        });
+      if (successCount > 0 && failureCount === 0) {
+        toast.success(
+          `🎉 Bulk generation complete! Successfully processed all ${successCount} projects.`,
+          { duration: 8000 }
+        );
+      } else if (successCount > 0 && failureCount > 0) {
+        toast.success(
+          `⚡ Bulk generation complete! Success: ${successCount}, Failed: ${failureCount} out of ${totalCount} projects.`,
+          { duration: 10000 }
+        );
+        toast.error(
+          `❌ Failed projects: ${result.failed.join(", ")}. You can retry these individually.`,
+          { duration: 12000 }
+        );
+      } else {
+        toast.error(
+          `❌ Bulk generation failed for all ${failureCount} projects. Please check your connection and try again.`,
+          { duration: 10000 }
+        );
       }
 
       // Refresh project list
@@ -165,10 +183,10 @@ export default function PMProjectManager({
         loadPMProjects();
       }
     } catch (error) {
-      console.error('Bulk generation error:', error);
+      console.error("Bulk generation error:", error);
       toast.error(
-        'Bulk generation failed. Backend API may not be available. You can still generate Actas individually using manual entry.',
-        { duration: 8000 }
+        "Bulk generation failed. Backend API may not be available. You can still generate Actas individually using manual entry.",
+        { duration: 8000 },
       );
     } finally {
       setBulkGenerating(false);
@@ -186,10 +204,10 @@ export default function PMProjectManager({
     if (project.has_acta_document) {
       const lastGenerated = project.acta_last_generated
         ? new Date(project.acta_last_generated).toLocaleDateString()
-        : 'Unknown';
+        : "Unknown";
       return `Acta available (${lastGenerated})`;
     }
-    return 'No Acta document';
+    return "No Acta document";
   };
 
   return (
@@ -198,7 +216,7 @@ export default function PMProjectManager({
         <div className="flex items-center gap-3">
           <Users className="h-6 w-6 text-blue-500" />
           <h2 className="text-xl font-bold text-gray-800">
-            {isAdminView ? 'All Projects' : 'Your Projects'}
+            {isAdminView ? "All Projects" : "Your Projects"}
           </h2>
           {projects.length > 0 && (
             <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded-full">
@@ -213,7 +231,7 @@ export default function PMProjectManager({
             disabled={loading}
             className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
 
@@ -224,9 +242,9 @@ export default function PMProjectManager({
               className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
             >
               <FileText
-                className={`h-4 w-4 ${bulkGenerating ? 'animate-pulse' : ''}`}
+                className={`h-4 w-4 ${bulkGenerating ? "animate-pulse" : ""}`}
               />
-              {bulkGenerating ? 'Generating All...' : 'Generate All Actas'}
+              {bulkGenerating ? "Generating All..." : "Generate All Actas"}
             </Button>
           )}
         </div>
@@ -263,8 +281,8 @@ export default function PMProjectManager({
                 hover:shadow-md hover:scale-[1.01]
                 ${
                   selectedProjectId === project.project_id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300'
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
                 }
               `}
               onClick={() => onProjectSelect?.(project.project_id)}
@@ -285,8 +303,8 @@ export default function PMProjectManager({
                     <span
                       className={
                         project.has_acta_document
-                          ? 'text-green-600'
-                          : 'text-yellow-600'
+                          ? "text-green-600"
+                          : "text-yellow-600"
                       }
                     >
                       {getProjectStatusText(project)}
@@ -295,7 +313,7 @@ export default function PMProjectManager({
 
                   {project.last_updated && (
                     <div className="text-xs text-gray-400 mt-1">
-                      Updated:{' '}
+                      Updated:{" "}
                       {new Date(project.last_updated).toLocaleDateString()}
                     </div>
                   )}

@@ -41,32 +41,33 @@ The `aws-exports.js` file must include:
 ```javascript
 const awsmobile = {
   // Region Configuration
-  aws_project_region: 'us-east-2',
-  
+  aws_project_region: "us-east-2",
+
   // User Pool Configuration (for authentication)
-  aws_user_pools_id: 'us-east-2_FyHLtOhiY',
-  aws_user_pools_web_client_id: 'dshos5iou44tuach7ta3ici5m',
-  
+  aws_user_pools_id: "us-east-2_FyHLtOhiY",
+  aws_user_pools_web_client_id: "dshos5iou44tuach7ta3ici5m",
+
   // Identity Pool Configuration (for AWS service access)
-  aws_cognito_identity_pool_id: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-  aws_cognito_region: 'us-east-2',
-  
+  aws_cognito_identity_pool_id:
+    "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35",
+  aws_cognito_region: "us-east-2",
+
   // Auth Flow Configuration
   Auth: {
     // Authentication flow for sign-in
-    authenticationFlowType: 'USER_SRP_AUTH',
-    
+    authenticationFlowType: "USER_SRP_AUTH",
+
     // Identity Pool configuration
-    identityPoolId: 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35',
-    identityPoolRegion: 'us-east-2',
-    
+    identityPoolId: "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35",
+    identityPoolRegion: "us-east-2",
+
     // User Pool configuration
-    userPoolId: 'us-east-2_FyHLtOhiY',
-    userPoolWebClientId: 'dshos5iou44tuach7ta3ici5m',
-    
+    userPoolId: "us-east-2_FyHLtOhiY",
+    userPoolWebClientId: "dshos5iou44tuach7ta3ici5m",
+
     mandatorySignIn: true,
-    region: 'us-east-2'
-  }
+    region: "us-east-2",
+  },
 };
 ```
 
@@ -101,7 +102,7 @@ const configureAmplify = async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     attempts++;
   }
-  
+
   if (window.awsmobile) {
     console.log('✅ AWS config found, configuring Amplify');
     Amplify.configure(window.awsmobile);
@@ -171,8 +172,8 @@ For development, the application includes a "Skip Auth Mode" which bypasses the 
 ```typescript
 if (skipAuth) {
   // In skip auth mode, just simulate login
-  localStorage.setItem('ikusi.jwt', 'dev-token');
-  nav('/dashboard');
+  localStorage.setItem("ikusi.jwt", "dev-token");
+  nav("/dashboard");
   return;
 }
 ```
