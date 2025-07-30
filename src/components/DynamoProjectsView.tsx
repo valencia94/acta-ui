@@ -1,7 +1,7 @@
 // src/components/DynamoProjectsView.tsx
 import { useEffect, useState } from 'react';
 import { getProjectsByPM } from '@/lib/api';
-import { Auth } from 'aws-amplify';
+import { getCurrentUser } from 'aws-amplify/auth';
 
 interface Project {
   id: string;
@@ -22,8 +22,7 @@ export default function DynamoProjectsView({ onProjectSelect }: Props) {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const user = await Auth.currentAuthenticatedUser();
-        const email = user.attributes.email;
+        const { username: email } = await getCurrentUser();
         const data = await getProjectsByPM(email, false);
         setProjects(data || []);
       } catch (err: any) {
