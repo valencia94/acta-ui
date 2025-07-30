@@ -1,7 +1,6 @@
-// src/pages/Dashboard.tsx - Clean unified dashboard
+// src/pages/Dashboard.tsx
 import { motion } from "framer-motion";
-import { Download, FileText, Send } from "lucide-react";
-import React, { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { toast } from "react-hot-toast";
 
 import ActaButtons from "@/components/ActaButtons/ActaButtons";
@@ -15,14 +14,8 @@ import {
   getDownloadUrl,
   sendApprovalEmail,
   checkDocumentInS3,
-  getProjectsByPM,
-  getSummary,
-  getTimeline,
 } from "@/lib/api";
-import { getCurrentUser } from "@/lib/api-amplify";
 
-
-// Lazy load PDF preview for better performance
 const PDFPreview = lazy(() => import("@/components/PDFPreview"));
 
 export default function Dashboard() {
@@ -30,55 +23,26 @@ export default function Dashboard() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [actionLoading, setActionLoading] = useState(false);
 
-  // PDF Preview state
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>("");
-
-  // Email dialog state
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [currentProjectName, setCurrentProjectName] = useState<string>("");
 
-  // Initialize user data
-  useEffect(() => {
-    const initializeUser = async () => {
-      if (user?.email) {
-        try {
-          const cognitoUser = await getCurrentUser();
-          console.log("Cognito user initialized:", cognitoUser);
-        } catch (error) {
-          console.error("Error initializing Cognito user:", error);
-        }
-      }
-    };
-
-    initializeUser();
-  }, [user]);
-
-  // Handle project selection from DynamoProjectsView
   const handleProjectSelect = (projectId: string) => {
     setSelectedProjectId(projectId);
     setCurrentProjectName(projectId);
     toast.success(`Selected project: ${projectId}`);
   };
 
-  // Generate ACTA document
   const handleGenerateActa = async () => {
-    if (!selectedProjectId) {
-      toast.error("Please select a project first");
+    if (!selectedProjectId || !user?.email) {
+      toast.error("Please select a project and ensure you're logged in.");
       return;
     }
-
-    if (!user?.email) {
-      toast.error("User email not available");
-      return;
-    }
-
     setActionLoading(true);
     try {
       await generateActaDocument(selectedProjectId, user.email, "pm");
-      toast.success(
-        "ACTA generation started – you\u2019ll get an e-mail when it\u2019s ready.",
-      );
+      toast.success("ACTA generation started. You'll receive an email when ready.");
     } catch (error: any) {
       console.error("Error generating ACTA:", error);
       toast.error(error?.message || "Failed to generate ACTA");
@@ -87,13 +51,11 @@ export default function Dashboard() {
     }
   };
 
-  // Download document
   const handleDownload = async (format: "pdf" | "docx") => {
     if (!selectedProjectId) {
       toast.error("Please select a project first");
       return;
     }
-
     setActionLoading(true);
     try {
       const url = await getDownloadUrl(selectedProjectId, format);
@@ -103,26 +65,21 @@ export default function Dashboard() {
       if (error?.message?.includes("404")) {
         toast.error("Document not ready, try Generate first.");
       } else {
-        toast.error(
-          error?.message || `Failed to download ${format.toUpperCase()}`,
-        );
+        toast.error(error?.message || `Failed to download ${format.toUpperCase()}`);
       }
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Preview PDF
   const handlePreview = async () => {
     if (!selectedProjectId) {
       toast.error("Please select a project first");
       return;
     }
-
     setActionLoading(true);
     try {
       const check = await checkDocumentInS3(selectedProjectId, "pdf");
-
       if (!check.available) {
         toast.error("Document not ready, try Generate first.");
         return;
@@ -138,13 +95,11 @@ export default function Dashboard() {
     }
   };
 
-  // Send approval email
   const handleSendApproval = async (email: string) => {
     if (!selectedProjectId) {
       toast.error("Please select a project first");
       return;
     }
-
     setActionLoading(true);
     try {
       const result = await sendApprovalEmail(selectedProjectId, email);
@@ -178,7 +133,6 @@ export default function Dashboard() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -202,7 +156,6 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Projects Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -226,7 +179,6 @@ export default function Dashboard() {
           />
         </motion.div>
 
-        {/* Actions Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -238,9 +190,7 @@ export default function Dashboard() {
               ACTA Actions
             </h2>
             <div className="text-xs sm:text-sm text-gray-500">
-              {selectedProjectId
-                ? `Project: ${selectedProjectId}`
-                : "No project selected"}
+              {selectedProjectId ? `Project: ${selectedProjectId}` : "No project selected"}
             </div>
           </div>
 
@@ -255,7 +205,6 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* PDF Preview Modal */}
       {pdfPreviewUrl && (
         <Suspense fallback={<div>Loading PDF...</div>}>
           <PDFPreview
@@ -267,7 +216,6 @@ export default function Dashboard() {
         </Suspense>
       )}
 
-      {/* Email Dialog */}
       <EmailInputDialog
         isOpen={isEmailDialogOpen}
         onClose={() => setIsEmailDialogOpen(false)}
@@ -278,7 +226,6 @@ export default function Dashboard() {
         placeholder="Enter client email address"
       />
 
-      {/* Responsive Indicator (dev only) */}
       <ResponsiveIndicator />
     </div>
   );
