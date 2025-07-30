@@ -61,6 +61,7 @@ async function initializeApp() {
         <App />
       </React.StrictMode>,
     );
+    console.log("\ud83d\udfe2 App booted");
   } catch (error) {
     console.error("Failed to initialize app:", error);
     // Still try to render the app without proper AWS config
