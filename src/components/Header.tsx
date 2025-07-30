@@ -14,37 +14,23 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, groups } = useAuth();
 
-  // Check if user has admin access
-  const isAdmin =
-    user?.email?.includes("admin") ||
-    user?.email?.includes("valencia94") ||
-    user?.email?.endsWith("@ikusi.com") ||
-    user?.email?.endsWith("@company.com");
+  const isAdmin = groups?.includes("admin");
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // Clear all local storage immediately
       localStorage.clear();
-
-      // Set loading state
       setOpen(false);
-
-      // Only call AWS signOut if not in skip auth mode
       if (!skipAuth) {
         await signOut({ global: true });
       }
-
-      // Add a small delay to ensure signOut completes
       setTimeout(() => {
-        // Force a complete page reload to login page specifically
         window.location.href = "/login";
       }, 100);
     } catch (error) {
       console.error("Logout error:", error);
-      // Even if signOut fails, force navigation
       localStorage.clear();
       setOpen(false);
       setTimeout(() => {
@@ -55,7 +41,6 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between bg-gradient-to-r from-green-500 to-teal-500 px-6 py-5 shadow-xl">
-      {/* Left: Enhanced logo + title */}
       <div className="flex items-center gap-5">
         <img
           src={logoSrc}
@@ -70,7 +55,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Center nav (hidden on mobile) */}
       <nav className="hidden md:flex items-center gap-8 text-white">
         <button
           onClick={() => navigate("/dashboard")}
@@ -90,7 +74,6 @@ export default function Header() {
         )}
       </nav>
 
-      {/* Right: mobile menu toggle */}
       <div className="relative">
         <button
           onClick={() => setOpen((o) => !o)}
@@ -107,7 +90,6 @@ export default function Header() {
               "ring-1 ring-black ring-opacity-5 focus:outline-none z-50",
             )}
           >
-            {/* Dashboard Option */}
             <button
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
               onClick={() => {
@@ -119,7 +101,6 @@ export default function Header() {
               Dashboard
             </button>
 
-            {/* Admin Option (if admin) */}
             {isAdmin && (
               <button
                 className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
@@ -133,7 +114,6 @@ export default function Header() {
               </button>
             )}
 
-            {/* Profile Option */}
             <button
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
               onClick={() => {
@@ -145,7 +125,6 @@ export default function Header() {
               Profile
             </button>
 
-            {/* Logout Option */}
             <button
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none disabled:opacity-50"
               onClick={handleLogout}
