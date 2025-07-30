@@ -1,0 +1,31 @@
+name: Copilot Setup - Pre-Firewall Chrome Install
+
+on:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  workflow_dispatch:
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Download Chrome (Headless Shell)
+        run: |
+          mkdir -p $HOME/chrome
+          curl -L -o chrome-shell.zip https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.94/linux64/chrome-headless-shell-linux64.zip
+          unzip chrome-shell.zip -d $HOME/chrome
+          echo "Chrome downloaded to $HOME/chrome"
+
+      - name: Cache Chrome Folder
+        uses: actions/cache@v4
+        with:
+          path: $HOME/chrome
+          key: chrome-cache-${{ runner.os }}-138.0.7204.94
