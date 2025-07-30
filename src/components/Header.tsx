@@ -14,9 +14,9 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
-  const { user, groups } = useAuth();
+  const { user } = useAuth();
 
-  const isAdmin = groups?.includes("admin");
+  const isAdmin = false;
 
   const handleLogout = async () => {
     setIsLoggingOut(true);

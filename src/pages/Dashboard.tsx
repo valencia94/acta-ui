@@ -172,11 +172,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <DynamoProjectsView
-            userEmail={user?.email || ""}
-            onProjectSelect={handleProjectSelect}
-            selectedProjectId={selectedProjectId}
-          />
+          <DynamoProjectsView onProjectSelect={handleProjectSelect} />
         </motion.div>
 
         <motion.div
