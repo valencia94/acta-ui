@@ -55,6 +55,7 @@ async function initializeApp() {
   try {
     const awsConfig = await waitForAwsConfig();
     Amplify.configure(awsConfig);
+    console.log("✅ Amplify configured with:", awsConfig);
     
     ReactDOM.createRoot(document.getElementById("root")!).render(
       <React.StrictMode>
