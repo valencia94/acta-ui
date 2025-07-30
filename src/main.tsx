@@ -15,6 +15,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "@/App";
 
+console.log("🧩 ENV", import.meta.env);
+
 // Wait for aws-exports.js to load via script tag before configuring Amplify
 function waitForAwsConfig(): Promise<any> {
   return new Promise((resolve, reject) => {
