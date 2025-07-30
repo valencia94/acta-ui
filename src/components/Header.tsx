@@ -74,7 +74,9 @@ export default function Header() {
         )}
       </nav>
 
-      <div className="relative">
+      <div className="flex items-center gap-4">
+        <span className="hidden md:inline text-xs text-white font-light">Signed in as: {user?.email}</span>
+        $1
         <button
           onClick={() => setOpen((o) => !o)}
           aria-label="Toggle menu"
