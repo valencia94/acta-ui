@@ -15,16 +15,24 @@ export default function Header() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isAdmin = false;
+
+  const isAdmin =
+    user?.email?.includes("admin") ||
+    user?.email?.includes("valencia94") ||
+    user?.email?.endsWith("@ikusi.com") ||
+    user?.email?.endsWith("@company.com");
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
       localStorage.clear();
+
       setOpen(false);
+
       if (!skipAuth) {
         await signOut({ global: true });
       }
+
       setTimeout(() => {
         window.location.href = "/login";
       }, 100);
@@ -74,7 +82,9 @@ export default function Header() {
       </nav>
 
       <div className="flex items-center gap-4">
-        <span className="hidden md:inline text-xs text-white font-light">Signed in as: {user?.email}</span>
+        <span className="hidden md:inline text-xs text-white font-light">
+          Signed in as: {user?.email}
+        </span>
         <button
           onClick={() => setOpen((o) => !o)}
           aria-label="Toggle menu"
@@ -87,11 +97,11 @@ export default function Header() {
           <div
             className={clsx(
               "absolute right-0 top-full mt-2 w-48 rounded-lg bg-white py-1 shadow-lg",
-              "ring-1 ring-black ring-opacity-5 focus:outline-none z-50",
+              "ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
             )}
           >
             <button
-              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               onClick={() => {
                 setOpen(false);
                 navigate("/dashboard");
@@ -103,7 +113,7 @@ export default function Header() {
 
             {isAdmin && (
               <button
-                className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => {
                   setOpen(false);
                   navigate("/admin");
@@ -115,7 +125,7 @@ export default function Header() {
             )}
 
             <button
-              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               onClick={() => {
                 setOpen(false);
                 navigate("/profile");
@@ -126,7 +136,7 @@ export default function Header() {
             </button>
 
             <button
-              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none disabled:opacity-50"
+              className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
               onClick={handleLogout}
               disabled={isLoggingOut}
             >

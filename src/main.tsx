@@ -15,6 +15,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "@/App";
 
+console.log("🧩 ENV", import.meta.env);
+
 // Wait for aws-exports.js to load via script tag before configuring Amplify
 function waitForAwsConfig(): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -55,12 +57,14 @@ async function initializeApp() {
   try {
     const awsConfig = await waitForAwsConfig();
     Amplify.configure(awsConfig);
+    console.log("✅ Amplify configured with:", awsConfig);
     
     ReactDOM.createRoot(document.getElementById("root")!).render(
       <React.StrictMode>
         <App />
       </React.StrictMode>,
     );
+    console.log("\ud83d\udfe2 App booted");
   } catch (error) {
     console.error("Failed to initialize app:", error);
     // Still try to render the app without proper AWS config

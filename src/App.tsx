@@ -53,6 +53,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    fetchAuthSession().then(session => {
+      console.log("🟢 Auth session:", session);
+    });
+  }, []);
+
+  useEffect(() => {
     const verify = async () => {
       console.log("🔍 App: Verifying auth status...");
       try {
