@@ -10,7 +10,11 @@ interface Project {
   status: string;
 }
 
-export default function DynamoProjectsView() {
+interface Props {
+  onProjectSelect?: (projectId: string) => void;
+}
+
+export default function DynamoProjectsView({ onProjectSelect }: Props) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +59,11 @@ export default function DynamoProjectsView() {
         </thead>
         <tbody>
           {projects.map((proj) => (
-            <tr key={proj.id} className="border-b hover:bg-gray-50">
+            <tr
+              key={proj.id}
+              className="border-b hover:bg-gray-50 cursor-pointer"
+              onClick={() => onProjectSelect?.(proj.id)}
+            >
               <td className="py-2 font-medium">{proj.id}</td>
               <td className="py-2">{proj.name}</td>
               <td className="py-2">{proj.pm}</td>
