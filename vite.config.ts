@@ -1,4 +1,4 @@
-// vite.config.ts
+// vite.config.ts (cleaned and corrected for S3 + CloudFront stability)
 import react from "@vitejs/plugin-react";
 import autoprefixer from "autoprefixer";
 import fs from "fs";
@@ -14,9 +14,7 @@ export default defineConfig({
     {
       name: "copy-aws-exports",
       closeBundle() {
-        console.log(
-          "📋 Copying browser-compatible aws-exports.js to dist folder...",
-        );
+        console.log("📋 Copying browser-compatible aws-exports.js to dist folder...");
         const srcPath = "public/aws-exports.js";
         const destPath = "dist/aws-exports.js";
 
@@ -27,9 +25,7 @@ export default defineConfig({
           fs.copyFileSync(srcPath, destPath);
           console.log("✅ aws-exports.js copied!");
         } else {
-          console.warn(
-            "⚠️ aws-exports.js not found in public/. Skipping copy.",
-          );
+          console.warn("⚠️ aws-exports.js not found in public/. Skipping copy.");
         }
       },
     },
@@ -76,32 +72,12 @@ export default defineConfig({
     port: 5000,
   },
   build: {
-    rollupOptions: {
-      external: ["fsevents"], // ✅ Prevents CI crashes
-      output: {
-        manualChunks: {
-          "pdf-viewer": ["react-pdf"],
-          "aws-sdk": ["@aws-sdk/client-cognito-identity", "@aws-sdk/client-dynamodb", "@aws-sdk/client-s3", "@aws-sdk/credential-provider-cognito-identity", "@aws-sdk/s3-request-presigner"],
-          vendor: ["react", "react-dom"],
-          ui: ["framer-motion", "lucide-react"],
-          amplify: ["aws-amplify", "@aws-amplify/auth", "@aws-amplify/ui-react", "amazon-cognito-identity-js"],
-        },
-        chunkFileNames: (chunkInfo) => {
-          const id = chunkInfo.facadeModuleId
-            ? path.basename(
-                chunkInfo.facadeModuleId,
-                path.extname(chunkInfo.facadeModuleId),
-              )
-            : "chunk";
-          return `assets/${id}-[hash].js`;
-        },
-        entryFileNames: "assets/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash].[ext]",
-      },
-    },
     chunkSizeWarningLimit: 1024,
+    rollupOptions: {
+      external: ["fsevents"]
+    }
   },
   ssr: {
-    noExternal: ["aws-amplify"], // ✅ Fix for deep import issues
+    noExternal: ["aws-amplify"],
   },
 });
