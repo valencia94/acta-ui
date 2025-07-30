@@ -14,9 +14,8 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
-  const { user, groups } = useAuth();
-
-  const isAdmin = groups?.includes("admin");
+  const { user } = useAuth();
+  const isAdmin = false;
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -76,7 +75,6 @@ export default function Header() {
 
       <div className="flex items-center gap-4">
         <span className="hidden md:inline text-xs text-white font-light">Signed in as: {user?.email}</span>
-        $1
         <button
           onClick={() => setOpen((o) => !o)}
           aria-label="Toggle menu"

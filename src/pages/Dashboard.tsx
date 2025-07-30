@@ -7,6 +7,7 @@ import ActaButtons from "@/components/ActaButtons/ActaButtons";
 import DynamoProjectsView from "@/components/DynamoProjectsView";
 import { EmailInputDialog } from "@/components/EmailInputDialog";
 import Header from "@/components/Header";
+import RuntimeLog from "@/components/RuntimeLog";
 import ResponsiveIndicator from "@/components/ResponsiveIndicator";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -131,6 +132,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      <RuntimeLog />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <motion.div
@@ -172,11 +174,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <DynamoProjectsView
-            userEmail={user?.email || ""}
-            onProjectSelect={handleProjectSelect}
-            selectedProjectId={selectedProjectId}
-          />
+          <DynamoProjectsView onProjectSelect={handleProjectSelect} />
         </motion.div>
 
         <motion.div
