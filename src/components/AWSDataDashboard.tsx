@@ -1,6 +1,7 @@
 //src/components/AWSDataDashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { getAllProjects } from '../lib/awsDataService';
+import { getProjectsByPM } from '@/lib/api';
 
 const TEST_PM_EMAIL = "christian.valencia@ikusi.com";
 
@@ -22,21 +23,14 @@ export const AWSDataDashboard: React.FC = () => {
       setPmProjects(pm);
 
       // Mock downloads since downloadDocument is not available
-      const downloads: string[] = ['Download functionality disabled'];
-
-      // 3. Download two documents
       const downloads: string[] = [];
+      
+      // Note: downloadDocument function is not available, so we'll skip actual downloads
       if (pm.length >= 2) {
         for (let i = 0; i < 2; i++) {
           const projectId = String(pm[i].id);
-          try {
-            const doc = await downloadDocument(projectId, "pdf");
-            downloads.push(
-              `Project ${projectId}: Downloaded PDF (${doc ? "success" : "fail"})`,
-            );
-          } catch (err) {
-            downloads.push(`Project ${projectId}: Download failed`);
-          }
+          // Mock download result since downloadDocument is not implemented
+          downloads.push(`Project ${projectId}: Download functionality not available`);
         }
       }
 

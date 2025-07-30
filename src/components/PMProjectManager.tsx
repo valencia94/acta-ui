@@ -3,7 +3,8 @@ import { Clock, FileText, RefreshCw, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
-import { generateSummariesForPM, getProjectsByPM, getAllProjects, PMProject } from '@/api';
+import { generateSummariesForPM } from '@/api';
+import { getProjectsByPM, getAllProjects, PMProject } from '@/lib/api';
 
 import Button from "./Button";
 
@@ -144,9 +145,9 @@ export default function PMProjectManager({
 
       const result = await generateSummariesForPM(pmEmail);
 
-      // Since API returns ProjectSummary[], treat all as successful
-      const successCount = result.length;
-      const failureCount = 0;
+      // Result has success, failed, and total counts
+      const successCount = result.success.length;
+      const failureCount = result.failed.length;
 
       if (successCount > 0) {
         toast.success(
