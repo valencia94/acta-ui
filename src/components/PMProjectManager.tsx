@@ -53,6 +53,7 @@ export default function PMProjectManager({
       console.log(`Loading projects for PM: ${pmEmail}`);
       const projectSummaries = await getProjectsByPM(pmEmail, false);
 
+      const pmProjects = projectSummaries.map((summary: any) => ({
         id: String(summary.id || summary.project_id || 'unknown'),
         name: String(summary.name || summary.project_name || 'Unknown Project'),
         pm: String(summary.pm || summary.project_manager || pmEmail),
