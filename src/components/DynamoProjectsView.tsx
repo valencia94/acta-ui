@@ -1,180 +1,77 @@
 // src/components/DynamoProjectsView.tsx
-import { useEffect, useState } from "react";
-import { getCurrentUser } from "@/lib/api-amplify";
-import ProjectTable, { Project } from "./ProjectTable";
-import { ProjectTableSkeleton } from "./LoadingSkeleton";
-import ErrorCallout from "./ErrorCallout";
-import { fetchProjects } from "@/utils/fetchProjects";
+import { useEffect, useState } from 'react';
+import { getProjectsByPM } from '@/lib/api';
+import { Auth } from 'aws-amplify';
 
-interface DynamoProjectsViewProps {
-  userEmail: string;
-  isAdmin?: boolean;
-  onProjectSelect?: (projectId: string) => void;
-  selectedProjectId?: string;
-  isAdminMode?: boolean;
+interface Project {
+  id: string;
+  name: string;
+  pm: string;
+  status: string;
 }
 
-export default function DynamoProjectsView({
-  userEmail,
-  isAdmin = false,
-  onProjectSelect,
-  selectedProjectId,
-  isAdminMode = false,
-}: DynamoProjectsViewProps) {
+export default function DynamoProjectsView() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cognitoUser, setCognitoUser] = useState<any>(null);
-  const [retryLoading, setRetryLoading] = useState(false);
 
-  // Get Cognito user info on mount
   useEffect(() => {
-    async function fetchCognitoUser() {
+    const loadProjects = async () => {
       try {
-        const user = await getCurrentUser();
-        setCognitoUser(user);
-        console.log("🔐 Cognito user loaded:", user);
-      } catch (error) {
-        console.warn("⚠️ Could not load Cognito user:", error);
+        const user = await Auth.currentAuthenticatedUser();
+        const email = user.attributes.email;
+        const data = await getProjectsByPM(email, false);
+        setProjects(data || []);
+      } catch (err: any) {
+        console.error('Failed to load projects:', err);
+        setError('Failed to load projects. Please try again.');
+      } finally {
+        setLoading(false);
       }
-    }
-    fetchCognitoUser();
+    };
+
+    loadProjects();
   }, []);
 
-  const loadProjects = async (isRetry = false) => {
-    if (!userEmail) return;
-
-    if (isRetry) {
-      setRetryLoading(true);
-    } else {
-      setLoading(true);
-    }
-    setError(null);
-
-    try {
-      console.log("📋 Fetching projects with CORS-resilient logic...");
-      console.log("👤 User email:", userEmail);
-      console.log("🔐 Cognito user:", cognitoUser);
-      console.log("🛡️ Admin mode:", isAdmin);
-
-      const projects = await fetchProjects({
-        userEmail,
-        isAdmin,
-      });
-
-      setProjects(projects);
-    } catch (err) {
-      console.error("❌ Failed to load projects:", err);
-      let errorMessage = "Failed to load projects. Please check your authentication.";
-      
-      if (err instanceof TypeError) {
-        errorMessage = "Still can't reach the API – please log out and back in.";
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-      setRetryLoading(false);
-    }
-  };
-
-  const handleRetry = () => {
-    loadProjects(true);
-  };
-
-  useEffect(() => {
-    loadProjects();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userEmail, isAdmin, cognitoUser]);
-
-  if (loading || retryLoading) {
-    return <ProjectTableSkeleton rows={3} />;
+  if (loading) {
+    return <div className="text-center text-gray-500">Loading projects...</div>;
   }
 
   if (error) {
-    const enhancedMessage = getEnhancedErrorMessage(error);
-    return (
-      <ErrorCallout
-        title="Failed to load projects"
-        message={enhancedMessage.message}
-        onRetry={handleRetry}
-        retryLoading={retryLoading}
-        className="mx-auto max-w-2xl"
-      />
-    );
-  }
-
-  // Enhanced error message helper
-  function getEnhancedErrorMessage(error: string) {
-    if (error.includes('401') || error.includes('Unauthorized')) {
-      return {
-        message: "Authentication expired. Please log out and log back in to continue accessing your projects.",
-        type: 'auth'
-      };
-    }
-    if (error.includes('403') || error.includes('Forbidden')) {
-      return {
-        message: "You don't have permission to access these projects. Please contact your administrator if you believe this is an error.",
-        type: 'permission'
-      };
-    }
-    if (error.includes('5') || error.includes('Internal Server Error') || error.includes('Service Unavailable')) {
-      return {
-        message: "Our servers are experiencing issues. Please try again in a few moments, or contact support if the problem persists.",
-        type: 'server'
-      };
-    }
-    if (error.includes('Network Error') || error.includes('timeout')) {
-      return {
-        message: "Connection issues detected. Please check your internet connection and try again.",
-        type: 'network'
-      };
-    }
-    return {
-      message: error || "An unexpected error occurred while loading projects. Please try again.",
-      type: 'general'
-    };
-  }
-
-  if (!projects.length) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 text-center text-gray-500">
-        <p>No projects found.</p>
-      </div>
-    );
+    return <div className="text-center text-red-500">{error}</div>;
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              {isAdminMode ? "All Projects (Admin)" : "Your Projects"}
-            </h3>
-            <p className="text-sm text-gray-500">
-              {cognitoUser ? (
-                <>✅ Authenticated as {cognitoUser.email}</>
-              ) : (
-                <>⚠️ Authentication status unknown</>
-              )}
-            </p>
-          </div>
-          <div className="text-sm text-gray-500">
-            {projects.length} project{projects.length !== 1 ? "s" : ""} found
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6">
-        <ProjectTable
-          data={projects}
-          onProjectSelect={onProjectSelect}
-          selectedProjectId={selectedProjectId}
-        />
-      </div>
+    <div className="bg-white p-6 rounded-2xl shadow-md">
+      <h3 className="text-lg font-semibold mb-4">Your Projects</h3>
+      <table className="w-full table-auto text-left">
+        <thead>
+          <tr className="text-sm text-gray-600 border-b">
+            <th className="py-2">Project ID</th>
+            <th className="py-2">Project Name</th>
+            <th className="py-2">PM</th>
+            <th className="py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {projects.map((proj) => (
+            <tr key={proj.id} className="border-b hover:bg-gray-50">
+              <td className="py-2 font-medium">{proj.id}</td>
+              <td className="py-2">{proj.name}</td>
+              <td className="py-2">{proj.pm}</td>
+              <td className="py-2">
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                  proj.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                  proj.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {proj.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
