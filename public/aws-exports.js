@@ -94,3 +94,4 @@ window.awsmobile = {
 // Optional compatibility reference
 window.amplifyConfig = window.awsmobile;
 console.log("✅ AWS Cognito config loaded successfully!");
+export default window.awsmobile;
