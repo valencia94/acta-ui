@@ -1,7 +1,7 @@
 // src/main.tsx
 
 import { Amplify } from "aws-amplify";
-import config from "../public/aws-exports.js";
+import config from "./aws-exports.js"
 
 import "@/styles/variables.css";
 import "@/styles/amplify-overrides.css";
