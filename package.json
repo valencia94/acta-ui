@@ -9,27 +9,26 @@
     "pnpm": "^9"
   },
   "packageManager": "pnpm@9.15.9",
-  "scripts": {
-    "ci:check": "pnpm exec tsc --noEmit && pnpm exec eslint . --fix",
-    "ci:test": "pnpm exec vitest --run --coverage",
-    "ci": "pnpm run ci:check && pnpm run ci:test",
-    "preview": "vite preview",
-    "dev": "vite",
-    "lint": "tsc --noEmit && eslint .",
-    "format": "prettier --write .",
-    "test": "vitest run",
-    "type-check": "tsc --noEmit",
-    "check:env": "node scripts/check-env.cjs",
-    "prepare": "node scripts/prepare.cjs",
-    "test:cognito": "node test-cognito-login.js",
-    "test:cognito:browser": "node test-cognito-auth.js",
-    "check-aws": "bash scripts/hashcheck-aws.sh",
-    "build": "vite build",
-    "predeploy": "pnpm run check-aws && pnpm run build && bash scripts/push-spa-routes.sh",
-    "deploy": "pnpm run predeploy",
-    "cy:open": "cypress open",
-    "cy:run": "cypress run"
-  },
+"scripts": {
+  "lint": "eslint . --ext .ts,.tsx,.js",              // ✅ Add --ext flag
+  "ci:check": "pnpm run type-check && pnpm run lint", // ✅ Clean chaining
+  "ci": "pnpm run ci:check && pnpm run test",         // ✅ Stable baseline
+  "type-check": "tsc --noEmit",
+  "test": "vitest run",
+  "format": "prettier --write .",
+  "dev": "vite",
+  "preview": "vite preview",
+  "build": "vite build",
+  "check:env": "node scripts/check-env.cjs",
+  "prepare": "node scripts/prepare.cjs",
+  "check-aws": "bash scripts/hashcheck-aws.sh",
+  "predeploy": "pnpm run check-aws && pnpm run build && bash scripts/push-spa-routes.sh",
+  "deploy": "pnpm run predeploy",
+  "cy:open": "cypress open",
+  "cy:run": "cypress run",
+  "test:cognito": "node test-cognito-login.js",
+  "test:cognito:browser": "node test-cognito-auth.js"
+},
   "dependencies": {
     "@aws-amplify/auth": "^6.13.3",
     "@aws-amplify/ui-react": "^6.11.2",
