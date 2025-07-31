@@ -55,9 +55,12 @@ function waitForAwsConfig(): Promise<any> {
 // Initialize app once AWS config is ready
 async function initializeApp() {
   try {
-    const awsConfig = await waitForAwsConfig();
-    Amplify.configure(awsConfig);
-    console.log("✅ Amplify configured with:", awsConfig);
+    const config = await waitForAwsConfig();
+    Amplify.configure(config);
+    window.addEventListener("error", (e) =>
+      console.error("GlobalError:", (e as ErrorEvent).message)
+    );
+    console.log("✅ Amplify configured:", config);
     
     ReactDOM.createRoot(document.getElementById("root")!).render(
       <React.StrictMode>
