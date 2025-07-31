@@ -72,11 +72,10 @@ export default defineConfig({
     port: 5000,
   },
   build: {
-    sourcemap: true,
     chunkSizeWarningLimit: 1024,
     rollupOptions: {
-      external: ["fsevents"],
-    },
+      external: ["fsevents"]
+    }
   },
   ssr: {
     noExternal: ["aws-amplify"],
