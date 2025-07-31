@@ -1,20 +1,21 @@
-// src/pages/Dashboard.tsx
-import { motion } from "framer-motion";
-import { lazy, Suspense, useState } from "react";
+// src/pages/Dashboard.tsx — Regenerated PM Dashboard using Admin layout
+import { useEffect, useState, lazy, Suspense } from "react";
 import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
 
-import ActaButtons from "@/components/ActaButtons/ActaButtons";
-import DynamoProjectsView from "@/components/DynamoProjectsView";
-import { EmailInputDialog } from "@/components/EmailInputDialog";
 import Header from "@/components/Header";
-import RuntimeLog from "@/components/RuntimeLog";
+import DynamoProjectsView from "@/components/DynamoProjectsView";
+import ActaButtons from "@/components/ActaButtons/ActaButtons";
+import { EmailInputDialog } from "@/components/EmailInputDialog";
 import ResponsiveIndicator from "@/components/ResponsiveIndicator";
+
 import { useAuth } from "@/hooks/useAuth";
+
 import {
   generateActaDocument,
   getDownloadUrl,
-  sendApprovalEmail,
   checkDocumentInS3,
+  sendApprovalEmail,
 } from "@/lib/api";
 
 const PDFPreview = lazy(() => import("@/components/PDFPreview"));
@@ -45,7 +46,6 @@ export default function Dashboard() {
       await generateActaDocument(selectedProjectId, user.email, "pm");
       toast.success("ACTA generation started. You'll receive an email when ready.");
     } catch (error: any) {
-      console.error("Error generating ACTA:", error);
       toast.error(error?.message || "Failed to generate ACTA");
     } finally {
       setActionLoading(false);
@@ -62,12 +62,7 @@ export default function Dashboard() {
       const url = await getDownloadUrl(selectedProjectId, format);
       window.open(url, "_blank");
     } catch (error: any) {
-      console.error(`Error downloading ${format}:`, error);
-      if (error?.message?.includes("404")) {
-        toast.error("Document not ready, try Generate first.");
-      } else {
-        toast.error(error?.message || `Failed to download ${format.toUpperCase()}`);
-      }
+      toast.error(error?.message || `Failed to download ${format.toUpperCase()}`);
     } finally {
       setActionLoading(false);
     }
@@ -89,7 +84,6 @@ export default function Dashboard() {
       setPdfPreviewUrl(url);
       setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
     } catch (error: any) {
-      console.error("Error previewing PDF:", error);
       toast.error(error?.message || "Failed to preview document");
     } finally {
       setActionLoading(false);
@@ -111,7 +105,6 @@ export default function Dashboard() {
         toast.error("Failed to send approval email");
       }
     } catch (error: any) {
-      console.error("Error sending approval email:", error);
       toast.error(error?.message || "Failed to send approval email");
     } finally {
       setActionLoading(false);
@@ -119,79 +112,49 @@ export default function Dashboard() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <div className="p-8 text-center text-gray-600">Loading...</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <RuntimeLog />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <main className="max-w-7xl mx-auto p-6 space-y-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6 sm:mb-8"
+          transition={{ duration: 0.4 }}
+          className="bg-white shadow-md rounded-lg p-6"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                Welcome back, {user?.email || "User"}!
-              </h1>
-              <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                Manage your projects and generate ACTA documents
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-xs sm:text-sm text-gray-500">
-                Selected Project: {selectedProjectId || "None"}
-              </div>
-            </div>
-          </div>
+          <h1 className="text-2xl font-semibold text-gray-800 mb-2">
+            Welcome, {user?.email}
+          </h1>
+          <p className="text-sm text-gray-500">
+            View your projects and take action with ACTA tools.
+          </p>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6 sm:mb-8"
-          data-testid="projects-section"
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-white shadow-md rounded-lg p-6"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-              Your Projects
-            </h2>
-            <div className="text-xs sm:text-sm text-gray-500">
-              Click on a project to select it
-            </div>
-          </div>
-
-          <DynamoProjectsView onProjectSelect={handleProjectSelect} />
+          <h2 className="text-lg font-medium text-gray-700 mb-4">Your Projects</h2>
+          <DynamoProjectsView
+            userEmail={user?.email || ""}
+            onProjectSelect={handleProjectSelect}
+            selectedProjectId={selectedProjectId}
+          />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm p-4 sm:p-6"
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="bg-white shadow-md rounded-lg p-6"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-              ACTA Actions
-            </h2>
-            <div className="text-xs sm:text-sm text-gray-500">
-              {selectedProjectId ? `Project: ${selectedProjectId}` : "No project selected"}
-            </div>
-          </div>
-
+          <h2 className="text-lg font-medium text-gray-700 mb-4">ACTA Actions</h2>
           <ActaButtons
             onGenerate={handleGenerateActa}
             onDownloadPdf={() => handleDownload("pdf")}
@@ -201,18 +164,18 @@ export default function Dashboard() {
             disabled={!selectedProjectId || actionLoading}
           />
         </motion.div>
-      </div>
+      </main>
 
-      {pdfPreviewUrl && (
-        <Suspense fallback={<div>Loading PDF...</div>}>
+      <Suspense fallback={<div>Loading preview...</div>}>
+        {pdfPreviewUrl && (
           <PDFPreview
             isOpen={!!pdfPreviewUrl}
             pdfUrl={pdfPreviewUrl}
             fileName={pdfPreviewFileName}
             onClose={() => setPdfPreviewUrl(null)}
           />
-        </Suspense>
-      )}
+        )}
+      </Suspense>
 
       <EmailInputDialog
         isOpen={isEmailDialogOpen}
@@ -220,7 +183,7 @@ export default function Dashboard() {
         onSubmit={handleSendApproval}
         loading={actionLoading}
         title="Send Approval Request"
-        description={`Send approval request for project: ${currentProjectName}`}
+        description={`Send approval for project: ${currentProjectName}`}
         placeholder="Enter client email address"
       />
 
