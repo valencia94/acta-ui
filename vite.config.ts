@@ -11,24 +11,24 @@ export default defineConfig({
   root: ".",
   publicDir: "public",
   plugins: [
-    {
-      name: "copy-aws-exports",
-      closeBundle() {
-        console.log("📋 Copying browser-compatible aws-exports.js to dist folder...");
-        const srcPath = "public/aws-exports.js";
-        const destPath = "dist/aws-exports.js";
+      {
+        name: "copy-aws-exports",
+        closeBundle() {
+          console.log("📋 Copying aws-exports.js to dist folder...");
+          const srcPath = "src/aws-exports.js";
+          const destPath = "dist/aws-exports.js";
 
-        if (fs.existsSync(srcPath)) {
-          if (!fs.existsSync("dist")) {
-            fs.mkdirSync("dist", { recursive: true });
+          if (fs.existsSync(srcPath)) {
+            if (!fs.existsSync("dist")) {
+              fs.mkdirSync("dist", { recursive: true });
+            }
+            fs.copyFileSync(srcPath, destPath);
+            console.log("✅ aws-exports.js copied!");
+          } else {
+            console.warn("⚠️ aws-exports.js not found in src/. Skipping copy.");
           }
-          fs.copyFileSync(srcPath, destPath);
-          console.log("✅ aws-exports.js copied!");
-        } else {
-          console.warn("⚠️ aws-exports.js not found in public/. Skipping copy.");
-        }
+        },
       },
-    },
     react(),
     svgr(),
   ],
