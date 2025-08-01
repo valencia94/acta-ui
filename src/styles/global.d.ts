@@ -6,6 +6,7 @@ import type { ActaApi } from "@/types/api";
 declare global {
   interface Window {
     __actaApi?: ActaApi;
+    awsmobile?: any;
     getSummary?: (id: string) => Promise<unknown>;
     getTimeline?: (id: string) => Promise<unknown>;
     getDownloadUrl?: (
