@@ -66,7 +66,8 @@ jobs:
           rm -rf dist && pnpm run build
           echo "✅ Build complete"
 
-      - name: 🔒 Check build
+      - name: 🔒 Build verification
+
         run: |
           echo "✅ build verified"
 
