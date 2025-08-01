@@ -27,7 +27,7 @@ fi
 echo "📋 Creating aws-exports.js in root directory for direct module imports..."
 cat > aws-exports.js << INNEREOF
 // aws-exports.js in root for direct module imports
-import awsmobile from './src/aws-exports.js';
+import awsmobile from '@/aws-exports.js';
 export default awsmobile;
 INNEREOF
 echo "✅ Created aws-exports.js in root directory"

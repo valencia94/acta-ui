@@ -1,10 +1,13 @@
-// vite.config.ts (cleaned and corrected for S3 + CloudFront stability)
 import react from "@vitejs/plugin-react";
 import autoprefixer from "autoprefixer";
 import path from "path";
 import tailwindcss from "tailwindcss";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
+import { existsSync, copyFileSync } from "fs";
+
+const srcPath = "src/aws-exports.js";
+const destPath = "dist/aws-exports.js";
 
 export default defineConfig({
   root: ".",
@@ -12,6 +15,14 @@ export default defineConfig({
   plugins: [
     react(),
     svgr(),
+    {
+      name: "copy-aws-exports",
+      closeBundle() {
+        if (existsSync(srcPath)) {
+          copyFileSync(srcPath, destPath);
+        }
+      },
+    },
   ],
   resolve: {
     alias: {
@@ -55,8 +66,8 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1024,
     rollupOptions: {
-      external: ["fsevents"]
-    }
+      external: ["fsevents"],
+    },
   },
   ssr: {
     noExternal: ["aws-amplify"],

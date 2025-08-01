@@ -1,36 +1,16 @@
-// src/main.tsx
-
-// 🔐 AWS Amplify Setup
 import { Amplify } from "aws-amplify";
-import awsmobile from "@/aws-exports";
-
-// 🎨 Global Styles
-import "@/styles/variables.css"; // Design tokens (colors, spacing)
-import "@/styles/amplify-overrides.css"; // Amplify UI overrides
-import "@/tailwind.css"; // Tailwind utilities
-import "@aws-amplify/ui-react/styles.css"; // Amplify UI base styles
-
-// ⚛️ React & App
+import awsConfig from "@/aws-exports.js";
 import React from "react";
-import ReactDOM from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import App from "@/App";
+import "@/styles/variables.css";
+import "@/styles/amplify-overrides.css";
+import "@/tailwind.css";
+import "@aws-amplify/ui-react/styles.css";
 
-console.log("🧩 ENV", import.meta.env);
-
-// Configure Amplify directly with imported config
-Amplify.configure(awsmobile);
-console.log("✅ Amplify configured:", awsmobile);
-
-// Set up error handling
-window.addEventListener("error", (e) =>
-  console.error("GlobalError:", (e as ErrorEvent).message)
-);
-
-// Render the app
-ReactDOM.createRoot(document.getElementById("root")!).render(
+Amplify.configure(awsConfig);
+createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
+  </React.StrictMode>
 );
-
-console.log("🟢 App booted");

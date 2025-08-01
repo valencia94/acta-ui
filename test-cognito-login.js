@@ -2,7 +2,7 @@
 // Script to verify Cognito login and token retrieval using aws-exports.js
 
 import { Auth } from "aws-amplify";
-import awsExports from "./src/aws-exports.js";
+import awsExports from "@/aws-exports.js";
 
 Auth.configure(awsExports);
 
