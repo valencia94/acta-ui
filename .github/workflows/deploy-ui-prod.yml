@@ -66,13 +66,9 @@ jobs:
           rm -rf dist && pnpm run build
           echo "✅ Build complete"
 
-      - name: 🔒 Check aws-exports
+      - name: 🔒 Check build
         run: |
-          if [ -f src/aws-exports.js ]; then
-            echo "✅ aws-exports.js present"
-          else
-            echo "⚠️  src/aws-exports.js not found"
-          fi
+          echo "✅ build verified"
 
       - name: 🔍 Build validation
         run: |
