@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
 import { skipAuth } from "@/env.variables";
-import awsExports from "@/aws-exports";
+import awsConfig from "@/aws-exports.js";
 
 interface FormData {
   email: string;
@@ -100,13 +100,13 @@ export default function Login() {
     try {
       // Use module import for AWS Amplify config
       if (
-        !awsExports ||
-        !awsExports.aws_user_pools_id ||
-        !awsExports.aws_user_pools_web_client_id
+        !awsConfig ||
+        !awsConfig.aws_user_pools_id ||
+        !awsConfig.aws_user_pools_web_client_id
       ) {
         console.error(
           "❌ AWS Amplify configuration not found or incomplete!",
-          awsExports,
+          awsConfig,
         );
         setError(
           "Authentication configuration not loaded. Please refresh the page or contact support.",
@@ -116,10 +116,10 @@ export default function Login() {
 
       // Log configuration for debugging
       console.log("📋 AWS Configuration:", {
-        region: awsExports.aws_project_region,
-        userPoolId: awsExports.aws_user_pools_id,
-        identityPoolId: awsExports.aws_cognito_identity_pool_id,
-        oauth: awsExports.oauth?.domain ? "Configured" : "Not configured",
+        region: awsConfig.aws_project_region,
+        userPoolId: awsConfig.aws_user_pools_id,
+        identityPoolId: awsConfig.aws_cognito_identity_pool_id,
+        oauth: awsConfig.oauth?.domain ? "Configured" : "Not configured",
       });
 
       const result = await signIn({ username: email, password });
