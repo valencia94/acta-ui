@@ -1,7 +1,6 @@
 // vite.config.ts (cleaned and corrected for S3 + CloudFront stability)
 import react from "@vitejs/plugin-react";
 import autoprefixer from "autoprefixer";
-import fs from "fs";
 import path from "path";
 import tailwindcss from "tailwindcss";
 import { defineConfig } from "vite";
@@ -11,24 +10,6 @@ export default defineConfig({
   root: ".",
   publicDir: "public",
   plugins: [
-    {
-      name: "copy-aws-exports",
-      closeBundle() {
-        console.log("📋 Copying browser-compatible aws-exports.js to dist folder...");
-        const srcPath = "public/aws-exports.js";
-        const destPath = "dist/aws-exports.js";
-
-        if (fs.existsSync(srcPath)) {
-          if (!fs.existsSync("dist")) {
-            fs.mkdirSync("dist", { recursive: true });
-          }
-          fs.copyFileSync(srcPath, destPath);
-          console.log("✅ aws-exports.js copied!");
-        } else {
-          console.warn("⚠️ aws-exports.js not found in public/. Skipping copy.");
-        }
-      },
-    },
     react(),
     svgr(),
   ],
