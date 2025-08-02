@@ -20,5 +20,10 @@ jobs:
         with:
           version: 8
           run_install: true
+
+      - name: 🔄 Corepack fallback (ensure pnpm on PATH)
+        run: |
+          corepack enable
+          corepack prepare pnpm@8.15.6 --activate
       - name: 🔍 Lint • Type-check • Unit tests
         run: pnpm run ci          # (script already exists in package.json)
