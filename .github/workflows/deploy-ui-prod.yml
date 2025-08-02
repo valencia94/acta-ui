@@ -1,4 +1,5 @@
 name: 🚀 Deploy ACTA-UI to S3 + CloudFront
+
 on:
   push:
     branches: [develop, main]
@@ -14,48 +15,47 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write   # needed for OIDC role
+      id-token: write          # OIDC role
 
     steps:
+      ## 1️⃣  Checkout repo
       - uses: actions/checkout@v4
 
-      - name: 🔧 Use Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: 🟣 Set up pnpm
+      ## 2️⃣  Install PNPM *FIRST* (standalone puts pnpm in /usr/local/bin)
+      - name: 🟣 Set up PNPM
         uses: pnpm/action-setup@v4
         with:
           version: 8
           run_install: false
-          standalone: true    # installs binary in /usr/local/bin
-      - name: 🕵️ Verify pnpm path
-        run: |
-          echo "PATH=$PATH"
-          which pnpm || echo "pnpm still missing"
-      - name: 🔄 Corepack fallback (ensure pnpm on PATH)
-        if: failure() && steps.Verify_pnpm_path.outcome == 'failure'
-        run: |
-          corepack enable
-          corepack prepare pnpm@8.15.6 --activate
+          standalone: true      # critical – exports a global binary
 
+      ## 3️⃣  Set up Node (now PNPM exists, cache restore won’t fail)
+      - name: 🔧 Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm            # safe because pnpm already on PATH
+
+      ## 4️⃣  Install dependencies
       - name: 📦 Install deps
         run: pnpm install --frozen-lockfile
 
+      ## 5️⃣  (Optional) Run build-time script to ensure API CORS
       - name: ⚙️ Enable CORS on API Gateway (idempotent)
         run: node scripts/enable-cors.js
 
+      ## 6️⃣  Configure AWS credentials (OIDC role or keys)
       - name: 🔒 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      ## 7️⃣  Build
       - name: 🏗️ Build
         run: pnpm run build
 
+      ## 8️⃣  Deploy to S3 + invalidate CloudFront
       - name: 📤 Sync to S3
         run: aws s3 sync dist/ s3://$S3_BUCKET/ --delete --region $AWS_REGION
 
