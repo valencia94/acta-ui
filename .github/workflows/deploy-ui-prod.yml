@@ -1,5 +1,4 @@
 name: 🚀 Deploy ACTA-UI to S3 + CloudFront
-
 on:
   push:
     branches: [develop, main]
@@ -9,69 +8,61 @@ env:
   S3_BUCKET: acta-ui-frontend-prod
   CLOUDFRONT_DISTRIBUTION_ID: EPQU7PVDLQXUA
   NODE_VERSION: 20
-  # 🔽  ADD THESE TWO LINES
-  API_ID: ${{ secrets.PROD_REST_API_ID }}   # or hard-code if absolutely required
-  API_STAGE: prod                           # script defaults, but explicit is safer
+  API_ID: ${{ secrets.PROD_REST_API_ID }}   # <- ensures env always set
+  API_STAGE: prod
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write          # OIDC role
+      id-token: write
 
     steps:
-      ## 1️⃣  Checkout repo
+      # 1️⃣ Checkout
       - uses: actions/checkout@v4
 
-      ## 2️⃣  Install PNPM *FIRST* (standalone puts pnpm in /usr/local/bin)
+      # 2️⃣ PNPM first
       - name: 🟣 Set up PNPM
         uses: pnpm/action-setup@v4
         with:
-          run_install: false        # or true
           standalone: true
+          run_install: false
 
-      ## 3️⃣  Set up Node (now PNPM exists, cache restore won’t fail)
+      # 3️⃣ Node with pnpm cache
       - name: 🔧 Set up Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm            # safe because pnpm already on PATH
+          cache: pnpm
 
-      ## 4️⃣  Install dependencies
-      - name: 📦 Install deps
-        run: pnpm install --frozen-lockfile
+      # 4️⃣ Install deps
+      - run: pnpm install --frozen-lockfile
+        name: 📦 Install deps
 
-      # 5️⃣  Configure AWS credentials  <<— move above the script
+      # 5️⃣ AWS creds **before** any SDK/CLI use
       - name: 🔒 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # Preferred: GitHub-OIDC role
           role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
-          # Fallback (uncomment if you do static keys instead)
+          # If you use static keys instead, uncomment:
           # aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # 6️⃣  Enable CORS on API Gateway (needs creds + API_ID)
+      # 6️⃣ Enable CORS (now has creds + API_ID)
       - name: ⚙️ Enable CORS on API Gateway (idempotent)
         run: node scripts/enable-cors.js
-        env:
-          API_ID: ${{ secrets.PROD_REST_API_ID }}
-          API_STAGE: prod
-          AWS_REGION: ${{ env.AWS_REGION }}
 
-      # 7️⃣  Build
+      # 7️⃣ Build
       - name: 🏗️ Build
         run: pnpm run build
 
-      ## 8️⃣  Deploy to S3 + invalidate CloudFront
+      # 8️⃣ Deploy static site
       - name: 📤 Sync to S3
         run: aws s3 sync dist/ s3://$S3_BUCKET/ --delete --region $AWS_REGION
 
       - name: 🚀 Invalidate CloudFront
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
-            --paths '/*'
+        run: aws cloudfront create-invalidation \
+             --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
+             --paths '/*'
