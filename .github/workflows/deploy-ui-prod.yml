@@ -35,6 +35,11 @@ jobs:
           version: 8
           run_install: false   # deploy job
 
+      - name: 🔄 Corepack fallback (ensure pnpm on PATH)
+        run: |
+          corepack enable
+          corepack prepare pnpm@8.15.6 --activate
+
       - name: 📦 Install deps
         run: pnpm install --frozen-lockfile
 
