@@ -16,10 +16,9 @@ jobs:
       - name: 🟣 Set up PNPM
         uses: pnpm/action-setup@v4
         with:
-          version: 8
-          run_install: true      # auto-installs deps
+          run_install: true        # or true
           standalone: true
-
+      
       # 2️⃣  Set up Node (pnpm now in PATH, cache restore safe)
       - name: 🔧 Set up Node 20
         uses: actions/setup-node@v4
