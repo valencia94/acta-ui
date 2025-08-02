@@ -1,0 +1,23 @@
+---
+name: 🛡️ CI Audit
+
+'on':
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: pnpm
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: true
+      - name: 🔍 Lint • Type-check • Unit tests
+        run: pnpm run ci          # (script already exists in package.json)
