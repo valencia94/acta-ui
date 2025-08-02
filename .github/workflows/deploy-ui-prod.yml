@@ -1,29 +1,25 @@
----
 name: 🚀 Deploy ACTA-UI to S3 + CloudFront
-
-'on':
+on:
   push:
     branches: [develop, main]
+
+env:
+  AWS_REGION: us-east-2
+  S3_BUCKET: acta-ui-frontend-prod
+  CLOUDFRONT_DISTRIBUTION_ID: EPQU7PVDLQXUA
+  NODE_VERSION: 20
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
-    env:
-      AWS_REGION: us-east-2
-      S3_BUCKET: acta-ui-frontend-prod
-      CLOUDFRONT_DISTRIBUTION_ID: EPQU7PVDLQXUA
-      API_ID: ${{ secrets.PROD_REST_API_ID }}
-      API_STAGE: prod
-      NODE_VERSION: 20
+      id-token: write   # needed for OIDC role
 
     steps:
-      - name: ⬇️ Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🔧 Use Node.js ${{ env.NODE_VERSION }} (pnpm cache)
+      - name: 🔧 Use Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -33,7 +29,7 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 8
-          run_install: false   # deploy job
+          run_install: false
 
       - name: 🔄 Corepack fallback (ensure pnpm on PATH)
         run: |
@@ -46,12 +42,17 @@ jobs:
       - name: ⚙️ Enable CORS on API Gateway (idempotent)
         run: node scripts/enable-cors.js
 
+      - name: 🔒 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: 🏗️ Build
         run: pnpm run build
 
       - name: 📤 Sync to S3
-        run: |
-          aws s3 sync dist/ s3://$S3_BUCKET/ --delete --region $AWS_REGION
+        run: aws s3 sync dist/ s3://$S3_BUCKET/ --delete --region $AWS_REGION
 
       - name: 🚀 Invalidate CloudFront
         run: |
