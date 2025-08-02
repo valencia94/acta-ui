@@ -15,7 +15,8 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - uses: pnpm/action-setup@v2
+      - name: 🟣 Set up pnpm
+        uses: pnpm/action-setup@v2
         with:
           version: 8
           run_install: true
