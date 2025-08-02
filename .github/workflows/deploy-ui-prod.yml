@@ -42,18 +42,27 @@ jobs:
       - name: 📦 Install deps
         run: pnpm install --frozen-lockfile
 
-      ## 5️⃣  (Optional) Run build-time script to ensure API CORS
-      - name: ⚙️ Enable CORS on API Gateway (idempotent)
-        run: node scripts/enable-cors.js
-
-      ## 6️⃣  Configure AWS credentials (OIDC role or keys)
+      # 5️⃣  Configure AWS credentials  <<— move above the script
       - name: 🔒 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          # Preferred: GitHub-OIDC role
           role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      ## 7️⃣  Build
+          # Fallback (uncomment if you do static keys instead)
+          # aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # 6️⃣  Enable CORS on API Gateway (needs creds + API_ID)
+      - name: ⚙️ Enable CORS on API Gateway (idempotent)
+        run: node scripts/enable-cors.js
+        env:
+          API_ID: ${{ secrets.PROD_REST_API_ID }}
+          API_STAGE: prod
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+      # 7️⃣  Build
       - name: 🏗️ Build
         run: pnpm run build
 
