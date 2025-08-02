@@ -20,8 +20,13 @@ jobs:
         with:
           version: 8
           run_install: true
-
+          standalone: true    # installs binary in /usr/local/bin
+      - name: 🕵️ Verify pnpm path
+        run: |
+          echo "PATH=$PATH"
+          which pnpm || echo "pnpm still missing"
       - name: 🔄 Corepack fallback (ensure pnpm on PATH)
+        if: failure() && steps.Verify_pnpm_path.outcome == 'failure'
         run: |
           corepack enable
           corepack prepare pnpm@8.15.6 --activate
