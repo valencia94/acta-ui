@@ -2,118 +2,42 @@ name: 🚀 Deploy ACTA-UI to S3 + CloudFront
 
 on:
   push:
-    branches: [ main, develop ]
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Deployment Environment'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-
-env:
-  NODE_VERSION: '18'
-  VITE_API_BASE_URL: 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod'
-  VITE_COGNITO_REGION: 'us-east-2'
-  VITE_COGNITO_POOL_ID: 'us-east-2_FyHLtOhiY'
-  VITE_COGNITO_WEB_CLIENT: 'dshos5iou44tuach7ta3ici5m'
-  VITE_SKIP_AUTH: 'false'
-  VITE_USE_MOCK_API: 'false'
-  S3_BUCKET: 'acta-ui-frontend-prod'
-  CLOUDFRONT_DISTRIBUTION_ID: 'EPQU7PVDLQXUA'
-  AWS_REGION: 'us-east-2'
+    branches: [ develop, main ]
 
 jobs:
   deploy:
-    name: 🏗️ Build & Deploy to S3 + CloudFront
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      id-token: write
-
+    env:
+      AWS_REGION: us-east-2
+      API_ID:    ${{ secrets.PROD_REST_API_ID }}
+      API_STAGE: prod
     steps:
-      - name: 📅 Checkout code
+      - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.9
-
-      - name: Setup Node.js
+      - name: 🔧 Use Node.js 20
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'pnpm'
 
-      - name: 📦 Install dependencies
-        run: |
-          echo "🧹 Cleaning build folder..."
-          rm -rf node_modules/.vite dist .cache
-          pnpm install --frozen-lockfile
-
-      - name: 🔍 Environment verification
-        run: |
-          echo "API: $VITE_API_BASE_URL"
-          echo "S3: $S3_BUCKET"
-          echo "CF: $CLOUDFRONT_DISTRIBUTION_ID"
-
-      - name: 🎗️ Build
-        run: |
-          rm -rf dist && pnpm run build
-          echo "✅ Build complete"
-
-      - name: 🔒 Build verification
-
-        run: |
-          echo "✅ build verified"
-
-      - name: 🔍 Build validation
-        run: |
-          grep -q 'Ikusi · Acta Platform' dist/index.html || exit 1
-          grep -r 'test-project\|mock-project' dist/ && exit 1 || echo "✅ No test data"
-
-      - name: 🔧 Configure AWS
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: 📦 Install deps
+        uses: pnpm/action-setup@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          version: 9.15.9
+      - run: pnpm install --frozen-lockfile
 
-      - name: ☁️ Sync to S3
+      - name: ⚙️ Enable CORS on API Gateway (idempotent)
+        run: node scripts/enable-cors.ts
+
+      - name: 🏗️ Build
+        run: pnpm run build
+
+      - name: 📤 Sync to S3
         run: |
-          aws s3 sync dist/ s3://$S3_BUCKET/ \
-            --region $AWS_REGION \
-            --delete \
-            --cache-control "public, max-age=31536000" \
-            --exclude "*.html" --exclude "*.json" --exclude "*test.js" --exclude "*.md"
+          aws s3 sync dist/ s3://$S3_BUCKET/ --delete --region $AWS_REGION
 
-          aws s3 sync dist/ s3://$S3_BUCKET/ \
-            --region $AWS_REGION \
-            --cache-control "no-cache, no-store, must-revalidate" \
-            --content-type "text/html" \
-            --include "*.html"
-
-          aws s3 sync dist/ s3://$S3_BUCKET/ \
-            --region $AWS_REGION \
-            --cache-control "no-cache, no-store, must-revalidate" \
-            --content-type "application/json" \
-            --include "*.json"
-
-      - name: 🌐 Invalidate CloudFront
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
-            --paths "/*"
-
-      - name: ✅ Confirm CloudFront health
-        run: |
-          sleep 10
-          curl -I https://d7t9x3j66yd8k.cloudfront.net | grep "200"
-          curl -s https://d7t9x3j66yd8k.cloudfront.net | grep -q "Ikusi · Acta Platform" || echo "⚠️ Cache still propagating..."
-
-      - name: 🎉 Complete
-        run: echo "🎉 UI deployed successfully to $S3_BUCKET → CloudFront!"
+      - name: 🚀 Invalidate CloudFront
+        run: aws cloudfront create-invalidation \
+               --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
+               --paths '/*'

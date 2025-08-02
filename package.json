@@ -57,6 +57,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@aws-sdk/client-api-gateway": "^3.848.0",
     "@chakra-ui/form-control": "^2.2.0",
     "@chakra-ui/input": "^2.1.2",
     "@chakra-ui/react": "^3.22.0",
