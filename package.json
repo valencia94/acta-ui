@@ -4,11 +4,11 @@
   "homepage": "https://github.com/valencia94/acta-ui",
   "license": "MIT",
   "type": "module",
+  "packageManager": "pnpm@8.15.6",
   "engines": {
-    "node": ">=20 <23",
-    "pnpm": "^8"
+    "pnpm": ">=8 <9",
+    "node": ">=20 <23"
   },
-    "packageManager": "pnpm@8.15.6",
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx,.js",
     "ci:check": "pnpm run type-check && pnpm run lint",
