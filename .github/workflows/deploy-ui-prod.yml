@@ -9,6 +9,9 @@ env:
   S3_BUCKET: acta-ui-frontend-prod
   CLOUDFRONT_DISTRIBUTION_ID: EPQU7PVDLQXUA
   NODE_VERSION: 20
+  # 🔽  ADD THESE TWO LINES
+  API_ID: ${{ secrets.PROD_REST_API_ID }}   # or hard-code if absolutely required
+  API_STAGE: prod                           # script defaults, but explicit is safer
 
 jobs:
   deploy:
