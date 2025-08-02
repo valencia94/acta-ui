@@ -1,7 +1,6 @@
----
 name: 🛡️ CI Audit
 
-'on':
+on:
   pull_request:
   push:
     branches: [main, develop]
@@ -9,26 +8,25 @@ name: 🛡️ CI Audit
 jobs:
   audit:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - name: 🟣 Set up pnpm
+
+      # 1️⃣  Install PNPM first
+      - name: 🟣 Set up PNPM
         uses: pnpm/action-setup@v4
         with:
           version: 8
-          run_install: true
-          standalone: true    # installs binary in /usr/local/bin
-      - name: 🕵️ Verify pnpm path
-        run: |
-          echo "PATH=$PATH"
-          which pnpm || echo "pnpm still missing"
-      - name: 🔄 Corepack fallback (ensure pnpm on PATH)
-        if: failure() && steps.Verify_pnpm_path.outcome == 'failure'
-        run: |
-          corepack enable
-          corepack prepare pnpm@8.15.6 --activate
-      - name: 🔍 Lint • Type-check • Unit tests
-        run: pnpm run ci          # (script already exists in package.json)
+          run_install: true      # auto-installs deps
+          standalone: true
+
+      # 2️⃣  Set up Node (pnpm now in PATH, cache restore safe)
+      - name: 🔧 Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # 3️⃣  Lint / type-check / unit tests
+      - name: 🔍 Lint, type-check, tests
+        run: pnpm run ci
