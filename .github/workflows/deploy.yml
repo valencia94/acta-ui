@@ -83,6 +83,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Enable CORS for API Gateway
+        env:
+          NODE_OPTIONS: --experimental-strip-types
+        run: node scripts/enable-cors.ts
+
       - name: ☁️ Sync to S3
         run: |
           aws s3 sync dist/ s3://$S3_BUCKET/ \
