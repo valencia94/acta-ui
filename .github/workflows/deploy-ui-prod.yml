@@ -25,9 +25,8 @@ jobs:
       - name: 🟣 Set up PNPM
         uses: pnpm/action-setup@v4
         with:
-          version: 8
-          run_install: false
-          standalone: true      # critical – exports a global binary
+          run_install: false        # or true
+          standalone: true
 
       ## 3️⃣  Set up Node (now PNPM exists, cache restore won’t fail)
       - name: 🔧 Set up Node ${{ env.NODE_VERSION }}
