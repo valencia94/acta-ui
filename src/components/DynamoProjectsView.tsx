@@ -27,7 +27,7 @@ export default function DynamoProjectsView({
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await getProjectsByPM(userEmail);
+        const data = await getProjectsByPM(userEmail, false); // includeArchived flag
         setProjects(data ?? []);
       } catch (err) {
         console.error(err);
