@@ -1,4 +1,5 @@
 name: 🚀 Deploy ACTA-UI to S3 + CloudFront
+
 on:
   push:
     branches: [develop, main]
@@ -8,57 +9,60 @@ env:
   S3_BUCKET: acta-ui-frontend-prod
   CLOUDFRONT_DISTRIBUTION_ID: EPQU7PVDLQXUA
   NODE_VERSION: 20
-  API_ID: ${{ secrets.PROD_REST_API_ID }}   # <- ensures env always set
-  API_STAGE: prod
+  # API identifiers pulled from repo secrets  🔽
+  API_ID:       ${{ secrets.ACTA_API_ID }}
+  API_ROOT_ID:  ${{ secrets.ACTA_API_ROOT_ID }}   # safe even if script ignores it
+  API_STAGE:    prod
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      id-token: write   # for OIDC role
 
     steps:
-      # 1️⃣ Checkout
+      # 1️⃣  Checkout source
       - uses: actions/checkout@v4
 
-      # 2️⃣ PNPM first
+      # 2️⃣  Install PNPM (puts binary in /usr/local/bin)
       - name: 🟣 Set up PNPM
         uses: pnpm/action-setup@v4
         with:
           standalone: true
           run_install: false
 
-      # 3️⃣ Node with pnpm cache
-      - name: 🔧 Set up Node ${{ env.NODE_VERSION }}
+      # 3️⃣  Set up Node with PNPM cache
+      - name: 🔧 Use Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      # 4️⃣ Install deps
-      - run: pnpm install --frozen-lockfile
-        name: 📦 Install deps
+      # 4️⃣  Install dependencies
+      - name: 📦 Install deps
+        run: pnpm install --frozen-lockfile
 
-      # 5️⃣ AWS creds **before** any SDK/CLI use
+      # 5️⃣  Configure AWS credentials *before* any AWS SDK/CLI
       - name: 🔒 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          # If you use static keys instead, uncomment:
+          # Uncomment below if you use static keys instead of OIDC
           # aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # 6️⃣ Enable CORS (now has creds + API_ID)
-      - name: ⚙️ Enable CORS on API Gateway (idempotent)
+      # 6️⃣  Enable CORS on API Gateway (needs creds + API_ID)
+      - name: ⚙️ Enable CORS on API Gateway
         run: node scripts/enable-cors.js
+        # No extra env: block needed; script inherits API_ID, API_ROOT_ID, API_STAGE
 
-      # 7️⃣ Build
+      # 7️⃣  Build the UI
       - name: 🏗️ Build
         run: pnpm run build
 
-      # 8️⃣ Deploy static site
+      # 8️⃣  Deploy to S3 + invalidate CloudFront
       - name: 📤 Sync to S3
         run: aws s3 sync dist/ s3://$S3_BUCKET/ --delete --region $AWS_REGION
 
