@@ -4,8 +4,7 @@ on:
   push:
     branches: [develop, main]
 
-# ---------- Global environment ----------
-env:
+env:                      # ---------- Global env ----------
   AWS_REGION: us-east-2
   S3_BUCKET: acta-ui-frontend-prod
   CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
@@ -13,61 +12,67 @@ env:
   API_ID:      ${{ secrets.ACTA_API_ID }}
   API_ROOT_ID: ${{ secrets.ACTA_API_ROOT_ID }}
   API_STAGE:   prod
-# ----------------------------------------
+# -----------------------------------------------------------
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write   # OIDC role for AWS
+      id-token: write   # for GitHub-OIDC role
 
     steps:
-      - uses: actions/checkout@v4                               # 1️⃣
+      - uses: actions/checkout@v4                            # 1️⃣ Checkout
 
-      - name: 🟣 Set up PNPM                                     # 2️⃣
+      - name: 🟣 Set up PNPM                                 # 2️⃣ PNPM first
         uses: pnpm/action-setup@v4
         with:
           standalone: true
           run_install: false
 
-      - name: 🔧 Set up Node ${{ env.NODE_VERSION }}             # 3️⃣
+      - name: 🔧 Set up Node ${{ env.NODE_VERSION }}         # 3️⃣ Node cache
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      - name: 📦 Install deps                                    # 4️⃣
+      - name: 📦 Install deps                                # 4️⃣ Deps
         run: pnpm install --frozen-lockfile
 
-      - name: 🔒 Configure AWS credentials                       # 5️⃣
+      - name: 🔒 Configure AWS credentials                   # 5️⃣ Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          # If you still rely on static keys, uncomment below:
+          # For static keys, uncomment:
           # aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: ✅ Guard required env vars                         # 6️⃣
+      - name: ✅ Guard API_ID                                # 6️⃣ Fail-fast
         run: |
-          for var in API_ID CLOUDFRONT_DISTRIBUTION_ID; do
-            if [ -z "${!var}" ]; then
-              echo "❌ $var is empty – aborting" >&2
-              exit 1
-            fi
-          done
+          if [ -z "$API_ID" ]; then
+            echo "❌ API_ID is empty – aborting" >&2
+            exit 1
+          fi
 
-      - name: ⚙️ Enable CORS on API Gateway                      # 7️⃣
+      - name: 🔄 Sanitise CloudFront ID                      # 7️⃣ Trim & export
+        run: |
+          CF_CLEAN=$(echo -n "$CLOUDFRONT_DISTRIBUTION_ID" | tr -d '[:space:]')
+          if [ -z "$CF_CLEAN" ]; then
+            echo "❌ CLOUDFRONT_DISTRIBUTION_ID is empty – aborting" >&2
+            exit 1
+          fi
+          echo "CF_ID=$CF_CLEAN" >> "$GITHUB_ENV"
+          echo "→ Using CloudFront ID: $CF_CLEAN"
+
+      - name: ⚙️ Enable CORS on API Gateway                  # 8️⃣ CORS script
         run: node scripts/enable-cors.js
 
-      - name: 🏗️ Build                                           # 8️⃣
+      - name: 🏗️ Build                                      # 9️⃣ Build
         run: pnpm run build
 
-      - name: 📤 Sync to S3                                      # 9️⃣
+      - name: 📤 Sync to S3                                  # 🔟 Deploy
         run: aws s3 sync dist/ "s3://$S3_BUCKET/" --delete --region "$AWS_REGION"
 
-      - name: 🚀 Invalidate CloudFront                           # 🔟
-        run: aws cloudfront create-invalidation \
-             --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
-             --paths '/*'
+      - name: 🚀 Invalidate CloudFront                       # 1️⃣1️⃣ Invalidate
+        run: aws cloudfront create-invalidation --distribution-id "$CF_ID" --paths '/*'
