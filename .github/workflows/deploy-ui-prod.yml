@@ -7,7 +7,7 @@ on:
 env:
   AWS_REGION: us-east-2
   S3_BUCKET: acta-ui-frontend-prod
-  CLOUDFRONT_DISTRIBUTION_ID: EPQU7PVDLQXUA
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
   NODE_VERSION: 20
   # API identifiers pulled from repo secrets  🔽
   API_ID:       ${{ secrets.ACTA_API_ID }}
@@ -65,6 +65,13 @@ jobs:
       # 8️⃣  Deploy to S3 + invalidate CloudFront
       - name: 📤 Sync to S3
         run: aws s3 sync dist/ s3://$S3_BUCKET/ --delete --region $AWS_REGION
+
+      - name: ✅ Verify CloudFront ID
+        run: |
+          if [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+            echo "❌ CLOUDFRONT_DISTRIBUTION_ID is empty" >&2
+            exit 1
+          fi
 
       - name: 🚀 Invalidate CloudFront
         run: aws cloudfront create-invalidation \
