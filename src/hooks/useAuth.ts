@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { getCurrentUser } from "@/lib/api-amplify";
 import { skipAuth } from "@/env.variables";
 
@@ -13,8 +14,13 @@ export function useAuth() {
           setUser({ email: "admin@ikusi.com" });
           return;
         }
+
+        const session = await fetchAuthSession();
         const current = await getCurrentUser();
-        setUser({ email: String(current?.email || "") });
+        const email = String(
+          current?.email || session.tokens?.idToken?.payload?.email || "",
+        );
+        setUser({ email });
       } catch {
         if (skipAuth) setUser({ email: "admin@ikusi.com" });
         else setUser(null);

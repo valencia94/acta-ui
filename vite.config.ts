@@ -5,10 +5,6 @@ import path from "path";
 import tailwindcss from "tailwindcss";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
-import { existsSync, copyFileSync } from "fs";
-
-const srcPath = "src/aws-exports.js";
-const destPath = "dist/aws-exports.js";
 
 export default defineConfig({
   root: ".",
@@ -17,31 +13,17 @@ export default defineConfig({
     {
       name: "copy-aws-exports",
       closeBundle() {
-        console.log("📋 Copying browser-compatible aws-exports.js to dist folder...");
-        const srcPath = "src/aws-exports.js";
-        const destPath = "dist/aws-exports.js";
-
-        if (fs.existsSync(srcPath)) {
-          if (!fs.existsSync("dist")) {
-            fs.mkdirSync("dist", { recursive: true });
-          }
-          fs.copyFileSync(srcPath, destPath);
-          console.log("✅ aws-exports.js copied!");
+        const src = path.resolve(__dirname, "public/aws-exports.js");
+        const dest = path.resolve(__dirname, "dist/aws-exports.js");
+        if (fs.existsSync(src)) {
+          fs.copyFileSync(src, dest);
         } else {
-          console.warn("⚠️ aws-exports.js not found in src/. Skipping copy.");
+          console.warn("⚠️ aws-exports.js not found in public/. Skipping copy.");
         }
       },
     },
     react(),
     svgr(),
-    {
-      name: "copy-aws-exports",
-      closeBundle() {
-        if (existsSync(srcPath)) {
-          copyFileSync(srcPath, destPath);
-        }
-      },
-    },
   ],
   resolve: {
     alias: {
