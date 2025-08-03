@@ -1,7 +1,6 @@
 // src/components/DynamoProjectsView.tsx
-import { useEffect, useState } from 'react';
-import { getProjectsByPM } from '@/lib/api';
-import { getCurrentUser } from 'aws-amplify/auth';
+import { useEffect, useState } from "react";
+import { getProjectsByPM } from "@/lib/api";
 
 interface Project {
   id: string;
@@ -11,10 +10,15 @@ interface Project {
 }
 
 interface Props {
+  /** Logged-in PM’s email (passed from Dashboard) */
+  userEmail: string;
   onProjectSelect?: (projectId: string) => void;
 }
 
-export default function DynamoProjectsView({ onProjectSelect }: Props) {
+export default function DynamoProjectsView({
+  userEmail,
+  onProjectSelect,
+}: Props) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,27 +26,22 @@ export default function DynamoProjectsView({ onProjectSelect }: Props) {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const { username: email } = await getCurrentUser();
-        const data = await getProjectsByPM(email, false);
+        // use the email passed in props, no extra auth call
+        const data = await getProjectsByPM(userEmail, /* includeArchived */ false);
         setProjects(data || []);
-      } catch (err: any) {
-        console.error('Failed to load projects:', err);
-        setError('Failed to load projects. Please try again.');
+      } catch (err: unknown) {
+        console.error("Failed to load projects:", err);
+        setError("Failed to load projects. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
-    loadProjects();
-  }, []);
+    if (userEmail) loadProjects();
+  }, [userEmail]);
 
-  if (loading) {
-    return <div className="text-center text-gray-500">Loading projects...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
-  }
+  if (loading) return <div className="text-center text-gray-500">Loading projects…</div>;
+  if (error)   return <div className="text-center text-red-500">{error}</div>;
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-md">
@@ -67,11 +66,15 @@ export default function DynamoProjectsView({ onProjectSelect }: Props) {
               <td className="py-2">{proj.name}</td>
               <td className="py-2">{proj.pm}</td>
               <td className="py-2">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                  proj.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                  proj.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                    proj.status === "Approved"
+                      ? "bg-green-100 text-green-800"
+                      : proj.status === "Pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {proj.status}
                 </span>
               </td>
