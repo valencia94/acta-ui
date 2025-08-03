@@ -7,17 +7,31 @@ import "@/styles/amplify-overrides.css";
 import "@/tailwind.css";
 import "@aws-amplify/ui-react/styles.css";
 
-async function configureAmplify() {
-  if (!(window as any).awsmobile) {
-    await new Promise((resolve) =>
-      window.addEventListener("awsmobile-loaded", resolve, { once: true }),
+async function loadAwsConfig() {
+  if ((window as any).awsmobile) return (window as any).awsmobile;
+
+  await new Promise((resolve) => {
+    const timer = setTimeout(resolve, 5000);
+    window.addEventListener(
+      "awsmobile-loaded",
+      () => {
+        clearTimeout(timer);
+        resolve(null);
+      },
+      { once: true },
     );
-  }
-  Amplify.configure((window as any).awsmobile);
+  });
+
+  if ((window as any).awsmobile) return (window as any).awsmobile;
+
+  const cfg = await import("@/aws-exports");
+  return cfg.default || cfg;
 }
 
 async function init() {
-  await configureAmplify();
+  const config = await loadAwsConfig();
+  Amplify.configure(config);
+
   createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
       <App />
