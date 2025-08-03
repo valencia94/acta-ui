@@ -1,4 +1,3 @@
-// src/components/DynamoProjectsView.tsx
 import { useEffect, useState } from "react";
 import { getProjectsByPM } from "@/lib/api";
 
@@ -10,74 +9,63 @@ interface Project {
 }
 
 interface Props {
-  /** Logged-in PM’s email (passed from Dashboard) */
+  /** Logged-in PM’s email – required to query DynamoDB */
   userEmail: string;
   onProjectSelect?: (projectId: string) => void;
+  selectedProjectId: string;  // if you highlight current row (optional)
 }
 
 export default function DynamoProjectsView({
   userEmail,
   onProjectSelect,
+  selectedProjectId,
 }: Props) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadProjects = async () => {
+    const load = async () => {
       try {
-        // use the email passed in props, no extra auth call
-        const data = await getProjectsByPM(userEmail, /* includeArchived */ false);
-        setProjects(data || []);
-      } catch (err: unknown) {
-        console.error("Failed to load projects:", err);
-        setError("Failed to load projects. Please try again.");
+        const data = await getProjectsByPM(userEmail);
+        setProjects(data ?? []);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load projects.");
       } finally {
         setLoading(false);
       }
     };
-
-    if (userEmail) loadProjects();
+    if (userEmail) load();
   }, [userEmail]);
 
-  if (loading) return <div className="text-center text-gray-500">Loading projects…</div>;
-  if (error)   return <div className="text-center text-red-500">{error}</div>;
+  if (loading) return <div className="text-gray-500">Loading projects…</div>;
+  if (error)   return <div className="text-red-500">{error}</div>;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md">
-      <h3 className="text-lg font-semibold mb-4">Your Projects</h3>
-      <table className="w-full table-auto text-left">
-        <thead>
-          <tr className="text-sm text-gray-600 border-b">
-            <th className="py-2">Project ID</th>
-            <th className="py-2">Project Name</th>
-            <th className="py-2">PM</th>
-            <th className="py-2">Status</th>
+    <div className="bg-white shadow rounded-lg overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-gray-50 text-xs text-gray-600 uppercase">
+          <tr>
+            <th className="px-4 py-2">ID</th>
+            <th className="px-4 py-2">Name</th>
+            <th className="px-4 py-2">PM</th>
+            <th className="px-4 py-2">Status</th>
           </tr>
         </thead>
         <tbody>
-          {projects.map((proj) => (
+          {projects.map((p) => (
             <tr
-              key={proj.id}
-              className="border-b hover:bg-gray-50 cursor-pointer"
-              onClick={() => onProjectSelect?.(proj.id)}
+              key={p.id}
+              onClick={() => onProjectSelect?.(p.id)}
+              className={`cursor-pointer hover:bg-gray-50 ${
+                selectedProjectId === p.id ? "bg-indigo-50" : ""
+              }`}
             >
-              <td className="py-2 font-medium">{proj.id}</td>
-              <td className="py-2">{proj.name}</td>
-              <td className="py-2">{proj.pm}</td>
-              <td className="py-2">
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                    proj.status === "Approved"
-                      ? "bg-green-100 text-green-800"
-                      : proj.status === "Pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {proj.status}
-                </span>
-              </td>
+              <td className="px-4 py-2 font-medium">{p.id}</td>
+              <td className="px-4 py-2">{p.name}</td>
+              <td className="px-4 py-2">{p.pm}</td>
+              <td className="px-4 py-2">{p.status}</td>
             </tr>
           ))}
         </tbody>
