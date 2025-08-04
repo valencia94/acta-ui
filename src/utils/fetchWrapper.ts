@@ -1,13 +1,33 @@
 // src/utils/fetchWrapper.ts
-import { fetchAuthSession } from "aws-amplify/auth";
+import {
+  fetchAuthSession,
+  getCurrentUser,
+} from "aws-amplify/auth";
 import { skipAuth } from "@/env.variables";
+import {
+  SignatureV4,
+  HttpRequest,
+} from "@aws-sdk/signature-v4";
+import { Sha256 } from "@aws-crypto/sha256-js";
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
+import { defaultProvider } from "@aws-sdk/credential-provider-node";
+import { parseUrl } from "@aws-sdk/url-parser";
+import { HttpHandler } from "@aws-sdk/fetch-http-handler";
+import { Amplify } from "aws-amplify";
+
+// 👇 Match API Gateway endpoints that require SigV4
+const needsSigV4 = (url: string) =>
+  url.includes("/projects-for-pm") ||
+  url.includes("/send-approval-email") ||
+  url.includes("/check-document") ||
+  url.includes("/all-projects") ||
+  url.includes("/download-acta") ||
+  url.includes("/extract-project-place");
 
 /**
- * Get the current authentication token
+ * Get Cognito JWT token or IAM credentials depending on endpoint
  */
 export async function getAuthToken(): Promise<string | null> {
-  // Use static import for skipAuth
-  // In skip auth mode, don't try to get real tokens
   if (skipAuth) {
     console.log("🔓 Skip auth mode: Using mock token");
     return "mock-auth-token-skip-mode";
@@ -16,12 +36,6 @@ export async function getAuthToken(): Promise<string | null> {
   try {
     console.log("🔐 Attempting to fetch auth session...");
     const session = await fetchAuthSession();
-    console.log("📡 Auth session response:", {
-      hasTokens: !!session.tokens,
-      hasIdToken: !!session.tokens?.idToken,
-      hasAccessToken: !!session.tokens?.accessToken,
-      credentials: !!session.credentials,
-    });
 
     const token = session.tokens?.idToken?.toString();
     if (token) {
@@ -38,99 +52,116 @@ export async function getAuthToken(): Promise<string | null> {
 }
 
 /**
- * Core fetch wrapper that throws on non-OK and parses JSON.
- * Automatically includes authentication headers when available.
- * @param input  URL or RequestInfo
- * @param init   Fetch options
- * @returns      Parsed JSON of type T
+ * Core fetcher that dynamically signs SigV4 requests or uses Cognito JWT
  */
 export async function fetcher<T>(
   input: RequestInfo,
-  init?: RequestInit,
+  init?: RequestInit
 ): Promise<T> {
   const url = typeof input === "string" ? input : input.url;
+  const isSig = needsSigV4(url);
 
-  // Get authentication token
-  const token = await getAuthToken();
+  let response;
 
-  // Prepare headers
-  const headers = new Headers(init?.headers);
+  if (isSig) {
+    // ✅ Use SigV4 signing
+    console.log("🔐 Using SigV4 credentials for:", url);
 
-  // Add authentication header if token is available
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+    const session = await fetchAuthSession();
+    const creds = session.credentials;
 
-  // Add default headers
-  if (!headers.has("Content-Type") && init?.method !== "GET") {
-    headers.set("Content-Type", "application/json");
-  }
+    const signer = new SignatureV4({
+      service: "execute-api",
+      region: import.meta.env.VITE_APP_REGION,
+      credentials: {
+        accessKeyId: creds.accessKeyId,
+        secretAccessKey: creds.secretAccessKey,
+        sessionToken: creds.sessionToken,
+        expiration: creds.expiration,
+      },
+      sha256: Sha256,
+    });
 
-  const enhancedInit: RequestInit = {
-    ...init,
-    headers,
-    credentials: "include", // Include cookies for session management
-  };
+    const httpRequest = new HttpRequest({
+      ...parseUrl(url),
+      method: init?.method ?? "GET",
+      headers: {
+        ...(init?.headers || {}),
+        "Content-Type": "application/json",
+        host: new URL(url).host,
+      },
+      body: init?.body,
+    });
 
-  console.log(`🌐 Fetching: ${input}`, {
-    method: enhancedInit.method || "GET",
-    hasAuth: !!token,
-    headers: Object.fromEntries(headers.entries()),
-  });
+    const signed = await signer.sign(httpRequest);
 
-  const res = await fetch(input, enhancedInit);
-
-  console.log(`📡 Response: ${res.status} ${res.statusText}`);
-
-  if (!res.ok) {
-    // Enhanced error handling with more context
-    let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+    const handler = new HttpHandler();
+    response = await handler.handle(signed as any);
+    const raw = await response.response.text();
 
     try {
-      const errorText = await res.text();
-      if (errorText) {
-        errorMessage += ` - ${errorText}`;
-      }
-    } catch (e) {
-      // If we can't read the error text, just use the status
+      return JSON.parse(raw) as T;
+    } catch {
+      throw new Error("Failed to parse JSON from SigV4 response");
+    }
+  } else {
+    // ✅ Use Cognito JWT fallback
+    const token = await getAuthToken();
+    const headers = new Headers(init?.headers);
+
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    if (!headers.has("Content-Type") && init?.method !== "GET") {
+      headers.set("Content-Type", "application/json");
     }
 
-    // Add context for common error scenarios
-    if (res.status === 403) {
-      errorMessage += " (Authentication required or insufficient permissions)";
-    } else if (res.status === 502) {
-      errorMessage +=
-        " (Backend Lambda function error - check CloudWatch logs)";
-    } else if (res.status === 404) {
-      errorMessage += " (Endpoint not found - check API Gateway routes)";
-    }
-    console.error("❌ Fetch error:", errorMessage);
-    throw new Error(errorMessage);
-  }
+    const enhancedInit: RequestInit = {
+      ...init,
+      headers,
+      credentials: "include",
+    };
 
-  // Parse JSON response
-  try {
-    const data = await res.json();
-    console.log("✅ Response data:", data);
-    return data as T;
-  } catch (error) {
-    console.error("❌ Failed to parse JSON response:", error);
-    throw new Error("Invalid JSON response from server");
+    console.log(`🌐 Fetching: ${url}`, {
+      method: enhancedInit.method || "GET",
+      hasAuth: !!token,
+      headers: Object.fromEntries(headers.entries()),
+    });
+
+    const res = await fetch(url, enhancedInit);
+
+    if (!res.ok) {
+      let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+      try {
+        const errorText = await res.text();
+        if (errorText) errorMessage += ` - ${errorText}`;
+      } catch {}
+
+      if (res.status === 403)
+        errorMessage += " (Authentication required or insufficient permissions)";
+      if (res.status === 502)
+        errorMessage += " (Lambda function error)";
+      if (res.status === 404)
+        errorMessage += " (Endpoint not found)";
+      console.error("❌ Fetch error:", errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    try {
+      const data = await res.json();
+      console.log("✅ Response data:", data);
+      return data as T;
+    } catch (error) {
+      console.error("❌ Failed to parse JSON response:", error);
+      throw new Error("Invalid JSON response from server");
+    }
   }
 }
 
-/**
- * Shorthand for GET requests.
- */
 export function get<T>(url: string): Promise<T> {
   return fetcher<T>(url, {
     credentials: "include",
   });
 }
 
-/**
- * Shorthand for POST requests with JSON body.
- */
 export function post<T>(url: string, body?: unknown): Promise<T> {
   return fetcher<T>(url, {
     method: "POST",
