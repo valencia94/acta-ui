@@ -1,19 +1,11 @@
 // src/utils/fetchWrapper.ts
-import {
-  fetchAuthSession,
-  getCurrentUser,
-} from "aws-amplify/auth";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { skipAuth } from "@/env.variables";
-import {
-  SignatureV4,
-  HttpRequest,
-} from "@aws-sdk/signature-v4";
+import { SignatureV4 } from "@smithy/signature-v4";
+import { HttpRequest } from "@smithy/protocol-http";
 import { Sha256 } from "@aws-crypto/sha256-js";
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
-import { defaultProvider } from "@aws-sdk/credential-provider-node";
-import { parseUrl } from "@aws-sdk/url-parser";
-import { HttpHandler } from "@aws-sdk/fetch-http-handler";
-import { Amplify } from "aws-amplify";
+import { parseUrl } from "@smithy/url-parser";
+import { FetchHttpHandler } from "@smithy/fetch-http-handler";
 
 // 👇 Match API Gateway endpoints that require SigV4
 const needsSigV4 = (url: string) =>
@@ -82,11 +74,17 @@ export async function fetcher<T>(
       sha256: Sha256,
     });
 
+    const headerEntries = init?.headers
+      ? init.headers instanceof Headers
+        ? Object.fromEntries(init.headers.entries())
+        : (init.headers as Record<string, string>)
+      : {};
+
     const httpRequest = new HttpRequest({
       ...parseUrl(url),
       method: init?.method ?? "GET",
       headers: {
-        ...(init?.headers || {}),
+        ...headerEntries,
         "Content-Type": "application/json",
         host: new URL(url).host,
       },
@@ -95,7 +93,7 @@ export async function fetcher<T>(
 
     const signed = await signer.sign(httpRequest);
 
-    const handler = new HttpHandler();
+    const handler = new FetchHttpHandler();
     response = await handler.handle(signed as any);
     const raw = await response.response.text();
 
