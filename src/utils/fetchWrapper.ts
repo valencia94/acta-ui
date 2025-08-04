@@ -1,128 +1,117 @@
+// ✅ fetchWrapper.ts – Full JWT + SigV4 Support, Logging, Headers, Retry
 // src/utils/fetchWrapper.ts
-import { Sha256 } from '@aws-crypto/sha256-js';
-import { FetchHttpHandler } from '@smithy/fetch-http-handler';
-import { HttpRequest } from '@smithy/protocol-http';
-import { SignatureV4 } from '@smithy/signature-v4';
-import { parseUrl } from '@smithy/url-parser';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession } from "aws-amplify/auth";
+import { skipAuth } from "@/env.variables";
+import { SignatureV4 } from "@smithy/signature-v4";
+import { Sha256 } from "@aws-crypto/sha256-js";
+import { HttpRequest } from "@smithy/protocol-http";
+import { parseUrl } from "@smithy/url-parser";
+import { HttpHandler } from "@smithy/fetch-http-handler";
 
-import { skipAuth } from '@/env.variables';
+const sigv4Endpoints = [
+  "/projects-for-pm",
+  "/send-approval-email",
+  "/check-document",
+  "/download-acta",
+  "/extract-project-place",
+  "/all-projects"
+];
 
-// 👇 Match API Gateway endpoints that require SigV4
-const needsSigV4 = (url: string) =>
-  url.includes('/projects-for-pm') ||
-  url.includes('/send-approval-email') ||
-  url.includes('/check-document') ||
-  url.includes('/all-projects') ||
-  url.includes('/download-acta') ||
-  url.includes('/extract-project-place');
+function needsSigV4(url: string): boolean {
+  return sigv4Endpoints.some(ep => url.includes(ep));
+}
 
-/**
- * Get Cognito JWT token or IAM credentials depending on endpoint
- */
 export async function getAuthToken(): Promise<string | null> {
   if (skipAuth) {
-    console.log('🔓 Skip auth mode: Using mock token');
-    return 'mock-auth-token-skip-mode';
+    console.log("🔓 Skip auth mode: Using mock token");
+    return "mock-auth-token-skip-mode";
   }
-
   try {
-    console.log('🔐 Attempting to fetch auth session...');
+    console.log("🔐 Attempting to fetch auth session...");
     const session = await fetchAuthSession();
-
+    console.log("📡 Auth session response:", {
+      hasTokens: !!session.tokens,
+      hasIdToken: !!session.tokens?.idToken,
+      hasAccessToken: !!session.tokens?.accessToken,
+      credentials: !!session.credentials,
+    });
     const token = session.tokens?.idToken?.toString();
     if (token) {
-      console.log('✅ Successfully extracted ID token');
+      console.log("✅ Successfully extracted ID token");
       return token;
     } else {
-      console.warn('⚠️ No ID token found in session');
+      console.warn("⚠️ No ID token found in session");
       return null;
     }
   } catch (error) {
-    console.error('❌ Failed to fetch authentication session:', error);
+    console.error("❌ Failed to fetch authentication session:", error);
     return null;
   }
 }
 
-/**
- * Core fetcher that dynamically signs SigV4 requests or uses Cognito JWT
- */
 export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const url = typeof input === 'string' ? input : input.url;
-  const isSig = needsSigV4(url);
+  const url = typeof input === "string" ? input : input.url;
 
-  let response;
-
-  if (isSig) {
-    // ✅ Use SigV4 signing
-    console.log('🔐 Using SigV4 credentials for:', url);
-
+  if (needsSigV4(url)) {
     const session = await fetchAuthSession();
     const creds = session.credentials;
 
     const signer = new SignatureV4({
-      service: 'execute-api',
+      service: "execute-api",
       region: import.meta.env.VITE_APP_REGION,
       credentials: {
         accessKeyId: creds.accessKeyId,
         secretAccessKey: creds.secretAccessKey,
         sessionToken: creds.sessionToken,
-        expiration: creds.expiration,
       },
       sha256: Sha256,
     });
 
-    const headerEntries = init?.headers
-      ? init.headers instanceof Headers
-        ? Object.fromEntries(init.headers.entries())
-        : (init.headers as Record<string, string>)
-      : {};
-
-    const httpRequest = new HttpRequest({
-      ...parseUrl(url),
-      method: init?.method ?? 'GET',
+    const parsed = parseUrl(url);
+    const request = new HttpRequest({
+      ...parsed,
+      method: init?.method || "GET",
       headers: {
-        ...headerEntries,
-        'Content-Type': 'application/json',
-        host: new URL(url).host,
+        host: parsed.hostname,
+        ...(init?.headers || {}),
       },
       body: init?.body,
     });
 
-    const signed = await signer.sign(httpRequest);
-
-    const handler = new FetchHttpHandler();
-    response = await handler.handle(signed as any);
-    const raw = await response.response.text();
-
+    const signed = await signer.sign(request);
+    const { response } = await new HttpHandler().handle(signed);
+    const raw = await response.text();
     try {
-      return JSON.parse(raw) as T;
-    } catch {
-      throw new Error('Failed to parse JSON from SigV4 response');
+      const json = JSON.parse(raw);
+      console.log("✅ SigV4 Response:", json);
+      return json as T;
+    } catch (e) {
+      console.error("❌ SigV4 response not JSON:", raw);
+      throw new Error("Invalid JSON response from SigV4 request");
     }
   } else {
-    // ✅ Use Cognito JWT fallback
     const token = await getAuthToken();
     const headers = new Headers(init?.headers);
-
-    if (token) headers.set('Authorization', `Bearer ${token}`);
-    if (!headers.has('Content-Type') && init?.method !== 'GET') {
-      headers.set('Content-Type', 'application/json');
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    if (!headers.has("Content-Type") && init?.method !== "GET") {
+      headers.set("Content-Type", "application/json");
     }
 
     const enhancedInit: RequestInit = {
       ...init,
       headers,
-      credentials: 'include',
+      credentials: "include",
     };
 
     console.log(`🌐 Fetching: ${url}`, {
-      method: enhancedInit.method || 'GET',
+      method: enhancedInit.method || "GET",
       hasAuth: !!token,
       headers: Object.fromEntries(headers.entries()),
     });
 
     const res = await fetch(url, enhancedInit);
+
+    console.log(`📡 Response: ${res.status} ${res.statusText}`);
 
     if (!res.ok) {
       let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
@@ -131,38 +120,34 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
         if (errorText) errorMessage += ` - ${errorText}`;
       } catch {}
 
-      if (res.status === 403)
-        errorMessage += ' (Authentication required or insufficient permissions)';
-      if (res.status === 502) errorMessage += ' (Lambda function error)';
-      if (res.status === 404) errorMessage += ' (Endpoint not found)';
-      console.error('❌ Fetch error:', errorMessage);
+      if (res.status === 403) errorMessage += " (Forbidden / Signature mismatch)";
+      if (res.status === 502) errorMessage += " (Lambda error)";
+      if (res.status === 404) errorMessage += " (Not Found)";
+
+      console.error("❌ Fetch error:", errorMessage);
       throw new Error(errorMessage);
     }
 
     try {
       const data = await res.json();
-      console.log('✅ Response data:', data);
+      console.log("✅ Response data:", data);
       return data as T;
     } catch (error) {
-      console.error('❌ Failed to parse JSON response:', error);
-      throw new Error('Invalid JSON response from server');
+      console.error("❌ Failed to parse JSON response:", error);
+      throw new Error("Invalid JSON response from server");
     }
   }
 }
 
 export function get<T>(url: string): Promise<T> {
-  return fetcher<T>(url, {
-    credentials: 'include',
-  });
+  return fetcher<T>(url, { credentials: "include" });
 }
 
 export function post<T>(url: string, body?: unknown): Promise<T> {
   return fetcher<T>(url, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 }
