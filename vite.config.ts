@@ -5,6 +5,11 @@ import path from "path";
 import tailwindcss from "tailwindcss";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
+import { fileURLToPath } from "url";
+
+// ✅ Emulates __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   root: ".",
@@ -17,6 +22,7 @@ export default defineConfig({
         const dest = path.resolve(__dirname, "dist/aws-exports.js");
         if (fs.existsSync(src)) {
           fs.copyFileSync(src, dest);
+          console.log("✅ Copied aws-exports.js to dist/");
         } else {
           console.warn("⚠️ aws-exports.js not found in public/. Skipping copy.");
         }
