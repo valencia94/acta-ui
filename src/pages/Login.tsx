@@ -7,14 +7,14 @@ import {
   signIn,
   signOut,
   signUp,
-} from "aws-amplify/auth";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+} from 'aws-amplify/auth';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 
-import { skipAuth } from "@/env.variables";
-import awsConfig from "@/aws-exports.js";
+import awsConfig from '@/aws-exports.js';
+import { skipAuth } from '@/env.variables';
 
 interface FormData {
   email: string;
@@ -24,22 +24,22 @@ interface FormData {
   newPassword?: string;
 }
 
-type AuthMode = "signin" | "signup" | "confirm" | "forgot" | "reset";
+type AuthMode = 'signin' | 'signup' | 'confirm' | 'forgot' | 'reset';
 
-const logoSrc = "/assets/ikusi-logo.png";
+const logoSrc = '/assets/ikusi-logo.png';
 
 export default function Login() {
   const nav = useNavigate();
   const { register, handleSubmit, watch, reset } = useForm<FormData>();
-  const [authMode, setAuthMode] = useState<AuthMode>("signin");
+  const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>('');
 
   // Ensure document title is always correct
   useEffect(() => {
-    document.title = "Ikusi · Acta Platform";
+    document.title = 'Ikusi · Acta Platform';
   }, []);
 
   useEffect(() => {
@@ -61,34 +61,32 @@ export default function Login() {
     try {
       if (skipAuth) {
         // In skip auth mode, just simulate login
-        localStorage.setItem("ikusi.jwt", "dev-token");
-        nav("/dashboard");
+        localStorage.setItem('ikusi.jwt', 'dev-token');
+        nav('/dashboard');
         return;
       }
 
       switch (authMode) {
-        case "signin":
+        case 'signin':
           await handleSignIn(data);
           break;
-        case "signup":
+        case 'signup':
           await handleSignUp(data);
           break;
-        case "confirm":
+        case 'confirm':
           await handleConfirmSignUp(data);
           break;
-        case "forgot":
+        case 'forgot':
           await handleForgotPassword(data);
           break;
-        case "reset":
+        case 'reset':
           await handleResetPassword(data);
           break;
       }
     } catch (error: unknown) {
-      console.error("Auth error:", error);
+      console.error('Auth error:', error);
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "An error occurred during authentication";
+        error instanceof Error ? error.message : 'An error occurred during authentication';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -96,40 +94,33 @@ export default function Login() {
   }
 
   async function handleSignIn({ email, password }: FormData) {
-    console.log("🔐 Starting sign-in process...");
+    console.log('🔐 Starting sign-in process...');
     try {
       // Use module import for AWS Amplify config
-      if (
-        !awsConfig ||
-        !awsConfig.aws_user_pools_id ||
-        !awsConfig.aws_user_pools_web_client_id
-      ) {
-        console.error(
-          "❌ AWS Amplify configuration not found or incomplete!",
-          awsConfig,
-        );
+      if (!awsConfig || !awsConfig.aws_user_pools_id || !awsConfig.aws_user_pools_web_client_id) {
+        console.error('❌ AWS Amplify configuration not found or incomplete!', awsConfig);
         setError(
-          "Authentication configuration not loaded. Please refresh the page or contact support.",
+          'Authentication configuration not loaded. Please refresh the page or contact support.'
         );
         return;
       }
 
       // Log configuration for debugging
-      console.log("📋 AWS Configuration:", {
+      console.log('📋 AWS Configuration:', {
         region: awsConfig.aws_project_region,
         userPoolId: awsConfig.aws_user_pools_id,
         identityPoolId: awsConfig.aws_cognito_identity_pool_id,
-        oauth: awsConfig.oauth?.domain ? "Configured" : "Not configured",
+        oauth: awsConfig.oauth?.domain ? 'Configured' : 'Not configured',
       });
 
       const result = await signIn({ username: email, password });
-      console.log("🔐 Sign-in result:", result);
+      console.log('🔐 Sign-in result:', result);
 
       if (result.isSignedIn) {
-        console.log("✅ User is signed in, fetching session...");
+        console.log('✅ User is signed in, fetching session...');
         // Get a fresh session with tokens
         const session = await fetchAuthSession({ forceRefresh: true });
-        console.log("🎫 Session data:", {
+        console.log('🎫 Session data:', {
           hasTokens: !!session.tokens,
           hasIdToken: !!session.tokens?.idToken,
           hasAccessToken: !!session.tokens?.accessToken,
@@ -139,69 +130,66 @@ export default function Login() {
         // Additional check for Identity Pool credentials which are needed for DynamoDB
         if (!session.credentials) {
           console.warn(
-            "⚠️ No AWS credentials in session - Identity Pool may not be configured correctly",
+            '⚠️ No AWS credentials in session - Identity Pool may not be configured correctly'
           );
         }
 
         if (!session.tokens?.idToken) {
-          console.error("❌ No ID token in session after login!");
-          setError("Login successful but no token received. Please try again.");
+          console.error('❌ No ID token in session after login!');
+          setError('Login successful but no token received. Please try again.');
           return;
         }
 
         const token = session.tokens.idToken.toString();
-        console.log("🎫 Token received, length:", token.length);
+        console.log('🎫 Token received, length:', token.length);
 
         // Log token details for debugging
         try {
-          const tokenParts = token.split(".");
+          const tokenParts = token.split('.');
           if (tokenParts.length === 3) {
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log("🔍 Token payload:", {
+            console.log('🔍 Token payload:', {
               sub: payload.sub,
               email: payload.email,
               exp: new Date(payload.exp * 1000).toISOString(),
-              groups: payload["cognito:groups"] || "None",
+              groups: payload['cognito:groups'] || 'None',
             });
           }
         } catch (e) {
-          console.log("⚠️ Could not parse token parts");
+          console.log('⚠️ Could not parse token parts');
         }
 
         // Store token in localStorage
-        localStorage.setItem("ikusi.jwt", token);
-        console.log("💾 Token saved to localStorage");
+        localStorage.setItem('ikusi.jwt', token);
+        console.log('💾 Token saved to localStorage');
 
         // Dispatch a custom event to notify App component
-        window.dispatchEvent(
-          new CustomEvent("auth-success", { detail: { user: email } }),
-        );
-        console.log("📢 Auth success event dispatched");
+        window.dispatchEvent(new CustomEvent('auth-success', { detail: { user: email } }));
+        console.log('📢 Auth success event dispatched');
 
-        console.log("🔄 Navigating to dashboard...");
-        nav("/dashboard");
+        console.log('🔄 Navigating to dashboard...');
+        nav('/dashboard');
       } else {
-        console.log("❌ Sign-in failed or incomplete");
-        setError("Login was not completed. Please try again.");
+        console.log('❌ Sign-in failed or incomplete');
+        setError('Login was not completed. Please try again.');
       }
     } catch (error) {
-      console.error("❌ Login error:", error);
-      let errorMessage = "Login failed: Unknown error";
+      console.error('❌ Login error:', error);
+      let errorMessage = 'Login failed: Unknown error';
       if (error instanceof Error) {
-        if (error.message.includes("UserPool")) {
+        if (error.message.includes('UserPool')) {
           errorMessage =
-            "Authentication service not configured correctly. Please try again later or contact support.";
-        } else if (error.message.includes("UserNotConfirmed")) {
-          errorMessage =
-            "Email not verified. Please check your email for a verification code.";
-          setAuthMode("confirm");
+            'Authentication service not configured correctly. Please try again later or contact support.';
+        } else if (error.message.includes('UserNotConfirmed')) {
+          errorMessage = 'Email not verified. Please check your email for a verification code.';
+          setAuthMode('confirm');
           setUserEmail(email);
-        } else if (error.message.includes("NotAuthorizedException")) {
-          errorMessage = "Incorrect username or password.";
-        } else if (error.message.includes("UserNotFoundException")) {
-          errorMessage = "Account not found. Please check your email address.";
-        } else if (error.message.includes("TooManyRequestsException")) {
-          errorMessage = "Too many attempts. Please try again later.";
+        } else if (error.message.includes('NotAuthorizedException')) {
+          errorMessage = 'Incorrect username or password.';
+        } else if (error.message.includes('UserNotFoundException')) {
+          errorMessage = 'Account not found. Please check your email address.';
+        } else if (error.message.includes('TooManyRequestsException')) {
+          errorMessage = 'Too many attempts. Please try again later.';
         } else {
           errorMessage = `Login failed: ${error.message}`;
         }
@@ -213,7 +201,7 @@ export default function Login() {
   async function handleSignUp({ email, password }: FormData) {
     const result = await signUp({
       username: email,
-      password: password!,
+      password: password,
       options: {
         userAttributes: {
           email: email,
@@ -221,12 +209,10 @@ export default function Login() {
       },
     });
 
-    if (result.nextStep.signUpStep === "CONFIRM_SIGN_UP") {
+    if (result.nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
       setUserEmail(email);
-      setAuthMode("confirm");
-      setSuccess(
-        "Account created! Please check your email for a confirmation code.",
-      );
+      setAuthMode('confirm');
+      setSuccess('Account created! Please check your email for a confirmation code.');
       reset();
     }
   }
@@ -234,36 +220,31 @@ export default function Login() {
   async function handleConfirmSignUp({ confirmationCode }: FormData) {
     await confirmSignUp({
       username: userEmail,
-      confirmationCode: confirmationCode!,
+      confirmationCode: confirmationCode,
     });
 
-    setSuccess("Account confirmed! You can now sign in.");
-    setAuthMode("signin");
+    setSuccess('Account confirmed! You can now sign in.');
+    setAuthMode('signin');
     reset();
   }
 
   async function handleForgotPassword({ email }: FormData) {
     await resetPassword({ username: email });
     setUserEmail(email);
-    setAuthMode("reset");
-    setSuccess("Password reset code sent to your email.");
+    setAuthMode('reset');
+    setSuccess('Password reset code sent to your email.');
     reset();
   }
 
-  async function handleResetPassword({
-    confirmationCode,
-    newPassword,
-  }: FormData) {
+  async function handleResetPassword({ confirmationCode, newPassword }: FormData) {
     await confirmResetPassword({
       username: userEmail,
-      confirmationCode: confirmationCode!,
-      newPassword: newPassword!,
+      confirmationCode: confirmationCode,
+      newPassword: newPassword,
     });
 
-    setSuccess(
-      "Password reset successfully! You can now sign in with your new password.",
-    );
-    setAuthMode("signin");
+    setSuccess('Password reset successfully! You can now sign in with your new password.');
+    setAuthMode('signin');
     reset();
   }
 
@@ -271,36 +252,36 @@ export default function Login() {
 
   const getTitle = () => {
     switch (authMode) {
-      case "signin":
-        return "Sign In";
-      case "signup":
-        return "Create Account";
-      case "confirm":
-        return "Confirm Account";
-      case "forgot":
-        return "Reset Password";
-      case "reset":
-        return "Set New Password";
+      case 'signin':
+        return 'Sign In';
+      case 'signup':
+        return 'Create Account';
+      case 'confirm':
+        return 'Confirm Account';
+      case 'forgot':
+        return 'Reset Password';
+      case 'reset':
+        return 'Set New Password';
       default:
-        return "Sign In";
+        return 'Sign In';
     }
   };
 
   const getButtonText = () => {
-    if (isLoading) return "Please wait...";
+    if (isLoading) return 'Please wait...';
     switch (authMode) {
-      case "signin":
-        return "Sign In";
-      case "signup":
-        return "Create Account";
-      case "confirm":
-        return "Confirm Account";
-      case "forgot":
-        return "Send Reset Code";
-      case "reset":
-        return "Reset Password";
+      case 'signin':
+        return 'Sign In';
+      case 'signup':
+        return 'Create Account';
+      case 'confirm':
+        return 'Confirm Account';
+      case 'forgot':
+        return 'Send Reset Code';
+      case 'reset':
+        return 'Reset Password';
       default:
-        return "Sign In";
+        return 'Sign In';
     }
   };
 
@@ -319,21 +300,19 @@ export default function Login() {
               alt="Ikusi logo"
               className="mx-auto h-20 w-auto mb-4 drop-shadow-sm"
               onError={(e) => {
-                console.error("Logo failed to load:", logoSrc);
-                e.currentTarget.style.display = "none";
+                console.error('Logo failed to load:', logoSrc);
+                e.currentTarget.style.display = 'none';
               }}
             />
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Acta Platform
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Acta Platform</h1>
             <p className="text-sm text-teal-600 font-medium">
-              {authMode === "confirm"
-                ? "Enter the code sent to your email"
-                : authMode === "forgot"
-                  ? "Enter your email to reset password"
-                  : authMode === "reset"
-                    ? "Enter new password and confirmation code"
-                    : "invisible technology, visible transformation"}
+              {authMode === 'confirm'
+                ? 'Enter the code sent to your email'
+                : authMode === 'forgot'
+                  ? 'Enter your email to reset password'
+                  : authMode === 'reset'
+                    ? 'Enter new password and confirmation code'
+                    : 'invisible technology, visible transformation'}
             </p>
           </div>
 
@@ -360,16 +339,14 @@ export default function Login() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email Field - shown for signin, signup, forgot */}
-            {(authMode === "signin" ||
-              authMode === "signup" ||
-              authMode === "forgot") && (
+            {(authMode === 'signin' || authMode === 'signup' || authMode === 'forgot') && (
               <div className="relative">
                 <input
                   id="email"
                   type="email"
                   placeholder=" "
                   required
-                  {...register("email")}
+                  {...register('email')}
                   className="
                     peer h-12 w-full px-4 pt-4 pb-2
                     border-2 border-gray-300 rounded-xl
@@ -393,14 +370,14 @@ export default function Login() {
             )}
 
             {/* Password Field - shown for signin, signup */}
-            {(authMode === "signin" || authMode === "signup") && (
+            {(authMode === 'signin' || authMode === 'signup') && (
               <div className="relative">
                 <input
                   id="password"
                   type="password"
                   placeholder=" "
                   required
-                  {...register("password")}
+                  {...register('password')}
                   className="
                     peer h-12 w-full px-4 pt-4 pb-2
                     border-2 border-gray-300 rounded-xl
@@ -424,17 +401,17 @@ export default function Login() {
             )}
 
             {/* Confirm Password Field - shown for signup */}
-            {authMode === "signup" && (
+            {authMode === 'signup' && (
               <div className="relative">
                 <input
                   id="confirmPassword"
                   type="password"
                   placeholder=" "
                   required
-                  {...register("confirmPassword", {
+                  {...register('confirmPassword', {
                     validate: (value) => {
-                      const password = watch("password");
-                      return value === password || "Passwords do not match";
+                      const password = watch('password');
+                      return value === password || 'Passwords do not match';
                     },
                   })}
                   className="
@@ -460,14 +437,14 @@ export default function Login() {
             )}
 
             {/* Confirmation Code Field - shown for confirm and reset */}
-            {(authMode === "confirm" || authMode === "reset") && (
+            {(authMode === 'confirm' || authMode === 'reset') && (
               <div className="relative">
                 <input
                   id="confirmationCode"
                   type="text"
                   placeholder=" "
                   required
-                  {...register("confirmationCode")}
+                  {...register('confirmationCode')}
                   className="
                     peer h-12 w-full px-4 pt-4 pb-2
                     border-2 border-gray-300 rounded-xl
@@ -491,14 +468,14 @@ export default function Login() {
             )}
 
             {/* New Password Field - shown for reset */}
-            {authMode === "reset" && (
+            {authMode === 'reset' && (
               <div className="relative">
                 <input
                   id="newPassword"
                   type="password"
                   placeholder=" "
                   required
-                  {...register("newPassword")}
+                  {...register('newPassword')}
                   className="
                     peer h-12 w-full px-4 pt-4 pb-2
                     border-2 border-gray-300 rounded-xl
@@ -545,12 +522,12 @@ export default function Login() {
 
           {/* Navigation Links */}
           <div className="mt-6 space-y-4">
-            {authMode === "signin" && (
+            {authMode === 'signin' && (
               <div className="flex flex-col space-y-2 text-sm text-center">
                 <button
                   type="button"
                   onClick={() => {
-                    setAuthMode("forgot");
+                    setAuthMode('forgot');
                     clearMessages();
                     reset();
                   }}
@@ -559,11 +536,11 @@ export default function Login() {
                   Forgot your password?
                 </button>
                 <div className="text-gray-600">
-                  Don't have an account?{" "}
+                  Don't have an account?{' '}
                   <button
                     type="button"
                     onClick={() => {
-                      setAuthMode("signup");
+                      setAuthMode('signup');
                       clearMessages();
                       reset();
                     }}
@@ -575,13 +552,13 @@ export default function Login() {
               </div>
             )}
 
-            {authMode === "signup" && (
+            {authMode === 'signup' && (
               <div className="text-sm text-center text-gray-600">
-                Already have an account?{" "}
+                Already have an account?{' '}
                 <button
                   type="button"
                   onClick={() => {
-                    setAuthMode("signin");
+                    setAuthMode('signin');
                     clearMessages();
                     reset();
                   }}
@@ -592,14 +569,12 @@ export default function Login() {
               </div>
             )}
 
-            {(authMode === "confirm" ||
-              authMode === "forgot" ||
-              authMode === "reset") && (
+            {(authMode === 'confirm' || authMode === 'forgot' || authMode === 'reset') && (
               <div className="text-sm text-center text-gray-600">
                 <button
                   type="button"
                   onClick={() => {
-                    setAuthMode("signin");
+                    setAuthMode('signin');
                     clearMessages();
                     reset();
                   }}
@@ -615,16 +590,16 @@ export default function Login() {
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-500">
               {skipAuth
-                ? "🚀 Demo mode - any credentials will work"
-                : authMode === "signin"
-                  ? "🔐 Enter your credentials to continue"
-                  : authMode === "signup"
-                    ? "✨ Create your account to get started"
-                    : authMode === "confirm"
-                      ? "📧 Check your email for the confirmation code"
-                      : authMode === "forgot"
-                        ? "🔑 We will send you a password reset code"
-                        : "🛡️ Enter your new password"}
+                ? '🚀 Demo mode - any credentials will work'
+                : authMode === 'signin'
+                  ? '🔐 Enter your credentials to continue'
+                  : authMode === 'signup'
+                    ? '✨ Create your account to get started'
+                    : authMode === 'confirm'
+                      ? '📧 Check your email for the confirmation code'
+                      : authMode === 'forgot'
+                        ? '🔑 We will send you a password reset code'
+                        : '🛡️ Enter your new password'}
             </p>
           </div>
         </div>

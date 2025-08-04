@@ -1,9 +1,9 @@
 // src/components/DashboardTester.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 interface TestResult {
   test: string;
-  status: "pass" | "fail" | "warn";
+  status: 'pass' | 'fail' | 'warn';
   message: string;
 }
 
@@ -13,7 +13,7 @@ export default function DashboardTester() {
 
   useEffect(() => {
     // Only show on dashboard
-    if (window.location.pathname.includes("dashboard")) {
+    if (window.location.pathname.includes('dashboard')) {
       setIsVisible(true);
     }
   }, []);
@@ -22,87 +22,68 @@ export default function DashboardTester() {
     const results = [];
 
     // Test 1: Check project ID input
-    const projectIdInput = document.querySelector(
-      "#projectId",
-    ) as HTMLInputElement;
+    const projectIdInput = document.querySelector('#projectId');
     results.push({
-      test: "Project ID Input",
-      status: projectIdInput ? "pass" : "fail",
-      message: projectIdInput ? "Found" : "Missing",
+      test: 'Project ID Input',
+      status: projectIdInput ? 'pass' : 'fail',
+      message: projectIdInput ? 'Found' : 'Missing',
     });
 
     // Test 2: Check buttons
-    const buttons = document.querySelectorAll("button");
-    const generateBtn = Array.from(buttons).find((btn) =>
-      btn.textContent?.includes("Generate"),
-    );
+    const buttons = document.querySelectorAll('button');
+    const generateBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Generate'));
     const approvalBtn = Array.from(buttons).find((btn) =>
-      btn.textContent?.includes("Send Approval"),
+      btn.textContent?.includes('Send Approval')
     );
-    const wordBtn = Array.from(buttons).find((btn) =>
-      btn.textContent?.includes("Word"),
-    );
-    const pdfBtn = Array.from(buttons).find((btn) =>
-      btn.textContent?.includes("PDF"),
-    );
+    const wordBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Word'));
+    const pdfBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('PDF'));
 
     results.push({
-      test: "Generate Button",
-      status: generateBtn ? "pass" : "fail",
+      test: 'Generate Button',
+      status: generateBtn ? 'pass' : 'fail',
       message: generateBtn
         ? generateBtn.disabled
-          ? "Found (disabled)"
-          : "Found (enabled)"
-        : "Missing",
+          ? 'Found (disabled)'
+          : 'Found (enabled)'
+        : 'Missing',
     });
 
     results.push({
-      test: "Send Approval Button",
-      status: approvalBtn ? "pass" : "fail",
+      test: 'Send Approval Button',
+      status: approvalBtn ? 'pass' : 'fail',
       message: approvalBtn
         ? approvalBtn.disabled
-          ? "Found (disabled)"
-          : "Found (enabled)"
-        : "Missing",
+          ? 'Found (disabled)'
+          : 'Found (enabled)'
+        : 'Missing',
     });
 
     results.push({
-      test: "Word Download Button",
-      status: wordBtn ? "pass" : "fail",
-      message: wordBtn
-        ? wordBtn.disabled
-          ? "Found (disabled)"
-          : "Found (enabled)"
-        : "Missing",
+      test: 'Word Download Button',
+      status: wordBtn ? 'pass' : 'fail',
+      message: wordBtn ? (wordBtn.disabled ? 'Found (disabled)' : 'Found (enabled)') : 'Missing',
     });
 
     results.push({
-      test: "PDF Download Button",
-      status: pdfBtn ? "pass" : "fail",
-      message: pdfBtn
-        ? pdfBtn.disabled
-          ? "Found (disabled)"
-          : "Found (enabled)"
-        : "Missing",
+      test: 'PDF Download Button',
+      status: pdfBtn ? 'pass' : 'fail',
+      message: pdfBtn ? (pdfBtn.disabled ? 'Found (disabled)' : 'Found (enabled)') : 'Missing',
     });
 
     // Test 3: API connectivity
     try {
-      const apiUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:9999";
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9999';
       const response = await fetch(`${apiUrl}/health`);
       results.push({
-        test: "API Connectivity",
-        status: response.ok ? "pass" : "warn",
-        message: response.ok
-          ? "API server reachable"
-          : `API returned ${response.status}`,
+        test: 'API Connectivity',
+        status: response.ok ? 'pass' : 'warn',
+        message: response.ok ? 'API server reachable' : `API returned ${response.status}`,
       });
     } catch (error) {
       results.push({
-        test: "API Connectivity",
-        status: "fail",
-        message: "API server not reachable",
+        test: 'API Connectivity',
+        status: 'fail',
+        message: 'API server not reachable',
       });
     }
 
@@ -110,34 +91,24 @@ export default function DashboardTester() {
   };
 
   const testButtonClick = (buttonName: string) => {
-    const projectIdInput = document.querySelector(
-      "#projectId",
-    ) as HTMLInputElement;
+    const projectIdInput = document.querySelector('#projectId');
     if (projectIdInput && !projectIdInput.value) {
-      projectIdInput.value = "1000000064013473";
-      projectIdInput.dispatchEvent(new Event("input", { bubbles: true }));
+      projectIdInput.value = '1000000064013473';
+      projectIdInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     setTimeout(() => {
-      const buttons = document.querySelectorAll("button");
+      const buttons = document.querySelectorAll('button');
       let targetBtn: HTMLButtonElement | null = null;
 
-      if (buttonName === "generate") {
-        targetBtn = Array.from(buttons).find((btn) =>
-          btn.textContent?.includes("Generate"),
-        ) as HTMLButtonElement;
-      } else if (buttonName === "approval") {
-        targetBtn = Array.from(buttons).find((btn) =>
-          btn.textContent?.includes("Send Approval"),
-        ) as HTMLButtonElement;
-      } else if (buttonName === "word") {
-        targetBtn = Array.from(buttons).find((btn) =>
-          btn.textContent?.includes("Word"),
-        ) as HTMLButtonElement;
-      } else if (buttonName === "pdf") {
-        targetBtn = Array.from(buttons).find((btn) =>
-          btn.textContent?.includes("PDF"),
-        ) as HTMLButtonElement;
+      if (buttonName === 'generate') {
+        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Generate'));
+      } else if (buttonName === 'approval') {
+        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Send Approval'));
+      } else if (buttonName === 'word') {
+        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Word'));
+      } else if (buttonName === 'pdf') {
+        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('PDF'));
       }
 
       if (targetBtn && !targetBtn.disabled) {
@@ -149,7 +120,7 @@ export default function DashboardTester() {
     }, 100);
   };
 
-  if (!isVisible || import.meta.env.VITE_SKIP_AUTH === "false") {
+  if (!isVisible || import.meta.env.VITE_SKIP_AUTH === 'false') {
     return null;
   }
 
@@ -167,25 +138,25 @@ export default function DashboardTester() {
 
         <div className="grid grid-cols-2 gap-1">
           <button
-            onClick={() => testButtonClick("generate")}
+            onClick={() => testButtonClick('generate')}
             className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs"
           >
             Test Generate
           </button>
           <button
-            onClick={() => testButtonClick("approval")}
+            onClick={() => testButtonClick('approval')}
             className="bg-teal-600 hover:bg-teal-700 px-2 py-1 rounded text-xs"
           >
             Test Approval
           </button>
           <button
-            onClick={() => testButtonClick("word")}
+            onClick={() => testButtonClick('word')}
             className="bg-purple-600 hover:bg-purple-700 px-2 py-1 rounded text-xs"
           >
             Test Word
           </button>
           <button
-            onClick={() => testButtonClick("pdf")}
+            onClick={() => testButtonClick('pdf')}
             className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
           >
             Test PDF
@@ -200,18 +171,14 @@ export default function DashboardTester() {
             <div key={i} className="flex items-center gap-2">
               <span
                 className={
-                  result.status === "pass"
-                    ? "text-green-400"
-                    : result.status === "warn"
-                      ? "text-yellow-400"
-                      : "text-red-400"
+                  result.status === 'pass'
+                    ? 'text-green-400'
+                    : result.status === 'warn'
+                      ? 'text-yellow-400'
+                      : 'text-red-400'
                 }
               >
-                {result.status === "pass"
-                  ? "✅"
-                  : result.status === "warn"
-                    ? "⚠️"
-                    : "❌"}
+                {result.status === 'pass' ? '✅' : result.status === 'warn' ? '⚠️' : '❌'}
               </span>
               <span className="truncate">{result.test}</span>
             </div>
@@ -219,9 +186,7 @@ export default function DashboardTester() {
         </div>
       )}
 
-      <div className="mt-2 text-gray-400">
-        Open DevTools Console for detailed logs
-      </div>
+      <div className="mt-2 text-gray-400">Open DevTools Console for detailed logs</div>
     </div>
   );
 }

@@ -1,22 +1,17 @@
 // src/components/ProjectTable.tsx
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
-import StatusChip from "./StatusChip";
+import StatusChip from './StatusChip';
 
 export type Project = { id: number; name: string; pm: string; status: string };
 
 const columns: ColumnDef<Project>[] = [
-  { accessorKey: "id", header: "ID" },
-  { accessorKey: "name", header: "Name" },
-  { accessorKey: "pm", header: "PM" },
+  { accessorKey: 'id', header: 'ID' },
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'pm', header: 'PM' },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: 'status',
+    header: 'Status',
     cell: ({ getValue }) => <StatusChip status={getValue<string>()} />,
   },
 ];
@@ -54,11 +49,11 @@ export default function ProjectTable({
                 <th
                   key={h.id}
                   className={`px-4 sm:px-6 py-3 text-left font-semibold text-gray-900 ${
-                    h.column.id === "id"
-                      ? "hidden sm:table-cell"
-                      : h.column.id === "pm"
-                        ? "hidden md:table-cell"
-                        : ""
+                    h.column.id === 'id'
+                      ? 'hidden sm:table-cell'
+                      : h.column.id === 'pm'
+                        ? 'hidden md:table-cell'
+                        : ''
                   }`}
                 >
                   {flexRender(h.column.columnDef.header, h.getContext())}
@@ -80,20 +75,20 @@ export default function ProjectTable({
                   project-card transition-colors duration-200 cursor-pointer
                   ${
                     isSelected
-                      ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
-                      : "hover:bg-gray-50"
+                      ? 'bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500'
+                      : 'hover:bg-gray-50'
                   }
                 `}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className={`px-4 sm:px-6 py-4 ${isSelected ? "text-blue-900" : "text-gray-900"} ${
-                      cell.column.id === "id"
-                        ? "hidden sm:table-cell"
-                        : cell.column.id === "pm"
-                          ? "hidden md:table-cell"
-                          : ""
+                    className={`px-4 sm:px-6 py-4 ${isSelected ? 'text-blue-900' : 'text-gray-900'} ${
+                      cell.column.id === 'id'
+                        ? 'hidden sm:table-cell'
+                        : cell.column.id === 'pm'
+                          ? 'hidden md:table-cell'
+                          : ''
                     }`}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

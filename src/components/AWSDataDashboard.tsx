@@ -1,9 +1,11 @@
 //src/components/AWSDataDashboard.tsx
 import React, { useEffect, useState } from 'react';
-import { getAllProjects } from '../lib/awsDataService';
+
 import { getProjectsByPM } from '@/lib/api';
 
-const TEST_PM_EMAIL = "christian.valencia@ikusi.com";
+import { getAllProjects } from '../lib/awsDataService';
+
+const TEST_PM_EMAIL = 'christian.valencia@ikusi.com';
 
 export const AWSDataDashboard: React.FC = () => {
   const [adminProjects, setAdminProjects] = useState<any[]>([]);
@@ -24,7 +26,7 @@ export const AWSDataDashboard: React.FC = () => {
 
       // Mock downloads since downloadDocument is not available
       const downloads: string[] = [];
-      
+
       // Note: downloadDocument function is not available, so we'll skip actual downloads
       if (pm.length >= 2) {
         for (let i = 0; i < 2; i++) {
@@ -42,20 +44,17 @@ export const AWSDataDashboard: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">
-        AWS Data Dashboard Test Results
-      </h2>
+      <h2 className="text-xl font-bold mb-4">AWS Data Dashboard Test Results</h2>
       {loading ? (
         <div>Loading...</div>
       ) : (
         <>
           <div className="mb-4">
-            <strong>Admin dashboard:</strong> {adminProjects.length} projects
-            loaded.
+            <strong>Admin dashboard:</strong> {adminProjects.length} projects loaded.
           </div>
           <div className="mb-4">
-            <strong>PM dashboard ({TEST_PM_EMAIL}):</strong> {pmProjects.length}{" "}
-            loans/projects loaded.
+            <strong>PM dashboard ({TEST_PM_EMAIL}):</strong> {pmProjects.length} loans/projects
+            loaded.
           </div>
           <div className="mb-4">
             <strong>Document Downloads:</strong>

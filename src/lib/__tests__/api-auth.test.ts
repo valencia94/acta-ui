@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { apiCall } from '@/lib/api-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { apiCall } from '@/lib/api-amplify';
 
 // Mock aws-amplify auth
 vi.mock('aws-amplify/auth', () => ({

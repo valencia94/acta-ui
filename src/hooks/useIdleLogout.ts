@@ -1,7 +1,7 @@
-import { signOut } from "aws-amplify/auth";
-import { useIdleTimer } from "react-idle-timer";
+import { signOut } from 'aws-amplify/auth';
+import { useIdleTimer } from 'react-idle-timer';
 
-import { skipAuth } from "@/env.variables";
+import { skipAuth } from '@/env.variables';
 
 export function useIdleLogout(minutes = 30) {
   const handleIdle = async () => {
@@ -15,12 +15,12 @@ export function useIdleLogout(minutes = 30) {
       }
 
       // Force page refresh to login
-      window.location.replace("/login");
+      window.location.replace('/login');
     } catch (error) {
-      console.error("Idle logout error:", error);
+      console.error('Idle logout error:', error);
       // Even if signOut fails, force navigation
       localStorage.clear();
-      window.location.replace("/login");
+      window.location.replace('/login');
     }
   };
 
@@ -28,6 +28,6 @@ export function useIdleLogout(minutes = 30) {
     timeout: minutes * 60 * 1000,
     onIdle: handleIdle,
     debounce: 500,
-    events: ["mousemove", "keydown", "scroll", "touchstart"],
+    events: ['mousemove', 'keydown', 'scroll', 'touchstart'],
   });
 }

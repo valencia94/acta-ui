@@ -1,8 +1,8 @@
-import { Download, X } from "lucide-react";
-import { lazy, Suspense } from "react";
+import { Download, X } from 'lucide-react';
+import { lazy, Suspense } from 'react';
 
 // Lazy load the PDF viewer to reduce bundle size
-const LazyPDFViewer = lazy(() => import("./PDFViewerCore"));
+const LazyPDFViewer = lazy(() => import('./PDFViewerCore'));
 
 interface PDFPreviewProps {
   isOpen: boolean;
@@ -11,18 +11,13 @@ interface PDFPreviewProps {
   fileName?: string;
 }
 
-export default function PDFPreview({
-  isOpen,
-  onClose,
-  pdfUrl,
-  fileName,
-}: PDFPreviewProps) {
+export default function PDFPreview({ isOpen, onClose, pdfUrl, fileName }: PDFPreviewProps) {
   if (!isOpen) return null;
 
   const handleDownload = () => {
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = pdfUrl;
-    link.download = fileName || "document.pdf";
+    link.download = fileName || 'document.pdf';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -35,7 +30,7 @@ export default function PDFPreview({
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              {fileName || "Document Preview"}
+              {fileName || 'Document Preview'}
             </h2>
           </div>
 

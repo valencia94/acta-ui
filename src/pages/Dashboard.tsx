@@ -1,34 +1,32 @@
 // src/pages/Dashboard.tsx — Regenerated PM Dashboard using Admin layout
-import { useEffect, useState, lazy, Suspense } from "react";
-import { toast } from "react-hot-toast";
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
+import { lazy, Suspense, useState } from 'react';
+import { toast } from 'react-hot-toast';
 
-import Header from "@/components/Header";
-import DynamoProjectsView from "@/components/DynamoProjectsView";
-import ActaButtons from "@/components/ActaButtons/ActaButtons";
-import { EmailInputDialog } from "@/components/EmailInputDialog";
-import ResponsiveIndicator from "@/components/ResponsiveIndicator";
-
-import { useAuth } from "@/hooks/useAuth";
-
+import ActaButtons from '@/components/ActaButtons/ActaButtons';
+import DynamoProjectsView from '@/components/DynamoProjectsView';
+import { EmailInputDialog } from '@/components/EmailInputDialog';
+import Header from '@/components/Header';
+import ResponsiveIndicator from '@/components/ResponsiveIndicator';
+import { useAuth } from '@/hooks/useAuth';
 import {
+  checkDocumentInS3,
   generateActaDocument,
   getDownloadUrl,
-  checkDocumentInS3,
   sendApprovalEmail,
-} from "@/lib/api";
+} from '@/lib/api';
 
-const PDFPreview = lazy(() => import("@/components/PDFPreview"));
+const PDFPreview = lazy(() => import('@/components/PDFPreview'));
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [actionLoading, setActionLoading] = useState(false);
 
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
-  const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>("");
+  const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>('');
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [currentProjectName, setCurrentProjectName] = useState<string>("");
+  const [currentProjectName, setCurrentProjectName] = useState<string>('');
 
   const handleProjectSelect = (projectId: string) => {
     setSelectedProjectId(projectId);
@@ -43,24 +41,24 @@ export default function Dashboard() {
     }
     setActionLoading(true);
     try {
-      await generateActaDocument(selectedProjectId, user.email, "pm");
+      await generateActaDocument(selectedProjectId, user.email, 'pm');
       toast.success("ACTA generation started. You'll receive an email when ready.");
     } catch (error: any) {
-      toast.error(error?.message || "Failed to generate ACTA");
+      toast.error(error?.message || 'Failed to generate ACTA');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleDownload = async (format: "pdf" | "docx") => {
+  const handleDownload = async (format: 'pdf' | 'docx') => {
     if (!selectedProjectId) {
-      toast.error("Please select a project first");
+      toast.error('Please select a project first');
       return;
     }
     setActionLoading(true);
     try {
       const url = await getDownloadUrl(selectedProjectId, format);
-      window.open(url, "_blank");
+      window.open(url, '_blank');
     } catch (error: any) {
       toast.error(error?.message || `Failed to download ${format.toUpperCase()}`);
     } finally {
@@ -70,21 +68,21 @@ export default function Dashboard() {
 
   const handlePreview = async () => {
     if (!selectedProjectId) {
-      toast.error("Please select a project first");
+      toast.error('Please select a project first');
       return;
     }
     setActionLoading(true);
     try {
-      const check = await checkDocumentInS3(selectedProjectId, "pdf");
+      const check = await checkDocumentInS3(selectedProjectId, 'pdf');
       if (!check.available) {
-        toast.error("Document not ready, try Generate first.");
+        toast.error('Document not ready, try Generate first.');
         return;
       }
-      const url = await getDownloadUrl(selectedProjectId, "pdf");
+      const url = await getDownloadUrl(selectedProjectId, 'pdf');
       setPdfPreviewUrl(url);
       setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
     } catch (error: any) {
-      toast.error(error?.message || "Failed to preview document");
+      toast.error(error?.message || 'Failed to preview document');
     } finally {
       setActionLoading(false);
     }
@@ -92,20 +90,20 @@ export default function Dashboard() {
 
   const handleSendApproval = async (email: string) => {
     if (!selectedProjectId) {
-      toast.error("Please select a project first");
+      toast.error('Please select a project first');
       return;
     }
     setActionLoading(true);
     try {
       const result = await sendApprovalEmail(selectedProjectId, email);
       if (result.message) {
-        toast.success("Approval email sent successfully!");
+        toast.success('Approval email sent successfully!');
         setIsEmailDialogOpen(false);
       } else {
-        toast.error("Failed to send approval email");
+        toast.error('Failed to send approval email');
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to send approval email");
+      toast.error(error?.message || 'Failed to send approval email');
     } finally {
       setActionLoading(false);
     }
@@ -126,9 +124,7 @@ export default function Dashboard() {
           transition={{ duration: 0.4 }}
           className="bg-white shadow-md rounded-lg p-6"
         >
-          <h1 className="text-2xl font-semibold text-gray-800 mb-2">
-            Welcome, {user?.email}
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-800 mb-2">Welcome, {user?.email}</h1>
           <p className="text-sm text-gray-500">
             View your projects and take action with ACTA tools.
           </p>
@@ -142,7 +138,7 @@ export default function Dashboard() {
         >
           <h2 className="text-lg font-medium text-gray-700 mb-4">Your Projects</h2>
           <DynamoProjectsView
-            userEmail={user?.email || ""}
+            userEmail={user?.email || ''}
             onProjectSelect={handleProjectSelect}
             selectedProjectId={selectedProjectId}
           />
@@ -157,8 +153,8 @@ export default function Dashboard() {
           <h2 className="text-lg font-medium text-gray-700 mb-4">ACTA Actions</h2>
           <ActaButtons
             onGenerate={handleGenerateActa}
-            onDownloadPdf={() => handleDownload("pdf")}
-            onDownloadWord={() => handleDownload("docx")}
+            onDownloadPdf={() => handleDownload('pdf')}
+            onDownloadWord={() => handleDownload('docx')}
             onPreviewPdf={handlePreview}
             onSendForApproval={() => setIsEmailDialogOpen(true)}
             disabled={!selectedProjectId || actionLoading}

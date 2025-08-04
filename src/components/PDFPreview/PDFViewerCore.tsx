@@ -1,16 +1,10 @@
 // Import CSS for react-pdf
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
-import {
-  ChevronLeft,
-  ChevronRight,
-  RotateCw,
-  ZoomIn,
-  ZoomOut,
-} from "lucide-react";
-import { useCallback, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { ChevronLeft, ChevronRight, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -27,14 +21,11 @@ export default function PDFViewerCore({ pdfUrl }: PDFViewerCoreProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const onDocumentLoadSuccess = useCallback(
-    ({ numPages }: { numPages: number }) => {
-      setNumPages(numPages);
-      setLoading(false);
-      setError(null);
-    },
-    [],
-  );
+  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+    setLoading(false);
+    setError(null);
+  }, []);
 
   const onDocumentLoadError = useCallback((error: Error) => {
     setError(error.message);
@@ -80,9 +71,7 @@ export default function PDFViewerCore({ pdfUrl }: PDFViewerCoreProps) {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Failed to load PDF
-          </h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load PDF</h3>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -120,31 +109,17 @@ export default function PDFViewerCore({ pdfUrl }: PDFViewerCoreProps) {
 
         {/* Zoom and Rotation Controls */}
         <div className="flex items-center space-x-2">
-          <button
-            onClick={zoomOut}
-            className="p-1 rounded hover:bg-gray-100"
-            title="Zoom Out"
-          >
+          <button onClick={zoomOut} className="p-1 rounded hover:bg-gray-100" title="Zoom Out">
             <ZoomOut className="h-5 w-5" />
           </button>
 
-          <span className="text-sm text-gray-600 min-w-max">
-            {Math.round(scale * 100)}%
-          </span>
+          <span className="text-sm text-gray-600 min-w-max">{Math.round(scale * 100)}%</span>
 
-          <button
-            onClick={zoomIn}
-            className="p-1 rounded hover:bg-gray-100"
-            title="Zoom In"
-          >
+          <button onClick={zoomIn} className="p-1 rounded hover:bg-gray-100" title="Zoom In">
             <ZoomIn className="h-5 w-5" />
           </button>
 
-          <button
-            onClick={rotate}
-            className="p-1 rounded hover:bg-gray-100"
-            title="Rotate"
-          >
+          <button onClick={rotate} className="p-1 rounded hover:bg-gray-100" title="Rotate">
             <RotateCw className="h-5 w-5" />
           </button>
         </div>

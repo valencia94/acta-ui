@@ -1,6 +1,6 @@
 // src/components/LoadingMessage/index.tsx
-import { Typography } from "@mui/material";
-import clsx from "clsx";
+import { Typography } from '@mui/material';
+import clsx from 'clsx';
 
 export interface LoadingMessageProps {
   /** The message to display while loading */
@@ -9,14 +9,11 @@ export interface LoadingMessageProps {
   className?: string;
 }
 
-export function LoadingMessage({
-  message = "Loading…",
-  className = "",
-}: LoadingMessageProps) {
+export function LoadingMessage({ message = 'Loading…', className = '' }: LoadingMessageProps) {
   return (
     <Typography
       variant="body1"
-      className={clsx("italic text-secondary", className)}
+      className={clsx('italic text-secondary', className)}
       id="loading-message"
     >
       {message}

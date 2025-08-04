@@ -1,6 +1,6 @@
 // src/components/ErrorCallout.tsx
-import { AlertCircle, RefreshCw } from "lucide-react";
-import React from "react";
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import React from 'react';
 
 interface ErrorCalloutProps {
   title?: string;
@@ -12,17 +12,15 @@ interface ErrorCalloutProps {
 }
 
 export function ErrorCallout({
-  title = "Something went wrong",
+  title = 'Something went wrong',
   message,
   onRetry,
-  retryText = "Retry",
+  retryText = 'Retry',
   retryLoading = false,
-  className = "",
+  className = '',
 }: ErrorCalloutProps) {
   return (
-    <div
-      className={`bg-white rounded-xl shadow-sm border border-red-200 ${className}`}
-    >
+    <div className={`bg-white rounded-xl shadow-sm border border-red-200 ${className}`}>
       <div className="p-6">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
@@ -44,10 +42,8 @@ export function ErrorCallout({
                   transition-colors duration-200
                 "
               >
-                <RefreshCw
-                  className={`h-4 w-4 ${retryLoading ? "animate-spin" : ""}`}
-                />
-                {retryLoading ? "Retrying..." : retryText}
+                <RefreshCw className={`h-4 w-4 ${retryLoading ? 'animate-spin' : ''}`} />
+                {retryLoading ? 'Retrying...' : retryText}
               </button>
             )}
           </div>

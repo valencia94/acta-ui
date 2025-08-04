@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { fetchAuthSession } from "aws-amplify/auth";
-import { getCurrentUser } from "@/lib/api-amplify";
-import { skipAuth } from "@/env.variables";
+import { fetchAuthSession } from 'aws-amplify/auth';
+import { useEffect, useState } from 'react';
+
+import { skipAuth } from '@/env.variables';
+import { getCurrentUser } from '@/lib/api-amplify';
 
 export function useAuth() {
   const [user, setUser] = useState<{ email: string } | null>(null);
@@ -11,18 +12,16 @@ export function useAuth() {
     (async () => {
       try {
         if (skipAuth) {
-          setUser({ email: "admin@ikusi.com" });
+          setUser({ email: 'admin@ikusi.com' });
           return;
         }
 
         const session = await fetchAuthSession();
         const current = await getCurrentUser();
-        const email = String(
-          current?.email || session.tokens?.idToken?.payload?.email || "",
-        );
+        const email = String(current?.email || session.tokens?.idToken?.payload?.email || '');
         setUser({ email });
       } catch {
-        if (skipAuth) setUser({ email: "admin@ikusi.com" });
+        if (skipAuth) setUser({ email: 'admin@ikusi.com' });
         else setUser(null);
       } finally {
         setLoading(false);
