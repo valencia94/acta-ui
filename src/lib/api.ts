@@ -13,7 +13,7 @@ import {
   s3Bucket,
   s3Region,
 } from '@/env.variables';
-import { getAuthToken } from '@/utils/fetchWrapper';
+import { fetcher, get, post } from '@/utils/fetchWrapper';
 
 /**
  * ---------------------------------------------------------------------------
@@ -26,57 +26,23 @@ export const S3_BUCKET = s3Bucket || 'projectplace-dv-2025-x9a7b';
 export const AWS_REGION = s3Region || 'us-east-2';
 
 /** -------------------------------------------------------------------------
- * 🛠️ Utility – signed / authorised fetch
+ * 🛠️ Utility – signed / authorised fetch using SigV4-enabled fetchWrapper
  * --------------------------------------------------------------------------*/
 async function request<T = unknown>(
   endpoint: string,
   options: RequestInit & { auth?: boolean } = {}
 ): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-
-  if (options.auth !== false) {
-    console.log('🔐 Attempting to get auth token for request to:', endpoint);
-    try {
-      const token = await getAuthToken();
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-        console.log('✅ Authorization header added to request');
-      } else {
-        console.warn('⚠️ No auth token available for request');
-      }
-    } catch (error) {
-      console.error('❌ Failed to get auth token:', error);
-    }
-  }
-
-  console.log('🌐 Making request to:', `${BASE}${endpoint}`, {
+  const url = `${BASE}${endpoint}`;
+  
+  console.log('🌐 Making SigV4-signed request to:', url, {
     method: options.method || 'GET',
-    hasAuth: !!headers['Authorization'],
   });
 
-  const res = await fetch(`${BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  console.log('📡 Request response:', {
-    status: res.status,
-    statusText: res.statusText,
-    ok: res.ok,
-  });
-
-  if (!res.ok) {
-    const txt = await res.text().catch(() => res.statusText);
-    console.error('❌ Request failed:', `${endpoint} → ${res.status}: ${txt}`);
-    throw new Error(`${endpoint} → ${res.status}: ${txt}`);
+  if (options.method === 'POST') {
+    return post<T>(url, options.body ? JSON.parse(options.body as string) : undefined);
+  } else {
+    return get<T>(url);
   }
-
-  if (options.method === 'HEAD') return undefined as unknown as T;
-  if (options.redirect === 'manual') return res as unknown as T;
-  return (await res.json()) as T;
 }
 
 /** -------------------------------------------------------------------------
@@ -133,19 +99,25 @@ export async function getSignedDownloadUrl(
   projectId: string,
   format: 'pdf' | 'docx'
 ): Promise<string> {
-  const res = await request<Response>(`/download-acta/${projectId}?format=${format}`, {
-    method: 'GET',
-    redirect: 'manual',
+  const url = `${BASE}/download-acta/${projectId}?format=${format}`;
+  
+  console.log('🔗 Getting download URL for:', url);
+  
+  // Use fetchWrapper for proper SigV4 signing
+  const response = await fetcher<{ downloadUrl?: string; url?: string }>(url, {
+    method: 'GET'
   });
-
-  if (res.status !== 302) {
-    const txt = await res.text().catch(() => res.statusText);
-    throw new Error(`Download‑endpoint error ${res.status}: ${txt}`);
+  
+  // Handle different response formats
+  if (typeof response === 'string') {
+    return response;
   }
-
-  const url = res.headers.get('Location');
-  if (!url) throw new Error('Missing Location header in 302 response');
-  return url;
+  
+  if (response && (response.downloadUrl || response.url)) {
+    return response.downloadUrl || response.url!;
+  }
+  
+  throw new Error('No download URL returned from API');
 }
 
 /** -------------------------------------------------------------------------
@@ -172,14 +144,17 @@ export async function documentExists(
   format: 'pdf' | 'docx'
 ): Promise<DocumentCheckResult> {
   try {
-    const response = await request(`/check-document/${projectId}?format=${format}`, {
-      method: 'HEAD',
+    const url = `${BASE}/check-document/${projectId}?format=${format}`;
+    const response = await fetcher<DocumentCheckResult>(url, {
+      method: 'GET'
     });
+    
     return {
       available: true,
-      // Add other properties if the API returns them
+      ...response
     };
-  } catch {
+  } catch (error) {
+    console.warn('Document check failed:', error);
     return {
       available: false,
     };
