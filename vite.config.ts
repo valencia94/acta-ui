@@ -7,7 +7,7 @@ import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 import { fileURLToPath } from "url";
 
-// ✅ Emulates __dirname in ESM
+// 🔁 Still needed for other dynamic paths (e.g. aliases)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -18,13 +18,16 @@ export default defineConfig({
     {
       name: "copy-aws-exports",
       closeBundle() {
-        const src = path.resolve(__dirname, "public/aws-exports.js");
-        const dest = path.resolve(__dirname, "dist/aws-exports.js");
+        const src = path.resolve(process.cwd(), "public/aws-exports.js");
+        const dest = path.resolve(process.cwd(), "dist/aws-exports.js");
+
+        console.log(`🧩 Copying aws-exports.js from ${src} → ${dest}`);
+
         if (fs.existsSync(src)) {
           fs.copyFileSync(src, dest);
-          console.log("✅ Copied aws-exports.js to dist/");
+          console.log("✅ aws-exports.js copied successfully.");
         } else {
-          console.warn("⚠️ aws-exports.js not found in public/. Skipping copy.");
+          console.warn("⚠️ aws-exports.js not found. Skipping copy.");
         }
       },
     },
