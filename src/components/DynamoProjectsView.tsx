@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { getProjectsByPM } from "@/lib/api";
+import { useEffect, useState } from 'react';
+
+import { getProjectsByPM } from '@/lib/api';
 
 interface Project {
   id: string;
@@ -12,7 +13,7 @@ interface Props {
   /** Logged-in PM’s email – required to query DynamoDB */
   userEmail: string;
   onProjectSelect?: (projectId: string) => void;
-  selectedProjectId: string;  // if you highlight current row (optional)
+  selectedProjectId: string; // if you highlight current row (optional)
 }
 
 export default function DynamoProjectsView({
@@ -31,7 +32,7 @@ export default function DynamoProjectsView({
         setProjects(data ?? []);
       } catch (err) {
         console.error(err);
-        setError("Failed to load projects.");
+        setError('Failed to load projects.');
       } finally {
         setLoading(false);
       }
@@ -40,7 +41,7 @@ export default function DynamoProjectsView({
   }, [userEmail]);
 
   if (loading) return <div className="text-gray-500">Loading projects…</div>;
-  if (error)   return <div className="text-red-500">{error}</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -59,7 +60,7 @@ export default function DynamoProjectsView({
               key={p.id}
               onClick={() => onProjectSelect?.(p.id)}
               className={`cursor-pointer hover:bg-gray-50 ${
-                selectedProjectId === p.id ? "bg-indigo-50" : ""
+                selectedProjectId === p.id ? 'bg-indigo-50' : ''
               }`}
             >
               <td className="px-4 py-2 font-medium">{p.id}</td>

@@ -1,5 +1,5 @@
 // src/components/Button/types.ts
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
 
 /** Props for our wrapper around MUI's Button */
 export interface ButtonProps {
@@ -12,16 +12,9 @@ export interface ButtonProps {
   /** Disabled state */
   disabled?: boolean;
   /** Button color */
-  color?:
-    | "primary"
-    | "secondary"
-    | "error"
-    | "info"
-    | "success"
-    | "warning"
-    | "inherit";
+  color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'inherit';
   /** Button variant */
-  variant?: "text" | "outlined" | "contained";
+  variant?: 'text' | 'outlined' | 'contained';
   /** Button type */
-  type?: "button" | "submit" | "reset";
+  type?: 'button' | 'submit' | 'reset';
 }

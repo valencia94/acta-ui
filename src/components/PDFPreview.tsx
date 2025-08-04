@@ -1,7 +1,7 @@
 // src/components/PDFPreview.tsx
-import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
-import { useState } from "react";
+import { AnimatePresence, motion } from 'framer-motion';
+import { Download, RotateCw, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { useState } from 'react';
 
 interface PDFPreviewProps {
   isOpen: boolean;
@@ -10,20 +10,15 @@ interface PDFPreviewProps {
   onClose: () => void;
 }
 
-export default function PDFPreview({
-  isOpen,
-  pdfUrl,
-  fileName,
-  onClose,
-}: PDFPreviewProps) {
+export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPreviewProps) {
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
 
   const handleDownload = () => {
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = pdfUrl;
     link.download = fileName;
-    link.target = "_blank";
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -63,9 +58,7 @@ export default function PDFPreview({
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  PDF Preview
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-900">PDF Preview</h2>
                 <span className="text-sm text-gray-500">{fileName}</span>
               </div>
 
@@ -79,9 +72,7 @@ export default function PDFPreview({
                   <ZoomOut className="h-4 w-4" />
                 </button>
 
-                <span className="text-sm text-gray-600 min-w-[60px] text-center">
-                  {zoom}%
-                </span>
+                <span className="text-sm text-gray-600 min-w-[60px] text-center">{zoom}%</span>
 
                 <button
                   onClick={handleZoomIn}
@@ -133,8 +124,8 @@ export default function PDFPreview({
                 className="bg-white shadow-2xl rounded-lg overflow-hidden"
                 style={{
                   transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: "center center",
-                  transition: "transform 0.2s ease-in-out",
+                  transformOrigin: 'center center',
+                  transition: 'transform 0.2s ease-in-out',
                 }}
               >
                 <iframe
@@ -155,9 +146,7 @@ export default function PDFPreview({
           >
             <div className="flex items-center justify-between text-sm text-gray-600">
               <div>
-                Press{" "}
-                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Esc</kbd>{" "}
-                to close
+                Press <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Esc</kbd> to close
               </div>
               <div>Use mouse wheel or zoom buttons to adjust size</div>
             </div>

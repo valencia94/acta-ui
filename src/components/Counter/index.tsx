@@ -1,13 +1,9 @@
 // src/components/Counter/index.tsx
-import { Typography } from "@mui/material";
+import { Typography } from '@mui/material';
 
-import { CounterProps } from "./types";
+import { CounterProps } from './types';
 
-export function Counter({
-  value,
-  id = "counter",
-  className = "",
-}: CounterProps) {
+export function Counter({ value, id = 'counter', className = '' }: CounterProps) {
   return (
     <Typography
       variant="h3"

@@ -1,7 +1,8 @@
 // src/api.ts
 
 import { apiBaseUrl } from '@/env.variables';
-import { get, post, getAuthToken } from '@/utils/fetchWrapper';
+import { getAuthToken } from '@/utils/fetchWrapper';
+
 import { apiGet, apiPost, getCurrentUser } from './lib/api-amplify';
 
 const BASE = apiBaseUrl;
@@ -34,23 +35,17 @@ export function getTimeline(id: string): Promise<TimelineEvent[]> {
 }
 
 /** ---------- ACTA DOWNLOAD (302 redirect) ---------- */
-export async function getDownloadUrl(
-  id: string,
-  format: "pdf" | "docx",
-): Promise<string> {
+export async function getDownloadUrl(id: string, format: 'pdf' | 'docx'): Promise<string> {
   const endpoint = `${BASE}/download-acta/${id}?format=${format}`;
   console.log(`🌐 Requesting download URL: ${endpoint}`);
 
   const res = await fetch(endpoint, {
-    method: "GET",
-    redirect: "manual",
+    method: 'GET',
+    redirect: 'manual',
   });
 
   console.log(`📡 Download API response: ${res.status} ${res.statusText}`);
-  console.log(
-    "📋 Response headers:",
-    Object.fromEntries(res.headers.entries()),
-  );
+  console.log('📋 Response headers:', Object.fromEntries(res.headers.entries()));
 
   if (res.status !== 302) {
     const errText = await res.text().catch(() => res.statusText);
@@ -58,12 +53,12 @@ export async function getDownloadUrl(
     throw new Error(`Download endpoint returned ${res.status}: ${errText}`);
   }
 
-  const url = res.headers.get("Location");
-  console.log("📍 Location header:", url);
+  const url = res.headers.get('Location');
+  console.log('📍 Location header:', url);
 
   if (!url) {
-    console.error("❌ Missing Location header in 302 response");
-    throw new Error("Download endpoint missing Location header");
+    console.error('❌ Missing Location header in 302 response');
+    throw new Error('Download endpoint missing Location header');
   }
 
   return url;
@@ -72,12 +67,12 @@ export async function getDownloadUrl(
 /** ---------- APPROVAL E-MAIL ---------- */
 export function sendApprovalEmail(
   actaId: string,
-  clientEmail: string,
+  clientEmail: string
 ): Promise<{ message: string; token: string }> {
-  return apiPost<{ message: string; token: string }>(
-    `${BASE}/send-approval-email`,
-    { actaId, clientEmail },
-  );
+  return apiPost<{ message: string; token: string }>(`${BASE}/send-approval-email`, {
+    actaId,
+    clientEmail,
+  });
 }
 
 /** ---------- PROJECT PLACE DATA EXTRACTOR ---------- */
@@ -88,7 +83,7 @@ export function extractProjectPlaceData(projectId: string): Promise<unknown> {
 /** ---------- ENHANCED S3 INTEGRATION FOR LAMBDA WORKFLOW ---------- */
 
 // S3 bucket configuration
-const S3_BUCKET = "projectplace-dv-2025-x9a7b";
+const S3_BUCKET = 'projectplace-dv-2025-x9a7b';
 
 /**
  * Generate ACTA document via Lambda
@@ -100,17 +95,17 @@ const S3_BUCKET = "projectplace-dv-2025-x9a7b";
 export async function generateActaDocument(
   projectId: string,
   userEmail: string,
-  userRole: "admin" | "pm" = "pm",
+  userRole: 'admin' | 'pm' = 'pm'
 ): Promise<{
   success: boolean;
   message: string;
   s3Location?: string;
   documentId?: string;
 }> {
-  console.log("🔄 Generating ACTA document for project:", projectId);
+  console.log('🔄 Generating ACTA document for project:', projectId);
   console.log(
-    "📦 Target S3 bucket:",
-    import.meta.env.VITE_S3_BUCKET || "projectplace-dv-2025-x9a7b",
+    '📦 Target S3 bucket:',
+    import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b'
   );
 
   // CORRECT PAYLOAD STRUCTURE for ProjectPlaceDataExtractor
@@ -118,14 +113,14 @@ export async function generateActaDocument(
     projectId: projectId,
     pmEmail: userEmail,
     userRole: userRole,
-    s3Bucket: import.meta.env.VITE_S3_BUCKET || "projectplace-dv-2025-x9a7b",
-    requestSource: "acta-ui",
+    s3Bucket: import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b',
+    requestSource: 'acta-ui',
     generateDocuments: true,
     extractMetadata: true,
     timestamp: new Date().toISOString(),
   };
 
-  console.log("📋 Payload structure:", payload);
+  console.log('📋 Payload structure:', payload);
 
   const response = await apiPost<{
     success: boolean;
@@ -137,7 +132,7 @@ export async function generateActaDocument(
 
   return {
     success: response.success || true,
-    message: response.message || "Document generation completed",
+    message: response.message || 'Document generation completed',
     s3Location: response.s3Location,
     documentId: response.documentId || projectId,
   };
@@ -148,37 +143,28 @@ export async function generateActaDocument(
  */
 export async function checkDocumentInS3(
   projectId: string,
-  format: "pdf" | "docx",
+  format: 'pdf' | 'docx'
 ): Promise<{
   available: boolean;
   lastModified?: string;
   size?: number;
   s3Key?: string;
 }> {
-  console.log(
-    `🔍 Checking document availability in S3: ${projectId}.${format}`,
-  );
+  console.log(`🔍 Checking document availability in S3: ${projectId}.${format}`);
 
   try {
-    const response = await fetch(
-      `${BASE}/document-validator/${projectId}?format=${format}`,
-      {
-        method: "HEAD",
-      },
-    );
+    const response = await fetch(`${BASE}/document-validator/${projectId}?format=${format}`, {
+      method: 'HEAD',
+    });
 
-    console.log(
-      `📊 S3 check response: ${response.status} ${response.statusText}`,
-    );
+    console.log(`📊 S3 check response: ${response.status} ${response.statusText}`);
 
     if (response.ok) {
-      const lastModified = response.headers.get("Last-Modified");
-      const contentLength = response.headers.get("Content-Length");
+      const lastModified = response.headers.get('Last-Modified');
+      const contentLength = response.headers.get('Content-Length');
       const size = contentLength ? parseInt(contentLength, 10) : undefined;
 
-      console.log(
-        `✅ Document found in S3 - Size: ${size} bytes, Modified: ${lastModified}`,
-      );
+      console.log(`✅ Document found in S3 - Size: ${size} bytes, Modified: ${lastModified}`);
 
       return {
         available: true,
@@ -191,14 +177,12 @@ export async function checkDocumentInS3(
     if (response.status === 404) {
       console.log(`📄 Document not found in S3: ${projectId}.${format}`);
     } else {
-      console.warn(
-        `⚠️ S3 check failed: ${response.status} ${response.statusText}`,
-      );
+      console.warn(`⚠️ S3 check failed: ${response.status} ${response.statusText}`);
     }
 
     return { available: false };
   } catch (error) {
-    console.warn("❌ Error checking document availability in S3:", error);
+    console.warn('❌ Error checking document availability in S3:', error);
     return { available: false };
   }
 }
@@ -208,7 +192,7 @@ export async function checkDocumentInS3(
  */
 export async function getS3DownloadUrl(
   projectId: string,
-  format: "pdf" | "docx",
+  format: 'pdf' | 'docx'
 ): Promise<{
   success: boolean;
   downloadUrl?: string;
@@ -220,43 +204,32 @@ export async function getS3DownloadUrl(
   };
 }> {
   console.log(`📥 Getting S3 download URL for: ${projectId}.${format}`);
-  console.log(
-    `📦 Expected S3 path: s3://${S3_BUCKET}/acta/${projectId}.${format}`,
-  );
+  console.log(`📦 Expected S3 path: s3://${S3_BUCKET}/acta/${projectId}.${format}`);
 
   try {
     const endpoint = `${BASE}/download-acta/${projectId}?format=${format}`;
     const response = await fetch(endpoint, {
-      method: "GET",
-      redirect: "manual",
+      method: 'GET',
+      redirect: 'manual',
     });
 
-    console.log(
-      `📊 Download API response: ${response.status} ${response.statusText}`,
-    );
-    console.log(
-      "📋 Response headers:",
-      Object.fromEntries(response.headers.entries()),
-    );
+    console.log(`📊 Download API response: ${response.status} ${response.statusText}`);
+    console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (response.status === 302) {
-      const signedUrl = response.headers.get("Location");
+      const signedUrl = response.headers.get('Location');
 
       if (signedUrl) {
         console.log(`🔗 Got S3 signed URL: ${signedUrl.substring(0, 100)}...`);
 
         // Verify the signed URL is accessible
         try {
-          const urlTest = await fetch(signedUrl, { method: "HEAD" });
+          const urlTest = await fetch(signedUrl, { method: 'HEAD' });
 
           if (urlTest.ok) {
-            console.log("✅ S3 signed URL is accessible");
-            console.log(
-              `📂 Content-Type: ${urlTest.headers.get("Content-Type")}`,
-            );
-            console.log(
-              `📏 Size: ${urlTest.headers.get("Content-Length")} bytes`,
-            );
+            console.log('✅ S3 signed URL is accessible');
+            console.log(`📂 Content-Type: ${urlTest.headers.get('Content-Type')}`);
+            console.log(`📏 Size: ${urlTest.headers.get('Content-Length')} bytes`);
 
             return {
               success: true,
@@ -269,7 +242,7 @@ export async function getS3DownloadUrl(
             };
           } else {
             console.error(
-              `❌ S3 signed URL not accessible: ${urlTest.status} ${urlTest.statusText}`,
+              `❌ S3 signed URL not accessible: ${urlTest.status} ${urlTest.statusText}`
             );
             return {
               success: false,
@@ -278,25 +251,25 @@ export async function getS3DownloadUrl(
             };
           }
         } catch (urlError) {
-          console.error("❌ Error testing S3 signed URL:", urlError);
+          console.error('❌ Error testing S3 signed URL:', urlError);
           return {
             success: false,
-            error: "Failed to verify S3 signed URL",
+            error: 'Failed to verify S3 signed URL',
             downloadUrl: signedUrl, // Return it anyway for debugging
           };
         }
       } else {
-        console.error("❌ Missing Location header in 302 response");
+        console.error('❌ Missing Location header in 302 response');
         return {
           success: false,
-          error: "Missing S3 signed URL in response",
+          error: 'Missing S3 signed URL in response',
         };
       }
     } else if (response.status === 404) {
-      console.log("📄 Document not found in S3 - may need to generate first");
+      console.log('📄 Document not found in S3 - may need to generate first');
       return {
         success: false,
-        error: "Document not found in S3 bucket",
+        error: 'Document not found in S3 bucket',
       };
     } else {
       const errorText = await response.text().catch(() => response.statusText);
@@ -304,9 +277,9 @@ export async function getS3DownloadUrl(
 
       let errorMessage = `Download failed (${response.status})`;
       if (response.status === 500) {
-        errorMessage += " - Lambda or S3 access error";
+        errorMessage += ' - Lambda or S3 access error';
       } else if (response.status === 403) {
-        errorMessage += " - Insufficient permissions for S3 access";
+        errorMessage += ' - Insufficient permissions for S3 access';
       }
 
       return {
@@ -315,10 +288,10 @@ export async function getS3DownloadUrl(
       };
     }
   } catch (error) {
-    console.error("❌ Network error getting S3 download URL:", error);
+    console.error('❌ Network error getting S3 download URL:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Network error",
+      error: error instanceof Error ? error.message : 'Network error',
     };
   }
 }
@@ -344,8 +317,8 @@ export interface PMProject {
     upcoming?: number;
   };
   days_since_update?: number;
-  acta_status?: "current" | "outdated" | "missing";
-  priority_level?: "low" | "medium" | "high";
+  acta_status?: 'current' | 'outdated' | 'missing';
+  priority_level?: 'low' | 'medium' | 'high';
 }
 
 export interface PMProjectsResponse {
@@ -362,52 +335,48 @@ export interface PMProjectsResponse {
 // Get all projects assigned to a PM by email (via metadata enricher)
 export async function getProjectsByPM(
   pmEmail: string,
-  isAdmin: boolean = false,
+  isAdmin: boolean = false
 ): Promise<ProjectSummary[]> {
-  console.log("📋 Loading projects for PM:", pmEmail, "Admin:", isAdmin);
+  console.log('📋 Loading projects for PM:', pmEmail, 'Admin:', isAdmin);
 
   // Use correct endpoint that matches projectMetadataEnricher
   const endpoint = isAdmin
     ? `${BASE}/pm-manager/all-projects`
     : `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`;
 
-  console.log("🌐 PM Projects endpoint:", endpoint);
+  console.log('🌐 PM Projects endpoint:', endpoint);
 
   return apiGet<ProjectSummary[]>(endpoint);
 }
 
 // Get all projects (admin only)
 export async function getAllProjects(): Promise<ProjectSummary[]> {
-  console.log("📋 Loading all projects (admin access)");
+  console.log('📋 Loading all projects (admin access)');
 
   // Use the admin endpoint to get all projects
   const endpoint = `${BASE}/pm-manager/all-projects`;
-  console.log("🌐 All Projects endpoint:", endpoint);
+  console.log('🌐 All Projects endpoint:', endpoint);
 
   return apiGet<ProjectSummary[]>(endpoint);
 }
 
 // Get enhanced PM projects with summary data
-export async function getPMProjectsWithSummary(
-  pmEmail: string,
-): Promise<PMProjectsResponse> {
+export async function getPMProjectsWithSummary(pmEmail: string): Promise<PMProjectsResponse> {
   // Handle admin access
-  if (pmEmail === "admin-all-access") {
+  if (pmEmail === 'admin-all-access') {
     return apiGet<PMProjectsResponse>(`${BASE}/pm-manager/all-projects`);
   }
 
-  return apiGet<PMProjectsResponse>(
-    `${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`,
-  );
+  return apiGet<PMProjectsResponse>(`${BASE}/pm-manager/${encodeURIComponent(pmEmail)}`);
 }
 
 // Get project summary (enhanced with PM context)
 export async function getProjectSummaryForPM(
   projectId: string,
-  pmEmail: string,
+  pmEmail: string
 ): Promise<ProjectSummary & { pm_context?: PMProject }> {
   return apiGet<ProjectSummary & { pm_context?: PMProject }>(
-    `${BASE}/project-summary/${projectId}?pm_email=${encodeURIComponent(pmEmail)}`,
+    `${BASE}/project-summary/${projectId}?pm_email=${encodeURIComponent(pmEmail)}`
   );
 }
 
@@ -419,39 +388,36 @@ export async function generateSummariesForPM(pmEmail: string): Promise<{
 }> {
   return apiPost<{ success: string[]; failed: string[]; total: number }>(
     `${BASE}/bulk-generate-summaries`,
-    { pm_email: pmEmail },
+    { pm_email: pmEmail }
   );
 }
 
 /** ---------- CHECK DOCUMENT AVAILABILITY ---------- */
 export async function checkDocumentAvailability(
   id: string,
-  format: "pdf" | "docx",
+  format: 'pdf' | 'docx'
 ): Promise<{ available: boolean; lastModified?: string }> {
   try {
-    const response = await fetch(
-      `${BASE}/document-validator/${id}?format=${format}`,
-      {
-        method: "HEAD",
-      },
-    );
+    const response = await fetch(`${BASE}/document-validator/${id}?format=${format}`, {
+      method: 'HEAD',
+    });
 
     if (response.ok) {
       return {
         available: true,
-        lastModified: response.headers.get("Last-Modified") || undefined,
+        lastModified: response.headers.get('Last-Modified') || undefined,
       };
     }
 
     return { available: false };
   } catch (error) {
-    console.warn("Error checking document availability:", error);
+    console.warn('Error checking document availability:', error);
     return { available: false };
   }
 }
 
 // Attach critical API functions to window for test-production.js visibility
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.getSummary = getSummary;
   window.getTimeline = getTimeline;
   window.getDownloadUrl = getDownloadUrl;

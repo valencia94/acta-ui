@@ -1,13 +1,12 @@
 // src/components/DocumentStatus.tsx
-import { CheckCircle, Clock, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CheckCircle, Clock, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-
-import { checkDocumentInS3 } from "@/lib/api";
+import { checkDocumentInS3 } from '@/lib/api';
 
 interface DocumentStatusProps {
   projectId: string;
-  format: "docx" | "pdf";
+  format: 'docx' | 'pdf';
   className?: string;
 }
 
@@ -19,11 +18,7 @@ interface DocumentInfo {
   s3Key?: string;
 }
 
-export default function DocumentStatus({
-  projectId,
-  format,
-  className = "",
-}: DocumentStatusProps) {
+export default function DocumentStatus({ projectId, format, className = '' }: DocumentStatusProps) {
   const [docInfo, setDocInfo] = useState<DocumentInfo>({
     available: false,
     checking: false,
@@ -48,7 +43,7 @@ export default function DocumentStatus({
           checking: false,
         });
       } catch (error) {
-        console.warn("Error checking document status in S3:", error);
+        console.warn('Error checking document status in S3:', error);
         setDocInfo({ available: false, checking: false });
       }
     };
@@ -70,7 +65,7 @@ export default function DocumentStatus({
 
   const getStatusText = () => {
     if (docInfo.checking) {
-      return "Checking S3...";
+      return 'Checking S3...';
     }
 
     if (docInfo.available) {
@@ -91,22 +86,20 @@ export default function DocumentStatus({
         parts.push(date);
       }
 
-      return `Available in S3${parts.length ? " (" + parts.join(", ") + ")" : ""}`;
+      return `Available in S3${parts.length ? ' (' + parts.join(', ') + ')' : ''}`;
     }
 
-    return "Not found in S3";
+    return 'Not found in S3';
   };
 
   const getStatusColor = () => {
-    if (docInfo.checking) return "text-yellow-600";
-    if (docInfo.available) return "text-green-600";
-    return "text-gray-500";
+    if (docInfo.checking) return 'text-yellow-600';
+    if (docInfo.available) return 'text-green-600';
+    return 'text-gray-500';
   };
 
   return (
-    <div
-      className={`flex flex-col gap-1 text-sm ${getStatusColor()} ${className}`}
-    >
+    <div className={`flex flex-col gap-1 text-sm ${getStatusColor()} ${className}`}>
       <div className="flex items-center gap-2">
         {getStatusIcon()}
         <span>

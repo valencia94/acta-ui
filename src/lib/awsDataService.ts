@@ -1,10 +1,10 @@
 // src/lib/awsDataService.ts
 // ✅ AWS SDK v3 integration using Cognito Identity Pool for temporary IAM credentials
 
-import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
 import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { GetObjectCommand,S3Client } from '@aws-sdk/client-s3';
+import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { fetchAuthSession } from 'aws-amplify/auth';
 

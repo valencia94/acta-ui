@@ -1,14 +1,8 @@
 // src/hooks/useAuthContext.tsx
-import { fetchAuthSession, signOut } from "aws-amplify/auth";
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { fetchAuthSession, signOut } from 'aws-amplify/auth';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-import { skipAuth } from "@/env.variables";
+import { skipAuth } from '@/env.variables';
 
 interface AuthContextType {
   isAuthed: boolean;
@@ -32,16 +26,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const { tokens } = await fetchAuthSession();
-      const token = tokens?.idToken?.toString() ?? "";
+      const token = tokens?.idToken?.toString() ?? '';
       if (token) {
-        localStorage.setItem("ikusi.jwt", token);
+        localStorage.setItem('ikusi.jwt', token);
         setIsAuthed(true);
       } else {
-        localStorage.removeItem("ikusi.jwt");
+        localStorage.removeItem('ikusi.jwt');
         setIsAuthed(false);
       }
     } catch {
-      localStorage.removeItem("ikusi.jwt");
+      localStorage.removeItem('ikusi.jwt');
       setIsAuthed(false);
     } finally {
       setIsChecking(false);
@@ -51,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       // Clear local storage first
-      localStorage.removeItem("ikusi.jwt");
+      localStorage.removeItem('ikusi.jwt');
       localStorage.clear();
 
       // Set auth state to false immediately
@@ -62,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await signOut({ global: true });
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error('Logout error:', error);
       // Even if signOut fails, we've already cleared local state
     }
   };
@@ -81,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuthContext() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuthContext must be used within an AuthProvider");
+    throw new Error('useAuthContext must be used within an AuthProvider');
   }
   return context;
 }

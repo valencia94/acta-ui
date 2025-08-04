@@ -1,11 +1,11 @@
 // src/components/LoadingSkeleton.tsx
-import React from "react";
+import React from 'react';
 
 interface SkeletonRowProps {
   className?: string;
 }
 
-export function SkeletonRow({ className = "" }: SkeletonRowProps) {
+export function SkeletonRow({ className = '' }: SkeletonRowProps) {
   return (
     <tr className={`animate-pulse ${className}`}>
       <td className="px-6 py-4">
@@ -51,15 +51,11 @@ export function ProjectTableSkeleton({ rows = 3 }: ProjectSkeletonProps) {
                 <th className="px-4 sm:px-6 py-3 text-left font-semibold hidden sm:table-cell">
                   ID
                 </th>
-                <th className="px-4 sm:px-6 py-3 text-left font-semibold">
-                  Name
-                </th>
+                <th className="px-4 sm:px-6 py-3 text-left font-semibold">Name</th>
                 <th className="px-4 sm:px-6 py-3 text-left font-semibold hidden md:table-cell">
                   PM
                 </th>
-                <th className="px-4 sm:px-6 py-3 text-left font-semibold">
-                  Status
-                </th>
+                <th className="px-4 sm:px-6 py-3 text-left font-semibold">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -91,7 +87,7 @@ interface CardSkeletonProps {
   className?: string;
 }
 
-export function CardSkeleton({ className = "" }: CardSkeletonProps) {
+export function CardSkeleton({ className = '' }: CardSkeletonProps) {
   return (
     <div
       className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 animate-pulse ${className}`}

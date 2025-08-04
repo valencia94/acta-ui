@@ -1,1 +1,1 @@
-export { default } from "./PDFPreview";
+export { default } from './PDFPreview';
