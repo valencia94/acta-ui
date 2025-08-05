@@ -196,6 +196,11 @@ export default function App() {
               )
             }
           />
+          {/* Catch-all route for unmatched paths - redirect to dashboard if authenticated, login if not */}
+          <Route
+            path="*"
+            element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} replace />}
+          />
         </Routes>
       </BrowserRouter>
 

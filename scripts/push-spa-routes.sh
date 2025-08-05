@@ -22,5 +22,13 @@ aws cloudfront create-invalidation \
   --paths "/*" \
   --region "$REGION"
 
+echo "🔍 Verifying SPA routing files were uploaded..."
+aws s3 ls "s3://$BUCKET/index.html" --region "$REGION" || echo "⚠️  index.html not found"
+aws s3 ls "s3://$BUCKET/404.html" --region "$REGION" || echo "⚠️  404.html not found"
+
 echo "✅ Deployment complete!"
+echo "📋 Next steps:"
+echo "  1. Wait 5-10 minutes for CloudFront invalidation to complete"
+echo "  2. Test direct navigation to routes like /dashboard, /admin, /projects-for-pm"
+echo "  3. Verify browser refresh works on all routes"
 

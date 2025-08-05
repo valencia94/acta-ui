@@ -26,6 +26,7 @@
     "predeploy": "pnpm run check-aws && pnpm run build && node scripts/smoke-test.js && bash scripts/push-spa-routes.sh",
     "deploy": "pnpm run predeploy",
     "smoke-test": "node scripts/smoke-test.js",
+    "test:spa-config": "node scripts/test-spa-config.js",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "test:cognito": "node test-cognito-login.js",
