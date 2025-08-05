@@ -20,12 +20,21 @@ export default defineConfig({
       closeBundle() {
         const src = path.resolve(process.cwd(), "public/aws-exports.js");
         const dest = path.resolve(process.cwd(), "dist/aws-exports.js");
+        const destDir = path.dirname(dest);
 
         console.log(`🧩 Copying aws-exports.js from ${src} → ${dest}`);
 
         if (fs.existsSync(src)) {
-          fs.copyFileSync(src, dest);
-          console.log("✅ aws-exports.js copied successfully.");
+          try {
+            // Ensure destination directory exists
+            if (!fs.existsSync(destDir)) {
+              fs.mkdirSync(destDir, { recursive: true });
+            }
+            fs.copyFileSync(src, dest);
+            console.log("✅ aws-exports.js copied successfully.");
+          } catch (error) {
+            console.warn("⚠️ Failed to copy aws-exports.js:", error.message);
+          }
         } else {
           console.warn("⚠️ aws-exports.js not found. Skipping copy.");
         }
