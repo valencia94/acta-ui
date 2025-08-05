@@ -7,7 +7,7 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "pnpm@9",
+  "packageManager": "pnpm@9.0.0",
   "scripts": {
     "lint": "pnpm exec eslint .",
     "ci:lint": "pnpm run lint",
