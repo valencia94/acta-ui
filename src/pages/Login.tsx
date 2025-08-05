@@ -28,9 +28,19 @@ type AuthMode = 'signin' | 'signup' | 'confirm' | 'forgot' | 'reset';
 
 const logoSrc = '/assets/ikusi-logo.png';
 
+// Test credentials from the problem statement
+const TEST_EMAIL = 'christian.valencia@ikusi.com';
+const TEST_PASSWORD = 'PdYb7TU7HvBhYP7$!';
+
+// Helper to fill test credentials in development
+const fillTestCredentials = (setValue: any) => {
+  setValue('email', TEST_EMAIL);
+  setValue('password', TEST_PASSWORD);
+};
+
 export default function Login() {
   const nav = useNavigate();
-  const { register, handleSubmit, watch, reset } = useForm<FormData>();
+  const { register, handleSubmit, watch, reset, setValue } = useForm<FormData>();
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -519,6 +529,22 @@ export default function Login() {
               {getButtonText()}
             </MotionButton>
           </form>
+
+          {/* Test Credentials Helper (Development/Demo) */}
+          {(import.meta.env.DEV || skipAuth) && authMode === 'signin' && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => fillTestCredentials(setValue)}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-full border border-blue-200"
+              >
+                💡 Fill Test Credentials
+              </button>
+              <p className="text-xs text-gray-500 mt-1">
+                Use: {TEST_EMAIL}
+              </p>
+            </div>
+          )}
 
           {/* Navigation Links */}
           <div className="mt-6 space-y-4">
