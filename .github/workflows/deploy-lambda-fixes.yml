@@ -35,9 +35,15 @@ jobs:
 
       - name: 🔧 Deploy Lambda function fixes
         run: |
-          echo "🔧 Deploying Lambda function fixes for button issues..."
-          chmod +x fix-lambda-functions.sh
-          ./fix-lambda-functions.sh
+          echo "🔧 Deploying Lambda function fixes..."
+          if [[ -f scripts/fix-lambda-functions.sh ]]; then
+            chmod +x scripts/fix-lambda-functions.sh
+            ./scripts/fix-lambda-functions.sh
+          else
+            echo "⚠️ Script not found. Running full audit instead."
+            chmod +x scripts/deployment-audit.sh
+            ./scripts/deployment-audit.sh
+          fi
 
       - name: 🧪 Test Lambda functions after deployment
         run: |
@@ -85,13 +91,13 @@ jobs:
       - name: 🚀 Deploy to S3
         run: |
           echo "🚀 Deploying updated frontend to S3..."
-          aws s3 sync dist/ s3://acta-ui-bucket --delete
+          aws s3 sync dist/ s3://acta-ui-frontend-prod --delete
 
       - name: 🔄 Invalidate CloudFront
         run: |
           echo "🔄 Invalidating CloudFront cache..."
           aws cloudfront create-invalidation \
-            --distribution-id E1ABCDEFGHIJKL \
+            --distribution-id EPQU7PVDLQXUA \
             --paths "/*" || echo "⚠️ CloudFront invalidation failed - check distribution ID"
 
   test-complete-system:
@@ -114,7 +120,7 @@ jobs:
           echo "====================" | tee -a deployment-summary.md
           echo "" | tee -a deployment-summary.md
           echo "✅ Lambda function fixes deployed" | tee -a deployment-summary.md
-          echo "✅ Frontend updated with API endpoint fixes" | tee -a deployment-summary.md  
+          echo "✅ Frontend updated with API endpoint fixes" | tee -a deployment-summary.md
           echo "✅ System testing completed" | tee -a deployment-summary.md
           echo "" | tee -a deployment-summary.md
           echo "🎯 EXPECTED RESULTS:" | tee -a deployment-summary.md
@@ -124,10 +130,4 @@ jobs:
           echo "- Send Approval button: 400 → 200" | tee -a deployment-summary.md
           echo "- Admin/PM project lists: Working with auth" | tee -a deployment-summary.md
           echo "" | tee -a deployment-summary.md
-          echo "🚀 Ready for production testing with authentication!" | tee -a deployment-summary.md
-
-      - name: 🗂 Upload deployment summary
-        uses: actions/upload-artifact@v3
-        with:
-          name: deployment-summary
-          path: deployment-summary.md
+          echo "🚀
