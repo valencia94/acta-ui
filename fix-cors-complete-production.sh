@@ -29,6 +29,7 @@ declare -a RESOURCES=(
   "send-approval-email"
   "pm-manager/all-projects"
   "pm-manager/{pmEmail}"
+  "projects-for-pm"
   "upload-document"
   "projects"
   "projects/{id}"
@@ -80,7 +81,7 @@ add_cors_options() {
     --resource-id "$RESOURCE_ID" \
     --http-method OPTIONS \
     --status-code 200 \
-    --response-parameters 'method.response.header.Access-Control-Allow-Origin=true,method.response.header.Access-Control-Allow-Methods=true,method.response.header.Access-Control-Allow-Headers=true,method.response.header.Access-Control-Allow-Credentials=true' \
+    --response-parameters 'method.response.header.Access-Control-Allow-Origin=true,method.response.header.Access-Control-Allow-Headers=true,method.response.header.Access-Control-Allow-Methods=true' \
     --response-models '{"application/json":"Empty"}' \
     --region "$REGION" >/dev/null 2>&1
 
@@ -90,7 +91,7 @@ add_cors_options() {
     --resource-id "$RESOURCE_ID" \
     --http-method OPTIONS \
     --status-code 200 \
-    --response-parameters "method.response.header.Access-Control-Allow-Origin='$PROD_ORIGIN',method.response.header.Access-Control-Allow-Methods='GET,POST,PUT,DELETE,OPTIONS,HEAD',method.response.header.Access-Control-Allow-Headers='Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',method.response.header.Access-Control-Allow-Credentials='true'" \
+    --response-parameters "method.response.header.Access-Control-Allow-Origin='*',method.response.header.Access-Control-Allow-Methods='GET,OPTIONS',method.response.header.Access-Control-Allow-Headers='Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'" \
     --response-templates '{"application/json":""}' \
     --region "$REGION" >/dev/null 2>&1
 
@@ -117,10 +118,9 @@ echo ""
 echo "🎉 ALL CORS OPTIONS METHODS APPLIED!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ CORS Headers Configured:"
-echo "   • Access-Control-Allow-Origin: $PROD_ORIGIN"
-echo "   • Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS,HEAD"
-echo "   • Access-Control-Allow-Headers: Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token"
-echo "   • Access-Control-Allow-Credentials: true"
+echo "   • Access-Control-Allow-Origin: *"
+echo "   • Access-Control-Allow-Methods: GET,OPTIONS"
+echo "   • Access-Control-Allow-Headers: Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token"
 echo ""
 echo "🔧 Fixed Endpoints:"
 for path in "${RESOURCES[@]}"; do
@@ -128,7 +128,7 @@ for path in "${RESOURCES[@]}"; do
 done
 echo ""
 echo "🧪 Test with:"
-echo "curl -X OPTIONS 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/health' \\"
+echo "curl -X OPTIONS 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod/projects-for-pm' \\"
 echo "  -H 'Origin: $PROD_ORIGIN' \\"
 echo "  -H 'Access-Control-Request-Method: GET' \\"
 echo "  -H 'Access-Control-Request-Headers: Authorization' -v"
