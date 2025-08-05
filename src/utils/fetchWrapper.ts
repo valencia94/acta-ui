@@ -1,5 +1,5 @@
-// ✅ fetchWrapper.ts – Full JWT + SigV4 Support, Logging, Headers, Retry
-// src/utils/fetchWrapper.ts
+// ✅ fetchWrapper.ts – Final Merge-Validated Version (CORS + CI Safe)
+
 import { fetchAuthSession } from "aws-amplify/auth";
 import { skipAuth } from "@/env.variables";
 import { SignatureV4 } from "@smithy/signature-v4";
@@ -21,7 +21,7 @@ function needsSigV4(url: string): boolean {
   if (typeof process !== "undefined" && process.env.VITEST) {
     return false;
   }
-  return sigv4Endpoints.some(ep => url.includes(ep));
+  return sigv4Endpoints.some((ep) => url.includes(ep));
 }
 
 export async function getAuthToken(): Promise<string | null> {
@@ -73,8 +73,24 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
     const parsed = parseUrl(url);
     const headerRecord: Record<string, string> = {
       host: parsed.hostname,
-      ...Object.fromEntries(new Headers(init?.headers).entries()),
     };
+
+    if (init?.headers) {
+      const headers = init.headers;
+      if (headers instanceof Headers) {
+        headers.forEach((value, key) => {
+          headerRecord[key] = value;
+        });
+      } else if (Array.isArray(headers)) {
+        headers.forEach(([key, value]) => {
+          headerRecord[key] = value;
+        });
+      } else if (typeof headers === "object") {
+        Object.entries(headers).forEach(([key, value]) => {
+          headerRecord[key] = String(value);
+        });
+      }
+    }
 
     const request = new HttpRequest({
       ...parsed,
@@ -85,6 +101,7 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
 
     const signed = (await signer.sign(request)) as HttpRequest;
     const { response } = await new FetchHttpHandler().handle(signed);
+
     const raw = await response.body?.transformToString();
     try {
       const json = JSON.parse(raw ?? "");
