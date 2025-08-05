@@ -51,11 +51,13 @@ jobs:
       - name: Build (CI)
         env:
           CI: '1'
+          VITE_AWS_REGION: us-east-2
         run: pnpm run build
 
       - name: Build Storybook
         env:
           CI: '1'
+          VITE_AWS_REGION: us-east-2
         run: pnpm run build:storybook || true
 
       - name: Run command

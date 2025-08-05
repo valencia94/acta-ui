@@ -8,6 +8,11 @@ import { HttpRequest } from "@smithy/protocol-http";
 import { parseUrl } from "@smithy/url-parser";
 import { FetchHttpHandler } from "@smithy/fetch-http-handler";
 
+const region =
+  import.meta.env.VITE_AWS_REGION ||
+  import.meta.env.VITE_COGNITO_REGION ||
+  "us-east-2";
+
 const sigv4Endpoints = [
   "/projects-for-pm",
   "/send-approval-email",
@@ -61,10 +66,7 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
 
     const signer = new SignatureV4({
       service: "execute-api",
-      region:
-        import.meta.env.VITE_AWS_REGION ||
-        import.meta.env.VITE_COGNITO_REGION ||
-        "us-east-2",
+      region,
       credentials: {
         accessKeyId: creds.accessKeyId,
         secretAccessKey: creds.secretAccessKey,

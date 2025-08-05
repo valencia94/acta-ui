@@ -5,6 +5,9 @@ on:
   push:
     branches: [main, develop]
 
+env:
+  VITE_AWS_REGION: us-east-2
+
 jobs:
   audit:
     runs-on: ubuntu-latest

@@ -12,6 +12,7 @@ env:                      # ---------- Global env ----------
   API_ID:      ${{ secrets.ACTA_API_ID }}
   API_ROOT_ID: ${{ secrets.ACTA_API_ROOT_ID }}
   API_STAGE:   prod
+  VITE_AWS_REGION: us-east-2
 # -----------------------------------------------------------
 
 jobs:
