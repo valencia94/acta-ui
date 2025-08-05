@@ -48,7 +48,7 @@ module.exports = {
     'unused-imports/no-unused-imports': 'error',
 
     // Console control
-    'no-console': 'warn',
+    'no-console': ['warn', { allow: ['warn', 'error', 'log'] }],
 
     'react/react-in-jsx-scope': 'off',
 
