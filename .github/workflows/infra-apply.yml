@@ -2,7 +2,6 @@ name: Apply Infrastructure Scripts
 
 on:
   workflow_dispatch:
-    description: 'Manually trigger infrastructure scripts'
   pull_request:
     types: [labeled]
     branches: [main]
@@ -12,34 +11,43 @@ jobs:
     name: Apply Infrastructure Scripts
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || contains(github.event.label.name, 'apply-infra')
-    
+
     permissions:
       id-token: write
       contents: read
-    
+
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v3
-      
-      - name: Setup Node.js
+
+      - name: 🟣 Set up PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: 🔧 Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: 'pnpm'
-      
-      - name: Configure AWS credentials
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔐 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
           aws-region: us-east-2
-      
-      - name: Make infra scripts executable
+
+      - name: ✅ Make infra scripts executable
         run: chmod +x infra/*.sh
-      
-      - name: Run infrastructure scripts
-        run: npm run infra:apply
-      
-      - name: Health check
+
+      - name: 🚀 Run infrastructure scripts
+        run: pnpm run infra:apply
+
+      - name: 🔍 Health check
         run: |
           echo "🔍 Performing health check..."
           curl -f https://d7t9x3j66yd8k.cloudfront.net/health || echo "⚠️ Health check failed"
