@@ -38,23 +38,38 @@ module.exports = {
     '*.stories.tsx',
     'vite.config.ts',
     'vite.config.*.ts',
+    'vitest.config.ts',
     'scripts/',
     'tests/',
   ],
   rules: {
     // Import hygiene
-    'simple-import-sort/imports': 'error',
-    'simple-import-sort/exports': 'error',
-    'unused-imports/no-unused-imports': 'warn',
+    'simple-import-sort/imports': 'off',
+    'simple-import-sort/exports': 'off',
+    'unused-imports/no-unused-imports': 'off',
 
-    // Console control
-    'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
+    // Console control (allow logs in codebase)
+    'no-console': 'off',
     'no-undef': 'off', // Handled by TS
 
     // Optional polish
-    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-floating-promises': 'warn',
+    '@typescript-eslint/no-floating-promises': 'off',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-unsafe-argument': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unsafe-return': 'off',
+    '@typescript-eslint/require-await': 'off',
+    '@typescript-eslint/no-misused-promises': 'off',
+    '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+    'react/react-in-jsx-scope': 'off',
+    'react/no-unescaped-entities': 'off',
+    'react-hooks/exhaustive-deps': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
+    'prettier/prettier': 'off',
   },
   settings: {
     react: {

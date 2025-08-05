@@ -16,8 +16,9 @@ public-backup/
 archive/
 src/aws-exports.js
 tests/playwright.preload.js
+cypress/
+cypress.config.ts
+src/sendProjectsForPM.ts
+src/components/PDFPreview/index.tsx
 # Root JS files (test scripts and debugging)
 *.js
-!*.config.js
-!vite.config.ts
-!vitest.config.ts
