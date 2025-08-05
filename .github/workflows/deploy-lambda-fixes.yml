@@ -24,22 +24,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: 🔐 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::703671891952:role/service-role/codebuild-acta-ui-service-role
+          role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
           aws-region: us-east-2
 
-      - name: Create and deploy Lambda function fixes
+      - name: 🔧 Deploy Lambda function fixes
         run: |
           echo "🔧 Deploying Lambda function fixes for button issues..."
           chmod +x fix-lambda-functions.sh
           ./fix-lambda-functions.sh
 
-      - name: Test Lambda functions after deployment
+      - name: 🧪 Test Lambda functions after deployment
         run: |
           echo "🧪 Testing Lambda functions after fixes..."
           chmod +x test-complete-system.sh
@@ -51,63 +51,64 @@ jobs:
     needs: deploy-lambda-fixes
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: 🟣 Setup pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 9
           standalone: true
           run_install: false
 
-      - name: Setup Node.js
+      - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'pnpm'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run CI checks
+      - name: 🧪 Run CI checks
         run: pnpm run ci
 
-      - name: Build frontend with API fixes
+      - name: 🔨 Build frontend with API fixes
         run: pnpm run build
 
-      - name: Configure AWS credentials
+      - name: 🔐 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::703671891952:role/service-role/codebuild-acta-ui-service-role
+          role-to-assume: ${{ secrets.OIDC_AWS_ROLE_ARN }}
           aws-region: us-east-2
 
-      - name: Deploy to S3
+      - name: 🚀 Deploy to S3
         run: |
           echo "🚀 Deploying updated frontend to S3..."
           aws s3 sync dist/ s3://acta-ui-bucket --delete
 
-      - name: Invalidate CloudFront
+      - name: 🔄 Invalidate CloudFront
         run: |
           echo "🔄 Invalidating CloudFront cache..."
           aws cloudfront create-invalidation \
             --distribution-id E1ABCDEFGHIJKL \
-            --paths "/*" || echo "CloudFront invalidation failed - check distribution ID"
+            --paths "/*" || echo "⚠️ CloudFront invalidation failed - check distribution ID"
 
   test-complete-system:
     runs-on: ubuntu-latest
     needs: [deploy-lambda-fixes, deploy-frontend]
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Run comprehensive system test
+      - name: 🧪 Run comprehensive system test
         run: |
           echo "🧪 Running final system test..."
           chmod +x test-complete-system.sh
           ./test-complete-system.sh
 
-      - name: Create deployment summary
+      - name: 📊 Create deployment summary
         run: |
           echo "📊 DEPLOYMENT SUMMARY" | tee deployment-summary.md
           echo "====================" | tee -a deployment-summary.md
@@ -125,7 +126,7 @@ jobs:
           echo "" | tee -a deployment-summary.md
           echo "🚀 Ready for production testing with authentication!" | tee -a deployment-summary.md
 
-      - name: Upload deployment summary
+      - name: 🗂 Upload deployment summary
         uses: actions/upload-artifact@v3
         with:
           name: deployment-summary
