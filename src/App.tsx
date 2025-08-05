@@ -3,8 +3,7 @@
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Toaster } from 'react-hot-toast';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import Header from '@/components/Header';
 import { skipAuth } from '@/env.variables';
@@ -33,21 +32,14 @@ const DashboardTester = import.meta.env.DEV
     )
   : null;
 
-// 🧪 Load testing utilities only in development
 if (import.meta.env.DEV) {
-  // Development testing modules (commented out for production build)
-  // import('@/utils/authTesting').catch(() => {});
-  // import('@/utils/authFlowTest').catch(() => {});
-  // import('@/utils/dashboardTesting').catch(() => {});
-  
-  // 🗺️ Log out React routes in dev mode
   console.log('🗺️ Available routes in dev mode:', [
     '/',
-    '/login', 
+    '/login',
     '/dashboard',
     '/admin',
     '/profile',
-    '/projects-for-pm'
+    '/projects-for-pm',
   ]);
 }
 
@@ -130,79 +122,76 @@ export default function App() {
 
   return (
     <ChakraProvider value={defaultSystem}>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} />}
-          />
-          <Route
-            path="/login"
-            element={skipAuth || isAuthed ? <Navigate to="/dashboard" /> : <Login />}
-          />
-          <Route
-            path="/dashboard"
-            element={skipAuth || isAuthed ? <Dashboard /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/admin"
-            element={skipAuth || isAuthed ? <AdminDashboard /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/profile"
-            element={
-              skipAuth || isAuthed ? (
-                <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
-                  <Header />
-                  <div className="py-12 px-4">
-                    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-                      <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile</h1>
-                      <p className="text-gray-600 mb-4">User profile page (Coming soon)</p>
-                      <button
-                        onClick={() => window.history.back()}
-                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                      >
-                        Go Back
-                      </button>
-                    </div>
+      <Routes>
+        <Route
+          path="/"
+          element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} />}
+        />
+        <Route
+          path="/login"
+          element={skipAuth || isAuthed ? <Navigate to="/dashboard" /> : <Login />}
+        />
+        <Route
+          path="/dashboard"
+          element={skipAuth || isAuthed ? <Dashboard /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/admin"
+          element={skipAuth || isAuthed ? <AdminDashboard /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/profile"
+          element={
+            skipAuth || isAuthed ? (
+              <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
+                <Header />
+                <div className="py-12 px-4">
+                  <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile</h1>
+                    <p className="text-gray-600 mb-4">User profile page (Coming soon)</p>
+                    <button
+                      onClick={() => window.history.back()}
+                      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                    >
+                      Go Back
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/projects-for-pm"
-            element={
-              skipAuth || isAuthed ? (
-                <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
-                  <Header />
-                  <div className="py-12 px-4">
-                    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-                      <h1 className="text-2xl font-bold text-gray-900 mb-4">PM Projects</h1>
-                      <p className="text-gray-600 mb-4">Project Manager view (Coming soon)</p>
-                      <button
-                        onClick={() => window.history.back()}
-                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                      >
-                        Go Back
-                      </button>
-                    </div>
+              </div>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/projects-for-pm"
+          element={
+            skipAuth || isAuthed ? (
+              <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
+                <Header />
+                <div className="py-12 px-4">
+                  <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">PM Projects</h1>
+                    <p className="text-gray-600 mb-4">Project Manager view (Coming soon)</p>
+                    <button
+                      onClick={() => window.history.back()}
+                      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                    >
+                      Go Back
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          {/* Catch-all route for unmatched paths - redirect to dashboard if authenticated, login if not */}
-          <Route
-            path="*"
-            element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} replace />}
-          />
-        </Routes>
-      </BrowserRouter>
+              </div>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="*"
+          element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} replace />}
+        />
+      </Routes>
 
       <Toaster
         position="top-right"
