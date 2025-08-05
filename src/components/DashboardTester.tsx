@@ -22,7 +22,7 @@ export default function DashboardTester() {
     const results = [];
 
     // Test 1: Check project ID input
-    const projectIdInput = document.querySelector('#projectId');
+    const projectIdInput = document.querySelector<HTMLInputElement>('#projectId');
     results.push({
       test: 'Project ID Input',
       status: projectIdInput ? 'pass' : 'fail',
@@ -91,7 +91,7 @@ export default function DashboardTester() {
   };
 
   const testButtonClick = (buttonName: string) => {
-    const projectIdInput = document.querySelector('#projectId');
+    const projectIdInput = document.querySelector<HTMLInputElement>('#projectId');
     if (projectIdInput && !projectIdInput.value) {
       projectIdInput.value = '1000000064013473';
       projectIdInput.dispatchEvent(new Event('input', { bubbles: true }));

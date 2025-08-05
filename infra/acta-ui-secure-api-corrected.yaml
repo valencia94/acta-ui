@@ -290,6 +290,54 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
 
+  ProjectsForPMResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ParentId: !Ref ExistingApiRootResourceId
+      PathPart: projects-for-pm
+
+  ProjectsForPMMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsForPMResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectMetadataEnricherArn}/invocations
+
+  ProjectsForPMOptions:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ExistingApiId
+      ResourceId: !Ref ProjectsForPMResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode":200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+            ResponseTemplates:
+              application/json: ''
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+          ResponseModels:
+            application/json: Empty
+
   # Document Status Check Resource (PROTECTED) - For document verification
   CheckDocumentResource:
     Type: AWS::ApiGateway::Resource
@@ -400,6 +448,14 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/pm-projects/*
 
+  ProjectsForPmPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: projectMetadataEnricher
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ExistingApiId}/*/GET/projects-for-pm
+
   CheckDocumentPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -420,6 +476,8 @@ Resources:
       - ExtractProjectPlaceMethod
       - SendApprovalEmailMethod
       - ProjectsMethod
+      - ProjectsForPMMethod
+      - ProjectsForPMOptions
       - PMProjectsAllMethod
       - PMProjectsEmailMethod
       - CheckDocumentMethod
@@ -448,7 +506,7 @@ Outputs:
 
   ProtectedEndpoints:
     Description: Endpoints that require Cognito authentication
-    Value: "timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email, projects, pm-projects/*, check-document/{id}"
+    Value: "timeline/{id}, project-summary/{id}, download-acta/{id}, extract-project-place/{id}, send-approval-email, projects, projects-for-pm, pm-projects/*, check-document/{id}"
 
   AmplifyIntegrationReady:
     Description: Amplify/Cognito integration status
