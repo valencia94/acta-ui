@@ -6,7 +6,7 @@ import { SignatureV4 } from "@smithy/signature-v4";
 import { Sha256 } from "@aws-crypto/sha256-js";
 import { HttpRequest } from "@smithy/protocol-http";
 import { parseUrl } from "@smithy/url-parser";
-import { HttpHandler } from "@smithy/fetch-http-handler";
+import { FetchHttpHandler } from "@smithy/fetch-http-handler";
 
 const sigv4Endpoints = [
   "/projects-for-pm",
@@ -79,7 +79,7 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
     });
 
     const signed = await signer.sign(request);
-    const { response } = await new HttpHandler().handle(signed);
+    const { response } = await new FetchHttpHandler().handle(signed);
     const raw = await response.text();
     try {
       const json = JSON.parse(raw);
