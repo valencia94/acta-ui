@@ -5,10 +5,9 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=20 <23",
-    "pnpm": ">=8 <9"
+    "node": ">=18"
   },
-  "packageManager": "pnpm@8.15.6",
+  "packageManager": "pnpm@9",
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx,.js",
     "ci:check": "pnpm run type-check",
@@ -30,7 +29,11 @@
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "test:cognito": "node test-cognito-login.js",
-    "test:cognito:browser": "node test-cognito-auth.js"
+    "test:cognito:browser": "node test-cognito-auth.js",
+    "infra:apply": "bash infra/apply-infra.sh",
+    "infra:cloudfront": "bash infra/cloudfront-cors.sh",
+    "infra:api": "bash infra/api-gw-cors.sh",
+    "infra:iam": "bash infra/iam-policy.sh"
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.13.3",
