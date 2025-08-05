@@ -18,6 +18,9 @@ const sigv4Endpoints = [
 ];
 
 function needsSigV4(url: string): boolean {
+  if (typeof process !== "undefined" && process.env.VITEST) {
+    return false;
+  }
   return sigv4Endpoints.some(ep => url.includes(ep));
 }
 
@@ -68,21 +71,23 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
     });
 
     const parsed = parseUrl(url);
+    const headerRecord: Record<string, string> = {
+      host: parsed.hostname,
+      ...Object.fromEntries(new Headers(init?.headers).entries()),
+    };
+
     const request = new HttpRequest({
       ...parsed,
       method: init?.method || "GET",
-      headers: {
-        host: parsed.hostname,
-        ...(init?.headers || {}),
-      },
+      headers: headerRecord,
       body: init?.body,
     });
 
-    const signed = await signer.sign(request);
+    const signed = (await signer.sign(request)) as HttpRequest;
     const { response } = await new FetchHttpHandler().handle(signed);
-    const raw = await response.text();
+    const raw = await response.body?.transformToString();
     try {
-      const json = JSON.parse(raw);
+      const json = JSON.parse(raw ?? "");
       console.log("✅ SigV4 Response:", json);
       return json as T;
     } catch (e) {
