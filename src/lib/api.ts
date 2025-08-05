@@ -33,7 +33,7 @@ async function request<T = unknown>(
   options: RequestInit & { auth?: boolean } = {}
 ): Promise<T> {
   const url = `${BASE}${endpoint}`;
-  
+
   console.log('🌐 Making SigV4-signed request to:', url, {
     method: options.method || 'GET',
   });
@@ -100,23 +100,23 @@ export async function getSignedDownloadUrl(
   format: 'pdf' | 'docx'
 ): Promise<string> {
   const url = `${BASE}/download-acta/${projectId}?format=${format}`;
-  
+
   console.log('🔗 Getting download URL for:', url);
-  
+
   // Use fetchWrapper for proper SigV4 signing
   const response = await fetcher<{ downloadUrl?: string; url?: string }>(url, {
-    method: 'GET'
+    method: 'GET',
   });
-  
+
   // Handle different response formats
   if (typeof response === 'string') {
     return response;
   }
-  
+
   if (response && (response.downloadUrl || response.url)) {
-    return response.downloadUrl || response.url!;
+    return response.downloadUrl || response.url;
   }
-  
+
   throw new Error('No download URL returned from API');
 }
 
@@ -146,12 +146,12 @@ export async function documentExists(
   try {
     const url = `${BASE}/check-document/${projectId}?format=${format}`;
     const response = await fetcher<DocumentCheckResult>(url, {
-      method: 'GET'
+      method: 'GET',
     });
-    
+
     return {
       available: true,
-      ...response
+      ...response,
     };
   } catch (error) {
     console.warn('Document check failed:', error);
