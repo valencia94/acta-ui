@@ -69,6 +69,13 @@ fi
 
 echo "🎯 Build verification successful!"
 
+# Create 404.html from index.html if it doesn't exist (SPA requirement)
+if [ ! -f "dist/404.html" ]; then
+    echo "📄 Creating 404.html from index.html for SPA routing..."
+    cp dist/index.html dist/404.html
+    echo "✅ 404.html created successfully"
+fi
+
 echo "☁️ Deploying to S3 bucket: $S3_BUCKET..."
 
 # Sync files to S3 with correct content types and cache headers
