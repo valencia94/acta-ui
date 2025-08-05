@@ -1,46 +1,92 @@
+# ====================================================================
+#  ACTA-UI POST-DEPLOY AUDIT
+#  Validates build integrity + production health after each deploy.
+#  Author: AIGOR | CVDex Tech Solutions
+# ====================================================================
+
 name: ACTA-UI Post-Deploy Audit
 
+# ── Triggers ─────────────────────────────────────────────────────────
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
+  # 1️⃣  Runs automatically when the deploy workflow finishes.
+  workflow_run:
+    workflows: ["Deploy ACTA-UI"]   # ← name of your deploy workflow
+    types: [completed]
+
+  # 2️⃣  Can be started manually from Actions tab.
+  workflow_dispatch: {}
+
+# ── Global env ───────────────────────────────────────────────────────
+env:
+  AWS_REGION: us-east-2
+  CLOUDFRONT_DOMAIN: d7t9x3j66yd8k.cloudfront.net
+  HEALTH_URL: https://d7t9x3j66yd8k.cloudfront.net/health   # simple /health route
+
+permissions:
+  contents: read
+  id-token: write               # required for OIDC → AWS STS
+
+concurrency:
+  group: post-deploy-audit
+  cancel-in-progress: true
 
 jobs:
   audit:
     runs-on: ubuntu-latest
-
-    env:
-      AWS_REGION: us-east-2
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+    timeout-minutes: 25
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+    # ── 1 Checkout ───────────────────────────────────────────────────
+    - uses: actions/checkout@v4
 
-      - name: Install Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
+    # ── 2 Node + pnpm toolchain ──────────────────────────────────────
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18          # keep in sync with local dev
+        cache: pnpm               # speeds up subsequent runs
 
-      - name: Install Dependencies
-        run: pnpm install
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9                # matches packageManager field
+        run_install: false        # we install in next step
 
-      - name: Build App
-        run: pnpm run build
+    # ── 3 Dependencies ───────────────────────────────────────────────
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
 
-      - name: Validate Build Output
-        run: ./scripts/validate-build.sh
+    # ── 4 Static Quality Gates ───────────────────────────────────────
+    - name: Lint
+      run: pnpm exec eslint . --max-warnings=0
 
-      - name: Audit S3 Deployment
-        run: ./scripts/s3-deployment-audit.sh
+    - name: Type-check
+      run: pnpm exec tsc --noEmit
 
-      - name: CloudFront Invalidation
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id EPQU7PVDLQXUA \
-            --paths "/*"
+    - name: Build (Vite prod)
+      run: pnpm run build
 
-      - name: Run Live Smoke Test
-        run: ./scripts/smoke-test.sh
+    - name: Unit tests (Vitest)
+      run: pnpm run test -- --run
+
+    # ── 5 AWS OIDC (optional but handy for S3/DDB checks) ────────────
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume:  ${{ secrets.OIDC_AWS_ROLE_ARN }}
+        aws-region:      ${{ env.AWS_REGION }}
+
+    # ── 6 Production Smoke - CloudFront health-check ────────────────
+    - name: Verify CloudFront health endpoint
+      run: |
+        echo "🔎 Checking $HEALTH_URL"
+        status=$(curl -s -o /dev/null -w '%{http_code}' "$HEALTH_URL")
+        if [ "$status" != "200" ]; then
+          echo "::error::Health check failed – HTTP $status"
+          exit 1
+        fi
+        echo "✅ CloudFront health OK (200)"
+
+    # ── 7 Success banner ─────────────────────────────────────────────
+    - name: Report success
+      if: success()
+      run: echo "🎉 Post-deploy audit passed – all gates green!"
