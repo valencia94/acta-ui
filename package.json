@@ -10,10 +10,11 @@
   },
   "packageManager": "pnpm@8.15.6",
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx,.js",
+    "lint": "pnpm exec eslint .",
+    "ci:lint": "pnpm run lint",
     "ci:check": "pnpm run type-check",
     "ci:test": "pnpm exec vitest --run --coverage",
-    "ci": "pnpm run ci:check && pnpm run ci:test",
+    "ci": "pnpm run ci:lint && pnpm run ci:check && pnpm run ci:test",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "format": "prettier --write .",

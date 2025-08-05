@@ -31,12 +31,12 @@ export default function DashboardTester() {
 
     // Test 2: Check buttons
     const buttons = document.querySelectorAll('button');
-    const generateBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Generate')) as HTMLButtonElement;
+    const generateBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Generate'));
     const approvalBtn = Array.from(buttons).find((btn) =>
       btn.textContent?.includes('Send Approval')
-    ) as HTMLButtonElement;
-    const wordBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Word')) as HTMLButtonElement;
-    const pdfBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('PDF')) as HTMLButtonElement;
+    );
+    const wordBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Word'));
+    const pdfBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('PDF'));
 
     results.push({
       test: 'Generate Button',
@@ -102,13 +102,13 @@ export default function DashboardTester() {
       let targetBtn: HTMLButtonElement | null = null;
 
       if (buttonName === 'generate') {
-        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Generate')) as HTMLButtonElement;
+        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Generate'));
       } else if (buttonName === 'approval') {
-        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Send Approval')) as HTMLButtonElement;
+        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Send Approval'));
       } else if (buttonName === 'word') {
-        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Word')) as HTMLButtonElement;
+        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('Word'));
       } else if (buttonName === 'pdf') {
-        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('PDF')) as HTMLButtonElement;
+        targetBtn = Array.from(buttons).find((btn) => btn.textContent?.includes('PDF'));
       }
 
       if (targetBtn && !targetBtn.disabled) {

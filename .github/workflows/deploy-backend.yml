@@ -30,6 +30,24 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
+      - name: 🟣 Set up PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          standalone: true
+          run_install: false
+
+      - name: 🔧 Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: 📦 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Run CI checks
+        run: pnpm run ci
+
       - name: 🔐 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
