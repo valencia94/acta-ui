@@ -1,35 +1,51 @@
-name: Run ACTA-UI Deployment Audit
+name: CI + Deployment Audit
 
 on:
-  workflow_dispatch: # Manual trigger from GitHub Actions UI
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
 
 jobs:
-  audit:
+  build-and-audit:
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-2
+
     steps:
-      - name: Checkout repo
+      - name: ✅ Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set up Node & install dependencies
+      - name: ♻ Set up Node.js 20
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: pnpm
 
-      - name: Install pnpm
+      - name: ✨ Install pnpm
         run: npm install -g pnpm
 
-      - name: Install deps
+      - name: 🚀 Install dependencies
         run: pnpm install
 
-      - name: Make audit scripts executable
-        run: chmod +x scripts/*.sh
+      - name: ✏️ Lint + Type Check + Test
+        run: pnpm run ci
 
-      - name: Run Deployment Audit
+      - name: 🎉 Build Project
+        run: pnpm run build
+
+      - name: ♻ Make Scripts Executable
+        run: chmod +x ./scripts/*.sh
+
+      - name: ✅ Run Deployment Audit (Build + S3 + Live Smoke Test)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-2
-        run: |
-          pnpm run build
-          ./scripts/deployment-audit.sh
+        run: ./scripts/deployment-audit.sh
+
+      - name: 📊 Upload Audit Logs (optional)
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: deployment-audit-logs
+          path: logs/
