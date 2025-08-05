@@ -76,3 +76,6 @@ jobs:
 
       - name: 🚀 Invalidate CloudFront                       # 1️⃣1️⃣ Invalidate
         run: aws cloudfront create-invalidation --distribution-id "$CF_ID" --paths '/*'
+
+      - name: ℹ️ Infrastructure Update Notice                  # 1️⃣2️⃣ Info
+        run: echo 'ℹ️  To apply new infra scripts, label the PR with `apply-infra`.'
