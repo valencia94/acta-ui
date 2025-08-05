@@ -302,7 +302,7 @@ The deployment flow is managed by `deploy-production.sh`:
 Environment variables are loaded from `.env` and `.env.production` files:
 
 - `VITE_API_BASE_URL`: API Gateway endpoint URL
-- `VITE_APP_REGION`: AWS region (us-east-2)
+- `VITE_AWS_REGION`: AWS region (us-east-2)
 - `VITE_S3_BUCKET`: S3 bucket for documents
 
 ## Common Issues and Solutions

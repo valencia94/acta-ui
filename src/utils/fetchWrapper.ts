@@ -61,7 +61,10 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
 
     const signer = new SignatureV4({
       service: "execute-api",
-      region: import.meta.env.VITE_APP_REGION,
+      region:
+        import.meta.env.VITE_AWS_REGION ||
+        import.meta.env.VITE_COGNITO_REGION ||
+        "us-east-2",
       credentials: {
         accessKeyId: creds.accessKeyId,
         secretAccessKey: creds.secretAccessKey,
