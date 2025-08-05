@@ -4,7 +4,7 @@ import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-
+import { Toaster } from 'react-hot-toast';
 import Header from '@/components/Header';
 import { skipAuth } from '@/env.variables';
 import { useIdleLogout } from '@/hooks/useIdleLogout';
