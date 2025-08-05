@@ -39,6 +39,16 @@ if (import.meta.env.DEV) {
   // import('@/utils/authTesting').catch(() => {});
   // import('@/utils/authFlowTest').catch(() => {});
   // import('@/utils/dashboardTesting').catch(() => {});
+  
+  // 🗺️ Log out React routes in dev mode
+  console.log('🗺️ Available routes in dev mode:', [
+    '/',
+    '/login', 
+    '/dashboard',
+    '/admin',
+    '/profile',
+    '/projects-for-pm'
+  ]);
 }
 
 export default function App() {
@@ -148,6 +158,30 @@ export default function App() {
                     <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
                       <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile</h1>
                       <p className="text-gray-600 mb-4">User profile page (Coming soon)</p>
+                      <button
+                        onClick={() => window.history.back()}
+                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                      >
+                        Go Back
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/projects-for-pm"
+            element={
+              skipAuth || isAuthed ? (
+                <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
+                  <Header />
+                  <div className="py-12 px-4">
+                    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+                      <h1 className="text-2xl font-bold text-gray-900 mb-4">PM Projects</h1>
+                      <p className="text-gray-600 mb-4">Project Manager view (Coming soon)</p>
                       <button
                         onClick={() => window.history.back()}
                         className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"

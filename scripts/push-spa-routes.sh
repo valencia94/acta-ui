@@ -8,8 +8,7 @@ REGION="us-east-2"
 DISTRIBUTION_ID="EPQU7PVDLQXUA"
 DIST_DIR="dist"
 
-echo "📦 Building frontend..."
-pnpm run build
+echo "📦 Build process completed, uploading artifacts..."
 
 echo "☁️ Uploading to S3 bucket: $BUCKET"
 aws s3 sync "$DIST_DIR/" "s3://$BUCKET/" \

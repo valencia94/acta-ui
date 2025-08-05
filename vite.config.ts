@@ -14,6 +14,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   root: ".",
   publicDir: "public",
+  base: "/",
   plugins: [
     {
       name: "copy-aws-exports",
@@ -38,6 +39,23 @@ export default defineConfig({
         } else {
           console.warn("⚠️ aws-exports.js not found. Skipping copy.");
         }
+
+        // 🔄 Copy index.html to 404.html for SPA routing support
+        const indexSrc = path.resolve(process.cwd(), "dist/index.html");
+        const fallbackDest = path.resolve(process.cwd(), "dist/404.html");
+        
+        console.log(`🔄 Copying index.html to 404.html for SPA routing: ${indexSrc} → ${fallbackDest}`);
+        
+        if (fs.existsSync(indexSrc)) {
+          try {
+            fs.copyFileSync(indexSrc, fallbackDest);
+            console.log("✅ 404.html created successfully for SPA routing.");
+          } catch (error) {
+            console.warn("⚠️ Failed to create 404.html:", error.message);
+          }
+        } else {
+          console.warn("⚠️ index.html not found in dist. Cannot create 404.html.");
+        }
       },
     },
     react(),
@@ -60,6 +78,7 @@ export default defineConfig({
     host: true,
     port: 3000,
     open: true,
+    historyApiFallback: true,
     proxy: {
       "/api": {
         target: "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod",
@@ -81,6 +100,7 @@ export default defineConfig({
   },
   preview: {
     port: 5000,
+    historyApiFallback: true,
   },
   build: {
     chunkSizeWarningLimit: 1024,
