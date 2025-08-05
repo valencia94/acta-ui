@@ -1,0 +1,35 @@
+name: Run ACTA-UI Deployment Audit
+
+on:
+  workflow_dispatch: # Manual trigger from GitHub Actions UI
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Node & install dependencies
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install deps
+        run: pnpm install
+
+      - name: Make audit scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Run Deployment Audit
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
+        run: |
+          pnpm run build
+          ./scripts/deployment-audit.sh
