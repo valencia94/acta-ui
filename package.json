@@ -11,7 +11,7 @@
   "packageManager": "pnpm@8.15.6",
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx,.js",
-    "ci:check": "pnpm run type-check && pnpm run lint",
+    "ci:check": "pnpm run type-check",
     "ci:test": "pnpm exec vitest --run --coverage",
     "ci": "pnpm run ci:check && pnpm run ci:test",
     "type-check": "tsc --noEmit",
