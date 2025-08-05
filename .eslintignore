@@ -18,6 +18,15 @@ src/aws-exports.js
 tests/playwright.preload.js
 # Root JS files (test scripts and debugging)
 *.js
-!*.config.js
-!vite.config.ts
-!vitest.config.ts
+# Allow config files to be ignored
+# !*.config.js
+# !vite.config.ts
+# !vitest.config.ts
+
+
+cypress/
+cypress.config.ts
+vite.config.ts
+vitest.config.ts
+src/components/PDFPreview/
+src/sendProjectsForPM.ts

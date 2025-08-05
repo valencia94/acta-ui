@@ -42,11 +42,8 @@ jobs:
       - name: Re-install after bump
         run: pnpm i
 
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Unit & component tests
-        run: pnpm run test || true # don’t fail PR on red test yet                                                                                QQ
+      - name: Run CI
+        run: pnpm run ci || true # don't fail PR on red test yet
 
       - name: Build (CI)
         env:
@@ -65,3 +62,4 @@ jobs:
           branch_main_name: develop
           branch_pr_name: dependencies-update
           commit_message: "'chore(deps): automatic updates'"
+

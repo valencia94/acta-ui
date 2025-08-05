@@ -39,6 +39,9 @@ jobs:
       - name: 📦 Install deps                                # 4️⃣ Deps
         run: pnpm install --frozen-lockfile
 
+      - name: Run CI checks
+        run: pnpm run ci
+
       - name: 🔒 Configure AWS credentials                   # 5️⃣ Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

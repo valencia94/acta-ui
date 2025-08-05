@@ -56,17 +56,11 @@ jobs:
       run: pnpm install --frozen-lockfile
 
     # ── 4 Static Quality Gates ───────────────────────────────────────
-    - name: Lint
-      run: pnpm exec eslint . --max-warnings=0
-
-    - name: Type-check
-      run: pnpm exec tsc --noEmit
+    - name: Run CI checks
+      run: pnpm run ci
 
     - name: Build (Vite prod)
       run: pnpm run build
-
-    - name: Unit tests (Vitest)
-      run: pnpm run test -- --run
 
     # ── 5 AWS OIDC (optional but handy for S3/DDB checks) ────────────
     - name: Configure AWS credentials

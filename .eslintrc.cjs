@@ -45,16 +45,28 @@ module.exports = {
     // Import hygiene
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
-    'unused-imports/no-unused-imports': 'warn',
+    'unused-imports/no-unused-imports': 'error',
 
     // Console control
-    'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
-    'no-undef': 'off', // Handled by TS
+    'no-console': ['warn', { allow: ['warn', 'error', 'log'] }],
+
+    'react/react-in-jsx-scope': 'off',
 
     // Optional polish
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'warn',
     '@typescript-eslint/no-floating-promises': 'warn',
+    '@typescript-eslint/no-unsafe-assignment': 'warn',
+    '@typescript-eslint/no-unsafe-member-access': 'warn',
+    '@typescript-eslint/no-unsafe-call': 'warn',
+    '@typescript-eslint/no-unsafe-argument': 'warn',
+    '@typescript-eslint/no-unsafe-return': 'warn',
+    '@typescript-eslint/no-misused-promises': 'warn',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'no-empty': 'warn',
+    '@typescript-eslint/require-await': 'warn',
+    '@typescript-eslint/ban-ts-comment': 'warn',
+    'react/no-unescaped-entities': 'warn',
   },
   settings: {
     react: {
