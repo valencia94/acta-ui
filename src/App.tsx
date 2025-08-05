@@ -4,7 +4,7 @@ import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import Header from '@/components/Header';
 import { skipAuth } from '@/env.variables';
@@ -120,8 +120,7 @@ export default function App() {
 
   return (
     <ChakraProvider value={defaultSystem}>
-      <BrowserRouter>
-        <Routes>
+      <Routes>
           <Route
             path="/"
             element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} />}
@@ -162,8 +161,7 @@ export default function App() {
               )
             }
           />
-        </Routes>
-      </BrowserRouter>
+      </Routes>
 
       <Toaster
         position="top-right"
