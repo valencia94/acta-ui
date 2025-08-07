@@ -1,8 +1,9 @@
 import './tailwind.css';
-import '@/styles/variables.css';
 import '@/styles/amplify-overrides.css';
+import '@/styles/variables.css';
 import '@aws-amplify/ui-react/styles.css';
 
+import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import React from 'react';
@@ -34,12 +35,20 @@ let amplifyConfigured = false;
 const configureAmplify = async () => {
   if (amplifyConfigured) return;
 
+  // Wait up to 5s for window.awsmobile to be injected
+  const start = Date.now();
+  while (!(window as any).awsmobile && Date.now() - start < 5000) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
   try {
     const config = (window as any).awsmobile || awsExports;
     Amplify.configure(config);
     amplifyConfigured = true;
     console.log('✅ Amplify configured with:', config);
+    const session = await fetchAuthSession().catch(() => null);
     console.log('Amplify Identity Pool:', config.aws_cognito_identity_pool_id);
+    console.log('🧠 Identity ID:', (session?.credentials as any)?.identityId);
   } catch (err) {
     console.error('❌ Amplify configuration failed:', err);
   }
@@ -50,9 +59,11 @@ async function init() {
 
   createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <ChakraProvider value={defaultSystem}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ChakraProvider>
     </React.StrictMode>
   );
 }

@@ -1,5 +1,4 @@
 import { Sha256 } from '@aws-crypto/sha256-js';
-// Keep the original functionality while adding the new pattern
 import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -19,35 +18,31 @@ let cachedClients: {
   s3: S3Client;
 } | null = null;
 
-const _fetchWithSigV4 = async (url: string) => {
+async function signRequest(url: string) {
   const session = await fetchAuthSession();
   const credentials = session.credentials;
   if (!credentials) throw new Error('❌ No Cognito credentials');
 
   const signer = new SignatureV4({
     credentials,
-    region: 'us-east-2',
+    region: REGION,
     service: 'execute-api',
     sha256: Sha256,
   });
 
-  const request = new HttpRequest({ hostname: new URL(url).hostname, method: 'GET', path: url });
-
+  const { hostname, pathname, search } = new URL(url);
+  const request = new HttpRequest({ hostname, method: 'GET', path: pathname + search });
   const signedRequest = await signer.sign(request);
-  const response = await fetch(url, {
-    headers: signedRequest.headers,
-  });
-
+  const response = await fetch(url, { headers: signedRequest.headers });
   return response.json();
-};
+}
 
 // ✅ Derive AWS credentials for this user session
-async function getAwsClients() {
-  if (cachedClients) return cachedClients;
-
+export async function getAwsCredentials() {
   const { tokens } = await fetchAuthSession();
   const logins = {
-    [`cognito-idp.${REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_POOL_ID}`]: tokens?.idToken?.toString() || '',
+    [`cognito-idp.${REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_POOL_ID}`]:
+      tokens?.idToken?.toString() || '',
   };
 
   const credentials = fromCognitoIdentityPool({
@@ -56,6 +51,15 @@ async function getAwsClients() {
     logins,
   });
 
+  const resolved = await credentials();
+  console.log('🧠 Resolved Cognito identity:', resolved.identityId);
+  return credentials;
+}
+
+async function getAwsClients() {
+  if (cachedClients) return cachedClients;
+
+  const credentials = await getAwsCredentials();
   const dynamoDB = new DynamoDBClient({ region: REGION, credentials });
   const s3 = new S3Client({ region: REGION, credentials });
 
@@ -76,4 +80,17 @@ export async function getDownloadUrl(key: string, expiresIn = 60): Promise<strin
   const { s3 } = await getAwsClients();
   const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
   return await getSignedUrl(s3, command, { expiresIn });
+}
+
+// ✅ Fetch projects for the current authenticated user via SigV4-signed request
+export async function getProjectsForCurrentUser(): Promise<any> {
+  const { tokens } = await fetchAuthSession();
+  const email = tokens?.idToken?.payload?.email as string | undefined;
+  if (!email) throw new Error('❌ No user email available');
+
+  const base =
+    import.meta.env.VITE_API_BASE_URL ||
+    'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
+  const url = `${base}/projects-for-pm?email=${encodeURIComponent(email)}&admin=false`;
+  return signRequest(url);
 }
