@@ -1,12 +1,11 @@
-import { Sha256 } from '@aws-crypto/sha256-js';
 import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { HttpRequest } from '@smithy/protocol-http';
-import { SignatureV4 } from '@smithy/signature-v4';
 import { fetchAuthSession } from 'aws-amplify/auth';
+
+import { fetcher } from '@/utils/fetchWrapper';
 
 const REGION = import.meta.env.VITE_COGNITO_REGION || 'us-east-2';
 const USER_POOL_ID = import.meta.env.VITE_COGNITO_POOL_ID || 'us-east-2_FyHLtOhiY';
@@ -19,27 +18,8 @@ let cachedClients: {
   s3: S3Client;
 } | null = null;
 
-async function signRequest(url: string) {
-  const session = await fetchAuthSession();
-  const credentials = session.credentials;
-  if (!credentials) throw new Error('❌ No Cognito credentials');
-
-  const signer = new SignatureV4({
-    credentials,
-    region: REGION,
-    service: 'execute-api',
-    sha256: Sha256,
-  });
-
-  const { hostname, pathname, search } = new URL(url);
-  const request = new HttpRequest({ hostname, method: 'GET', path: pathname + search });
-  const signedRequest = await signer.sign(request);
-  const response = await fetch(url, { headers: signedRequest.headers });
-  return response.json();
-}
-
 // ✅ Derive AWS credentials for this user session
-export async function getAwsCredentials() {
+export async function getAwsCredentials(): Promise<any> {
   const { tokens } = await fetchAuthSession();
   const token = tokens?.idToken?.toString();
   if (!token) throw new Error('❌ No ID token available');
@@ -85,32 +65,45 @@ export async function getDownloadUrl(key: string, expiresIn = 60): Promise<strin
 
 // ✅ Fetch projects for the current authenticated user via SigV4-signed request
 export async function getProjectsForCurrentUser(): Promise<any> {
-  try {
-    const { tokens } = await fetchAuthSession();
-    const email = tokens?.idToken?.payload?.email as string | undefined;
-    if (!email) throw new Error('❌ No user email available');
+  const { tokens } = await fetchAuthSession();
+  const email = tokens?.idToken?.payload?.email as string | undefined;
+  if (!email) throw new Error('❌ No user email available');
 
-    const base =
-      import.meta.env.VITE_API_BASE_URL ||
-      'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
-    const url = `${base}/projects-for-pm?email=${encodeURIComponent(email)}&admin=false`;
-    return signRequest(url);
-  } catch (err) {
-    console.warn('⚠️ Cognito authentication failed, using mock data for development:', err);
-    // Return mock project data for development when Cognito is blocked
-    return [
-      {
-        id: 'mock-project-1',
-        name: 'Sample Project Alpha',
-        pm: 'admin@ikusi.com',
-        status: 'In Progress'
-      },
-      {
-        id: 'mock-project-2', 
-        name: 'Sample Project Beta',
-        pm: 'admin@ikusi.com',
-        status: 'Completed'
-      }
-    ];
+  const base =
+    import.meta.env.VITE_API_BASE_URL ||
+    'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
+  const url = `${base}/projects-for-pm?email=${encodeURIComponent(email)}&admin=false`;
+  
+  // Use the centralized fetchWrapper for consistent SigV4 signing
+  const rawProjects = await fetcher<any[]>(url);
+  
+  // Map DynamoDB fields to UI interface
+  return rawProjects.map((project: any) => ({
+    id: project.project_id || project.id,
+    name: project.project_name || project.name || `Project ${project.project_id || project.id}`,
+    pm: project.pm_email || project.pm || project.project_manager,
+    status: mapProjectStatus(project),
+    // Keep original fields for reference
+    originalData: project
+  }));
+}
+
+// Helper function to map project status from DynamoDB data
+function mapProjectStatus(project: any): string {
+  // Check for explicit status field
+  if (project.status) return project.status;
+  
+  // Check if ACTA document exists
+  if (project.has_acta_document === true) return 'Completed';
+  if (project.has_acta_document === false) return 'In Progress';
+  
+  // Check last updated to determine if active
+  if (project.last_updated) {
+    const lastUpdated = new Date(project.last_updated);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return lastUpdated > thirtyDaysAgo ? 'Active' : 'Inactive';
   }
+  
+  // Default status
+  return 'Active';
 }

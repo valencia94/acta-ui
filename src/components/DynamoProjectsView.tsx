@@ -7,6 +7,15 @@ interface Project {
   name: string;
   pm: string;
   status: string;
+  // Optional fields from DynamoDB
+  originalData?: {
+    project_id?: string;
+    project_name?: string;
+    pm_email?: string;
+    last_updated?: string;
+    has_acta_document?: boolean;
+    [key: string]: any;
+  };
 }
 
 interface Props {
