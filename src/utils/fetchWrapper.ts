@@ -204,6 +204,27 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
           return mockDownloadUrl as T;
         }
 
+        if (url.includes('/all-projects')) {
+          const mockAllProjects = [
+            {
+              id: 'ADMIN-PROJECT-001',
+              name: 'Admin Project Alpha',
+              pm: 'pm1@ikusi.com',
+              status: 'active',
+              description: 'Admin view project example'
+            },
+            {
+              id: 'ADMIN-PROJECT-002', 
+              name: 'Admin Project Beta',
+              pm: 'pm2@ikusi.com',
+              status: 'completed',
+              description: 'Another admin project'
+            }
+          ];
+          console.log('🎭 Returning mock all projects:', mockAllProjects);
+          return mockAllProjects as T;
+        }
+
         // For other endpoints, return a generic success response
         const mockResponse = { success: true, message: 'Mock response in development mode' };
         console.log('🎭 Returning generic mock response:', mockResponse);
