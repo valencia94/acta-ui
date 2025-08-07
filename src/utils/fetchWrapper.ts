@@ -56,7 +56,8 @@ export async function getAuthToken(): Promise<string | null> {
 export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const url = typeof input === 'string' ? input : input.url;
 
-  if (needsSigV4(url)) {
+  // Skip SigV4 signing completely when skipAuth is enabled
+  if (needsSigV4(url) && !skipAuth) {
     const session = await fetchAuthSession();
     const creds = session.credentials;
 
@@ -132,34 +133,86 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
       headers: Object.fromEntries(headers.entries()),
     });
 
-    const res = await fetch(url, enhancedInit);
+    try {
+      const res = await fetch(url, enhancedInit);
 
-    console.log(`📡 Response: ${res.status} ${res.statusText}`);
+      console.log(`📡 Response: ${res.status} ${res.statusText}`);
 
-    if (!res.ok) {
-      let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
-      try {
-        const errorText = await res.text();
-        if (errorText) errorMessage += ` - ${errorText}`;
-      } catch {
-        // Ignore parsing errors for error response text
+      if (!res.ok) {
+        let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+        try {
+          const errorText = await res.text();
+          if (errorText) errorMessage += ` - ${errorText}`;
+        } catch {
+          // Ignore parsing errors for error response text
+        }
+
+        if (res.status === 403) errorMessage += ' (Forbidden / Signature mismatch)';
+        if (res.status === 502) errorMessage += ' (Lambda error)';
+        if (res.status === 404) errorMessage += ' (Not Found)';
+
+        console.error('❌ Fetch error:', errorMessage);
+        throw new Error(errorMessage);
       }
 
-      if (res.status === 403) errorMessage += ' (Forbidden / Signature mismatch)';
-      if (res.status === 502) errorMessage += ' (Lambda error)';
-      if (res.status === 404) errorMessage += ' (Not Found)';
-
-      console.error('❌ Fetch error:', errorMessage);
-      throw new Error(errorMessage);
-    }
-
-    try {
       const data = await res.json();
       console.log('✅ Response data:', data);
       return data as T;
-    } catch (error) {
-      console.error('❌ Failed to parse JSON response:', error);
-      throw new Error('Invalid JSON response from server');
+    } catch (fetchError) {
+      // If in development mode and fetch fails (likely due to blocked API), return mock data
+      if (skipAuth && import.meta.env.DEV) {
+        console.warn('🔄 API fetch failed in dev mode, returning mock data for:', url);
+        
+        // Return mock data based on endpoint
+        if (url.includes('/projects-for-pm')) {
+          const mockProjects = [
+            {
+              id: 'PROJECT-001',
+              name: 'Sample ACTA Project Alpha',
+              pm: 'admin@ikusi.com',
+              status: 'active',
+              description: 'Mock project for development testing'
+            },
+            {
+              id: 'PROJECT-002', 
+              name: 'Demo Project Beta',
+              pm: 'admin@ikusi.com',
+              status: 'in-progress',
+              description: 'Another sample project for UI testing'
+            },
+            {
+              id: 'PROJECT-003',
+              name: 'Test Project Gamma',
+              pm: 'admin@ikusi.com', 
+              status: 'completed',
+              description: 'Completed mock project example'
+            }
+          ];
+          console.log('🎭 Returning mock projects:', mockProjects);
+          return mockProjects as T;
+        }
+        
+        if (url.includes('/check-document')) {
+          const mockDocumentCheck = { available: true, lastModified: new Date().toISOString() };
+          console.log('🎭 Returning mock document check:', mockDocumentCheck);
+          return mockDocumentCheck as T;
+        }
+        
+        if (url.includes('/download-acta')) {
+          const mockDownloadUrl = 'https://example.com/mock-acta-document.pdf';
+          console.log('🎭 Returning mock download URL:', mockDownloadUrl);
+          return mockDownloadUrl as T;
+        }
+
+        // For other endpoints, return a generic success response
+        const mockResponse = { success: true, message: 'Mock response in development mode' };
+        console.log('🎭 Returning generic mock response:', mockResponse);
+        return mockResponse as T;
+      }
+
+      // Re-throw the error if not in mock mode
+      console.error('❌ Failed to fetch:', fetchError);
+      throw new Error('Failed to fetch from API');
     }
   }
 }
