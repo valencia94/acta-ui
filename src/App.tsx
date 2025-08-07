@@ -44,7 +44,7 @@ if (import.meta.env.DEV) {
   ]);
 }
 
-export default function App() {
+export default function App(): JSX.Element {
   useThemedFavicon();
   useIdleLogout(30);
 
@@ -56,7 +56,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    fetchAuthSession().then((session) => {
+    void fetchAuthSession().then((session) => {
       console.log('🟢 Auth session:', session);
     });
   }, []);
@@ -97,7 +97,7 @@ export default function App() {
       setIsAuthed(true);
       setChecked(true);
     } else {
-      verify();
+      void verify();
     }
 
     const handleStorageChange = () => {
@@ -107,7 +107,7 @@ export default function App() {
 
     const handleAuthSuccess = () => {
       console.log('📢 Re-verifying after auth success...');
-      verify();
+      void verify();
     };
 
     window.addEventListener('storage', handleStorageChange);

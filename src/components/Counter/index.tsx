@@ -3,7 +3,7 @@ import { Typography } from '@mui/material';
 
 import { CounterProps } from './types';
 
-export function Counter({ value, id = 'counter', className = '' }: CounterProps) {
+export function Counter({ value, id = 'counter', className = '' }: CounterProps): JSX.Element {
   return (
     <Typography
       variant="h3"

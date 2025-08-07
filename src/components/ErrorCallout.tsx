@@ -18,7 +18,7 @@ export function ErrorCallout({
   retryText = 'Retry',
   retryLoading = false,
   className = '',
-}: ErrorCalloutProps) {
+}: ErrorCalloutProps): JSX.Element {
   return (
     <div className={`bg-white rounded-xl shadow-sm border border-red-200 ${className}`}>
       <div className="p-6">

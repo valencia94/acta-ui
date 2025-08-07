@@ -3,7 +3,7 @@ import { useIdleTimer } from 'react-idle-timer';
 
 import { skipAuth } from '@/env.variables';
 
-export function useIdleLogout(minutes = 30) {
+export function useIdleLogout(minutes = 30): void {
   const handleIdle = async () => {
     try {
       // Clear local storage
@@ -26,7 +26,7 @@ export function useIdleLogout(minutes = 30) {
 
   useIdleTimer({
     timeout: minutes * 60 * 1000,
-    onIdle: handleIdle,
+    onIdle: () => void handleIdle(),
     debounce: 500,
     events: ['mousemove', 'keydown', 'scroll', 'touchstart'],
   });

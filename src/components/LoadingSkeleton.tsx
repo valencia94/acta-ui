@@ -5,7 +5,7 @@ interface SkeletonRowProps {
   className?: string;
 }
 
-export function SkeletonRow({ className = '' }: SkeletonRowProps) {
+export function SkeletonRow({ className = '' }: SkeletonRowProps): JSX.Element {
   return (
     <tr className={`animate-pulse ${className}`}>
       <td className="px-6 py-4">
@@ -28,7 +28,7 @@ interface ProjectSkeletonProps {
   rows?: number;
 }
 
-export function ProjectTableSkeleton({ rows = 3 }: ProjectSkeletonProps) {
+export function ProjectTableSkeleton({ rows = 3 }: ProjectSkeletonProps): JSX.Element {
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
       <div className="p-4 sm:p-6 border-b border-gray-200">
@@ -87,7 +87,7 @@ interface CardSkeletonProps {
   className?: string;
 }
 
-export function CardSkeleton({ className = '' }: CardSkeletonProps) {
+export function CardSkeleton({ className = '' }: CardSkeletonProps): JSX.Element {
   return (
     <div
       className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 animate-pulse ${className}`}

@@ -160,7 +160,7 @@ export const checkApiHealth = async (): Promise<{
       timestamp: new Date().toISOString(),
       ...response,
     };
-  } catch (error) {
+  } catch {
     return {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),

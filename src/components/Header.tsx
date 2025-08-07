@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const logoSrc = '/assets/ikusi-logo.png';
 
-export default function Header() {
+export default function Header(): JSX.Element {
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
@@ -133,7 +133,7 @@ export default function Header() {
 
             <button
               className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-              onClick={handleLogout}
+              onClick={() => void handleLogout()}
               disabled={isLoggingOut}
             >
               {isLoggingOut ? (

@@ -1,7 +1,7 @@
 // src/components/ResponsiveIndicator.tsx
 import React, { useEffect, useState } from 'react';
 
-export function ResponsiveIndicator() {
+export function ResponsiveIndicator(): JSX.Element {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {

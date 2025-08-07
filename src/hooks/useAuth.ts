@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { skipAuth } from '@/env.variables';
 import { getCurrentUser } from '@/lib/api-amplify';
 
-export function useAuth() {
+export function useAuth(): { user: { email: string } | null; loading: boolean } {
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       try {
         if (skipAuth) {
           setUser({ email: 'admin@ikusi.com' });

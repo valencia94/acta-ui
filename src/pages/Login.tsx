@@ -155,7 +155,7 @@ export default function Login() {
               groups: payload['cognito:groups'] || 'None',
             });
           }
-        } catch (e) {
+        } catch (_e) {
           console.log('⚠️ Could not parse token parts');
         }
 
@@ -250,7 +250,7 @@ export default function Login() {
 
   const MotionButton = motion.button;
 
-  const getTitle = () => {
+  const _getTitle = () => {
     switch (authMode) {
       case 'signin':
         return 'Sign In';

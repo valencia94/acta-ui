@@ -108,7 +108,7 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
       const json = JSON.parse(raw ?? '');
       console.log('✅ SigV4 Response:', json);
       return json as T;
-    } catch (e) {
+    } catch {
       console.error('❌ SigV4 response not JSON:', raw);
       throw new Error('Invalid JSON response from SigV4 request');
     }
@@ -141,7 +141,9 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
       try {
         const errorText = await res.text();
         if (errorText) errorMessage += ` - ${errorText}`;
-      } catch {}
+      } catch {
+        // Ignore parsing errors for error response text
+      }
 
       if (res.status === 403) errorMessage += ' (Forbidden / Signature mismatch)';
       if (res.status === 502) errorMessage += ' (Lambda error)';

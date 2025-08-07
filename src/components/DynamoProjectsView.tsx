@@ -20,7 +20,7 @@ export default function DynamoProjectsView({
   userEmail,
   onProjectSelect,
   selectedProjectId,
-}: Props) {
+}: Props): JSX.Element {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +37,7 @@ export default function DynamoProjectsView({
         setLoading(false);
       }
     };
-    if (userEmail) load();
+    if (userEmail) void load();
   }, [userEmail]);
 
   if (loading) return <div className="text-gray-500">Loading projects…</div>;

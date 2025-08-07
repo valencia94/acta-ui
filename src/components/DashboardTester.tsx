@@ -7,7 +7,7 @@ interface TestResult {
   message: string;
 }
 
-export default function DashboardTester() {
+export default function DashboardTester(): JSX.Element {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -79,7 +79,7 @@ export default function DashboardTester() {
         status: response.ok ? 'pass' : 'warn',
         message: response.ok ? 'API server reachable' : `API returned ${response.status}`,
       });
-    } catch (error) {
+    } catch {
       results.push({
         test: 'API Connectivity',
         status: 'fail',
@@ -130,7 +130,7 @@ export default function DashboardTester() {
 
       <div className="space-y-2 mb-3">
         <button
-          onClick={runQuickTest}
+          onClick={() => void runQuickTest()}
           className="w-full bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
         >
           Run Quick Test

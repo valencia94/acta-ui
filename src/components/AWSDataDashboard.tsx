@@ -39,7 +39,7 @@ export const AWSDataDashboard: React.FC = () => {
       setDownloadResults(downloads);
       setLoading(false);
     }
-    runTests();
+    void runTests();
   }, []);
 
   return (

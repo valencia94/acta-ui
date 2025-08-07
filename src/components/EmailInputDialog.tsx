@@ -21,7 +21,7 @@ export function EmailInputDialog({
   title = 'Send Email',
   description = 'Enter the email address to send to:',
   placeholder = 'Enter email address',
-}: EmailInputDialogProps) {
+}: EmailInputDialogProps): JSX.Element {
   const [email, setEmail] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {

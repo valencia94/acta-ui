@@ -8,7 +8,7 @@ import { Counter } from '@/components/Counter';
 import { LoadingMessage } from '@/components/LoadingMessage';
 import { counterDefaultValue } from '@/env.variables';
 
-export function App() {
+export function App(): JSX.Element {
   const [counterValue, setCounterValue] = useState<number>(counterDefaultValue);
   const [loading, setLoading] = useState(false);
 

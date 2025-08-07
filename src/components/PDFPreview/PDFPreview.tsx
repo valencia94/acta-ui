@@ -11,7 +11,7 @@ interface PDFPreviewProps {
   fileName?: string;
 }
 
-export default function PDFPreview({ isOpen, onClose, pdfUrl, fileName }: PDFPreviewProps) {
+export default function PDFPreview({ isOpen, onClose, pdfUrl, fileName }: PDFPreviewProps): JSX.Element | null {
   if (!isOpen) return null;
 
   const handleDownload = () => {

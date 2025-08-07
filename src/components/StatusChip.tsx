@@ -6,7 +6,7 @@ export interface StatusChipProps {
   status: string;
 }
 
-export default function StatusChip({ status }: StatusChipProps) {
+export default function StatusChip({ status }: StatusChipProps): JSX.Element {
   // Map of statuses → Tailwind utility classes
   const colorMap: Record<string, string> = {
     READY: 'bg-green-100 text-green-700',

@@ -4,7 +4,7 @@
 import { confirmSignUp, resetPassword, signIn, signUp } from 'aws-amplify/auth';
 
 // Test account creation
-export async function testCreateAccount() {
+export async function testCreateAccount(): Promise<void> {
   try {
     console.log('🔧 Testing account creation...');
 
@@ -36,7 +36,7 @@ export async function testCreateAccount() {
 }
 
 // Test account confirmation
-export async function testConfirmAccount(email: string, code: string) {
+export async function testConfirmAccount(email: string, code: string): Promise<void> {
   try {
     console.log('🔧 Testing account confirmation...');
 
@@ -54,7 +54,7 @@ export async function testConfirmAccount(email: string, code: string) {
 }
 
 // Test sign in
-export async function testSignIn(email: string, password: string) {
+export async function testSignIn(email: string, password: string): Promise<void> {
   try {
     console.log('🔧 Testing sign in...');
 
@@ -75,7 +75,7 @@ export async function testSignIn(email: string, password: string) {
 }
 
 // Test password reset
-export async function testPasswordReset(email: string) {
+export async function testPasswordReset(email: string): Promise<void> {
   try {
     console.log('🔧 Testing password reset...');
 

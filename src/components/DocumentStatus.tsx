@@ -18,7 +18,7 @@ interface DocumentInfo {
   s3Key?: string;
 }
 
-export default function DocumentStatus({ projectId, format, className = '' }: DocumentStatusProps) {
+export default function DocumentStatus({ projectId, format, className = '' }: DocumentStatusProps): JSX.Element {
   const [docInfo, setDocInfo] = useState<DocumentInfo>({
     available: false,
     checking: false,
@@ -48,7 +48,7 @@ export default function DocumentStatus({ projectId, format, className = '' }: Do
       }
     };
 
-    checkAvailability();
+    void checkAvailability();
   }, [projectId, format]);
 
   const getStatusIcon = () => {
