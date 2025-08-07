@@ -4,13 +4,13 @@ import '@/styles/amplify-overrides.css';
 import '@aws-amplify/ui-react/styles.css';
 
 import { Amplify } from 'aws-amplify';
+import awsExports from './aws-exports';
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import App from '@/App';
-
-import awsExports from './aws-exports'; // Fallback
 
 let amplifyConfigured = false;
 
@@ -30,7 +30,7 @@ const configureAmplify = async () => {
 
 async function init() {
   await configureAmplify();
-  
+
   createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <BrowserRouter>
