@@ -128,7 +128,7 @@ export default function App() {
           path="/"
           element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} />}
         />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={skipAuth || isAuthed ? <Navigate to="/dashboard" /> : <Login />} />
         <Route
           path="/dashboard"
           element={skipAuth || isAuthed ? <Dashboard /> : <Navigate to="/login" />}
