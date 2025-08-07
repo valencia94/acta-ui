@@ -1,13 +1,14 @@
 // src/pages/Dashboard.tsx — Regenerated PM Dashboard using Admin layout
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { motion } from 'framer-motion';
-import { lazy, Suspense, useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
 import DynamoProjectsView from '@/components/DynamoProjectsView';
 import { EmailInputDialog } from '@/components/EmailInputDialog';
 import Header from '@/components/Header';
+import PDFPreview from '@/components/PDFPreview';
 import ResponsiveIndicator from '@/components/ResponsiveIndicator';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -16,8 +17,6 @@ import {
   getDownloadUrl,
   sendApprovalEmail,
 } from '@/lib/api';
-
-const PDFPreview = lazy(() => import('@/components/PDFPreview'));
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -173,16 +172,14 @@ export default function Dashboard() {
         </motion.div>
       </main>
 
-      <Suspense fallback={<div>Loading preview...</div>}>
-        {pdfPreviewUrl && (
-          <PDFPreview
-            isOpen={!!pdfPreviewUrl}
-            pdfUrl={pdfPreviewUrl}
-            fileName={pdfPreviewFileName}
-            onClose={() => setPdfPreviewUrl(null)}
-          />
-        )}
-      </Suspense>
+      {pdfPreviewUrl && (
+        <PDFPreview
+          isOpen={!!pdfPreviewUrl}
+          pdfUrl={pdfPreviewUrl}
+          fileName={pdfPreviewFileName}
+          onClose={() => setPdfPreviewUrl(null)}
+        />
+      )}
 
       <EmailInputDialog
         isOpen={isEmailDialogOpen}

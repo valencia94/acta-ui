@@ -3,13 +3,14 @@ import { Download, Eye, Send, Zap } from 'lucide-react';
 
 import Button from '@/components/Button';
 
-interface ActaButtonsProps {
-  onGenerate: () => void;
-  onDownloadWord: () => void;
-  onDownloadPdf: () => void;
-  onPreviewPdf: () => void;
+export interface ActaButtonsProps {
+  onGenerate: () => Promise<void>;
+  onDownloadWord: () => Promise<void>;
+  onDownloadPdf: () => Promise<void>;
+  onPreviewPdf: () => Promise<void>;
   onSendForApproval: () => void;
   disabled: boolean;
+  isGenerating: boolean;
 }
 
 export default function ActaButtons({
@@ -19,10 +20,11 @@ export default function ActaButtons({
   onPreviewPdf,
   onSendForApproval,
   disabled,
+  isGenerating,
 }: ActaButtonsProps): JSX.Element {
-  const handleClick = (action: () => void, _actionName: string) => {
+  const handleClick = (action: () => Promise<void> | void, _actionName: string) => {
     if (disabled) return;
-    action();
+    void action();
   };
 
   return (
@@ -35,8 +37,17 @@ export default function ActaButtons({
           disabled={disabled}
           className="flex items-center justify-center gap-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold px-4 sm:px-5 py-3 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform active:scale-95 w-full h-12 sm:h-14 border border-green-400/20"
         >
-          <Zap className="h-4 w-4 text-yellow-300" />
-          <span className="text-sm">Generate</span>
+          {isGenerating ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              <span className="text-sm">Generating...</span>
+            </>
+          ) : (
+            <>
+              <Zap className="h-4 w-4 text-yellow-300" />
+              <span className="text-sm">Generate</span>
+            </>
+          )}
         </Button>
 
         <Button

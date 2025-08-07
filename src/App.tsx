@@ -1,7 +1,7 @@
 // src/App.tsx
 
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { lazy, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
@@ -14,23 +14,6 @@ import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 
 console.log('VITE ENV:', import.meta.env);
-
-// 🌱 Load debug components only in dev mode
-const AuthDebugger = import.meta.env.DEV
-  ? lazy(() =>
-      import('@/components/AuthDebugger').catch(() => ({
-        default: () => null,
-      }))
-    )
-  : null;
-
-const DashboardTester = import.meta.env.DEV
-  ? lazy(() =>
-      import('@/components/DashboardTester').catch(() => ({
-        default: () => null,
-      }))
-    )
-  : null;
 
 if (import.meta.env.DEV) {
   console.log('🗺️ Available routes in dev mode:', [
