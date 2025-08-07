@@ -1,6 +1,7 @@
 // import { Auth } from 'aws-amplify';rc/lib/api-amplify.ts
 // Enhanced API client with AWS Amplify authentication integration
 
+import { getCredentials } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 import { apiBaseUrl, skipAuth } from '@/env.variables';
@@ -22,6 +23,11 @@ export const apiCall = async (
   const { timeout = 30000, headers = {}, skipAuth: skipAuthOption = false } = options || {};
 
   try {
+    const creds = await getCredentials();
+    if (!creds?.identityId) {
+      throw new Error('Missing identity ID for SigV4 request');
+    }
+
     // Prepare headers
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
