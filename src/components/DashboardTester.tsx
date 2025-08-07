@@ -79,7 +79,7 @@ export default function DashboardTester(): JSX.Element {
         status: response.ok ? 'pass' : 'warn',
         message: response.ok ? 'API server reachable' : `API returned ${response.status}`,
       });
-    } catch (_error) {
+    } catch {
       results.push({
         test: 'API Connectivity',
         status: 'fail',

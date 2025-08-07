@@ -19,7 +19,7 @@ let cachedClients: {
   s3: S3Client;
 } | null = null;
 
-const fetchWithSigV4 = async (url: string) => {
+const _fetchWithSigV4 = async (url: string) => {
   const session = await fetchAuthSession();
   const credentials = session.credentials;
   if (!credentials) throw new Error('❌ No Cognito credentials');
@@ -64,7 +64,7 @@ async function getAwsClients() {
 }
 
 // ✅ Fetch all projects for the signed-in PM (basic example using Scan)
-export async function getAllProjects() {
+export async function getAllProjects(): Promise<any> {
   const { dynamoDB } = await getAwsClients();
   const command = new ScanCommand({ TableName: TABLE_NAME });
   const result = await dynamoDB.send(command);
@@ -72,7 +72,7 @@ export async function getAllProjects() {
 }
 
 // ✅ Generate signed download URL for a file in S3
-export async function getDownloadUrl(key: string, expiresIn = 60) {
+export async function getDownloadUrl(key: string, expiresIn = 60): Promise<string> {
   const { s3 } = await getAwsClients();
   const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
   return await getSignedUrl(s3, command, { expiresIn });
