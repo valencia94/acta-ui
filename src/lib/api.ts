@@ -14,6 +14,7 @@ import {
   s3Region,
 } from '@/env.variables';
 import { fetcher, get, post } from '@/utils/fetchWrapper';
+import { signedApiFetch } from '@/lib/api-amplify';
 
 /**
  * ---------------------------------------------------------------------------
@@ -177,9 +178,17 @@ export const getDownloadUrl = getSignedDownloadUrl;
 export const checkDocumentAvailability = documentExists;
 
 export async function getProjectsByPM(pmEmail: string, isAdmin: boolean): Promise<PMProject[]> {
-  return request<PMProject[]>(
-    `/projects-for-pm?email=${encodeURIComponent(pmEmail)}&admin=${isAdmin}`
-  );
+  const url = `${BASE}/projects-for-pm?email=${encodeURIComponent(pmEmail)}&admin=${isAdmin}`;
+  console.log('🚀 Using signedApiFetch for getProjectsByPM:', url);
+  
+  const response = await signedApiFetch(url, 'GET');
+  
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => response.statusText);
+    throw new Error(`API Error ${response.status}: ${errorText}`);
+  }
+  
+  return response.json();
 }
 
 export async function generateSummariesForPM(pmEmail: string): Promise<ProjectSummary[]> {
@@ -187,7 +196,17 @@ export async function generateSummariesForPM(pmEmail: string): Promise<ProjectSu
 }
 
 export async function getAllProjects(): Promise<PMProject[]> {
-  return request<PMProject[]>(`/all-projects`);
+  const url = `${BASE}/all-projects`;
+  console.log('🚀 Using signedApiFetch for getAllProjects:', url);
+  
+  const response = await signedApiFetch(url, 'GET');
+  
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => response.statusText);
+    throw new Error(`API Error ${response.status}: ${errorText}`);
+  }
+  
+  return response.json();
 }
 
 export async function getProjectSummaryForPM(projectId: string): Promise<ProjectSummary> {

@@ -2,8 +2,63 @@
 // Enhanced API client with AWS Amplify authentication integration
 
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { Credentials } from '@aws-sdk/types';
+import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
+import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
+import { SignatureV4 } from '@smithy/signature-v4';
+import { HttpRequest } from '@smithy/protocol-http';
+import { Sha256 } from '@aws-crypto/sha256-js';
 
 import { apiBaseUrl, skipAuth } from '@/env.variables';
+
+const region = 'us-east-2';
+const identityPoolId = 'us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35';
+
+/**
+ * NEW: Inject IAM identity for API Gateway access
+ */
+export const getAwsCredentials = async (): Promise<Credentials> => {
+  return fromCognitoIdentityPool({
+    client: new CognitoIdentityClient({ region }),
+    identityPoolId,
+  })();
+};
+
+/**
+ * NEW: Use signed fetch with SigV4 for API Gateway endpoints
+ */
+export const signedApiFetch = async (url: string, method: string = 'GET') => {
+  const credentials = await getAwsCredentials();
+  
+  // Log Identity ID if available (for debugging)
+  if ('identityId' in credentials) {
+    console.log("🧠 Identity ID:", (credentials as any).identityId);
+  } else {
+    console.log("🧠 Using IAM credentials for API Gateway access");
+  }
+
+  const signer = new SignatureV4({
+    credentials,
+    region,
+    service: 'execute-api',
+    sha256: Sha256,
+  });
+
+  const request = await signer.sign(
+    new HttpRequest({
+      method,
+      protocol: 'https',
+      path: new URL(url).pathname,
+      headers: { host: new URL(url).host },
+      hostname: new URL(url).host,
+    })
+  );
+
+  return fetch(url, {
+    method,
+    headers: request.headers,
+  });
+};
 
 /**
  * Enhanced API call with AWS Amplify authentication
@@ -104,11 +159,34 @@ export const apiCall = async (
 
 /**
  * Authenticated GET request
+ * Uses SigV4 signing for specific endpoints that require IAM credentials
  */
 export const apiGet = async <T = any>(
   path: string,
   options?: { timeout?: number; headers?: Record<string, string> }
 ): Promise<T> => {
+  // Check if this endpoint needs SigV4 signing for IAM access
+  const needsSigV4 = path.includes('/projects-for-pm') || path.includes('/all-projects');
+  
+  if (needsSigV4) {
+    console.log('🔐 Using SigV4 signing for IAM-protected endpoint:', path);
+    
+    // Build full URL
+    const fullUrl = path.startsWith('http')
+      ? path
+      : `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+    
+    const response = await signedApiFetch(fullUrl, 'GET');
+    
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => response.statusText);
+      throw new Error(`API Error ${response.status}: ${errorText}`);
+    }
+    
+    return response.json();
+  }
+  
+  // Use regular JWT-based authentication for other endpoints
   return apiCall(path, 'GET', undefined, options);
 };
 
