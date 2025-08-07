@@ -19,7 +19,7 @@ export default function ActaButtons({
   onPreviewPdf,
   onSendForApproval,
   disabled,
-}: ActaButtonsProps) {
+}: ActaButtonsProps): JSX.Element {
   const handleClick = (action: () => void, _actionName: string) => {
     if (disabled) return;
     action();

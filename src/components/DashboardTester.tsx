@@ -7,7 +7,7 @@ interface TestResult {
   message: string;
 }
 
-export default function DashboardTester() {
+export default function DashboardTester(): JSX.Element {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isVisible, setIsVisible] = useState(false);
 

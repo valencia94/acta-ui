@@ -10,7 +10,7 @@ interface PDFPreviewProps {
   onClose: () => void;
 }
 
-export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPreviewProps) {
+export default function PDFPreview({ isOpen, pdfUrl, fileName, onClose }: PDFPreviewProps): JSX.Element {
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
 

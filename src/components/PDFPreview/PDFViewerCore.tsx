@@ -13,7 +13,7 @@ interface PDFViewerCoreProps {
   pdfUrl: string;
 }
 
-export default function PDFViewerCore({ pdfUrl }: PDFViewerCoreProps) {
+export default function PDFViewerCore({ pdfUrl }: PDFViewerCoreProps): JSX.Element {
   const [numPages, setNumPages] = useState<number>(1);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);

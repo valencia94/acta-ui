@@ -26,7 +26,7 @@ export default function ProjectTable({
   data,
   onProjectSelect,
   selectedProjectId,
-}: ProjectTableProps) {
+}: ProjectTableProps): JSX.Element {
   const table = useReactTable({
     data,
     columns,

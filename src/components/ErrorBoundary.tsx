@@ -17,11 +17,11 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
-  public render() {
+  public render(): ReactNode {
     if (this.state.hasError) {
       return (
         <div className="p-4 bg-red-50 rounded-lg">
