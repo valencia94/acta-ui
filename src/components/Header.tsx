@@ -5,10 +5,9 @@ import { Grid, LogOut, Menu, Shield, User } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import logoSrc from '@/assets/ikusi-logo.png';
 import { skipAuth } from '@/env.variables';
 import { useAuth } from '@/hooks/useAuth';
-
-const logoSrc = '/assets/ikusi-logo.png';
 
 export default function Header(): JSX.Element {
   const [open, setOpen] = useState(false);

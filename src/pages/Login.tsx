@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
+import logoSrc from '@/assets/ikusi-logo.png';
 import awsConfig from '@/aws-exports.js';
 import { skipAuth } from '@/env.variables';
 
@@ -25,8 +26,6 @@ interface FormData {
 }
 
 type AuthMode = 'signin' | 'signup' | 'confirm' | 'forgot' | 'reset';
-
-const logoSrc = '/assets/ikusi-logo.png';
 
 export default function Login() {
   const nav = useNavigate();
