@@ -1,11 +1,17 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src", "scripts", "tests"],
+  "include": [
+    "src",
+    "scripts",
+    "tests",
+    "cypress/**/*.ts"
+  ],
   "files": [
     "vite.config.ts",
     "vitest.config.ts",
     "src/sendProjectsForPM.ts",
-    "src/components/PDFPreview/index.tsx"
+    "src/components/PDFPreview/index.tsx",
+    "cypress.config.ts",
+    "cypress/**/*.ts"
   ]
 }
-

@@ -1,14 +1,23 @@
 // eslint.config.js
 import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import prettier from 'eslint-config-prettier';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
-import prettier from 'eslint-config-prettier';
+import tseslint from 'typescript-eslint';
 
 /** @type {import("eslint").Linter.FlatConfig[]} */
 export default [
+  // ⛔️ Quarantine legacy scripts
+  {
+    files: ['scripts/prepare.cjs', 'cognito-extraction/working-bundle.js'],
+    rules: {
+      '@typescript-eslint/no-var-requires': 'off',
+      'no-misleading-character-class': 'off'
+    }
+  },
+
   js.configs.recommended,
 
   // TypeScript Rules
@@ -28,7 +37,7 @@ export default [
     rules: {
       ...tseslint.configs.recommendedTypeChecked.rules,
 
-      // 🟡 TEMPORARILY silenced rules for deploy unblock
+      // 🔕 TEMPORARY: Silence noisy rules to unblock deploy
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
@@ -36,7 +45,7 @@ export default [
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
 
-      // Core rules
+      // TypeScript-specific rules
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-misused-promises': 'warn',
       '@typescript-eslint/require-await': 'warn',
@@ -46,14 +55,14 @@ export default [
     }
   },
 
-  // JavaScript / React Rules
+  // JavaScript + React Rules
   {
     files: ['**/*.{ts,tsx,js,cjs,mjs}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        // Node
+        // Node.js
         module: true,
         require: true,
         process: true,
@@ -73,7 +82,7 @@ export default [
         clearInterval: true,
         requestAnimationFrame: true,
 
-        // DOM
+        // Web APIs
         Blob: true,
         File: true,
         FormData: true,
@@ -115,7 +124,7 @@ export default [
     }
   },
 
-  // 🚫 Ignore broken legacy + deployment bundle files
+  // 🧼 Ignore legacy & broken deployment bundles
   {
     files: [
       '**/working-bundle.js',
@@ -141,6 +150,20 @@ export default [
       'no-self-assign': 'off',
       'no-redeclare': 'off'
     }
+  },
+
+  // 🚫 Global Ignore Paths (FlatConfig requires this!)
+  {
+    ignores: [
+      '.trash/**',
+      'dist/**',
+      'deployment-backup-*/**',
+      '**/*.backup.js',
+      '**/*.bundle.js',
+      '**/*.min.js',
+      '**/*.map',
+      '**/*.log'
+    ]
   },
 
   prettier

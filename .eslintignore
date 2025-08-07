@@ -61,3 +61,5 @@ deployment-backup-*/dist-backup/assets/**/*.js
 
 # Trash quarantine zone
 .trash/
+.trash
+.trash
