@@ -3,7 +3,7 @@ import '@/styles/variables.css';
 import '@/styles/amplify-overrides.css';
 import '@aws-amplify/ui-react/styles.css';
 
-import { Amplify } from 'aws-amplify';
+import { Amplify, fetchAuthSession, getCredentials } from 'aws-amplify';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -28,8 +28,20 @@ const configureAmplify = async () => {
   }
 };
 
+const initializeIdentity = async () => {
+  try {
+    await fetchAuthSession();
+    const credentials = await getCredentials();
+    console.log('🧠 Identity ID:', credentials?.identityId);
+    (window as any).identityId = credentials?.identityId;
+  } catch (err) {
+    console.error('❌ Identity resolution failed', err);
+  }
+};
+
 async function init() {
   await configureAmplify();
+  await initializeIdentity();
 
   createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

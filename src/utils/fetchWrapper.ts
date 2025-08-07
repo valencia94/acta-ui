@@ -5,6 +5,7 @@ import { FetchHttpHandler } from '@smithy/fetch-http-handler';
 import { HttpRequest } from '@smithy/protocol-http';
 import { SignatureV4 } from '@smithy/signature-v4';
 import { parseUrl } from '@smithy/url-parser';
+import { getCredentials } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 import { skipAuth } from '@/env.variables';
@@ -57,6 +58,10 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
   const url = typeof input === 'string' ? input : input.url;
 
   if (needsSigV4(url)) {
+    const credsLoaded = await getCredentials();
+    if (!credsLoaded?.identityId) {
+      throw new Error('Missing identity ID for SigV4 request');
+    }
     const session = await fetchAuthSession();
     const creds = session.credentials;
 
