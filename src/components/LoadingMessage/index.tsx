@@ -9,7 +9,7 @@ export interface LoadingMessageProps {
   className?: string;
 }
 
-export function LoadingMessage({ message = 'Loading…', className = '' }: LoadingMessageProps) {
+export function LoadingMessage({ message = 'Loading…', className = '' }: LoadingMessageProps): JSX.Element {
   return (
     <Typography
       variant="body1"

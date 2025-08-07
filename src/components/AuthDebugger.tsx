@@ -3,13 +3,13 @@ import type { AuthSession, AuthUser } from 'aws-amplify/auth';
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import { useEffect, useState } from 'react';
 
-export default function AuthDebugger() {
+export default function AuthDebugger(): JSX.Element {
   const [authStatus, setAuthStatus] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    checkAuthStatus();
+    void checkAuthStatus();
   }, []);
 
   const checkAuthStatus = async () => {
@@ -57,7 +57,7 @@ export default function AuthDebugger() {
           </div>
         )}
         <button
-          onClick={checkAuthStatus}
+          onClick={() => void checkAuthStatus()}
           className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
         >
           Refresh

@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const logoSrc = '/assets/ikusi-logo.png';
 
-export default function Header() {
+export default function Header(): JSX.Element {
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
