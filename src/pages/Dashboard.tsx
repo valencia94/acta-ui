@@ -132,10 +132,10 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white shadow-md rounded-lg p-6"
+          className="bg-white shadow-lg rounded-xl p-8 border border-gray-100"
         >
-          <h1 className="text-2xl font-semibold text-gray-800 mb-2">Welcome, {user?.email}</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">Welcome, {user?.email}</h1>
+          <p className="text-base text-gray-600">
             View your projects and take action with ACTA tools.
           </p>
         </motion.div>
@@ -144,9 +144,9 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white shadow-md rounded-lg p-6"
+          className="bg-white shadow-lg rounded-xl p-8 border border-gray-100"
         >
-          <h2 className="text-lg font-medium text-gray-700 mb-4">Your Projects</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Your Projects</h2>
           <DynamoProjectsView
             userEmail={user?.email || ''}
             onProjectSelect={handleProjectSelect}
@@ -158,9 +158,9 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-white shadow-md rounded-lg p-6"
+          className="bg-white shadow-lg rounded-xl p-8 border border-gray-100"
         >
-          <h2 className="text-lg font-medium text-gray-700 mb-4">ACTA Actions</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">ACTA Actions</h2>
           <ActaButtons
             onGenerate={handleGenerateActa}
             onDownloadPdf={() => handleDownload('pdf')}
@@ -168,6 +168,7 @@ export default function Dashboard() {
             onPreviewPdf={handlePreview}
             onSendForApproval={() => setIsEmailDialogOpen(true)}
             disabled={!selectedProjectId || actionLoading}
+            isGenerating={actionLoading}
           />
         </motion.div>
       </main>
