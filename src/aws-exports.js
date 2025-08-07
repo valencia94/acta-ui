@@ -12,6 +12,14 @@ export default {
     redirectSignOut: "https://d7t9x3j66yd8k.cloudfront.net/login",
     responseType: "code"
   },
+  Auth: {
+    region: "us-east-2",
+    userPoolId: "us-east-2_FyHLtOhiY",
+    userPoolWebClientId: "dshos5iou44tuach7ta3ici5m",
+    identityPoolId: "us-east-2:1d50fa9e-c72f-4a3d-acfd-7b36ea065f35",
+    authenticationFlowType: "USER_SRP_AUTH",
+    mandatorySignIn: true
+  },
   API: {
     REST: {
       ActaAPI: {

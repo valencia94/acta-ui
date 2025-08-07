@@ -1,6 +1,7 @@
 // src/pages/Dashboard.tsx — Regenerated PM Dashboard using Admin layout
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { motion } from 'framer-motion';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect,useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
@@ -27,6 +28,15 @@ export default function Dashboard() {
   const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>('');
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [currentProjectName, setCurrentProjectName] = useState<string>('');
+
+  // Local verification script for Cognito credentials
+  useEffect(() => {
+    fetchAuthSession().then((session) => {
+      console.log('🧠 Identity ID:', (session?.credentials as any)?.identityId);
+    }).catch((err) => {
+      console.error('❌ Failed to get Cognito credentials:', err);
+    });
+  }, []);
 
   const handleProjectSelect = (projectId: string) => {
     setSelectedProjectId(projectId);
