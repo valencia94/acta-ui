@@ -20,7 +20,7 @@ export default function ActaButtons({
   onPreviewPdf,
   onSendForApproval,
   disabled,
-  _isGenerating,
+  isGenerating,
 }: ActaButtonsProps): JSX.Element {
   const handleClick = (action: () => void, actionName: string) => {
     if (disabled) {
@@ -52,8 +52,17 @@ export default function ActaButtons({
             border border-green-400/20
           "
         >
-          <FileText className="h-4 w-4" />
-          <span className="text-sm">Generate</span>
+          {isGenerating ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              <span className="text-sm">Generating...</span>
+            </>
+          ) : (
+            <>
+              <FileText className="h-4 w-4" />
+              <span className="text-sm">Generate</span>
+            </>
+          )}
         </Button>
 
         <Button
