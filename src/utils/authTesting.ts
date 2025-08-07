@@ -25,13 +25,14 @@ export async function testCreateAccount(): Promise<void> {
 
     if (result.nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
       console.log('📧 Confirmation required. Check email for code.');
-      return { success: true, needsConfirmation: true, email: testEmail };
+      console.log({ success: true, needsConfirmation: true, email: testEmail });
+      return;
     }
 
-    return { success: true, needsConfirmation: false };
+    console.log({ success: true, needsConfirmation: false });
   } catch (error) {
     console.error('❌ Account creation failed:', error);
-    return { success: false, error: error.message };
+    console.error({ success: false, error: (error as Error).message });
   }
 }
 
@@ -46,10 +47,10 @@ export async function testConfirmAccount(email: string, code: string): Promise<v
     });
 
     console.log('✅ Account confirmed successfully');
-    return { success: true };
+    console.log({ success: true });
   } catch (error) {
     console.error('❌ Account confirmation failed:', error);
-    return { success: false, error: error.message };
+    console.error({ success: false, error: (error as Error).message });
   }
 }
 
@@ -64,13 +65,14 @@ export async function testSignIn(email: string, password: string): Promise<void>
 
     if (result.isSignedIn) {
       console.log('🎉 Successfully signed in!');
-      return { success: true };
+      console.log({ success: true });
+      return;
     }
 
-    return { success: false, error: 'Sign in incomplete' };
+    console.error({ success: false, error: 'Sign in incomplete' });
   } catch (error) {
     console.error('❌ Sign in failed:', error);
-    return { success: false, error: error.message };
+    console.error({ success: false, error: (error as Error).message });
   }
 }
 
@@ -82,10 +84,10 @@ export async function testPasswordReset(email: string): Promise<void> {
     await resetPassword({ username: email });
 
     console.log('✅ Password reset code sent');
-    return { success: true };
+    console.log({ success: true });
   } catch (error) {
     console.error('❌ Password reset failed:', error);
-    return { success: false, error: error.message };
+    console.error({ success: false, error: (error as Error).message });
   }
 }
 
