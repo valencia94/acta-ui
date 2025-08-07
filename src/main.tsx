@@ -1,6 +1,6 @@
-import './tailwind.css';
-import '@/styles/amplify-overrides.css';
 import '@/styles/variables.css';
+import '@/tailwind.css';
+import '@/styles/amplify-overrides.css';
 import '@aws-amplify/ui-react/styles.css';
 
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
