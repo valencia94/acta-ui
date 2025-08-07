@@ -11,6 +11,10 @@ interface ActaButtonsProps {
   onSendForApproval: () => void;
   disabled: boolean;
   isGenerating: boolean;
+  isDownloadingWord?: boolean;
+  isDownloadingPdf?: boolean;
+  isPreviewingPdf?: boolean;
+  isSendingApproval?: boolean;
 }
 
 export default function ActaButtons({
@@ -21,10 +25,14 @@ export default function ActaButtons({
   onSendForApproval,
   disabled,
   isGenerating,
+  isDownloadingWord = false,
+  isDownloadingPdf = false,
+  isPreviewingPdf = false,
+  isSendingApproval = false,
 }: ActaButtonsProps): JSX.Element {
-  const handleClick = (action: () => void, actionName: string) => {
-    if (disabled) {
-      console.log(`${actionName} clicked but disabled`);
+  const handleClick = (action: () => void, actionName: string, isLoading: boolean = false) => {
+    if (disabled || isLoading) {
+      console.log(`${actionName} clicked but disabled or loading`);
       return;
     }
     console.log(`${actionName} clicked`);
@@ -37,8 +45,8 @@ export default function ActaButtons({
       <div className="grid grid-cols-2 gap-3 w-full">
         {/* Primary Actions Row */}
         <Button
-          onClick={() => handleClick(onGenerate, 'Generate Acta')}
-          disabled={disabled}
+          onClick={() => handleClick(onGenerate, 'Generate Acta', isGenerating)}
+          disabled={disabled || isGenerating}
           className="
             flex items-center justify-center gap-2.5
             bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
@@ -66,8 +74,8 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onSendForApproval, 'Send for Approval')}
-          disabled={disabled}
+          onClick={() => handleClick(onSendForApproval, 'Send for Approval', isSendingApproval)}
+          disabled={disabled || isSendingApproval}
           className="
             flex items-center justify-center gap-2.5
             bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700
@@ -81,16 +89,25 @@ export default function ActaButtons({
             border border-teal-400/20
           "
         >
-          <Send className="h-4 w-4" />
-          <span className="text-sm">Send Approval</span>
+          {isSendingApproval ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              <span className="text-sm">Sending...</span>
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" />
+              <span className="text-sm">Send Approval</span>
+            </>
+          )}
         </Button>
       </div>
 
       {/* Secondary Actions Row - 3 column grid */}
       <div className="grid grid-cols-3 gap-2 w-full mt-3">
         <Button
-          onClick={() => handleClick(onDownloadWord, 'Download Word')}
-          disabled={disabled}
+          onClick={() => handleClick(onDownloadWord, 'Download Word', isDownloadingWord)}
+          disabled={disabled || isDownloadingWord}
           className="
             flex items-center justify-center gap-2
             bg-white hover:bg-green-50 
@@ -104,13 +121,22 @@ export default function ActaButtons({
             w-full h-12
           "
         >
-          <Download className="h-4 w-4" />
-          <span className="text-xs font-medium">Word</span>
+          {isDownloadingWord ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-2 border-green-600 border-t-transparent"></div>
+              <span className="text-xs font-medium">Loading...</span>
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              <span className="text-xs font-medium">Word</span>
+            </>
+          )}
         </Button>
 
         <Button
-          onClick={() => handleClick(onPreviewPdf, 'Preview PDF')}
-          disabled={disabled}
+          onClick={() => handleClick(onPreviewPdf, 'Preview PDF', isPreviewingPdf)}
+          disabled={disabled || isPreviewingPdf}
           className="
             flex items-center justify-center gap-2
             bg-white hover:bg-blue-50
@@ -124,13 +150,22 @@ export default function ActaButtons({
             w-full h-12
           "
         >
-          <Eye className="h-4 w-4" />
-          <span className="text-xs font-medium">Preview</span>
+          {isPreviewingPdf ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-600 border-t-transparent"></div>
+              <span className="text-xs font-medium">Loading...</span>
+            </>
+          ) : (
+            <>
+              <Eye className="h-4 w-4" />
+              <span className="text-xs font-medium">Preview</span>
+            </>
+          )}
         </Button>
 
         <Button
-          onClick={() => handleClick(onDownloadPdf, 'Download PDF')}
-          disabled={disabled}
+          onClick={() => handleClick(onDownloadPdf, 'Download PDF', isDownloadingPdf)}
+          disabled={disabled || isDownloadingPdf}
           className="
             flex items-center justify-center gap-2
             bg-white hover:bg-teal-50
@@ -144,8 +179,17 @@ export default function ActaButtons({
             w-full h-12
           "
         >
-          <Download className="h-4 w-4" />
-          <span className="text-xs font-medium">PDF</span>
+          {isDownloadingPdf ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-2 border-teal-600 border-t-transparent"></div>
+              <span className="text-xs font-medium">Loading...</span>
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              <span className="text-xs font-medium">PDF</span>
+            </>
+          )}
         </Button>
       </div>
 
