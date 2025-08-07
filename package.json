@@ -9,7 +9,7 @@
   },
   "packageManager": "pnpm@10.13.1",
   "scripts": {
-    "lint": "pnpm exec eslint .",
+    "lint": "pnpm exec eslint \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"tests/**/*.ts\" \"vite.config.ts\" \"vitest.config.ts\" \"src/sendProjectsForPM.ts\"",
     "lint:fix": "./scripts/fix-lint.sh",
     "lint:ci": "pnpm exec eslint . --max-warnings=0",
     "ci:lint": "pnpm run lint:ci",
@@ -193,4 +193,3 @@
     }
   }
 }
-

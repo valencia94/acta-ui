@@ -41723,7 +41723,7 @@ const Uie = (e, t) =>
           tP[c] = !0;
           const u = c.endsWith(".css"),
             d = u ? '[rel="stylesheet"]' : "";
-          if (!!r)
+          if (r)
             for (let h = s.length - 1; h >= 0; h--) {
               const y = s[h];
               if (y.href === c && (!u || y.rel === "stylesheet")) return;

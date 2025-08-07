@@ -1,3 +1,7 @@
+.trash/
+
+# Ignore backup, dist, and legacy noise...
+
 # ✅ Tooling + infra
 node_modules/
 .pnpm-store/
