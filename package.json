@@ -24,7 +24,7 @@
     "preview": "vite preview",
     "build": "vite build",
     "check:env": "node scripts/check-env.cjs",
-    "check-aws": "bash scripts/hashcheck-aws.sh",
+    "check-aws": "node scripts/validate-aws-config.js",
     "predeploy": "pnpm run check-aws && pnpm run build && node scripts/smoke-test.js",
     "deploy": "pnpm run predeploy",
     "smoke-test": "node scripts/smoke-test.js",

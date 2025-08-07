@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 function copyAwsExports() {
   return {
     name: "copy-aws-exports",
-    closeBundle() {
+    writeBundle() {
       const src = path.resolve(process.cwd(), "public/aws-exports.js");
       const dest = path.resolve(process.cwd(), "dist/aws-exports.js");
       const destDir = path.dirname(dest);
@@ -40,7 +40,7 @@ function copyAwsExports() {
           try {
             fs.copyFileSync(indexSrc, fallbackDest);
             console.log("✅ 404.html created successfully.");
-          } catch (error) {
+          } catch (error: any) {
             console.warn("⚠️ Failed to create 404.html:", error.message);
           }
         } else {

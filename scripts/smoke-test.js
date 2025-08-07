@@ -24,6 +24,19 @@ if (!fs.existsSync(DIST_DIR)) {
 
 console.log('✅ dist directory exists');
 
+// Ensure 404.html exists for SPA routing (create from index.html if missing)
+const indexPath = path.join(DIST_DIR, 'index.html');
+const fallbackPath = path.join(DIST_DIR, '404.html');
+
+if (fs.existsSync(indexPath) && !fs.existsSync(fallbackPath)) {
+  try {
+    fs.copyFileSync(indexPath, fallbackPath);
+    console.log('✅ 404.html created from index.html for SPA routing');
+  } catch (error) {
+    console.error(`❌ Failed to create 404.html: ${error.message}`);
+  }
+}
+
 // Check required files exist
 let allFilesExist = true;
 for (const file of REQUIRED_FILES) {
