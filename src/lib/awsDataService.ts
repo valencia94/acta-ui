@@ -1,11 +1,12 @@
-// src/lib/awsDataService.ts
-// ✅ AWS SDK v3 integration using Cognito Identity Pool for temporary IAM credentials
-
+import { Sha256 } from '@aws-crypto/sha256-js';
+// Keep the original functionality while adding the new pattern
 import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
-import { GetObjectCommand,S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { HttpRequest } from '@smithy/protocol-http';
+import { SignatureV4 } from '@smithy/signature-v4';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 const REGION = import.meta.env.VITE_COGNITO_REGION || 'us-east-2';
@@ -18,13 +19,35 @@ let cachedClients: {
   s3: S3Client;
 } | null = null;
 
+const fetchWithSigV4 = async (url: string) => {
+  const session = await fetchAuthSession();
+  const credentials = session.credentials;
+  if (!credentials) throw new Error('❌ No Cognito credentials');
+
+  const signer = new SignatureV4({
+    credentials,
+    region: 'us-east-2',
+    service: 'execute-api',
+    sha256: Sha256,
+  });
+
+  const request = new HttpRequest({ hostname: new URL(url).hostname, method: 'GET', path: url });
+
+  const signedRequest = await signer.sign(request);
+  const response = await fetch(url, {
+    headers: signedRequest.headers,
+  });
+
+  return response.json();
+};
+
 // ✅ Derive AWS credentials for this user session
 async function getAwsClients() {
   if (cachedClients) return cachedClients;
 
   const { tokens } = await fetchAuthSession();
   const logins = {
-    [`cognito-idp.${REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_POOL_ID}`]: tokens.idToken?.toString() || '',
+    [`cognito-idp.${REGION}.amazonaws.com/${import.meta.env.VITE_COGNITO_POOL_ID}`]: tokens?.idToken?.toString() || '',
   };
 
   const credentials = fromCognitoIdentityPool({
