@@ -1,0 +1,11 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { AnalyticsValidationErrorCode, assertValidationError } from '../errors';
+/**
+ * Validates tracker configuration.
+ */
+export const validateTrackerConfiguration = (input) => {
+    assertValidationError(input.type === 'event' ||
+        input.type === 'pageView' ||
+        input.type === 'session', AnalyticsValidationErrorCode.InvalidTracker);
+};

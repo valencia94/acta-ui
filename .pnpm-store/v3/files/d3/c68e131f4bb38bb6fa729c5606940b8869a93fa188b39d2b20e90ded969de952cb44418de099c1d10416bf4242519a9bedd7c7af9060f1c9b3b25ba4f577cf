@@ -1,0 +1,35 @@
+"use strict";
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+Object.defineProperty(exports, "__esModule", { value: true });
+const internals_1 = require("@aws-amplify/api-graphql/internals");
+const api_graphql_1 = require("@aws-amplify/api-graphql");
+/**
+ * @private
+ *
+ * Creates a client that can be used to make GraphQL requests, using a provided `AmplifyClassV6`
+ * compatible context object for config and auth fetching.
+ *
+ * @param params
+ * @returns
+ */
+function generateClient(params) {
+    const client = {
+        [api_graphql_1.__amplify]: params.amplify,
+        graphql: internals_1.graphql,
+        cancel: internals_1.cancel,
+        isCancelError: internals_1.isCancelError,
+        models: {},
+    };
+    return client;
+}
+exports.generateClient = generateClient;
+var server_1 = require("@aws-amplify/api-rest/server");
+exports.get = server_1.get;
+exports.put = server_1.put;
+exports.post = server_1.post;
+exports.del = server_1.del;
+exports.head = server_1.head;
+exports.patch = server_1.patch;
+exports.isCancelError = server_1.isCancelError;
+//# sourceMappingURL=server.js.map

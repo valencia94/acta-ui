@@ -1,0 +1,7 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { getAmplifyServerContext, } from '@aws-amplify/core/internals/adapter-core';
+import { getProperties as getPropertiesInternal } from '../internal/getProperties';
+export const getProperties = (contextSpec, input) => {
+    return getPropertiesInternal(getAmplifyServerContext(contextSpec).amplify, input);
+};

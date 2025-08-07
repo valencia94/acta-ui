@@ -1,0 +1,241 @@
+export default function DynamoProjectsViewexport default function DynamoProjectsViewimport React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Filter, RefreshCw, Activity, MessageSquare, Calendar, Building2 } from 'lucide-react';
+import { getProjectsForCurrentUser } from '@/lib/awsDataService';
+
+interface Project {
+  project_id: string;
+  project_name: string;
+  plant_let?: string;
+  activity?: string;
+  comments?: string;
+  timestamp?: string;
+  pm_email?: string;
+}
+
+interface DynamoProjectsViewProps {
+  userEmail: string;
+  onProjectSelect?: (project: Project) => void;
+  selectedProjectId?: string;
+}
+
+export function DynamoProjectsView({ 
+  userEmail, 
+  onProjectSelect, 
+  selectedProjectId
+}: DynamoProjectsViewProps) {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterActivity, setFilterActivity] = useState('all');
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  useEffect(() => {
+    loadProjects();
+  }, [userEmail]);
+
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      const data = await getProjectsForCurrentUser();
+      
+      // Group by project_id and get the latest record for each
+      const projectMap = new Map<string, Project>();
+      
+      data.forEach((project: any) => {
+        const existingProject = projectMap.get(project.project_id);
+        
+        if (!existingProject || 
+            (project.timestamp && (!existingProject.timestamp || project.timestamp > existingProject.timestamp))) {
+          projectMap.set(project.project_id, {
+            ...project,
+            project_name: project.project_name || project.name || `Project ${project.project_id}`
+          });
+        }
+      });
+      
+      const uniqueProjects = Array.from(projectMap.values());
+      
+      // Sort by timestamp (newest first) or project_id
+      uniqueProjects.sort((a, b) => {
+        if (a.timestamp && b.timestamp) {
+          return b.timestamp.localeCompare(a.timestamp);
+        }
+        return a.project_id.localeCompare(b.project_id);
+      });
+      
+      setProjects(uniqueProjects);
+      setFilteredProjects(uniqueProjects);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      setProjects([]);
+      setFilteredProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let filtered = [...projects];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(project => 
+        project.project_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (project.plant_let && project.plant_let.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    if (filterActivity !== 'all') {
+      filtered = filtered.filter(project => project.activity === filterActivity);
+    }
+    
+    setFilteredProjects(filtered);
+  }, [searchTerm, filterActivity, projects]);
+
+  const uniqueActivities = Array.from(new Set(projects.map(p => p.activity).filter(Boolean)));
+
+  return (
+    <div className="bg-white rounded-lg shadow">
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Your Projects</h3>
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <Calendar className="w-4 h-4" />
+            <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
+            <button
+              onClick={loadProjects}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+          
+          {uniqueActivities.length > 0 && (
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={filterActivity}
+                onChange={(e) => setFilterActivity(e.target.value)}
+                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white"
+              >
+                <option value="all">All Activities</option>
+                {uniqueActivities.map(activity => (
+                  <option key={activity} value={activity}>{activity}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Project ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Project Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Plant
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Activity
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Comments
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center">
+                  <div className="flex items-center justify-center">
+                    <RefreshCw className="w-6 h-6 animate-spin text-emerald-600" />
+                    <span className="ml-2 text-gray-600">Loading projects...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredProjects.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                  {searchTerm || filterActivity !== 'all' 
+                    ? 'No projects match your filters' 
+                    : 'No projects found'}
+                </td>
+              </tr>
+            ) : (
+              <AnimatePresence>
+                {filteredProjects.map((project) => (
+                  <motion.tr
+                    key={project.project_id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                      selectedProjectId === project.project_id ? 'bg-emerald-50' : ''
+                    }`}
+                    onClick={() => onProjectSelect?.(project)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{project.project_id}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{project.project_name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Building2 className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-900">{project.plant_let || 'N/A'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Activity className="w-4 h-4 text-emerald-500 mr-2" />
+                        <span className="text-sm text-gray-900">{project.activity || 'N/A'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <MessageSquare className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-600 truncate max-w-xs">
+                          {project.comments || 'No comments'}
+                        </span>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+        <div className="text-sm text-gray-600">
+          Showing {filteredProjects.length} of {projects.length} projects
+        </div>
+      </div>
+    </div>
+  );
+}

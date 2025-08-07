@@ -1,0 +1,14 @@
+"use strict";
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ServiceWorker = exports.ConsoleLogger = exports.Cache = exports.I18n = exports.Hub = void 0;
+/*
+This file maps exports from `aws-amplify/utils`.
+*/
+var core_1 = require("@aws-amplify/core");
+Object.defineProperty(exports, "Hub", { enumerable: true, get: function () { return core_1.Hub; } });
+Object.defineProperty(exports, "I18n", { enumerable: true, get: function () { return core_1.I18n; } });
+Object.defineProperty(exports, "Cache", { enumerable: true, get: function () { return core_1.Cache; } });
+Object.defineProperty(exports, "ConsoleLogger", { enumerable: true, get: function () { return core_1.ConsoleLogger; } });
+Object.defineProperty(exports, "ServiceWorker", { enumerable: true, get: function () { return core_1.ServiceWorker; } });

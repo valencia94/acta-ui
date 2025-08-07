@@ -1,0 +1,8 @@
+"use strict";
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+Object.defineProperty(exports, "__esModule", { value: true });
+var resolveConfig_1 = require("./resolveConfig");
+exports.resolveConfig = resolveConfig_1.resolveConfig;
+var resolveLibraryOptions_1 = require("./resolveLibraryOptions");
+exports.resolveLibraryOptions = resolveLibraryOptions_1.resolveLibraryOptions;

@@ -1,0 +1,10 @@
+import IndexedDBAdapter from '../IndexedDBAdapter';
+import AsyncStorageAdapter from '../AsyncStorageAdapter';
+import { isWebWorker, isBrowser } from '@aws-amplify/core/internals/utils';
+const getDefaultAdapter = () => {
+    if ((isBrowser && window.indexedDB) || (isWebWorker() && self.indexedDB)) {
+        return IndexedDBAdapter;
+    }
+    return AsyncStorageAdapter;
+};
+export default getDefaultAdapter;

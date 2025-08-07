@@ -1,0 +1,10 @@
+export { CONTROL_MSG, ConnectionState } from './PubSub';
+export var GraphQLAuthError;
+(function (GraphQLAuthError) {
+    GraphQLAuthError["NO_API_KEY"] = "No api-key configured";
+    GraphQLAuthError["NO_CURRENT_USER"] = "No current user";
+    GraphQLAuthError["NO_CREDENTIALS"] = "No credentials";
+    GraphQLAuthError["NO_FEDERATED_JWT"] = "No federated jwt";
+    GraphQLAuthError["NO_AUTH_TOKEN"] = "No auth token specified";
+})(GraphQLAuthError || (GraphQLAuthError = {}));
+export const __amplify = Symbol('amplify');

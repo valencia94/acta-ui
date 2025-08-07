@@ -1,0 +1,25 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { graphql, cancel, isCancelError, } from '@aws-amplify/api-graphql/internals';
+import { __amplify, } from '@aws-amplify/api-graphql';
+/**
+ * @private
+ *
+ * Creates a client that can be used to make GraphQL requests, using a provided `AmplifyClassV6`
+ * compatible context object for config and auth fetching.
+ *
+ * @param params
+ * @returns
+ */
+export function generateClient(params) {
+    const client = {
+        [__amplify]: params.amplify,
+        graphql,
+        cancel,
+        isCancelError,
+        models: {},
+    };
+    return client;
+}
+export { get, put, post, del, head, patch, isCancelError, } from '@aws-amplify/api-rest/server';
+//# sourceMappingURL=server.js.map

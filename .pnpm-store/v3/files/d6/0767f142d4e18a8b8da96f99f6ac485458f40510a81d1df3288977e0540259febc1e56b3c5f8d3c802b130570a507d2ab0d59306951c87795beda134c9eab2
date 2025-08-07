@@ -1,0 +1,9 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { loadAmplifyPushNotification } from '@aws-amplify/react-native';
+import { assertIsInitialized } from '../../../errors/errorHelpers';
+const { requestPermissions: requestPermissionsNative } = loadAmplifyPushNotification();
+export const requestPermissions = async (input) => {
+    assertIsInitialized();
+    return requestPermissionsNative(input);
+};

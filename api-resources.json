@@ -1,0 +1,199 @@
+{
+    "items": [
+        {
+            "id": "0rpaw2",
+            "parentId": "i3rbne",
+            "pathPart": "{projectId}",
+            "path": "/check-document/{projectId}",
+            "resourceMethods": {
+                "GET": {},
+                "HEAD": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "3scf5w",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "project-summary",
+            "path": "/project-summary",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "4j5w9n",
+            "parentId": "3scf5w",
+            "pathPart": "{id}",
+            "path": "/project-summary/{id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "7uxfi7",
+            "parentId": "9ufbqd",
+            "pathPart": "refresh-data",
+            "path": "/pm-manager/refresh-data"
+        },
+        {
+            "id": "9nmq2z",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "projects",
+            "path": "/projects",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "9ufbqd",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "pm-manager",
+            "path": "/pm-manager"
+        },
+        {
+            "id": "a0omy8",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "timeline",
+            "path": "/timeline",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "bu2yiu",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "approve",
+            "path": "/approve",
+            "resourceMethods": {
+                "ANY": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "bwa124",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "handleApprovalCallback",
+            "path": "/handleApprovalCallback",
+            "resourceMethods": {
+                "ANY": {}
+            }
+        },
+        {
+            "id": "cltt9f",
+            "parentId": "9ufbqd",
+            "pathPart": "{pmEmail}",
+            "path": "/pm-manager/{pmEmail}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "co74cb",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "extract-project-place",
+            "path": "/extract-project-place",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "dgcz16",
+            "parentId": "pufkqk",
+            "pathPart": "{id}",
+            "path": "/download-acta/{id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "i3rbne",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "check-document",
+            "path": "/check-document",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "j6ci0c",
+            "parentId": "co74cb",
+            "pathPart": "{id}",
+            "path": "/extract-project-place/{id}",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "j7z1ti",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "health",
+            "path": "/health",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "kw8f8zihjg",
+            "path": "/"
+        },
+        {
+            "id": "prgbfe",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "ProjectPlaceDataExtractor",
+            "path": "/ProjectPlaceDataExtractor",
+            "resourceMethods": {
+                "ANY": {},
+                "HEAD": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "pufkqk",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "download-acta",
+            "path": "/download-acta",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "sixint",
+            "parentId": "kw8f8zihjg",
+            "pathPart": "send-approval-email",
+            "path": "/send-approval-email",
+            "resourceMethods": {
+                "HEAD": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "u8hucp",
+            "parentId": "9ufbqd",
+            "pathPart": "all-projects",
+            "path": "/pm-manager/all-projects",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "wo429e",
+            "parentId": "a0omy8",
+            "pathPart": "{id}",
+            "path": "/timeline/{id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        }
+    ]
+}

@@ -1,0 +1,115 @@
+{
+	"name": "@aws-amplify/api-rest",
+	"private": false,
+	"version": "4.0.0",
+	"description": "Api-rest category of aws-amplify",
+	"main": "./lib/index.js",
+	"module": "./lib-esm/index.js",
+	"typings": "./lib-esm/index.d.ts",
+	"react-native": {
+		"./lib/index": "./lib-esm/index.js"
+	},
+	"sideEffects": [
+		"./lib/RestAPI.js",
+		"./lib-esm/RestAPI.js"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"test": "npm run lint && jest -w 1 --coverage",
+		"test:watch": "tslint 'src/**/*.ts' && jest -w 1 --watch",
+		"build-with-test": "npm run clean && npm test && tsc && webpack",
+		"build:cjs": "rimraf lib && tsc -m commonjs --outDir lib && webpack && webpack --config ./webpack.config.dev.js",
+		"build:esm": "rimraf lib-esm && tsc -m esnext --outDir lib-esm",
+		"build:cjs:watch": "rimraf lib && tsc -m commonjs --outDir lib --watch",
+		"build:esm:watch": "rimraf lib-esm && tsc -m esnext --outDir lib-esm --watch",
+		"build": "npm run clean && npm run build:esm && npm run build:cjs",
+		"clean": "npm run clean:size && rimraf lib-esm lib dist",
+		"clean:size": "rimraf dual-publish-tmp tmp*",
+		"format": "echo \"Not implemented\"",
+		"lint": "tslint 'src/**/*.ts' && npm run ts-coverage",
+		"ts-coverage": "typescript-coverage-report -p ./tsconfig.json -t 70.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/aws-amplify/amplify-js.git"
+	},
+	"author": "Amazon Web Services",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/aws/aws-amplify/issues"
+	},
+	"homepage": "https://aws-amplify.github.io/",
+	"files": [
+		"lib",
+		"lib-esm",
+		"src",
+		"internals",
+		"server"
+	],
+	"dependencies": {
+		"tslib": "^2.5.0"
+	},
+	"peerDependencies": {
+		"@aws-amplify/core": "^6.0.0"
+	},
+	"devDependencies": {
+		"@aws-amplify/core": "6.0.0",
+		"@aws-amplify/react-native": "^1.0.0",
+		"typescript": "5.0.2"
+	},
+	"size-limit": [
+		{
+			"name": "API (rest client)",
+			"path": "./lib-esm/index.js",
+			"import": "{ Amplify, RestAPI }",
+			"limit": "31.5 kB"
+		}
+	],
+	"jest": {
+		"globals": {
+			"ts-jest": {
+				"diagnostics": false,
+				"tsConfig": {
+					"allowJs": true,
+					"noEmitOnError": false
+				}
+			}
+		},
+		"transform": {
+			"^.+\\.(js|jsx|ts|tsx)$": "ts-jest"
+		},
+		"testPathIgnorePatterns": [
+			"/testUtils/"
+		],
+		"testRegex": "(/__tests__/.*|\\.(test|spec))\\.(tsx?|jsx?)$",
+		"moduleFileExtensions": [
+			"ts",
+			"tsx",
+			"js",
+			"json",
+			"jsx"
+		],
+		"testEnvironment": "jsdom",
+		"testURL": "http://localhost/",
+		"coverageThreshold": {
+			"global": {
+				"branches": 0,
+				"functions": 0,
+				"lines": 0,
+				"statements": 0
+			}
+		},
+		"coveragePathIgnorePatterns": [
+			"node_modules",
+			"dist",
+			"lib",
+			"lib-esm"
+		],
+		"setupFiles": [
+			"<rootDir>/setupTests.ts"
+		]
+	},
+	"gitHead": "d505105326d7f6214f6bd1e06eb20be3a3651377"
+}
