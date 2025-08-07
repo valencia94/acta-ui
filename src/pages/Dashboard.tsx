@@ -21,7 +21,13 @@ import {
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
-  const [actionLoading, setActionLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState({
+    generating: false,
+    downloadingWord: false,
+    downloadingPdf: false,
+    previewing: false,
+    sendingApproval: false,
+  });
 
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>('');
@@ -40,7 +46,10 @@ export default function Dashboard() {
   const handleProjectSelect = (projectId: string) => {
     setSelectedProjectId(projectId);
     setCurrentProjectName(projectId);
-    toast.success(`Selected project: ${projectId}`);
+    toast.success(`Selected project: ${projectId}`, {
+      duration: 2000,
+      icon: '✅',
+    });
   };
 
   const handleGenerateActa = async () => {
@@ -48,14 +57,20 @@ export default function Dashboard() {
       toast.error("Please select a project and ensure you're logged in.");
       return;
     }
-    setActionLoading(true);
+    setActionLoading(prev => ({ ...prev, generating: true }));
     try {
       await generateActaDocument(selectedProjectId, user.email, 'pm');
-      toast.success("ACTA generation started. You'll receive an email when ready.");
+      toast.success("ACTA generation started successfully! You'll receive an email when ready.", {
+        duration: 5000,
+        icon: '✅',
+      });
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to generate ACTA');
+      toast.error(error?.message || 'Failed to generate ACTA', {
+        duration: 4000,
+        icon: '❌',
+      });
     } finally {
-      setActionLoading(false);
+      setActionLoading(prev => ({ ...prev, generating: false }));
     }
   };
 
@@ -64,14 +79,24 @@ export default function Dashboard() {
       toast.error('Please select a project first');
       return;
     }
-    setActionLoading(true);
+    
+    const loadingKey = format === 'pdf' ? 'downloadingPdf' : 'downloadingWord';
+    setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
+    
     try {
       const url = await getDownloadUrl(selectedProjectId, format);
       window.open(url, '_blank');
+      toast.success(`${format.toUpperCase()} download started successfully!`, {
+        duration: 3000,
+        icon: '📥',
+      });
     } catch (error: any) {
-      toast.error(error?.message || `Failed to download ${format.toUpperCase()}`);
+      toast.error(error?.message || `Failed to download ${format.toUpperCase()}`, {
+        duration: 4000,
+        icon: '❌',
+      });
     } finally {
-      setActionLoading(false);
+      setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
 
@@ -80,20 +105,30 @@ export default function Dashboard() {
       toast.error('Please select a project first');
       return;
     }
-    setActionLoading(true);
+    setActionLoading(prev => ({ ...prev, previewing: true }));
     try {
       const check = await checkDocumentInS3(selectedProjectId, 'pdf');
       if (!check.available) {
-        toast.error('Document not ready, try Generate first.');
+        toast.error('Document not ready, try Generate first.', {
+          duration: 4000,
+          icon: '⏳',
+        });
         return;
       }
       const url = await getDownloadUrl(selectedProjectId, 'pdf');
       setPdfPreviewUrl(url);
       setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
+      toast.success('Document preview loaded successfully!', {
+        duration: 3000,
+        icon: '👁️',
+      });
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to preview document');
+      toast.error(error?.message || 'Failed to preview document', {
+        duration: 4000,
+        icon: '❌',
+      });
     } finally {
-      setActionLoading(false);
+      setActionLoading(prev => ({ ...prev, previewing: false }));
     }
   };
 
@@ -102,19 +137,28 @@ export default function Dashboard() {
       toast.error('Please select a project first');
       return;
     }
-    setActionLoading(true);
+    setActionLoading(prev => ({ ...prev, sendingApproval: true }));
     try {
       const result = await sendApprovalEmail(selectedProjectId, email);
       if (result.message) {
-        toast.success('Approval email sent successfully!');
+        toast.success('Approval email sent successfully!', {
+          duration: 4000,
+          icon: '📧',
+        });
         setIsEmailDialogOpen(false);
       } else {
-        toast.error('Failed to send approval email');
+        toast.error('Failed to send approval email', {
+          duration: 4000,
+          icon: '❌',
+        });
       }
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to send approval email');
+      toast.error(error?.message || 'Failed to send approval email', {
+        duration: 4000,
+        icon: '❌',
+      });
     } finally {
-      setActionLoading(false);
+      setActionLoading(prev => ({ ...prev, sendingApproval: false }));
     }
   };
 
@@ -123,7 +167,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-gray-100">
       <Header />
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
@@ -131,10 +175,10 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white shadow-lg rounded-xl p-8 border border-gray-100"
+          className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Welcome, {user?.email}</h1>
-          <p className="text-base text-gray-600">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome, {user?.email}</h1>
+          <p className="text-lg text-gray-600 leading-relaxed">
             View your projects and take action with ACTA tools.
           </p>
         </motion.div>
@@ -143,9 +187,9 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white shadow-lg rounded-xl p-8 border border-gray-100"
+          className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
         >
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">Your Projects</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-8">Your Projects</h2>
           <DynamoProjectsView
             userEmail={user?.email || ''}
             onProjectSelect={handleProjectSelect}
@@ -157,17 +201,21 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-white shadow-lg rounded-xl p-8 border border-gray-100"
+          className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
         >
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">ACTA Actions</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-8">ACTA Actions</h2>
           <ActaButtons
             onGenerate={handleGenerateActa}
             onDownloadPdf={() => handleDownload('pdf')}
             onDownloadWord={() => handleDownload('docx')}
             onPreviewPdf={handlePreview}
             onSendForApproval={() => setIsEmailDialogOpen(true)}
-            disabled={!selectedProjectId || actionLoading}
-            isGenerating={actionLoading}
+            disabled={!selectedProjectId || Object.values(actionLoading).some(Boolean)}
+            isGenerating={actionLoading.generating}
+            isDownloadingWord={actionLoading.downloadingWord}
+            isDownloadingPdf={actionLoading.downloadingPdf}
+            isPreviewingPdf={actionLoading.previewing}
+            isSendingApproval={actionLoading.sendingApproval}
           />
         </motion.div>
       </main>
@@ -185,7 +233,7 @@ export default function Dashboard() {
         isOpen={isEmailDialogOpen}
         onClose={() => setIsEmailDialogOpen(false)}
         onSubmit={handleSendApproval}
-        loading={actionLoading}
+        loading={actionLoading.sendingApproval}
         title="Send Approval Request"
         description={`Send approval for project: ${currentProjectName}`}
         placeholder="Enter client email address"
