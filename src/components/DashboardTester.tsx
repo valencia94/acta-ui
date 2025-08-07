@@ -79,7 +79,7 @@ export default function DashboardTester() {
         status: response.ok ? 'pass' : 'warn',
         message: response.ok ? 'API server reachable' : `API returned ${response.status}`,
       });
-    } catch (error) {
+    } catch (_error) {
       results.push({
         test: 'API Connectivity',
         status: 'fail',

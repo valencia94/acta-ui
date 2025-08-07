@@ -31,7 +31,9 @@ async function enableCors() {
         httpMethod: 'OPTIONS',
         authorizationType: 'NONE'
       }));
-    } catch {}
+    } catch {
+      // Ignore if method already exists
+    }
 
     try {
       await client.send(new PutIntegrationCommand({
@@ -41,7 +43,9 @@ async function enableCors() {
         type: 'MOCK',
         requestTemplates: { 'application/json': '{"statusCode":200}' }
       }));
-    } catch {}
+    } catch {
+      // Ignore if integration already exists
+    }
 
     try {
       await client.send(new PutMethodResponseCommand({
@@ -56,7 +60,9 @@ async function enableCors() {
           'method.response.header.Access-Control-Allow-Origin': false
         }
       }));
-    } catch {}
+    } catch {
+      // Ignore if method response already exists
+    }
 
     try {
       await client.send(new PutIntegrationResponseCommand({
@@ -70,7 +76,9 @@ async function enableCors() {
           'method.response.header.Access-Control-Allow-Origin': '\'*\''
         }
       }));
-    } catch {}
+    } catch {
+      // Ignore if integration response already exists
+    }
   }
   await client.send(new CreateDeploymentCommand({
     restApiId: API_ID,

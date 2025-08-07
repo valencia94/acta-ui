@@ -20,7 +20,7 @@ export default function ActaButtons({
   onSendForApproval,
   disabled,
 }: ActaButtonsProps) {
-  const handleClick = (action: () => void, actionName: string) => {
+  const handleClick = (action: () => void, _actionName: string) => {
     if (disabled) return;
     action();
   };

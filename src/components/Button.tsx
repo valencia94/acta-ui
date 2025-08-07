@@ -27,7 +27,7 @@ export default function Button({
   color = 'primary',
   variant = 'contained',
   type = 'button',
-}: ButtonProps) {
+}: ButtonProps): JSX.Element {
   return (
     <MUIButton
       onClick={onClick}

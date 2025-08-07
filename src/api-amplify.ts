@@ -18,7 +18,7 @@ export const apiCall = async (
     headers?: Record<string, string>;
     skipAuth?: boolean;
   }
-) => {
+): Promise<any> => {
   const { timeout = 30000, headers = {}, skipAuth: skipAuthOption = false } = options || {};
 
   try {
@@ -160,7 +160,7 @@ export const checkApiHealth = async (): Promise<{
       timestamp: new Date().toISOString(),
       ...response,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
@@ -171,7 +171,7 @@ export const checkApiHealth = async (): Promise<{
 /**
  * Get current user info from JWT token
  */
-export const getCurrentUser = async () => {
+export const getCurrentUser = async (): Promise<any> => {
   try {
     const session = await fetchAuthSession();
     const token = session.tokens?.idToken;
