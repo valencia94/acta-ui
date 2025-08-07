@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export const useThemedFavicon = () => {
+export const useThemedFavicon = (): void => {
   useEffect(() => {
     const matcher = window.matchMedia('(prefers-color-scheme: dark)');
     const lightIcon = document.querySelector<HTMLLinkElement>('#fav-light');

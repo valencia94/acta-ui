@@ -1,6 +1,6 @@
 // Quick backend status diagnostic
 
-export async function quickBackendDiagnostic() {
+export async function quickBackendDiagnostic(): Promise<boolean> {
   console.log('🔍 Quick Backend Diagnostic...');
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;

@@ -108,7 +108,7 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
       const json = JSON.parse(raw ?? '');
       console.log('✅ SigV4 Response:', json);
       return json as T;
-    } catch (_e) {
+    } catch {
       console.error('❌ SigV4 response not JSON:', raw);
       throw new Error('Invalid JSON response from SigV4 request');
     }

@@ -72,7 +72,7 @@ async function testSignIn() {
 }
 
 // Run all tests
-async function runAllTests() {
+async function runAllTests(): Promise<void> {
   console.log('🧪 Starting comprehensive authentication tests...');
   console.log('📍 AWS Region:', 'us-east-2');
   console.log('🏊 User Pool:', 'us-east-2_FyHLtOhiY');
