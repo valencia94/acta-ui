@@ -19,7 +19,7 @@ export const apiStage = import.meta.env.VITE_API_STAGE || 'prod';
 // Skip authentication only if explicitly set to true in development
 // export const skipAuth =
 //   import.meta.env.VITE_SKIP_AUTH === "true" && import.meta.env.DEV;
-export const skipAuth = false; // Disabled for production resilience
+export const skipAuth = import.meta.env.DEV; // Enable skip auth in development
 // export const isDemo = import.meta.env.VITE_IS_DEMO === "true";
 export const isDemo = false; // Disabled for production resilience
 export const authDebug = import.meta.env.VITE_AUTH_DEBUG === 'true';

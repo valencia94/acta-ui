@@ -213,12 +213,7 @@ export default function App(): JSX.Element {
         }}
       />
 
-      {import.meta.env.DEV && AuthDebugger && DashboardTester && (
-        <Suspense fallback={<div>Loading debug tools...</div>}>
-          <AuthDebugger />
-          <DashboardTester />
-        </Suspense>
-      )}
+      {/* Debug components removed for cleaner UI */}
     </ChakraProvider>
   );
 }
