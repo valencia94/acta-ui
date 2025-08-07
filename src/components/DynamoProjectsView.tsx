@@ -115,7 +115,7 @@ export default function DynamoProjectsView({
                 )}
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <dt className="font-medium text-gray-500 uppercase tracking-wide text-xs">Project ID</dt>
                   <dd className="mt-1 text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded text-xs">
@@ -132,17 +132,46 @@ export default function DynamoProjectsView({
                   <dt className="font-medium text-gray-500 uppercase tracking-wide text-xs">Status</dt>
                   <dd className="mt-1">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      project.status === 'active' 
+                      project.status === 'Active' 
                         ? 'bg-green-100 text-green-800'
-                        : project.status === 'completed'
+                        : project.status === 'Completed'
                         ? 'bg-blue-100 text-blue-800' 
+                        : project.status === 'In Progress'
+                        ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
                       {project.status || 'Active'}
                     </span>
                   </dd>
                 </div>
+                
+                {project.originalData?.has_acta_document !== undefined && (
+                  <div>
+                    <dt className="font-medium text-gray-500 uppercase tracking-wide text-xs">ACTA Document</dt>
+                    <dd className="mt-1">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        project.originalData.has_acta_document 
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {project.originalData.has_acta_document ? '✓ Available' : '✗ Missing'}
+                      </span>
+                    </dd>
+                  </div>
+                )}
               </div>
+              
+              {project.originalData?.last_updated && (
+                <div className="mt-3 text-xs text-gray-500">
+                  <span className="font-medium">Last Updated:</span> {
+                    new Date(project.originalData.last_updated).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short', 
+                      day: 'numeric'
+                    })
+                  }
+                </div>
+              )}
             </div>
             
             <div className="ml-4 flex-shrink-0">
