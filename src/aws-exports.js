@@ -39,3 +39,22 @@ const awsmobile = {
 };
 
 export default awsmobile;
+
+// Auth config duplicated intentionally to support both Amplify v6 modular + legacy use
+``` |
+
+---
+
+### 📄 `src/App.tsx`
+
+**🟡 Reviewed — Copilot Suggestion Partially Rejected**
+
+| Issue | Feedback |
+|-------|----------|
+| Removed conditional logic from `/login` route | ⚠️ Risk: allows signed-in users to revisit login form |
+| ✅ AIGOR Recommendation | Restore this logic:
+```tsx
+<Route
+  path="/login"
+  element={skipAuth || isAuthed ? <Navigate to="/dashboard" /> : <Login />}
+/>
