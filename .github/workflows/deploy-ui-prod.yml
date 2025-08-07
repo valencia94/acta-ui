@@ -37,7 +37,7 @@ jobs:
           cache: pnpm
 
       - name: 📦 Install deps                                # 4️⃣ Deps
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run CI checks
         run: pnpm run ci
@@ -69,7 +69,12 @@ jobs:
           echo "→ Using CloudFront ID: $CF_CLEAN"
 
       - name: ⚙️ Enable CORS on API Gateway                  # 8️⃣ CORS script
-        run: node scripts/enable-cors.js
+        run: |
+          if [ -f scripts/enable-cors.js ]; then
+            node scripts/enable-cors.js
+          else
+            echo 'scripts/enable-cors.js not found – skipping'
+          fi
 
       - name: 🏗️ Build                                      # 9️⃣ Build
         run: pnpm run build
