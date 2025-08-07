@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { getProjectsByPM } from '@/lib/api';
+import { getProjectsForCurrentUser } from '@/lib/awsDataService';
 
 interface Project {
   id: string;
@@ -28,7 +28,7 @@ export default function DynamoProjectsView({
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await getProjectsByPM(userEmail, false); // includeArchived flag
+        const data = await getProjectsForCurrentUser();
         setProjects(data ?? []);
       } catch (err) {
         console.error(err);
