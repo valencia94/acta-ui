@@ -2,7 +2,7 @@
 
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
