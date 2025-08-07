@@ -3,11 +3,11 @@ import { motion } from 'framer-motion';
 import { LayoutDashboard, Menu as MenuIcon } from 'lucide-react';
 import { ReactNode } from 'react';
 
+import logoSrc from '@/assets/ikusi-logo.png';
+
 interface ShellProps {
   children: ReactNode;
 }
-
-const logoSrc = '/assets/ikusi-logo.png';
 
 export default function Shell({ children }: ShellProps): JSX.Element {
   return (
