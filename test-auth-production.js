@@ -1,7 +1,7 @@
 // test-auth-production.js
 // Test authentication in the current production deployment
 
-import { test, expect } from "@playwright/test";
+import {test } from "@playwright/test";
 
 test("Test current authentication flow in production", async ({ page }) => {
   console.log("🔍 Testing current production authentication...");

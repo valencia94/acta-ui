@@ -1,0 +1,17 @@
+"use strict";
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+Object.defineProperty(exports, "__esModule", { value: true });
+var API_1 = require("./API");
+exports.generateClient = API_1.generateClient;
+var api_graphql_1 = require("@aws-amplify/api-graphql");
+exports.GraphQLAuthError = api_graphql_1.GraphQLAuthError;
+var api_rest_1 = require("@aws-amplify/api-rest");
+exports.get = api_rest_1.get;
+exports.put = api_rest_1.put;
+exports.post = api_rest_1.post;
+exports.del = api_rest_1.del;
+exports.head = api_rest_1.head;
+exports.patch = api_rest_1.patch;
+exports.isCancelError = api_rest_1.isCancelError;
+//# sourceMappingURL=index.js.map

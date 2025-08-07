@@ -3,8 +3,8 @@
 // Master validation script that runs all our working tests
 
 import { spawn } from "child_process";
+import { dirname } from "path";
 import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

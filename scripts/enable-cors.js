@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 import {
   APIGatewayClient,
+  CreateDeploymentCommand,
   GetResourcesCommand,
-  PutMethodCommand,
   PutIntegrationCommand,
-  PutMethodResponseCommand,
   PutIntegrationResponseCommand,
-  CreateDeploymentCommand
-} from '@aws-sdk/client-api-gateway';
+  PutMethodCommand,
+  PutMethodResponseCommand} from '@aws-sdk/client-api-gateway';
 
 const API_ID = process.env.API_ID ?? '<PROD_API_ID>';
 const API_STAGE = process.env.API_STAGE ?? 'prod';

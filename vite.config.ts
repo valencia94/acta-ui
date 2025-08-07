@@ -3,9 +3,9 @@ import autoprefixer from "autoprefixer";
 import fs from "fs";
 import path from "path";
 import tailwindcss from "tailwindcss";
+import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

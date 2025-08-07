@@ -1,0 +1,235 @@
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/index.ts
+var index_exports = {};
+__export(index_exports, {
+  Schema: () => import_validator_lite.schema,
+  ValidateEnv: () => ValidateEnv,
+  defineConfig: () => defineConfig
+});
+module.exports = __toCommonJS(index_exports);
+var import_node_path = __toESM(require("path"), 1);
+var import_node_process = require("process");
+var import_unconfig = require("unconfig");
+
+// src/ui.ts
+var import_cliui = require("@poppinss/cliui");
+function initUi() {
+  return (0, import_cliui.cliui)({ mode: process.env.NODE_ENV === "testing" ? "raw" : "normal" });
+}
+
+// src/validators/zod/index.ts
+function errorReporter(ui, errors) {
+  let finalMessage = ui.colors.red("Failed to validate environment variables : \n");
+  for (const error of errors) {
+    const errorKey = `[${ui.colors.magenta(error.key)}]`;
+    finalMessage += `
+${errorKey}: 
+`;
+    const message = `Invalid value for "${error.key}" : ${error.err.issues[0].message}`;
+    finalMessage += `  ${ui.colors.yellow(message)} 
+`;
+  }
+  return finalMessage;
+}
+async function zodValidation(ui, env, schema2) {
+  const errors = [];
+  const variables = [];
+  for (const [key, validator] of Object.entries(schema2)) {
+    const result = validator.safeParse(env[key]);
+    if (!result.success) {
+      errors.push({ key, err: result.error });
+      continue;
+    }
+    if (typeof result.data === "undefined") continue;
+    variables.push({ key, value: result.data });
+  }
+  if (errors.length) {
+    throw new Error(errorReporter(ui, errors));
+  }
+  return variables;
+}
+
+// src/validators/builtin/index.ts
+function errorReporter2(ui, errors) {
+  let finalMessage = ui.colors.red("Failed to validate environment variables : \n");
+  for (const error of errors) {
+    const errorKey = `[${ui.colors.magenta(error.key)}]`;
+    finalMessage += `
+${errorKey}: 
+`;
+    const message = error.err.message.replace(`${error.err.code}: `, "");
+    finalMessage += `  ${ui.colors.yellow(message)} 
+`;
+  }
+  return finalMessage;
+}
+function builtinValidation(ui, env, schema2) {
+  const errors = [];
+  const variables = [];
+  for (const [key, validator] of Object.entries(schema2)) {
+    try {
+      const res = validator(key, env[key]);
+      if (typeof res === "undefined") continue;
+      variables.push({ key, value: res });
+    } catch (err) {
+      errors.push({ key, err });
+    }
+  }
+  if (errors.length) {
+    throw new Error(errorReporter2(ui, errors));
+  }
+  return variables;
+}
+
+// src/validators/standard/index.ts
+function errorReporter3(ui, errors) {
+  let finalMessage = ui.colors.red("Failed to validate environment variables : \n");
+  for (const error of errors) {
+    const errorKey = `[${ui.colors.magenta(error.key)}]`;
+    finalMessage += `
+${errorKey}: 
+`;
+    const message = `Invalid value for "${error.key}" : ${error.err.issues[0].message}`;
+    finalMessage += `  ${ui.colors.yellow(message)} 
+`;
+  }
+  return finalMessage;
+}
+async function standardValidation(ui, env, schema2) {
+  const errors = [];
+  const variables = [];
+  for (const [key, validator] of Object.entries(schema2)) {
+    const result = await validator["~standard"].validate(env[key]);
+    if (result.issues) {
+      errors.push({ key, err: result });
+      continue;
+    }
+    variables.push({ key, value: result.value });
+  }
+  if (errors.length) {
+    throw new Error(errorReporter3(ui, errors));
+  }
+  return variables;
+}
+
+// src/index.ts
+var import_validator_lite = require("@poppinss/validator-lite");
+async function loadOptions(rootDir, inlineConfig) {
+  let source = "env";
+  if (inlineConfig && "configFile" in inlineConfig && inlineConfig.configFile) {
+    source = inlineConfig.configFile;
+  }
+  const loader = (0, import_unconfig.createConfigLoader)({
+    sources: [{ files: source, extensions: ["ts", "cts", "mts", "js", "cjs", "mjs"] }],
+    cwd: rootDir,
+    defaults: inlineConfig,
+    importx: { cache: false, loader: "jiti" }
+  });
+  const result = await loader.load();
+  const config = result.config;
+  if (!config) throw new Error("Missing configuration for vite-plugin-validate-env");
+  return config;
+}
+function getNormalizedOptions(options) {
+  let schema2;
+  let validator;
+  const isSchemaNested = "schema" in options && "validator" in options;
+  if (isSchemaNested) {
+    schema2 = options.schema;
+    validator = options.validator;
+  } else {
+    validator = "builtin";
+    schema2 = options;
+  }
+  return { schema: schema2, validator };
+}
+function logVariables(ui, variables) {
+  ui.logger.log(`${ui.colors.cyan("[vite-plugin-validate-env]")} debug process.env content`);
+  for (const { key, value } of variables) {
+    ui.logger.log(`${ui.icons.pointer} ${ui.colors.cyan(key)}: ${value}`);
+  }
+}
+function shouldLogVariables(options) {
+  return "debug" in options && options.debug === true;
+}
+async function validateEnv(ui, userConfig, envConfig, inlineOptions) {
+  const { normalizePath, loadEnv } = await import("vite");
+  const rootDir = userConfig.root || (0, import_node_process.cwd)();
+  const resolvedRoot = normalizePath(
+    userConfig.root ? import_node_path.default.resolve(userConfig.root) : process.cwd()
+  );
+  const envDir = userConfig.envDir ? normalizePath(import_node_path.default.resolve(resolvedRoot, userConfig.envDir)) : resolvedRoot;
+  const env = loadEnv(envConfig.mode, envDir, userConfig.envPrefix);
+  const options = await loadOptions(rootDir, inlineOptions);
+  const variables = await validateAndLog(ui, env, options);
+  return {
+    define: variables.reduce(
+      (acc, { key, value }) => {
+        acc[`import.meta.env.${key}`] = JSON.stringify(value);
+        return acc;
+      },
+      {}
+    )
+  };
+}
+async function validateAndLog(ui, env, options) {
+  const { schema: schema2, validator } = getNormalizedOptions(options);
+  const showDebug = shouldLogVariables(options);
+  const validate = { zod: zodValidation, builtin: builtinValidation, standard: standardValidation }[validator];
+  try {
+    const variables = await validate(ui, env, schema2);
+    if (showDebug) logVariables(ui, variables);
+    return variables;
+  } catch (error) {
+    if (showDebug) {
+      const variables = Object.entries(schema2).map(([key]) => ({ key, value: env[key] }));
+      logVariables(ui, variables);
+    }
+    throw error;
+  }
+}
+var ValidateEnv = (options) => {
+  const ui = initUi();
+  return {
+    // @ts-expect-error - only used for testing as we need to keep each instance of the plugin unique to a test
+    ui: process.env.NODE_ENV === "testing" ? ui : void 0,
+    name: "vite-plugin-validate-env",
+    config: (config, env) => validateEnv(ui, config, env, options)
+  };
+};
+var defineConfig = (config) => config;
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  Schema,
+  ValidateEnv,
+  defineConfig
+});
+//# sourceMappingURL=index.cjs.map

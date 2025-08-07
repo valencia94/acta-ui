@@ -1,0 +1,15 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { Category, getAmplifyUserAgentObject, getAmplifyUserAgent, } from '@aws-amplify/core/internals/utils';
+export function getInAppMessagingUserAgent(action) {
+    return getAmplifyUserAgentObject({
+        category: Category.InAppMessaging,
+        action,
+    });
+}
+export function getInAppMessagingUserAgentString(action) {
+    return getAmplifyUserAgent({
+        category: Category.InAppMessaging,
+        action,
+    });
+}

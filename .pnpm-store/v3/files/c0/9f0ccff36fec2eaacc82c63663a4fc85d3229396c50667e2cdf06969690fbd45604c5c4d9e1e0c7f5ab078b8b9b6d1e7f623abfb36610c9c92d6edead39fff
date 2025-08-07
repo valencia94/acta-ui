@@ -1,0 +1,25 @@
+import { parseJsonError, } from '@aws-amplify/core/internals/aws-client-utils';
+import { RestApiError } from '../errors';
+/**
+ * Internal-only method to create a new RestApiError from a service error.
+ *
+ * @internal
+ */
+export const buildRestApiServiceError = (error) => {
+    const restApiError = new RestApiError({
+        name: error?.name,
+        message: error.message,
+        underlyingError: error,
+    });
+    return restApiError;
+};
+export const parseRestApiServiceError = async (response) => {
+    const parsedError = await parseJsonError(response);
+    if (!parsedError) {
+        // Response is not an error.
+        return;
+    }
+    return Object.assign(buildRestApiServiceError(parsedError), {
+        $metadata: parsedError.$metadata,
+    });
+};

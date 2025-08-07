@@ -1,0 +1,8 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+export var S3Exception;
+(function (S3Exception) {
+    S3Exception["NotFoundException"] = "NotFoundException";
+    S3Exception["ForbiddenException"] = "ForbiddenException";
+    S3Exception["BadRequestException"] = "BadRequestException";
+})(S3Exception || (S3Exception = {}));

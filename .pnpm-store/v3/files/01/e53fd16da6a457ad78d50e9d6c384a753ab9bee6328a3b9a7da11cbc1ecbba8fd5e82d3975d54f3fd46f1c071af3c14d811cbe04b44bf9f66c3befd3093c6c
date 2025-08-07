@@ -1,0 +1,40 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.utils = exports.NAMESPACES = exports.ModelSortPredicateCreator = exports.ModelPredicateCreator = exports.Predicates = exports.AsyncItem = exports.AsyncCollection = exports.initSchema = exports.DataStoreClass = exports.DataStore = void 0;
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+var datastore_1 = require("./datastore/datastore");
+Object.defineProperty(exports, "DataStore", { enumerable: true, get: function () { return datastore_1.DataStore; } });
+Object.defineProperty(exports, "DataStoreClass", { enumerable: true, get: function () { return datastore_1.DataStoreClass; } });
+Object.defineProperty(exports, "initSchema", { enumerable: true, get: function () { return datastore_1.initSchema; } });
+Object.defineProperty(exports, "AsyncCollection", { enumerable: true, get: function () { return datastore_1.AsyncCollection; } });
+Object.defineProperty(exports, "AsyncItem", { enumerable: true, get: function () { return datastore_1.AsyncItem; } });
+var predicates_1 = require("./predicates");
+Object.defineProperty(exports, "Predicates", { enumerable: true, get: function () { return predicates_1.Predicates; } });
+Object.defineProperty(exports, "ModelPredicateCreator", { enumerable: true, get: function () { return predicates_1.ModelPredicateCreator; } });
+Object.defineProperty(exports, "ModelSortPredicateCreator", { enumerable: true, get: function () { return predicates_1.ModelSortPredicateCreator; } });
+const util_1 = require("./util");
+var util_2 = require("./util");
+Object.defineProperty(exports, "NAMESPACES", { enumerable: true, get: function () { return util_2.NAMESPACES; } });
+exports.utils = {
+    USER: util_1.USER,
+    traverseModel: util_1.traverseModel,
+    validatePredicate: util_1.validatePredicate,
+    isNonModelConstructor: util_1.isNonModelConstructor,
+    isModelConstructor: util_1.isModelConstructor,
+};
+__exportStar(require("./types"), exports);

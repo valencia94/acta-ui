@@ -1,0 +1,4 @@
+export declare const resolveCredentials: () => Promise<{
+    credentials: import("@aws-amplify/core/lib-esm/libraryUtils").AWSCredentials;
+    identityId: string | undefined;
+}>;

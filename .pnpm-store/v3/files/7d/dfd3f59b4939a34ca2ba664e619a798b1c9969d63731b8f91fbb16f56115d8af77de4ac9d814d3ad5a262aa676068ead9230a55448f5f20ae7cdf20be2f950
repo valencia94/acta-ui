@@ -1,0 +1,35 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { resolveApiUrl, createCancellableOperation, logger, parseSigningInfo, } from '../../utils';
+import { transferHandler } from './handler';
+const publicHandler = (amplify, options, method) => createCancellableOperation(async (abortSignal) => {
+    const { apiName, options: apiOptions = {}, path: apiPath } = options;
+    const url = resolveApiUrl(amplify, apiName, apiPath, apiOptions?.queryParams);
+    const libraryOptionsHeaders = await amplify.libraryOptions?.API?.REST?.headers?.({
+        apiName,
+    });
+    const { headers: invocationHeaders = {} } = apiOptions;
+    const headers = {
+        // custom headers from invocation options should precede library options
+        ...libraryOptionsHeaders,
+        ...invocationHeaders,
+    };
+    const signingServiceInfo = parseSigningInfo(url, {
+        amplify,
+        apiName,
+    });
+    logger.debug(method, url, headers, `IAM signing options: ${JSON.stringify(signingServiceInfo)}`);
+    return transferHandler(amplify, {
+        ...apiOptions,
+        url,
+        method,
+        headers,
+        abortSignal,
+    }, signingServiceInfo);
+});
+export const get = (amplify, input) => publicHandler(amplify, input, 'GET');
+export const post = (amplify, input) => publicHandler(amplify, input, 'POST');
+export const put = (amplify, input) => publicHandler(amplify, input, 'PUT');
+export const del = (amplify, input) => publicHandler(amplify, input, 'DELETE');
+export const head = (amplify, input) => publicHandler(amplify, input, 'HEAD');
+export const patch = (amplify, input) => publicHandler(amplify, input, 'PATCH');

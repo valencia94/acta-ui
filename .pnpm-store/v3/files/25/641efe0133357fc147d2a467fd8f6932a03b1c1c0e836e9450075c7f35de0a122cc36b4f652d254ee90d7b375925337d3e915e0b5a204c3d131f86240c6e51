@@ -1,0 +1,44 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DefaultAmplify = void 0;
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+const core_1 = require("@aws-amplify/core");
+const utils_1 = require("@aws-amplify/core/internals/utils");
+const cognito_1 = require("./auth/cognito");
+exports.DefaultAmplify = {
+    configure(resourceConfig, libraryOptions) {
+        let resolvedResourceConfig;
+        if (Object.keys(resourceConfig).some(key => key.startsWith('aws_'))) {
+            resolvedResourceConfig = (0, utils_1.parseAWSExports)(resourceConfig);
+        }
+        else {
+            resolvedResourceConfig = resourceConfig;
+        }
+        // When Auth config is provided but no custom Auth provider defined
+        // use the default Auth Providers
+        if (resolvedResourceConfig.Auth && !libraryOptions?.Auth) {
+            cognito_1.CognitoUserPoolsTokenProvider.setAuthConfig(resolvedResourceConfig.Auth);
+            const libraryOptionsWithDefaultAuthProviders = {
+                ...libraryOptions,
+                Auth: {
+                    tokenProvider: cognito_1.CognitoUserPoolsTokenProvider,
+                    credentialsProvider: cognito_1.cognitoCredentialsProvider,
+                },
+            };
+            cognito_1.CognitoUserPoolsTokenProvider.setKeyValueStorage(libraryOptions?.ssr
+                ? // TODO: allow configure with a public interface
+                    new core_1.CookieStorage({
+                        sameSite: 'lax',
+                    })
+                : core_1.defaultStorage);
+            core_1.Amplify.configure(resolvedResourceConfig, libraryOptionsWithDefaultAuthProviders);
+        }
+        else {
+            core_1.Amplify.configure(resolvedResourceConfig, libraryOptions);
+        }
+    },
+    getConfig() {
+        return core_1.Amplify.getConfig();
+    },
+};

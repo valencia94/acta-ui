@@ -1,0 +1,15 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { AmplifyErrorCode, } from '@aws-amplify/core/internals/utils';
+import { InAppMessagingError } from './InAppMessagingError';
+export function assertServiceError(error) {
+    if (!error ||
+        error.name === 'Error' ||
+        error instanceof TypeError) {
+        throw new InAppMessagingError({
+            name: AmplifyErrorCode.Unknown,
+            message: 'An unknown error has ocurred.',
+            underlyingError: error,
+        });
+    }
+}

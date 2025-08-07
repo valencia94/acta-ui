@@ -1,0 +1,4 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+export { getBadgeCount, getLaunchNotification, getPermissionStatus, identifyUser, initializePushNotifications, onNotificationOpened, onNotificationReceivedInBackground, onNotificationReceivedInForeground, onTokenReceived, requestPermissions, setBadgeCount, } from './providers/pinpoint';
+export { PushNotificationError } from './errors';

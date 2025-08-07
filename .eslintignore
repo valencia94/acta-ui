@@ -1,32 +1,65 @@
-.idea
-.github
-.husky
-.run
-.storybook
-dist
-node_modules
-coverage
-storybook-static
-test-results
-testing-resources
-public/*.js
-test-api*.js
-api-connectivity*.js
+.trash/
+
+# Ignore backup, dist, and legacy noise...
+
+# ✅ Tooling + infra
+node_modules/
+.pnpm-store/
+.husky/
+.run/
+.github/
+.storybook/
+.vscode/
+.idea/
+
+# ✅ Output & test artifacts
+dist/
+coverage/
 public-backup/
 archive/
+deployment-backup-*/
+storybook-static/
+test-results/
+testing-resources/
+
+# ✅ Legacy and backup files
+*.backup
+*.bundle.js
+*.min.js
+*.map
+working-bundle.*
+verify-bundle-components.js
+scan-all.mjs
+scripts/.eslintrc.cjs
 src/aws-exports.js
-tests/playwright.preload.js
-# Root JS files (test scripts and debugging)
-*.js
-# Allow config files to be ignored
-# !*.config.js
-# !vite.config.ts
-# !vitest.config.ts
+src/sendProjectsForPM.ts
+complete-dynamo-scan.js
 
-
+# ✅ Cypress
 cypress/
 cypress.config.ts
-vite.config.ts
-vitest.config.ts
-src/components/PDFPreview/
-src/sendProjectsForPM.ts
+
+# ✅ Manual test files
+tests/manual/
+tests/utils/
+test-*.js
+
+# ✅ Common loose files
+*.cjs
+*.mjs
+*.test.js
+*.config.js
+
+# ✅ Per-file parser warnings (unsupported by tsconfig.lint.json)
+archive/Dashboard-Clean.tsx
+cognito-extraction/working-bundle.js
+deployment-backup-*/dist-backup/assets/**/*.js
+
+# ✅ Overrides: Allow linting for critical configs
+!vite.config.ts
+!vitest.config.ts
+
+# Trash quarantine zone
+.trash/
+.trash
+.trash

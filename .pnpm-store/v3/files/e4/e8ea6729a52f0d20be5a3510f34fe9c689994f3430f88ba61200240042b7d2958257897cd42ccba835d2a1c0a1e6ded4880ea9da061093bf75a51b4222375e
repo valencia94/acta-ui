@@ -1,0 +1,46 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+import { calculateContentMd5 } from '../../../utils';
+import { uploadPart } from '../../../utils/client';
+export const uploadPartExecutor = async ({ dataChunkerGenerator, completedPartNumberSet, s3Config, abortSignal, bucket, finalKey, uploadId, onPartUploadCompletion, onProgress, isObjectLockEnabled, }) => {
+    let transferredBytes = 0;
+    for (const { data, partNumber, size } of dataChunkerGenerator) {
+        if (abortSignal.aborted) {
+            // TODO: debug message: upload executor aborted
+            break;
+        }
+        if (completedPartNumberSet.has(partNumber)) {
+            // TODO: debug message: part already uploaded
+            transferredBytes += size;
+            onProgress?.({
+                transferredBytes,
+            });
+        }
+        else {
+            // handle cancel error
+            const { ETag: eTag } = await uploadPart({
+                ...s3Config,
+                abortSignal,
+                onUploadProgress: (event) => {
+                    const { transferredBytes: currentPartTransferredBytes } = event;
+                    onProgress?.({
+                        transferredBytes: transferredBytes + currentPartTransferredBytes,
+                    });
+                },
+            }, {
+                Bucket: bucket,
+                Key: finalKey,
+                UploadId: uploadId,
+                // TODO: The Body type of S3 UploadPart API from AWS SDK does not correctly reflects the supported data types.
+                Body: data,
+                PartNumber: partNumber,
+                ContentMD5: isObjectLockEnabled
+                    ? await calculateContentMd5(data)
+                    : undefined,
+            });
+            transferredBytes += size;
+            // eTag will always be set even the S3 model interface marks it as optional.
+            onPartUploadCompletion(partNumber, eTag);
+        }
+    }
+};

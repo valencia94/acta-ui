@@ -2,9 +2,9 @@
 // test-connectivity-with-auth.js
 // Comprehensive connectivity test using actual user credentials
 
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import { config } from "dotenv";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
