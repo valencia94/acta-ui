@@ -37,7 +37,7 @@ export default function DynamoProjectsView({
         setLoading(false);
       }
     };
-    if (userEmail) load();
+    if (userEmail) void load();
   }, [userEmail]);
 
   if (loading) return <div className="text-gray-500">Loading projects…</div>;

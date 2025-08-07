@@ -130,7 +130,7 @@ export default function DashboardTester(): JSX.Element {
 
       <div className="space-y-2 mb-3">
         <button
-          onClick={runQuickTest}
+          onClick={() => void runQuickTest()}
           className="w-full bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
         >
           Run Quick Test

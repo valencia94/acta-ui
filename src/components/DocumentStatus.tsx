@@ -48,7 +48,7 @@ export default function DocumentStatus({ projectId, format, className = '' }: Do
       }
     };
 
-    checkAvailability();
+    void checkAvailability();
   }, [projectId, format]);
 
   const getStatusIcon = () => {

@@ -9,7 +9,7 @@ interface ShellProps {
 
 const logoSrc = '/assets/ikusi-logo.png';
 
-export default function Shell({ children }: ShellProps) {
+export default function Shell({ children }: ShellProps): JSX.Element {
   return (
     <div className="min-h-screen flex">
       {/* ── Sidebar */}
