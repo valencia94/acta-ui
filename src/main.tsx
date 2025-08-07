@@ -1,6 +1,6 @@
+import './tailwind.css';
 import '@/styles/variables.css';
 import '@/styles/amplify-overrides.css';
-import '@/tailwind.css';
 import '@aws-amplify/ui-react/styles.css';
 
 import { Amplify } from 'aws-amplify';
@@ -10,32 +10,28 @@ import { BrowserRouter } from 'react-router-dom';
 
 import App from '@/App';
 
-async function loadAwsConfig() {
-  if ((window as any).awsmobile) return (window as any).awsmobile;
+import awsExports from './aws-exports'; // Fallback
 
-  await new Promise((resolve) => {
-    const timer = setTimeout(resolve, 5000);
-    window.addEventListener(
-      'awsmobile-loaded',
-      () => {
-        clearTimeout(timer);
-        resolve(null);
-      },
-      { once: true }
-    );
-  });
+let amplifyConfigured = false;
 
-  if ((window as any).awsmobile) return (window as any).awsmobile;
+const configureAmplify = async () => {
+  if (amplifyConfigured) return;
 
-  const cfg = await import('@/aws-exports');
-  return cfg.default || cfg;
-}
+  try {
+    const config = (window as any).awsmobile || awsExports;
+    Amplify.configure(config);
+    amplifyConfigured = true;
+    console.log('✅ Amplify configured with:', config);
+    console.log('Amplify Identity Pool:', config.aws_cognito_identity_pool_id);
+  } catch (err) {
+    console.error('❌ Amplify configuration failed:', err);
+  }
+};
 
 async function init() {
-  const config = await loadAwsConfig();
-  Amplify.configure(config);
-
-  createRoot(document.getElementById('root')).render(
+  await configureAmplify();
+  
+  createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <BrowserRouter>
         <App />
