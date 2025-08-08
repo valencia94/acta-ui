@@ -108,7 +108,7 @@ export async function getProjectsForCurrentUser(): Promise<any> {
     const result = await dynamoDB.send(new QueryCommand(params));
     const items = (result.Items || []).map((item) => unmarshall(item));
 
-    // Legacy path (no grouping): preserve EXACT original shape
+        // Legacy path (no grouping): preserve EXACT original shape
     if (!GROUPED) {
       return items.map((project: any) => ({
         id: project.project_id || project.id,
@@ -116,13 +116,13 @@ export async function getProjectsForCurrentUser(): Promise<any> {
         pm: project.pm_email || project.pm || project.project_manager,
         status: mapProjectStatus(project),
         originalData: project,
-        // additive only (safe to ignore in callers) - ensure strings for React rendering
-        hito: typeof project.planlet === 'object' 
-          ? (project.planlet?.name || project.planlet?.id || String(project.planlet))
-          : project.planlet ?? null,
-        actividad: typeof project.title === 'object'
-          ? (project.title?.name || project.title?.id || String(project.title))
-          : project.title ?? null,
+        // additive only (safe to ignore in callers)
+        hito: typeof project.planlet === 'object' && project.planlet?.name 
+          ? project.planlet.name 
+          : typeof project.planlet === 'string' 
+          ? project.planlet 
+          : null,
+        actividad: typeof project.title === 'string' ? project.title : null,
       }));
     }
 
@@ -142,12 +142,12 @@ export async function getProjectsForCurrentUser(): Promise<any> {
         id: pid,
         name: String(latest.project_name ?? latest.name ?? pid),
         pm: String(latest.pm_email ?? latest.pm ?? latest.project_manager ?? ''),
-        hito: typeof latest.planlet === 'object' 
-          ? (latest.planlet?.name || latest.planlet?.id || String(latest.planlet))
-          : latest.planlet ?? null,      // Planlet
-        actividad: typeof latest.title === 'object'
-          ? (latest.title?.name || latest.title?.id || String(latest.title))
-          : latest.title ?? null,   // Title
+        hito: typeof latest.planlet === 'object' && latest.planlet?.name 
+          ? latest.planlet.name 
+          : typeof latest.planlet === 'string' 
+          ? latest.planlet 
+          : null,
+        actividad: typeof latest.title === 'string' ? latest.title : null,
         status: mapProjectStatus(latest),
         originalData: latest,
       };
