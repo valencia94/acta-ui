@@ -51,7 +51,6 @@
     "@mui/material": "^6.5.0",
     "@mui/styled-engine": "npm:@mui/styled-engine-sc@^6.4.9",
     "@mui/styled-engine-sc": "^6.4.9",
-    "@rollup/rollup-linux-x64-gnu": "^4.46.2",
     "@smithy/fetch-http-handler": "^5.1.0",
     "@smithy/protocol-http": "^5.1.2",
     "@smithy/signature-v4": "^5.1.2",
