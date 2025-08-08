@@ -1,6 +1,6 @@
 // src/pages/Dashboard.tsx — Regenerated PM Dashboard using Admin layout
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
@@ -36,6 +36,64 @@ export default function Dashboard() {
   const [currentProjectName, setCurrentProjectName] = useState<string>('');
   const [corsError, setCorsError] = useState<Error | null>(null);
 
+  // Regeneration watcher for Generate flow
+  const [regenState, setRegenState] = useState<{ active: boolean; baseline?: string | null; updated?: string | null; tries: number; startedAt?: number }>({ active: false, baseline: null, updated: null, tries: 0 });
+  const regenTimerRef = useRef<number | null>(null);
+
+  function stopRegenTimer() {
+    if (regenTimerRef.current) {
+      window.clearInterval(regenTimerRef.current);
+      regenTimerRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      // cleanup on unmount
+      stopRegenTimer();
+    };
+  }, []);
+
+  async function startRegenerationWatch(projectId: string, baselineLastMod: string | null | undefined) {
+    stopRegenTimer();
+    setRegenState({ active: true, baseline: baselineLastMod ?? null, updated: null, tries: 0, startedAt: Date.now() });
+    const maxTries = 24; // ~2 minutes at 5s
+    regenTimerRef.current = window.setInterval(async () => {
+      try {
+        const res = await checkDocumentInS3(projectId, 'pdf');
+        const lastMod = res.lastModified || null;
+        const updated = !!lastMod && lastMod !== (baselineLastMod ?? null);
+        setRegenState(prev => ({ ...prev, updated: lastMod, tries: prev.tries + 1 }));
+        if (updated) {
+          stopRegenTimer();
+          setRegenState(prev => ({ ...prev, active: false }));
+          toast.success('New ACTA document is ready. You can Preview or Download now.', { duration: 4000, icon: '✅' });
+        } else if ((regenTimerRef.current !== null) && (typeof regenTimerRef.current !== 'undefined')) {
+          // keep waiting
+        }
+        // Stop after max tries
+        if (regenTimerRef.current && (typeof regenTimerRef.current !== 'undefined')) {
+          // noop
+        }
+        if ((typeof window !== 'undefined') && typeof setTimeout === 'function') {
+          // no-op; ensures bundler keeps timers
+        }
+        if (regenTimerRef.current && (regenState.tries + 1) >= maxTries) {
+          stopRegenTimer();
+          setRegenState(prev => ({ ...prev, active: false }));
+          toast('Generate is still processing in the background. You can use the current document meanwhile.', { duration: 4000 });
+        }
+      } catch (e) {
+        // transient errors – continue polling unless we exceed max
+        setRegenState(prev => ({ ...prev, tries: prev.tries + 1 }));
+        if (regenTimerRef.current && (regenState.tries + 1) >= maxTries) {
+          stopRegenTimer();
+          setRegenState(prev => ({ ...prev, active: false }));
+        }
+      }
+    }, 5000);
+  }
+
   const handleProjectSelect = (project: Project) => {
     setSelectedProjectId(project.id);
     setCurrentProjectName(project.name);
@@ -55,11 +113,21 @@ export default function Dashboard() {
     setCorsError(null);
     
     try {
+      // Capture baseline lastModified before generating to detect fresh output
+      let baselineLastMod: string | null = null;
+      try {
+        const before = await checkDocumentInS3(selectedProjectId, 'pdf');
+        baselineLastMod = before.lastModified ?? null;
+      } catch {}
+
       await trackAction('Generate ACTA', selectedProjectId, async () => {
         return await generateActaDocument(selectedProjectId, user.email, 'pm');
       });
       
-      toast.success("ACTA generation started successfully! You'll receive an email when ready.", {
+      // Start background watcher – non-blocking for user
+      void startRegenerationWatch(selectedProjectId, baselineLastMod);
+
+      toast.success("ACTA regeneration started. We’ll notify when the new version is ready.", {
         duration: 5000,
         icon: '✅',
       });
@@ -246,6 +314,20 @@ export default function Dashboard() {
           className="bg-surface border border-borders rounded-xl p-6 shadow-sm"
         >
           <h2 className="text-lg font-semibold text-secondary mb-6">ACTA ACTIONS</h2>
+          {regenState.active && (
+            <div className="mb-4 text-xs text-body">
+              <span className="inline-flex items-center gap-2">
+                <span className="animate-spin rounded-full h-3 w-3 border-2 border-accent border-t-transparent"></span>
+                Regenerating document… We’ll notify when the new version is ready.
+              </span>
+              {regenState.baseline && (
+                <div className="mt-1">Last known version: <span className="font-medium">{regenState.baseline}</span></div>
+              )}
+              {regenState.updated && regenState.updated !== regenState.baseline && (
+                <div className="mt-1">New version detected: <span className="font-medium">{regenState.updated}</span></div>
+              )}
+            </div>
+          )}
           <ActaButtons
             onGenerate={handleGenerateActa}
             onDownloadPdf={() => handleDownload('pdf')}
