@@ -7,10 +7,12 @@ import { toast } from 'react-hot-toast';
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
 import DynamoProjectsView from '@/components/DynamoProjectsView';
 import { EmailInputDialog } from '@/components/EmailInputDialog';
+import { CorsErrorBanner } from '@/components/ErrorHandling/CorsErrorBanner';
 import Header from '@/components/Header';
 import PDFPreview from '@/components/PDFPreview';
 import ResponsiveIndicator from '@/components/ResponsiveIndicator';
 import { useAuth } from '@/hooks/useAuth';
+import { useMetrics } from '@/hooks/useMetrics';
 import {
   checkDocumentInS3,
   generateActaDocument,
@@ -20,6 +22,7 @@ import {
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
+  const { trackAction } = useMetrics();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [actionLoading, setActionLoading] = useState({
     generating: false,
@@ -33,6 +36,7 @@ export default function Dashboard() {
   const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>('');
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [currentProjectName, setCurrentProjectName] = useState<string>('');
+  const [corsError, setCorsError] = useState<Error | null>(null);
 
   // Local verification script for Cognito credentials
   useEffect(() => {
@@ -57,14 +61,23 @@ export default function Dashboard() {
       toast.error("Please select a project and ensure you're logged in.");
       return;
     }
+    
     setActionLoading(prev => ({ ...prev, generating: true }));
+    setCorsError(null);
+    
     try {
-      await generateActaDocument(selectedProjectId, user.email, 'pm');
+      await trackAction('Generate ACTA', selectedProjectId, async () => {
+        return await generateActaDocument(selectedProjectId, user.email, 'pm');
+      });
+      
       toast.success("ACTA generation started successfully! You'll receive an email when ready.", {
         duration: 5000,
         icon: '✅',
       });
     } catch (error: any) {
+      if (error.message.includes('Failed to fetch')) {
+        setCorsError(error);
+      }
       toast.error(error?.message || 'Failed to generate ACTA', {
         duration: 4000,
         icon: '❌',
@@ -82,15 +95,22 @@ export default function Dashboard() {
     
     const loadingKey = format === 'pdf' ? 'downloadingPdf' : 'downloadingWord';
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }));
+    setCorsError(null);
     
     try {
-      const url = await getDownloadUrl(selectedProjectId, format);
+      const url = await trackAction(`Download ${format.toUpperCase()}`, selectedProjectId, async () => {
+        return await getDownloadUrl(selectedProjectId, format);
+      });
+      
       window.open(url, '_blank');
       toast.success(`${format.toUpperCase()} download started successfully!`, {
         duration: 3000,
         icon: '📥',
       });
     } catch (error: any) {
+      if (error.message.includes('Failed to fetch')) {
+        setCorsError(error);
+      }
       toast.error(error?.message || `Failed to download ${format.toUpperCase()}`, {
         duration: 4000,
         icon: '❌',
@@ -105,28 +125,41 @@ export default function Dashboard() {
       toast.error('Please select a project first');
       return;
     }
+    
     setActionLoading(prev => ({ ...prev, previewing: true }));
+    setCorsError(null);
+    
     try {
-      const check = await checkDocumentInS3(selectedProjectId, 'pdf');
-      if (!check.available) {
-        toast.error('Document not ready, try Generate first.', {
-          duration: 4000,
-          icon: '⏳',
-        });
-        return;
-      }
-      const url = await getDownloadUrl(selectedProjectId, 'pdf');
-      setPdfPreviewUrl(url);
-      setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
+      await trackAction('Preview PDF', selectedProjectId, async () => {
+        const check = await checkDocumentInS3(selectedProjectId, 'pdf');
+        if (!check.available) {
+          throw new Error('Document not ready, try Generate first.');
+        }
+        const url = await getDownloadUrl(selectedProjectId, 'pdf');
+        setPdfPreviewUrl(url);
+        setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
+        return url;
+      });
+      
       toast.success('Document preview loaded successfully!', {
         duration: 3000,
         icon: '👁️',
       });
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to preview document', {
-        duration: 4000,
-        icon: '❌',
-      });
+      if (error.message.includes('Failed to fetch')) {
+        setCorsError(error);
+      }
+      if (error.message.includes('Document not ready')) {
+        toast.error('Document not ready, try Generate first.', {
+          duration: 4000,
+          icon: '⏳',
+        });
+      } else {
+        toast.error(error?.message || 'Failed to preview document', {
+          duration: 4000,
+          icon: '❌',
+        });
+      }
     } finally {
       setActionLoading(prev => ({ ...prev, previewing: false }));
     }
@@ -137,9 +170,15 @@ export default function Dashboard() {
       toast.error('Please select a project first');
       return;
     }
+    
     setActionLoading(prev => ({ ...prev, sendingApproval: true }));
+    setCorsError(null);
+    
     try {
-      const result = await sendApprovalEmail(selectedProjectId, email);
+      const result = await trackAction('Send Approval', selectedProjectId, async () => {
+        return await sendApprovalEmail(selectedProjectId, email);
+      });
+      
       if (result.message) {
         toast.success('Approval email sent successfully!', {
           duration: 4000,
@@ -153,6 +192,9 @@ export default function Dashboard() {
         });
       }
     } catch (error: any) {
+      if (error.message.includes('Failed to fetch')) {
+        setCorsError(error);
+      }
       toast.error(error?.message || 'Failed to send approval email', {
         duration: 4000,
         icon: '❌',
@@ -171,6 +213,17 @@ export default function Dashboard() {
       <Header />
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
+        {/* CORS Error Banner */}
+        {corsError && (
+          <CorsErrorBanner
+            error={corsError}
+            url={import.meta.env.VITE_API_BASE_URL}
+            region={import.meta.env.VITE_AWS_REGION || import.meta.env.VITE_COGNITO_REGION}
+            onRetry={() => setCorsError(null)}
+            onDismiss={() => setCorsError(null)}
+          />
+        )}
+        
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

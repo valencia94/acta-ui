@@ -5,6 +5,7 @@ import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-id
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
+import { useMockData } from '@/env.variables';
 import { fetcher } from '@/utils/fetchWrapper';
 
 const REGION = import.meta.env.VITE_COGNITO_REGION || 'us-east-2';
@@ -65,6 +66,14 @@ export async function getDownloadUrl(key: string, expiresIn = 60): Promise<strin
 
 // ✅ Fetch projects for the current authenticated user via SigV4-signed request
 export async function getProjectsForCurrentUser(): Promise<any> {
+  // Check if we should use mock data (only in development with explicit flag)
+  if (useMockData) {
+    console.log('[ACTA] Using MOCK data');
+    return getSampleProjects();
+  }
+
+  console.log('[ACTA] Using LIVE data');
+  
   try {
     const { tokens } = await fetchAuthSession();
     const email = tokens?.idToken?.payload?.email as string | undefined;
@@ -90,55 +99,54 @@ export async function getProjectsForCurrentUser(): Promise<any> {
   } catch (error) {
     console.error('❌ Failed to fetch projects from API:', error);
     
-    // In development, provide helpful sample data when API is not accessible
-    if (import.meta.env.DEV) {
-      console.warn('⚠️ Development mode: Using sample projects since API is not accessible');
-      return [
-        {
-          id: 'sample-project-001',
-          name: 'Office Building Construction',
-          pm: 'admin@ikusi.com',
-          status: 'In Progress',
-          originalData: {
-            project_id: 'sample-project-001',
-            project_name: 'Office Building Construction',
-            pm_email: 'admin@ikusi.com',
-            last_updated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-            has_acta_document: false
-          }
-        },
-        {
-          id: 'sample-project-002',
-          name: 'Infrastructure Upgrade',
-          pm: 'admin@ikusi.com', 
-          status: 'Completed',
-          originalData: {
-            project_id: 'sample-project-002',
-            project_name: 'Infrastructure Upgrade',
-            pm_email: 'admin@ikusi.com',
-            last_updated: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-            has_acta_document: true
-          }
-        },
-        {
-          id: 'sample-project-003',
-          name: 'Smart City Initiative',
-          pm: 'admin@ikusi.com',
-          status: 'Active',
-          originalData: {
-            project_id: 'sample-project-003', 
-            project_name: 'Smart City Initiative',
-            pm_email: 'admin@ikusi.com',
-            last_updated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            has_acta_document: false
-          }
-        }
-      ];
-    }
-    
-    // In production, re-throw the error
+    // In production, re-throw the error (no fallback to sample data)
     throw error;
   }
+}
+
+// Helper function to return sample projects (only used when useMockData is true)
+function getSampleProjects() {
+  return [
+    {
+      id: 'sample-project-001',
+      name: 'Office Building Construction',
+      pm: 'admin@ikusi.com',
+      status: 'In Progress',
+      originalData: {
+        project_id: 'sample-project-001',
+        project_name: 'Office Building Construction',
+        pm_email: 'admin@ikusi.com',
+        last_updated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        has_acta_document: false
+      }
+    },
+    {
+      id: 'sample-project-002',
+      name: 'Infrastructure Upgrade',
+      pm: 'admin@ikusi.com', 
+      status: 'Completed',
+      originalData: {
+        project_id: 'sample-project-002',
+        project_name: 'Infrastructure Upgrade',
+        pm_email: 'admin@ikusi.com',
+        last_updated: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        has_acta_document: true
+      }
+    },
+    {
+      id: 'sample-project-003',
+      name: 'Smart City Initiative',
+      pm: 'admin@ikusi.com',
+      status: 'Active',
+      originalData: {
+        project_id: 'sample-project-003', 
+        project_name: 'Smart City Initiative',
+        pm_email: 'admin@ikusi.com',
+        last_updated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        has_acta_document: false
+      }
+    }
+  ];
 }
 
 // Helper function to map project status from DynamoDB data
