@@ -15,6 +15,7 @@ export interface ActaButtonsProps {
   isDownloadingPdf?: boolean;
   isPreviewingPdf?: boolean;
   isSendingApproval?: boolean;
+  compact?: boolean; // New prop for compact horizontal layout
 }
 
 export default function ActaButtons({
@@ -29,11 +30,112 @@ export default function ActaButtons({
   isDownloadingPdf = false,
   isPreviewingPdf = false,
   isSendingApproval = false,
+  compact = false,
 }: ActaButtonsProps): JSX.Element {
   const handleClick = (action: () => Promise<void> | void, _actionName: string) => {
     if (disabled) return;
     void action();
   };
+
+  if (compact) {
+    // Compact horizontal layout for sticky panel
+    return (
+      <div className="flex items-center space-x-2">
+        <Button
+          type="button"
+          aria-label="Generate ACTA document"
+          onClick={() => handleClick(onGenerate, 'Generate Acta')}
+          disabled={disabled}
+          className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold px-3 py-2 rounded-lg transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:-translate-y-0.5 transform active:scale-95 h-9 border border-green-400/20"
+        >
+          {isGenerating ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+              <span className="text-xs">Generating...</span>
+            </>
+          ) : (
+            <>
+              <Zap className="h-3 w-3 text-yellow-300" />
+              <span className="text-xs">Generate</span>
+            </>
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          aria-label="Download Word document"
+          onClick={() => handleClick(onDownloadWord, 'Download Word')}
+          disabled={disabled || isDownloadingWord}
+          className="flex items-center justify-center gap-1 bg-white border border-green-200 text-green-700 font-medium px-2.5 py-2 rounded-lg transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:bg-green-50 hover:border-green-400 hover:text-green-800 hover:shadow-md hover:-translate-y-0.5 transform active:scale-95 h-9"
+        >
+          {isDownloadingWord ? (
+            <div className="animate-spin rounded-full h-3 w-3 border-2 border-green-600 border-t-transparent"></div>
+          ) : (
+            <>
+              <Download className="h-3 w-3" />
+              <span className="text-xs hidden sm:inline">Word</span>
+            </>
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          aria-label="Preview PDF document"
+          onClick={() => handleClick(onPreviewPdf, 'Preview PDF')}
+          disabled={disabled || isPreviewingPdf}
+          className="flex items-center justify-center gap-1 bg-white border border-blue-200 text-blue-700 font-medium px-2.5 py-2 rounded-lg transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:bg-blue-50 hover:border-blue-400 hover:text-blue-800 hover:shadow-md hover:-translate-y-0.5 transform active:scale-95 h-9"
+        >
+          {isPreviewingPdf ? (
+            <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-600 border-t-transparent"></div>
+          ) : (
+            <>
+              <Eye className="h-3 w-3" />
+              <span className="text-xs hidden sm:inline">Preview</span>
+            </>
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          aria-label="Download PDF document"
+          onClick={() => handleClick(onDownloadPdf, 'Download PDF')}
+          disabled={disabled || isDownloadingPdf}
+          className="flex items-center justify-center gap-1 bg-white border border-teal-200 text-teal-700 font-medium px-2.5 py-2 rounded-lg transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:bg-teal-50 hover:border-teal-400 hover:text-teal-800 hover:shadow-md hover:-translate-y-0.5 transform active:scale-95 h-9"
+        >
+          {isDownloadingPdf ? (
+            <div className="animate-spin rounded-full h-3 w-3 border-2 border-teal-600 border-t-transparent"></div>
+          ) : (
+            <>
+              <Download className="h-3 w-3" />
+              <span className="text-xs hidden sm:inline">PDF</span>
+            </>
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          aria-label="Send document for approval"
+          onClick={() => handleClick(onSendForApproval, 'Send for Approval')}
+          disabled={disabled || isSendingApproval}
+          className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white font-semibold px-3 py-2 rounded-lg transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:-translate-y-0.5 transform active:scale-95 h-9 border border-teal-400/20"
+        >
+          {isSendingApproval ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+              <span className="text-xs">Sending...</span>
+            </>
+          ) : (
+            <>
+              <Send className="h-3 w-3" />
+              <span className="text-xs hidden sm:inline">Send</span>
+            </>
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  // Original layout for non-compact usage
 
   return (
     <div className="w-full max-w-4xl mx-auto">

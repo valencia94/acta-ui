@@ -201,6 +201,45 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-gray-100">
       <Header />
 
+      {/* Sticky ACTA Actions Panel - appears when project is selected */}
+      {selectedProjectId && (
+        <motion.div
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -100 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-lg"
+        >
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-semibold text-gray-700">Project Selected:</span>
+                  <span className="text-sm font-bold text-green-700">{currentProjectName}</span>
+                </div>
+              </div>
+              <div className="flex-1 max-w-2xl ml-8">
+                <ActaButtons
+                  onGenerate={handleGenerateActa}
+                  onDownloadPdf={() => handleDownload('pdf')}
+                  onDownloadWord={() => handleDownload('docx')}
+                  onPreviewPdf={handlePreview}
+                  onSendForApproval={() => setIsEmailDialogOpen(true)}
+                  disabled={!selectedProjectId || Object.values(actionLoading).some(Boolean)}
+                  isGenerating={actionLoading.generating}
+                  isDownloadingWord={actionLoading.downloadingWord}
+                  isDownloadingPdf={actionLoading.downloadingPdf}
+                  isPreviewingPdf={actionLoading.previewing}
+                  isSendingApproval={actionLoading.sendingApproval}
+                  compact={true}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <main className="max-w-7xl mx-auto p-6 space-y-8">
         {/* CORS Error Banner */}
         {corsError && (
@@ -239,27 +278,27 @@ export default function Dashboard() {
           />
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
-        >
-          <h2 className="text-2xl font-bold text-gray-800 mb-8">ACTA Actions</h2>
-          <ActaButtons
-            onGenerate={handleGenerateActa}
-            onDownloadPdf={() => handleDownload('pdf')}
-            onDownloadWord={() => handleDownload('docx')}
-            onPreviewPdf={handlePreview}
-            onSendForApproval={() => setIsEmailDialogOpen(true)}
-            disabled={!selectedProjectId || Object.values(actionLoading).some(Boolean)}
-            isGenerating={actionLoading.generating}
-            isDownloadingWord={actionLoading.downloadingWord}
-            isDownloadingPdf={actionLoading.downloadingPdf}
-            isPreviewingPdf={actionLoading.previewing}
-            isSendingApproval={actionLoading.sendingApproval}
-          />
-        </motion.div>
+        {/* Instructions panel when no project is selected */}
+        {!selectedProjectId && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
+          >
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">ACTA Actions</h2>
+            <div className="text-center py-8">
+              <div className="text-gray-400 mb-4">
+                <svg className="h-12 w-12 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Select a Project First</h3>
+              <p className="text-gray-500">Choose a project from the list above to access ACTA actions.</p>
+              <p className="text-sm text-gray-400 mt-2">Actions will appear in a panel at the top for easy access.</p>
+            </div>
+          </motion.div>
+        )}
       </main>
 
       {pdfPreviewUrl && (

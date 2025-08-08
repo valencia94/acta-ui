@@ -55,8 +55,9 @@ vi.mock('../../components/ActaButtons/ActaButtons', () => ({
     isDownloadingWord,
     isPreviewingPdf,
     isSendingApproval,
+    compact,
   }: any) => (
-    <div data-testid="acta-buttons">
+    <div data-testid={compact ? "acta-buttons-compact" : "acta-buttons"}>
       <button
         data-testid="generate-button"
         onClick={onGenerate}
@@ -164,7 +165,7 @@ describe('Dashboard Component', () => {
     expect(screen.getByText('Your Projects')).toBeInTheDocument();
     expect(screen.getByText('ACTA Actions')).toBeInTheDocument();
     expect(screen.getByTestId('projects-view')).toBeInTheDocument();
-    expect(screen.getByTestId('acta-buttons')).toBeInTheDocument();
+    expect(screen.getByText('Select a Project First')).toBeInTheDocument();
   });
 
   it('allows project selection and shows success toast', async () => {
@@ -175,7 +176,7 @@ describe('Dashboard Component', () => {
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith(
-        'Selected project: test-project-001',
+        'Selected project: Test Project',
         expect.objectContaining({
           duration: 2000,
           icon: '✅',
@@ -190,9 +191,14 @@ describe('Dashboard Component', () => {
 
     render(<Dashboard />);
 
-    // First select a project
+    // First select a project to show the sticky panel
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
+
+    // Wait for sticky panel to appear
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
+    });
 
     // Then click generate
     const generateButton = screen.getByTestId('generate-button');
@@ -223,9 +229,14 @@ describe('Dashboard Component', () => {
 
     render(<Dashboard />);
 
-    // First select a project
+    // First select a project to show the sticky panel
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
+
+    // Wait for sticky panel to appear
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
+    });
 
     // Then click generate
     const generateButton = screen.getByTestId('generate-button');
@@ -245,14 +256,9 @@ describe('Dashboard Component', () => {
   it('prevents actions when no project is selected', async () => {
     render(<Dashboard />);
 
-    const generateButton = screen.getByTestId('generate-button');
-    fireEvent.click(generateButton);
-
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        "Please select a project and ensure you're logged in."
-      );
-    });
+    // When no project is selected, buttons should not be visible (no sticky panel)
+    expect(screen.queryByTestId('generate-button')).not.toBeInTheDocument();
+    expect(screen.getByText('Select a Project First')).toBeInTheDocument();
   });
 
   it('handles PDF download successfully', async () => {
@@ -268,9 +274,14 @@ describe('Dashboard Component', () => {
 
     render(<Dashboard />);
 
-    // First select a project
+    // First select a project to show the sticky panel
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
+
+    // Wait for sticky panel to appear
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
+    });
 
     // Then click download PDF
     const downloadButton = screen.getByTestId('download-pdf-button');
@@ -311,9 +322,14 @@ describe('Dashboard Component', () => {
 
     render(<Dashboard />);
 
-    // First select a project
+    // First select a project to show the sticky panel
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
+
+    // Wait for sticky panel to appear
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
+    });
 
     // Then click download Word
     const downloadButton = screen.getByTestId('download-word-button');
@@ -341,9 +357,14 @@ describe('Dashboard Component', () => {
 
     render(<Dashboard />);
 
-    // First select a project
+    // First select a project to show the sticky panel
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
+
+    // Wait for sticky panel to appear
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
+    });
 
     // Then click preview
     const previewButton = screen.getByTestId('preview-button');
@@ -377,9 +398,14 @@ describe('Dashboard Component', () => {
 
     render(<Dashboard />);
 
-    // First select a project
+    // First select a project to show the sticky panel
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
+
+    // Wait for sticky panel to appear
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
+    });
 
     // Then click preview
     const previewButton = screen.getByTestId('preview-button');
@@ -402,9 +428,14 @@ describe('Dashboard Component', () => {
 
     render(<Dashboard />);
 
-    // First select a project
+    // First select a project to show the sticky panel
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
+
+    // Wait for sticky panel to appear
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
+    });
 
     // Then click send approval
     const sendApprovalButton = screen.getByTestId('send-approval-button');
@@ -443,18 +474,41 @@ describe('Dashboard Component', () => {
   it('shows loading states for all buttons', async () => {
     render(<Dashboard />);
   
-    // First select a project
+    // First select a project to show the sticky panel
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
   
-    // Wait for UI updates if needed
-  await waitFor(() => {
+    // Wait for sticky panel to appear and verify buttons are present
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
       expect(screen.getByText('Generate')).toBeInTheDocument();
       expect(screen.getByText('Download PDF')).toBeInTheDocument();
       expect(screen.getByText('Download Word')).toBeInTheDocument();
       expect(screen.getByText('Preview')).toBeInTheDocument();
       expect(screen.getByText('Send Approval')).toBeInTheDocument();
     });
+  });
+
+  it('displays sticky ACTA panel when project is selected', async () => {
+    render(<Dashboard />);
+
+    // Initially, no sticky panel should be visible
+    expect(screen.queryByTestId('acta-buttons-compact')).not.toBeInTheDocument();
+    expect(screen.getByText('Select a Project First')).toBeInTheDocument();
+
+    // Select a project
+    const projectButton = screen.getByTestId('project-button');
+    fireEvent.click(projectButton);
+
+    // Sticky panel should appear with project name
+    await waitFor(() => {
+      expect(screen.getByTestId('acta-buttons-compact')).toBeInTheDocument();
+      expect(screen.getByText('Test Project')).toBeInTheDocument();
+      expect(screen.getByText('Project Selected:')).toBeInTheDocument();
+    });
+
+    // The instructions panel should be hidden
+    expect(screen.queryByText('Select a Project First')).not.toBeInTheDocument();
   });
 });
 
