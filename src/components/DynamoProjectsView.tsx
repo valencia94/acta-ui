@@ -8,6 +8,9 @@ export interface Project {
   name: string;
   pm: string;
   status: string;
+  // Extra fields for grouped view
+  hito?: string | null;
+  actividad?: string | null;
   // Optional fields from DynamoDB
   originalData?: {
     project_id?: string;
@@ -200,6 +203,25 @@ export default function DynamoProjectsView({
                   </dd>
                 </div>
               </div>
+
+              {/* Extra fields for grouped view */}
+              {(project.hito || project.actividad) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mt-4">
+                  {project.hito && (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <dt className="font-semibold text-blue-700 uppercase tracking-wide text-xs mb-1">Hito</dt>
+                      <dd className="text-blue-900 font-medium">{project.hito}</dd>
+                    </div>
+                  )}
+                  
+                  {project.actividad && (
+                    <div className="bg-purple-50 rounded-lg p-4">
+                      <dt className="font-semibold text-purple-700 uppercase tracking-wide text-xs mb-1">Actividad</dt>
+                      <dd className="text-purple-900 font-medium">{project.actividad}</dd>
+                    </div>
+                  )}
+                </div>
+              )}
               
               {project.originalData?.last_updated && (
                 <div className="mt-4 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">

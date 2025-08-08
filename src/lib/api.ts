@@ -112,18 +112,18 @@ export async function sendApprovalEmail(
   projectId: string,
   recipientEmail?: string,
 ) {
-  const envEmail =
+  const fallbackEmail =
+    recipientEmail ||
     (process.env.VITE_APPROVAL_EMAIL as string | undefined) ||
     (import.meta.env.VITE_APPROVAL_EMAIL as string | undefined);
-  const finalEmail = recipientEmail || envEmail;
 
-  if (!finalEmail) {
+  if (!fallbackEmail) {
     throw new Error('Please provide an email address for approval.');
   }
 
   return post<{ message: string }>(`${BASE}/send-approval-email`, {
     projectId,
-    recipientEmail: finalEmail,
+    recipientEmail: fallbackEmail,
   });
 }
 

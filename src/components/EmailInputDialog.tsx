@@ -45,19 +45,19 @@ export function EmailInputDialog({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        className="bg-surface rounded-xl shadow-lg w-full max-w-lg p-6"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-lg font-semibold text-secondary">{title}</h3>
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg text-muted hover:text-body hover:bg-bg transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
-        <p className="text-gray-600 mb-4">{description}</p>
+        <p className="text-sm text-body mb-4">{description}</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -68,7 +68,7 @@ export function EmailInputDialog({
               placeholder={placeholder}
               required
               disabled={loading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50"
+              className="w-full px-4 py-2 border border-borders rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 disabled:opacity-50 text-sm"
               autoFocus
             />
           </div>
@@ -78,16 +78,16 @@ export function EmailInputDialog({
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2 text-body bg-white border border-borders rounded-xl hover:bg-bg transition-colors disabled:opacity-50 text-sm font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !email.trim()}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
             >
-              {loading ? 'Sending...' : 'Send'}
+              {loading ? 'SENDING...' : 'SEND'}
             </button>
           </div>
         </form>

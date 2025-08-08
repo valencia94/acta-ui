@@ -46,38 +46,38 @@ export default function Header(): JSX.Element {
   };
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between bg-gradient-to-r from-green-500 to-teal-500 px-6 py-5 shadow-xl">
-      <div className="flex items-center gap-5">
-        <img src={logoSrc} alt="Ikusi logo" className="h-12 w-auto drop-shadow-sm" />
+    <header className="sticky top-0 z-50 flex items-center justify-between bg-accent px-6 py-4 shadow-sm">
+      <div className="flex items-center gap-4">
+        <img src={logoSrc} alt="Ikusi logo" className="h-10 w-auto" />
         <div className="leading-tight text-white">
-          <h1 className="text-2xl font-bold tracking-tight">Acta Platform</h1>
-          <p className="text-sm opacity-90 font-medium">
+          <h1 className="text-xl font-semibold tracking-tight">Acta Platform</h1>
+          <p className="text-xs opacity-90 font-medium">
             invisible technology, visible transformation
           </p>
         </div>
       </div>
 
-      <nav className="hidden md:flex items-center gap-8 text-white">
+      <nav className="hidden md:flex items-center gap-6 text-white">
         <button
           onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors font-medium"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors font-medium text-sm"
         >
-          <Grid className="h-5 w-5" />
+          <Grid className="h-4 w-4" />
           Dashboard
         </button>
         {isAdmin && (
           <button
             onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-colors font-medium"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors font-medium text-sm"
           >
-            <Shield className="h-5 w-5" />
+            <Shield className="h-4 w-4" />
             Admin
           </button>
         )}
       </nav>
 
       <div className="flex items-center gap-4">
-        <span className="hidden md:inline text-xs text-white font-light">
+        <span className="hidden md:inline text-xs text-white/80 font-medium">
           Signed in as: {user?.email}
         </span>
         <button

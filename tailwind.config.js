@@ -17,9 +17,21 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "var(--color-primary)",
-        secondary: "var(--color-secondary)",
+        // Ikusi UI Style Reference Sheet Colors
+        bg: "var(--color-bg)",
+        surface: "var(--color-surface)",
+        borders: "var(--color-borders)",
         accent: "var(--color-accent)",
+        "accent-hover": "var(--color-accent-hover)",
+        secondary: "var(--color-secondary)",
+        body: "var(--color-body)",
+        muted: "var(--color-muted)",
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        danger: "var(--color-danger)",
+        
+        // Legacy compatibility
+        primary: "var(--color-primary)",
         neutral: "var(--color-neutral)",
         "bg-default": "var(--color-bg-default)",
         "text-default": "var(--color-text-default)",
