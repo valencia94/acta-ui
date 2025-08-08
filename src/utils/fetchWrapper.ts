@@ -101,3 +101,62 @@ export function post<T>(url: string, body?: unknown): Promise<T> {
   });
 }
 
+/**
+ * Fire-and-forget style POST for long-running backends behind API Gateway.
+ * - Adds Authorization header (Amplify ID token)
+ * - Uses credentials: 'omit' and mode: 'cors'
+ * - Uses keepalive to allow the browser to send during unload
+ * - Optional client-side timeout; treats AbortError as accepted
+ * - Treats API Gateway 504 (Endpoint request timed out) as "accepted"
+ */
+export async function postFireAndForget(
+  url: string,
+  body?: unknown,
+  options?: { timeoutMs?: number },
+): Promise<{ accepted: boolean; timeout?: boolean; status?: number }> {
+  const token = await getAuthToken();
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  const controller = new AbortController();
+  const timeoutMs = options?.timeoutMs ?? 5000;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      headers,
+      credentials: 'omit',
+      mode: 'cors',
+      keepalive: true,
+      signal: controller.signal,
+    });
+
+    // Consider 2xx and 202 as accepted
+    if (res.ok || res.status === 202) {
+      return { accepted: true, status: res.status };
+    }
+    // Treat API Gateway timeout as accepted (Lambda likely still running)
+    if (res.status === 504) {
+      return { accepted: true, status: res.status };
+    }
+
+    // Surface other errors
+    const text = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status}: ${res.statusText}${text ? ` - ${text}` : ''}`);
+  } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      return { accepted: true, timeout: true };
+    }
+    // Some browsers wrap network timeouts differently
+    const msg = String(err?.message || '').toLowerCase();
+    if (msg.includes('timeout') || msg.includes('timed out')) {
+      return { accepted: true, timeout: true };
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+

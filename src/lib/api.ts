@@ -9,7 +9,7 @@ import {
   s3Bucket,
   s3Region,
 } from '@/env.variables';
-import { fetcher, get, post } from '@/utils/fetchWrapper';
+import { fetcher, get, post, postFireAndForget } from '@/utils/fetchWrapper';
 
 import { getDownloadUrl as getS3PresignedUrl } from './awsDataService';
 
@@ -36,9 +36,9 @@ export interface TimelineEvent {
   fecha: string;
 }
 
-export const getSummary = (id: string) =>
+export const getSummary = (id: string): Promise<ProjectSummary> =>
   get<ProjectSummary>(`${BASE}/project-summary/${id}`);
-export const getTimeline = (id: string) =>
+export const getTimeline = (id: string): Promise<TimelineEvent[]> =>
   get<TimelineEvent[]>(`${BASE}/timeline/${id}`);
 
 /** -----------------------------------------------------------------------
@@ -48,7 +48,7 @@ export async function generateActaDocument(
   projectId: string,
   userEmail?: string,
   userRole: 'pm' | 'admin' = 'pm',
-) {
+): Promise<{ message: string; success: boolean }> {
   const payload = {
     projectId,
     pmEmail: userEmail,
@@ -63,10 +63,13 @@ export async function generateActaDocument(
     timestamp: new Date().toISOString(),
   };
 
-  return post<{ message: string; success: boolean }>(
+  // Fire-and-forget: we treat immediate 2xx/202/504/timeout as accepted and move on.
+  const result = await postFireAndForget(
     `${BASE}/extract-project-place/${projectId}`,
     payload,
+    { timeoutMs: 5000 },
   );
+  return { message: 'accepted', success: result.accepted };
 }
 
 /** -----------------------------------------------------------------------
@@ -111,7 +114,7 @@ export async function previewPdfViaS3(projectId: string): Promise<string> {
 export async function sendApprovalEmail(
   projectId: string,
   recipientEmail?: string,
-) {
+): Promise<{ message: string }> {
   const fallbackEmail =
     recipientEmail ||
     (process.env.VITE_APPROVAL_EMAIL as string | undefined) ||
