@@ -55,8 +55,11 @@ export async function getAuthToken(): Promise<string | null> {
 
 export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const url = typeof input === 'string' ? input : input.url;
+  const token = await getAuthToken();
+
 
   if (needsSigV4(url)) {
+    const token = await getAuthToken();
     const session = await fetchAuthSession();
     const creds = session.credentials;
 
@@ -75,6 +78,10 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
     const headerRecord: Record<string, string> = {
       host: parsed.hostname,
     };
+
+    if (token) {
+      headerRecord['Authorization'] = `Bearer ${token}`;
+    }
 
     if (init?.headers) {
       const headers = init.headers;
@@ -113,7 +120,6 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
       throw new Error('Invalid JSON response from SigV4 request');
     }
   } else {
-    const token = await getAuthToken();
     const headers = new Headers(init?.headers);
     if (token) headers.set('Authorization', `Bearer ${token}`);
     if (!headers.has('Content-Type') && init?.method !== 'GET') {

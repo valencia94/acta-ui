@@ -34,12 +34,27 @@ async function request<T = unknown>(
 ): Promise<T> {
   const url = `${BASE}${endpoint}`;
 
-  console.log('🌐 Making SigV4-signed request to:', url, {
-    method: options.method || 'GET',
-  });
+  let body: unknown = undefined;
+  if (options.body) {
+    try {
+      body = JSON.parse(options.body as string);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('❌ Failed to parse request body as JSON:', options.body, err);
+      }
+      body = undefined;
+    }
+  }
+
+  if (import.meta.env.DEV) {
+    console.log('🌐 Request:', url, {
+      method: options.method || 'GET',
+      payload: body,
+    });
+  }
 
   if (options.method === 'POST') {
-    return post<T>(url, options.body ? JSON.parse(options.body as string) : undefined);
+    return post<T>(url, body);
   } else {
     return get<T>(url);
   }
@@ -95,20 +110,20 @@ export async function generateActaDocument(
 /** -------------------------------------------------------------------------
  * 🏗️ 2 & 3. Download DOCX / PDF
  * --------------------------------------------------------------------------*/
-export async function getSignedDownloadUrl(
+export async function getS3DownloadUrl(
   projectId: string,
   format: 'pdf' | 'docx'
 ): Promise<string> {
   const url = `${BASE}/download-acta/${projectId}?format=${format}`;
 
-  console.log('🔗 Getting download URL for:', url);
+  if (import.meta.env.DEV) {
+    console.log('🔗 Getting download URL for:', url);
+  }
 
-  // Use fetchWrapper for proper SigV4 signing
   const response = await fetcher<{ downloadUrl?: string; url?: string }>(url, {
     method: 'GET',
   });
 
-  // Handle different response formats
   if (typeof response === 'string') {
     return response;
   }
@@ -123,10 +138,10 @@ export async function getSignedDownloadUrl(
 /** -------------------------------------------------------------------------
  * 🏗️ 4. Send approval e‑mail to client
  * --------------------------------------------------------------------------*/
-export const sendApprovalEmail = (actaId: string, clientEmail: string) =>
+export const sendApprovalEmail = (projectId: string, recipientEmail: string) =>
   request<{ message: string }>(`/send-approval-email`, {
     method: 'POST',
-    body: JSON.stringify({ actaId, clientEmail }),
+    body: JSON.stringify({ projectId, recipientEmail }),
   });
 
 export interface DocumentCheckResult {
@@ -145,6 +160,9 @@ export async function documentExists(
 ): Promise<DocumentCheckResult> {
   try {
     const url = `${BASE}/check-document/${projectId}?format=${format}`;
+    if (import.meta.env.DEV) {
+      console.log('🔍 Checking document:', url);
+    }
     const response = await fetcher<DocumentCheckResult>(url, {
       method: 'GET',
     });
@@ -173,7 +191,7 @@ export interface PMProject {
 }
 
 export const checkDocumentInS3 = documentExists;
-export const getDownloadUrl = getSignedDownloadUrl;
+export const getDownloadUrl = getS3DownloadUrl;
 export const checkDocumentAvailability = documentExists;
 
 export async function getProjectsByPM(pmEmail: string, isAdmin: boolean): Promise<PMProject[]> {
@@ -206,7 +224,7 @@ if (import.meta.env.DEV && typeof window !== 'undefined') {
   window.__actaApi = {
     ping: () => request<{ status: string }>('/health', { auth: false }),
     generateActaDocument,
-    getSignedDownloadUrl,
+    getS3DownloadUrl,
     documentExists,
     sendApprovalEmail,
     getSummary,
