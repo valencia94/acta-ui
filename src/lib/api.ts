@@ -135,6 +135,7 @@ export interface DocumentCheckResult {
   lastModified?: string;
   size?: number;
   s3Key?: string;
+  checkFailed?: boolean;
 }
 
 export async function checkDocumentInS3(
@@ -147,7 +148,15 @@ export async function checkDocumentInS3(
     );
     return { available: true, ...data };
   } catch (err) {
-    console.warn('Document check failed:', err);
+    console.warn(`Document check failed for ${projectId}.${format}:`, err);
+    // For network errors, assume document might exist but check failed
+    if (err instanceof Error && err.message.includes('Network error')) {
+      return { 
+        available: false, 
+        s3Key: `acta-${projectId}.${format}`,
+        checkFailed: true 
+      };
+    }
     return { available: false };
   }
 }
@@ -166,23 +175,23 @@ export interface PMProject {
   [k: string]: unknown;
 }
 
-export const getAllProjects = () => get<PMProject[]>(`${BASE}/all-projects`);
+export const getAllProjects = (): Promise<PMProject[]> => get<PMProject[]>(`${BASE}/all-projects`);
 
 // Additional project lookups used by other modules
-export const getProjectsByPM = (pmEmail: string, isAdmin: boolean) =>
+export const getProjectsByPM = (pmEmail: string, isAdmin: boolean): Promise<PMProject[]> =>
   get<PMProject[]>(
     `${BASE}/projects-for-pm?email=${encodeURIComponent(pmEmail)}&admin=${isAdmin}`,
   );
 
-export const generateSummariesForPM = (pmEmail: string) =>
+export const generateSummariesForPM = (pmEmail: string): Promise<ProjectSummary[]> =>
   get<ProjectSummary[]>(
     `${BASE}/project-summaries?email=${encodeURIComponent(pmEmail)}`,
   );
 
-export const getProjectSummaryForPM = (projectId: string) =>
+export const getProjectSummaryForPM = (projectId: string): Promise<ProjectSummary> =>
   get<ProjectSummary>(`${BASE}/project-summary/${projectId}`);
 
-export const getPMProjectsWithSummary = (pmEmail: string) =>
+export const getPMProjectsWithSummary = (pmEmail: string): Promise<ProjectSummary[]> =>
   get<ProjectSummary[]>(
     `${BASE}/projects-with-summary?email=${encodeURIComponent(pmEmail)}`,
   );
@@ -191,8 +200,7 @@ export const getPMProjectsWithSummary = (pmEmail: string) =>
  * Dev helpers – expose functions for debugging
  * -------------------------------------------------------------------- */
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  // @ts-ignore
-  window.__actaApi = {
+  (window as any).__actaApi = {
     generateActaDocument,
     getDownloadLink,
     previewPdfBackend,
@@ -203,5 +211,16 @@ if (import.meta.env.DEV && typeof window !== 'undefined') {
     getSummary,
     getTimeline,
   };
+}
+
+// Maintain window exports for backward compatibility with test files
+if (typeof window !== 'undefined') {
+  (window as any).getSummary = getSummary;
+  (window as any).getTimeline = getTimeline;
+  (window as any).getDownloadUrl = getDownloadLink;
+  (window as any).sendApprovalEmail = sendApprovalEmail;
+  (window as any).getAllProjects = getAllProjects;
+  (window as any).checkDocumentInS3 = checkDocumentInS3;
+  (window as any).generateActaDocument = generateActaDocument;
 }
 

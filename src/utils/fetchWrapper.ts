@@ -49,29 +49,37 @@ export async function fetcher<T>(input: RequestInfo, init: RequestInit = {}): Pr
     headers: Object.fromEntries(headers.entries()),
   });
 
-  const res = await fetch(url, enhancedInit);
-
-  console.log(`📡 Response: ${res.status} ${res.statusText}`);
-
-  if (!res.ok) {
-    let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
-    try {
-      const errorText = await res.text();
-      if (errorText) errorMessage += ` - ${errorText}`;
-    } catch {
-      // ignore
-    }
-    console.error('❌ Fetch error:', errorMessage);
-    throw new Error(errorMessage);
-  }
-
   try {
-    const data = await res.json();
-    console.log('✅ Response data:', data);
-    return data as T;
+    const res = await fetch(url, enhancedInit);
+
+    console.log(`📡 Response: ${res.status} ${res.statusText}`);
+
+    if (!res.ok) {
+      let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+      try {
+        const errorText = await res.text();
+        if (errorText) errorMessage += ` - ${errorText}`;
+      } catch {
+        // ignore
+      }
+      console.error('❌ Fetch error:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    try {
+      const data = await res.json();
+      console.log('✅ Response data:', data);
+      return data as T;
+    } catch (error) {
+      console.error('❌ Failed to parse JSON response:', error);
+      throw new Error('Invalid JSON response from server');
+    }
   } catch (error) {
-    console.error('❌ Failed to parse JSON response:', error);
-    throw new Error('Invalid JSON response from server');
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      console.error('❌ Network error (CORS or connectivity):', error);
+      throw new Error('Network error: Unable to connect to API. Please check your connection and try again.');
+    }
+    throw error;
   }
 }
 
