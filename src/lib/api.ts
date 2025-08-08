@@ -175,7 +175,7 @@ export interface PMProject {
   [k: string]: unknown;
 }
 
-export const getAllProjects = (): Promise<PMProject[]> => get<PMProject[]>(`${BASE}/all-projects`);
+export const getAllProjects = (): Promise<PMProject[]> => get<PMProject[]>(`${BASE}/pm-manager/all-projects`);
 
 // Additional project lookups used by other modules
 export const getProjectsByPM = (pmEmail: string, isAdmin: boolean): Promise<PMProject[]> =>

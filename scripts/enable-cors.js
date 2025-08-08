@@ -3,10 +3,12 @@ import {
   APIGatewayClient,
   CreateDeploymentCommand,
   GetResourcesCommand,
+  PutGatewayResponseCommand,
   PutIntegrationCommand,
   PutIntegrationResponseCommand,
   PutMethodCommand,
-  PutMethodResponseCommand} from '@aws-sdk/client-api-gateway';
+  PutMethodResponseCommand,
+} from '@aws-sdk/client-api-gateway';
 
 const API_ID = process.env.API_ID ?? '<PROD_API_ID>';
 const API_STAGE = process.env.API_STAGE ?? 'prod';
@@ -78,6 +80,43 @@ async function enableCors() {
       }));
     } catch {
       // Ignore if integration response already exists
+    }
+  }
+  // Ensure gateway responses include CORS so any 4XX/5XX/timeouts don't break CORS
+  const corsHeaders = {
+    'gatewayresponse.header.Access-Control-Allow-Origin': '\'*\'',
+    'gatewayresponse.header.Access-Control-Allow-Headers': '\'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token\'',
+    'gatewayresponse.header.Access-Control-Allow-Methods': '\'GET,POST,OPTIONS\'',
+  };
+  const responseTypes = [
+    'DEFAULT_4XX',
+    'DEFAULT_5XX',
+    'BAD_REQUEST_PARAMETERS',
+    'BAD_REQUEST_BODY',
+    'UNAUTHORIZED',
+    'ACCESS_DENIED',
+    'MISSING_AUTHENTICATION_TOKEN',
+    'INVALID_API_KEY',
+    'AUTHORIZER_FAILURE',
+    'AUTHORIZER_CONFIGURATION_ERROR',
+    'THROTTLED',
+    'QUOTA_EXCEEDED',
+    'REQUEST_TOO_LARGE',
+    'UNSUPPORTED_MEDIA_TYPE',
+    'INTEGRATION_FAILURE',
+    'INTEGRATION_TIMEOUT',
+    'INVALID_SIGNATURE',
+    'EXPIRED_TOKEN',
+  ];
+  for (const responseType of responseTypes) {
+    try {
+      await client.send(new PutGatewayResponseCommand({
+        restApiId: API_ID,
+        responseType,
+        responseParameters: corsHeaders,
+      }));
+    } catch (e) {
+      // ignore if already exists
     }
   }
   await client.send(new CreateDeploymentCommand({

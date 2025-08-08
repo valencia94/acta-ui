@@ -40,7 +40,13 @@ export async function fetcher<T>(input: RequestInfo, init: RequestInit = {}): Pr
   const enhancedInit: RequestInit = {
     ...init,
     headers,
-    credentials: 'include',
+  // Important: do NOT send cookies/credentials on cross-origin requests.
+  // If credentials are included, the browser requires a non-wildcard
+  // Access-Control-Allow-Origin and Access-Control-Allow-Credentials: true.
+  // Our API intentionally sets ACAO: * for simplicity, so we must omit
+  // credentials to avoid a CORS "TypeError: Failed to fetch".
+  credentials: 'omit',
+  mode: 'cors',
   };
 
   console.log(`🌐 Fetching: ${url}`, {

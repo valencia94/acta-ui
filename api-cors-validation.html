@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTA UI - API & CORS Validation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .loading { background-color: #d1ecf1; border-color: #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .status-success { background: green; }
+        .status-error { background: red; }
+        .status-warning { background: orange; }
+    </style>
+</head>
+<body>
+    <h1>🔗 ACTA UI - API & CORS Validation</h1>
+    <p>This page tests the API connectivity and CORS configuration for ACTA UI production endpoints.</p>
+
+    <!-- CORS Test Section -->
+    <div id="cors-test" class="test-section loading">
+        <h2><span class="status-indicator status-warning"></span>CORS Configuration Test</h2>
+        <p>Testing if CORS headers are properly configured for API Gateway...</p>
+        <div id="cors-results">Running tests...</div>
+    </div>
+
+    <!-- API Endpoints Test -->
+    <div id="api-test" class="test-section loading">
+        <h2><span class="status-indicator status-warning"></span>API Endpoints Test</h2>
+        <p>Testing API endpoint connectivity and response codes...</p>
+        <div id="api-results">Running tests...</div>
+    </div>
+
+    <!-- Health Check -->
+    <div id="health-test" class="test-section loading">
+        <h2><span class="status-indicator status-warning"></span>Health Check</h2>
+        <p>Testing API Gateway health endpoint...</p>
+        <div id="health-results">Running tests...</div>
+    </div>
+
+    <!-- Authentication Test -->
+    <div id="auth-test" class="test-section loading">
+        <h2><span class="status-indicator status-warning"></span>Authentication Flow</h2>
+        <p>Testing JWT token validation (requires login)...</p>
+        <div id="auth-results">
+            <button onclick="testAuthentication()">Test with Current Session</button>
+            <div id="auth-output">Click button to test authentication</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
+        const FRONTEND_ORIGIN = 'https://d7t9x3j66yd8k.cloudfront.net';
+
+        // Update status indicator
+        function updateStatus(sectionId, status) {
+            const section = document.getElementById(sectionId);
+            const indicator = section.querySelector('.status-indicator');
+            indicator.className = `status-indicator status-${status}`;
+            
+            section.className = `test-section ${status === 'success' ? 'success' : status === 'error' ? 'error' : 'warning'}`;
+        }
+
+        // Test CORS configuration
+        async function testCors() {
+            const results = document.getElementById('cors-results');
+            
+            try {
+                // Test OPTIONS preflight
+                const optionsResponse = await fetch(`${API_BASE}/health`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': FRONTEND_ORIGIN,
+                        'Access-Control-Request-Method': 'GET',
+                        'Access-Control-Request-Headers': 'authorization,content-type'
+                    }
+                });
+
+                const corsHeaders = {};
+                for (const [key, value] of optionsResponse.headers.entries()) {
+                    if (key.toLowerCase().includes('access-control')) {
+                        corsHeaders[key] = value;
+                    }
+                }
+
+                results.innerHTML = `
+                    <strong>✅ OPTIONS Preflight Success</strong><br>
+                    Status: ${optionsResponse.status}<br>
+                    <strong>CORS Headers:</strong>
+                    <pre>${JSON.stringify(corsHeaders, null, 2)}</pre>
+                `;
+                updateStatus('cors-test', 'success');
+            } catch (error) {
+                results.innerHTML = `
+                    <strong>❌ CORS Test Failed</strong><br>
+                    Error: ${error.message}
+                `;
+                updateStatus('cors-test', 'error');
+            }
+        }
+
+        // Test API endpoints
+        async function testApiEndpoints() {
+            const results = document.getElementById('api-results');
+            const endpoints = [
+                '/health',
+                '/pm-manager/all-projects',
+                '/projects'
+            ];
+
+            let resultsHtml = '<strong>Endpoint Test Results:</strong><br>';
+            let allPassed = true;
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_BASE}${endpoint}`, {
+                        method: 'GET',
+                        headers: {
+                            'Origin': FRONTEND_ORIGIN
+                        }
+                    });
+
+                    const status = response.status;
+                    const statusText = response.statusText;
+                    const success = status < 500; // Accept auth errors but not server errors
+                    
+                    if (!success) allPassed = false;
+
+                    resultsHtml += `
+                        <div style="margin: 5px 0;">
+                            ${success ? '✅' : '❌'} <code>${endpoint}</code> → ${status} ${statusText}
+                        </div>
+                    `;
+                } catch (error) {
+                    allPassed = false;
+                    resultsHtml += `
+                        <div style="margin: 5px 0;">
+                            ❌ <code>${endpoint}</code> → Network Error: ${error.message}
+                        </div>
+                    `;
+                }
+            }
+
+            results.innerHTML = resultsHtml;
+            updateStatus('api-test', allPassed ? 'success' : 'error');
+        }
+
+        // Test health endpoint specifically
+        async function testHealth() {
+            const results = document.getElementById('health-results');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.text();
+                
+                results.innerHTML = `
+                    <strong>✅ Health Check Success</strong><br>
+                    Status: ${response.status} ${response.statusText}<br>
+                    Response: <pre>${data}</pre>
+                `;
+                updateStatus('health-test', 'success');
+            } catch (error) {
+                results.innerHTML = `
+                    <strong>❌ Health Check Failed</strong><br>
+                    Error: ${error.message}
+                `;
+                updateStatus('health-test', 'error');
+            }
+        }
+
+        // Test authentication (requires AWS Amplify to be loaded)
+        async function testAuthentication() {
+            const output = document.getElementById('auth-output');
+            
+            try {
+                // Check if we have access to the authentication context
+                if (typeof window.getCurrentUser === 'function') {
+                    const user = await window.getCurrentUser();
+                    const token = user?.signInUserSession?.accessToken?.jwtToken;
+                    
+                    if (token) {
+                        // Test authenticated request
+                        const response = await fetch(`${API_BASE}/pm-manager/all-projects`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        output.innerHTML = `
+                            <strong>✅ Authenticated Request Success</strong><br>
+                            Status: ${response.status}<br>
+                            User: ${user.username}
+                        `;
+                        updateStatus('auth-test', 'success');
+                    } else {
+                        output.innerHTML = '<strong>⚠️ No authentication token found</strong><br>Please log in first.';
+                        updateStatus('auth-test', 'warning');
+                    }
+                } else {
+                    output.innerHTML = '<strong>⚠️ Authentication functions not available</strong><br>Test from main application.';
+                    updateStatus('auth-test', 'warning');
+                }
+            } catch (error) {
+                output.innerHTML = `
+                    <strong>❌ Authentication Test Failed</strong><br>
+                    Error: ${error.message}
+                `;
+                updateStatus('auth-test', 'error');
+            }
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', async () => {
+            await testCors();
+            await testApiEndpoints();
+            await testHealth();
+        });
+    </script>
+</body>
+</html>
