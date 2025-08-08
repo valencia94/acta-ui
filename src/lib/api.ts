@@ -1,5 +1,5 @@
-import { fetcher } from "@/utils/fetchWrapper";
 import { getDownloadUrl } from "@/lib/awsDataService"; // fallback for preview if needed
+import { fetcher } from "@/utils/fetchWrapper";
 
 const API = import.meta.env.VITE_API_BASE_URL!;
 
