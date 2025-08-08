@@ -3,9 +3,8 @@
  */
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-
-import DynamoProjectsView, { Project } from '../DynamoProjectsView';
 import { getProjectsForCurrentUser } from '../../lib/awsDataService';
+import DynamoProjectsView, { Project } from '../DynamoProjectsView';
 
 vi.mock('../../lib/awsDataService');
 
