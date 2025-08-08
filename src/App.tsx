@@ -12,6 +12,7 @@ import { useThemedFavicon } from '@/hooks/useThemedFavicon';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
+import { UX_TOKENS } from '@/utils/flags';
 
 console.log('VITE ENV:', import.meta.env);
 
@@ -104,7 +105,11 @@ export default function App(): JSX.Element {
   if (!checked) return null;
 
   return (
-    <div className="font-sans">
+    <div className={
+      UX_TOKENS
+        ? "font-sans min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]"
+        : "font-sans"
+    }>
       <Routes>
         <Route
           path="/"
@@ -123,15 +128,35 @@ export default function App(): JSX.Element {
           path="/profile"
           element={
             skipAuth || isAuthed ? (
-              <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
+              <div className={
+                UX_TOKENS
+                  ? "min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]"
+                  : "min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100"
+              }>
                 <Header />
                 <div className="py-12 px-4">
-                  <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile</h1>
-                    <p className="text-gray-600 mb-4">User profile page (Coming soon)</p>
+                  <div className={
+                    UX_TOKENS
+                      ? "max-w-md mx-auto bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-sm p-6"
+                      : "max-w-md mx-auto bg-white rounded-lg shadow-md p-6"
+                  }>
+                    <h1 className={
+                      UX_TOKENS
+                        ? "text-2xl font-bold text-[var(--color-text)] mb-4"
+                        : "text-2xl font-bold text-gray-900 mb-4"
+                    }>Profile</h1>
+                    <p className={
+                      UX_TOKENS
+                        ? "text-[var(--color-text-muted)] mb-4"
+                        : "text-gray-600 mb-4"
+                    }>User profile page (Coming soon)</p>
                     <button
                       onClick={() => window.history.back()}
-                      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                      className={
+                        UX_TOKENS
+                          ? "inline-flex items-center rounded-xl px-4 py-2 font-medium bg-[var(--color-accent)] text-[var(--color-accent-contrast)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 transition-opacity"
+                          : "px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                      }
                     >
                       Go Back
                     </button>
@@ -147,15 +172,35 @@ export default function App(): JSX.Element {
           path="/projects-for-pm"
           element={
             skipAuth || isAuthed ? (
-              <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
+              <div className={
+                UX_TOKENS
+                  ? "min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]"
+                  : "min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100"
+              }>
                 <Header />
                 <div className="py-12 px-4">
-                  <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">PM Projects</h1>
-                    <p className="text-gray-600 mb-4">Project Manager view (Coming soon)</p>
+                  <div className={
+                    UX_TOKENS
+                      ? "max-w-md mx-auto bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-sm p-6"
+                      : "max-w-md mx-auto bg-white rounded-lg shadow-md p-6"
+                  }>
+                    <h1 className={
+                      UX_TOKENS
+                        ? "text-2xl font-bold text-[var(--color-text)] mb-4"
+                        : "text-2xl font-bold text-gray-900 mb-4"
+                    }>PM Projects</h1>
+                    <p className={
+                      UX_TOKENS
+                        ? "text-[var(--color-text-muted)] mb-4"
+                        : "text-gray-600 mb-4"
+                    }>Project Manager view (Coming soon)</p>
                     <button
                       onClick={() => window.history.back()}
-                      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                      className={
+                        UX_TOKENS
+                          ? "inline-flex items-center rounded-xl px-4 py-2 font-medium bg-[var(--color-accent)] text-[var(--color-accent-contrast)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 transition-opacity"
+                          : "px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                      }
                     >
                       Go Back
                     </button>

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}", "./src/**/*.css"],
   safelist: [
     "peer",
@@ -17,12 +17,26 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Legacy tokens (keep for backwards compatibility)
         primary: "var(--color-primary)",
         secondary: "var(--color-secondary)",
         accent: "var(--color-accent)",
         neutral: "var(--color-neutral)",
         "bg-default": "var(--color-bg-default)",
         "text-default": "var(--color-text-default)",
+        
+        // New design tokens for UX refresh
+        bg: "var(--color-bg)",
+        surface: "var(--color-surface)",
+        border: "var(--color-border)",
+        "secondary-new": "var(--color-secondary)",
+        "accent-new": "var(--color-accent)",
+        "accent-contrast": "var(--color-accent-contrast)",
+        text: "var(--color-text)",
+        "text-muted": "var(--color-text-muted)",
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        danger: "var(--color-danger)",
       },
       spacing: {
         1: "var(--space-1)",
@@ -31,11 +45,14 @@ module.exports = {
         4: "var(--space-4)",
         5: "var(--space-5)",
         6: "var(--space-6)",
+        card: "var(--space-card)",
       },
       borderRadius: {
         sm: "var(--radius-sm)",
         md: "var(--radius-md)",
         lg: "var(--radius-lg)",
+        xl: "var(--radius-xl)",
+        "2xl": "28px",
       },
       transitionDuration: {
         fast: "var(--transition-fast)",
