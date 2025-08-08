@@ -3,6 +3,9 @@ import { Download, Eye, FileText, Send } from 'lucide-react';
 
 import Button from '@/components/Button';
 
+// Loading gates inside this component prevent API calls while actions
+// are already in progress or the buttons are disabled.
+
 export interface ActaButtonsProps {
   onGenerate: () => void;
   onDownloadWord: () => void;
