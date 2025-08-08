@@ -116,7 +116,7 @@ export async function getProjectsForCurrentUser(): Promise<any> {
         pm: project.pm_email || project.pm || project.project_manager,
         status: mapProjectStatus(project),
         originalData: project,
-        // additive only (safe to ignore in callers); present for consumers that want it
+        // additive only (safe to ignore in callers)
         hito: project.planlet ?? null,
         actividad: project.title ?? null,
       }));
@@ -147,6 +147,40 @@ export async function getProjectsForCurrentUser(): Promise<any> {
 
     // newest activity first
     rows.sort((a, b) => {
-      const aT = toDate(a.originalData?.card_comment_date) || toDate(a.originalData?.last_comment_date) || toDate(a.originalData?.last_updated);
-      const bT = toDate(b.originalData?.card_comment_date) || toDate(b.originalData?.last_comment_date) || toDate(b.originalData?.last_updated);
-      return
+      const aT =
+        toDate(a.originalData?.card_comment_date) ||
+        toDate(a.originalData?.last_comment_date) ||
+        toDate(a.originalData?.last_updated);
+      const bT =
+        toDate(b.originalData?.card_comment_date) ||
+        toDate(b.originalData?.last_comment_date) ||
+        toDate(b.originalData?.last_updated);
+      return bT - aT;
+    });
+
+    return rows;
+  } catch (error) {
+    console.error('[ACTA] Failed to fetch projects from DynamoDB:', error);
+    throw error;
+  }
+}
+
+// Helper function to map project status from DynamoDB data
+function mapProjectStatus(project: any): string {
+  // Check for explicit status field
+  if (project.status) return project.status;
+
+  // Check if ACTA document exists
+  if (project.has_acta_document === true) return 'Completed';
+  if (project.has_acta_document === false) return 'In Progress';
+
+  // Check last updated to determine if active
+  if (project.last_updated) {
+    const lastUpdated = new Date(project.last_updated);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return lastUpdated > thirtyDaysAgo ? 'Active' : 'Inactive';
+  }
+
+  // Default status
+  return 'Active';
+}
