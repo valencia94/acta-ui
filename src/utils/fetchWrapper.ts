@@ -57,7 +57,9 @@ export async function fetcher<T>(input: RequestInfo, init?: RequestInit): Promis
   const url = typeof input === 'string' ? input : input.url;
   const token = await getAuthToken();
 
+
   if (needsSigV4(url)) {
+    const token = await getAuthToken();
     const session = await fetchAuthSession();
     const creds = session.credentials;
 
