@@ -1,6 +1,6 @@
 import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
 import { DynamoDBClient, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
@@ -63,6 +63,29 @@ export async function getDownloadUrl(key: string, expiresIn = 60): Promise<strin
   const { s3 } = await getAwsClients();
   const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
   return await getSignedUrl(s3, command, { expiresIn });
+}
+
+// ✅ Find the latest ACTA document key in S3 for a given project id and format
+export async function findActaKeyForProject(
+  projectId: string,
+  format: 'pdf' | 'docx',
+): Promise<string | null> {
+  const { s3 } = await getAwsClients();
+  const Prefix = 'actas/';
+  const resp = await s3.send(new ListObjectsV2Command({ Bucket: BUCKET, Prefix }));
+  const contents = resp.Contents || [];
+  const matches = contents
+    .filter((obj) => !!obj.Key && obj.Key.endsWith(`.${format}`) && obj.Key.includes(projectId));
+
+  if (matches.length === 0) return null;
+  // pick the most recently modified
+  let latest = matches[0]!;
+  for (const obj of matches) {
+    if ((obj.LastModified || 0) > (latest.LastModified || 0)) {
+      latest = obj;
+    }
+  }
+  return latest.Key || null;
 }
 
 // ---------- helpers for grouping ----------

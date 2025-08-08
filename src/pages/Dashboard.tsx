@@ -18,7 +18,7 @@ import {
   sendApprovalEmail,
 } from '@/lib/api';
 
-export default function Dashboard() {
+export default function Dashboard(): JSX.Element {
   const { user, loading: authLoading } = useAuth();
   const { trackAction } = useMetrics();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
@@ -54,43 +54,40 @@ export default function Dashboard() {
     };
   }, []);
 
-  async function startRegenerationWatch(projectId: string, baselineLastMod: string | null | undefined) {
+  function startRegenerationWatch(projectId: string, baselineLastMod: string | null | undefined) {
     stopRegenTimer();
     setRegenState({ active: true, baseline: baselineLastMod ?? null, updated: null, tries: 0, startedAt: Date.now() });
     const maxTries = 24; // ~2 minutes at 5s
-    regenTimerRef.current = window.setInterval(async () => {
-      try {
-        const res = await checkDocumentInS3(projectId, 'pdf');
-        const lastMod = res.lastModified || null;
-        const updated = !!lastMod && lastMod !== (baselineLastMod ?? null);
-        setRegenState(prev => ({ ...prev, updated: lastMod, tries: prev.tries + 1 }));
-        if (updated) {
-          stopRegenTimer();
-          setRegenState(prev => ({ ...prev, active: false }));
-          toast.success('New ACTA document is ready. You can Preview or Download now.', { duration: 4000, icon: '✅' });
-        } else if ((regenTimerRef.current !== null) && (typeof regenTimerRef.current !== 'undefined')) {
-          // keep waiting
+    let tries = 0;
+    regenTimerRef.current = window.setInterval(() => {
+      void (async () => {
+        try {
+          const res = await checkDocumentInS3(projectId, 'pdf');
+          const lastMod = res.lastModified || null;
+          const updated = !!lastMod && lastMod !== (baselineLastMod ?? null);
+          tries += 1;
+          setRegenState(prev => ({ ...prev, updated: lastMod, tries }));
+          if (updated) {
+            stopRegenTimer();
+            setRegenState(prev => ({ ...prev, active: false }));
+            toast.success('New ACTA document is ready. You can Preview or Download now.', { duration: 4000, icon: '✅' });
+          }
+          // Stop after max tries
+          if (regenTimerRef.current && tries >= maxTries) {
+            stopRegenTimer();
+            setRegenState(prev => ({ ...prev, active: false }));
+            toast('Generate is still processing in the background. You can use the current document meanwhile.', { duration: 4000 });
+          }
+        } catch {
+          // transient errors – continue polling unless we exceed max
+          tries += 1;
+          setRegenState(prev => ({ ...prev, tries }));
+          if (regenTimerRef.current && tries >= maxTries) {
+            stopRegenTimer();
+            setRegenState(prev => ({ ...prev, active: false }));
+          }
         }
-        // Stop after max tries
-        if (regenTimerRef.current && (typeof regenTimerRef.current !== 'undefined')) {
-          // noop
-        }
-        if ((typeof window !== 'undefined') && typeof setTimeout === 'function') {
-          // no-op; ensures bundler keeps timers
-        }
-        if (regenTimerRef.current && (regenState.tries + 1) >= maxTries) {
-          stopRegenTimer();
-          setRegenState(prev => ({ ...prev, active: false }));
-          toast('Generate is still processing in the background. You can use the current document meanwhile.', { duration: 4000 });
-        }
-      } catch (e) {
-        // transient errors – continue polling unless we exceed max
-        setRegenState(prev => ({ ...prev, tries: prev.tries + 1 }));
-        if (regenTimerRef.current && (regenState.tries + 1) >= maxTries) {
-          stopRegenTimer();
-          setRegenState(prev => ({ ...prev, active: false }));
-        }
-      }
+      })();
     }, 5000);
   }
 
@@ -118,7 +115,9 @@ export default function Dashboard() {
       try {
         const before = await checkDocumentInS3(selectedProjectId, 'pdf');
         baselineLastMod = before.lastModified ?? null;
-      } catch {}
+      } catch {
+        // ignore check baseline errors
+      }
 
       await trackAction('Generate ACTA', selectedProjectId, async () => {
         return await generateActaDocument(selectedProjectId, user.email, 'pm');
@@ -188,10 +187,6 @@ export default function Dashboard() {
     
     try {
       await trackAction('Preview PDF', selectedProjectId, async () => {
-        const check = await checkDocumentInS3(selectedProjectId, 'pdf');
-        if (!check.available) {
-          throw new Error('Document not ready, try Generate first.');
-        }
         const url = await getS3DownloadUrl(selectedProjectId, 'pdf');
         setPdfPreviewUrl(url);
         setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
@@ -206,17 +201,10 @@ export default function Dashboard() {
       if (error.message.includes('Failed to fetch')) {
         setCorsError(error);
       }
-      if (error.message.includes('Document not ready')) {
-        toast.error('Document not ready, try Generate first.', {
-          duration: 4000,
-          icon: '⏳',
-        });
-      } else {
-        toast.error(error?.message || 'Failed to preview document', {
-          duration: 4000,
-          icon: '❌',
-        });
-      }
+      toast.error(error?.message || 'Failed to preview document', {
+        duration: 4000,
+        icon: '❌',
+      });
     } finally {
       setActionLoading(prev => ({ ...prev, previewing: false }));
     }
@@ -356,7 +344,7 @@ export default function Dashboard() {
       <EmailInputDialog
         isOpen={isEmailDialogOpen}
         onClose={() => setIsEmailDialogOpen(false)}
-        onSubmit={handleSendApproval}
+        onSubmit={(email) => { void handleSendApproval(email); }}
         loading={actionLoading.sendingApproval}
         title="Send Approval Request"
         description={`Send approval for project: ${currentProjectName}`}

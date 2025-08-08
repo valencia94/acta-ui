@@ -9,9 +9,9 @@ import {
   s3Bucket,
   s3Region,
 } from '@/env.variables';
-import { fetcher, get, post, postFireAndForget } from '@/utils/fetchWrapper';
+import { get, getAuthToken, post, postFireAndForget } from '@/utils/fetchWrapper';
 
-import { getDownloadUrl as getS3PresignedUrl } from './awsDataService';
+import { findActaKeyForProject, getDownloadUrl as getS3PresignedUrl } from './awsDataService';
 
 export const BASE =
   apiBaseUrl || 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
@@ -79,19 +79,66 @@ export async function getDownloadLink(
   projectId: string,
   format: 'pdf' | 'docx',
 ): Promise<string> {
-  const url = `${BASE}/download-acta/${projectId}?format=${format}`;
-  const response = await fetcher<{ url?: string; downloadUrl?: string }>(url, {
-    method: 'GET',
-  });
-
-  if (typeof response === 'string') return response;
-  if (response?.url || response?.downloadUrl) {
-    return response.url || response.downloadUrl!;
+  // The backend may implement either:
+  // 1) GET /download-acta/{id}?format=... → 302 Location: <signed-url>
+  // 2) GET /download-acta/{id}?format=... → 200 { url }
+  // 3) GET /download-acta?project_id=...&format=... (legacy) → 302 or { url }
+  async function tryVariant(url: string): Promise<string | null> {
+    const token = await getAuthToken();
+    const res = await fetch(url, {
+      method: 'GET',
+      redirect: 'manual',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      credentials: 'omit',
+      mode: 'cors',
+    });
+    // 302 redirect style
+    if (res.status === 302) {
+      const loc = res.headers.get('Location');
+      if (loc) return loc;
+    }
+    // JSON body style
+    if (res.ok) {
+      try {
+        const data = await res.json();
+        const u = data?.url || data?.downloadUrl || null;
+        if (u) return u;
+      } catch {
+        // ignore parse error
+      }
+    }
+    // 400 with body may indicate wrong variant
+    if (res.status === 400) {
+      const body = await res.text().catch(() => '');
+      if (body.includes('project_id is required')) return null;
+    }
+    return null;
   }
+
+  // Try path-parameter variant first
+  const primary = await tryVariant(`${BASE}/download-acta/${encodeURIComponent(projectId)}?format=${format}`);
+  if (primary) return primary;
+  // Fallback to legacy query param variant
+  const fallback = await tryVariant(`${BASE}/download-acta?project_id=${encodeURIComponent(projectId)}&format=${format}`);
+  if (fallback) return fallback;
   throw new Error('No download URL returned from API');
 }
 
-export const getS3DownloadUrl = getDownloadLink;
+export async function getS3DownloadUrl(projectId: string, format: 'pdf' | 'docx'): Promise<string> {
+  // 1) Prefer backend endpoint (handles auth/redirects). If unavailable, fall back to S3 search.
+  try {
+    const apiUrl = await getDownloadLink(projectId, format);
+    if (apiUrl) return apiUrl;
+  } catch {
+    // ignore and try S3
+  }
+  // 2) Locate the actual S3 object by scanning the 'actas/' prefix and matching the project id
+  const key = await findActaKeyForProject(projectId, format);
+  if (!key) {
+    throw new Error(`ACTA ${format.toUpperCase()} not found in S3 for project ${projectId}`);
+  }
+  return getS3PresignedUrl(key);
+}
 export const getDownloadUrl = getDownloadLink;
 
 /** -----------------------------------------------------------------------
