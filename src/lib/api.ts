@@ -11,7 +11,7 @@ import {
 } from '@/env.variables';
 import { get, getAuthToken, post, postFireAndForget } from '@/utils/fetchWrapper';
 
-import { findActaKeyForProject, getDownloadUrl as getS3PresignedUrl } from './awsDataService';
+// S3 presigning is not used client-side to avoid CORS and least-privilege issues
 
 export const BASE =
   apiBaseUrl || 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
@@ -125,19 +125,10 @@ export async function getDownloadLink(
 }
 
 export async function getS3DownloadUrl(projectId: string, format: 'pdf' | 'docx'): Promise<string> {
-  // 1) Prefer backend endpoint (handles auth/redirects). If unavailable, fall back to S3 search.
-  try {
-    const apiUrl = await getDownloadLink(projectId, format);
-    if (apiUrl) return apiUrl;
-  } catch {
-    // ignore and try S3
-  }
-  // 2) Locate the actual S3 object by scanning the 'actas/' prefix and matching the project id
-  const key = await findActaKeyForProject(projectId, format);
-  if (!key) {
-    throw new Error(`ACTA ${format.toUpperCase()} not found in S3 for project ${projectId}`);
-  }
-  return getS3PresignedUrl(key);
+  // Use backend endpoint to obtain a signed URL or redirect, avoiding direct S3 bucket listing from the browser.
+  const apiUrl = await getDownloadLink(projectId, format);
+  if (apiUrl) return apiUrl;
+  throw new Error(`No ${format.toUpperCase()} download URL available for project ${projectId}`);
 }
 export const getDownloadUrl = getDownloadLink;
 
@@ -150,9 +141,9 @@ export async function previewPdfBackend(projectId: string): Promise<string> {
   return data.url;
 }
 
-export async function previewPdfViaS3(projectId: string): Promise<string> {
-  // Fallback: directly generate a signed URL via S3
-  return getS3PresignedUrl(`acta-${projectId}.pdf`);
+export function previewPdfViaS3(projectId: string): Promise<string> {
+  // Use the download link helper to obtain a previewable URL
+  return getDownloadLink(projectId, 'pdf');
 }
 
 /** -----------------------------------------------------------------------
