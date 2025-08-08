@@ -440,13 +440,13 @@ describe('Dashboard Component', () => {
     });
   });
 
-  it('shows loading states for all buttons', async () => {
+  it('shows loading states for all buttons', () => {
     render(<Dashboard />);
-
+  
     // First select a project
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
-
+  
     // All buttons should show normal state initially
     expect(screen.getByText('Generate')).toBeInTheDocument();
     expect(screen.getByText('Download PDF')).toBeInTheDocument();
