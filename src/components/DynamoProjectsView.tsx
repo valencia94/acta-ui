@@ -230,14 +230,24 @@ export default function DynamoProjectsView({
                   {project.hito && (
                     <div className="bg-blue-50 rounded-lg p-4">
                       <dt className="font-semibold text-blue-700 uppercase tracking-wide text-xs mb-1">Hito</dt>
-                      <dd className="text-blue-900 font-medium">{project.hito}</dd>
+                      <dd className="text-blue-900 font-medium">
+                        {typeof project.hito === 'object' 
+                          ? (project.hito.name || project.hito.id || JSON.stringify(project.hito))
+                          : String(project.hito)
+                        }
+                      </dd>
                     </div>
                   )}
                   
                   {project.actividad && (
                     <div className="bg-purple-50 rounded-lg p-4">
                       <dt className="font-semibold text-purple-700 uppercase tracking-wide text-xs mb-1">Actividad</dt>
-                      <dd className="text-purple-900 font-medium">{project.actividad}</dd>
+                      <dd className="text-purple-900 font-medium">
+                        {typeof project.actividad === 'object' 
+                          ? (project.actividad.name || project.actividad.id || JSON.stringify(project.actividad))
+                          : String(project.actividad)
+                        }
+                      </dd>
                     </div>
                   )}
                 </div>
