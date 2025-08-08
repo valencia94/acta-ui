@@ -1,5 +1,6 @@
 // src/components/ActaButtons.tsx
 import { Download, Eye, FileText, Send } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 import Button from '@/components/Button';
 
@@ -18,6 +19,8 @@ export interface ActaButtonsProps {
   isDownloadingPdf?: boolean;
   isPreviewingPdf?: boolean;
   isSendingApproval?: boolean;
+  /** Optional email used when sending for approval */
+  approvalEmail?: string;
 }
 
 export default function ActaButtons({
@@ -32,10 +35,25 @@ export default function ActaButtons({
   isDownloadingPdf = false,
   isPreviewingPdf = false,
   isSendingApproval = false,
+  approvalEmail,
 }: ActaButtonsProps): JSX.Element {
-  const handleClick = (action: () => void, actionName: string, isLoading: boolean = false) => {
-    if (disabled || isLoading) {
-      console.log(`${actionName} clicked but disabled or loading`);
+  const envEmail =
+    (import.meta.env.VITE_APPROVAL_EMAIL as string | undefined) ||
+    (process.env.VITE_APPROVAL_EMAIL as string | undefined);
+  const resolvedEmail = approvalEmail || envEmail;
+
+  const handleClick = (
+    action: () => void,
+    actionName: string,
+    isLoading: boolean = false,
+    requiresEmail = false,
+  ) => {
+    if (disabled || isLoading || (requiresEmail && !resolvedEmail)) {
+      if (requiresEmail && !resolvedEmail) {
+        toast.error('Please provide an approval email address');
+      } else {
+        console.log(`${actionName} clicked but disabled or loading`);
+      }
       return;
     }
     console.log(`${actionName} clicked`);
@@ -77,8 +95,10 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onSendForApproval, 'Send for Approval', isSendingApproval)}
-          disabled={disabled || isSendingApproval}
+          onClick={() =>
+            handleClick(onSendForApproval, 'Send for Approval', isSendingApproval, true)
+          }
+          disabled={disabled || isSendingApproval || !resolvedEmail}
           className="
             flex items-center justify-center gap-2.5
             bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700
