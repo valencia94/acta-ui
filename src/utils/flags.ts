@@ -1,1 +1,0 @@
-export const UX_TOKENS = (import.meta.env.VITE_UX_TOKENS_UPGRADE ?? "0") !== "0";

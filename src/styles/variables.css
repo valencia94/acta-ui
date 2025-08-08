@@ -4,7 +4,7 @@
 /*───────────────────────────────────────────────────────────────────────────────*/
 
 :root {
-  /*── Legacy Palette (existing tokens) ──────────────────────────────────────*/
+  /*── Palette ────────────────────────────────────────────────────────────────*/
   --color-primary: #4ac795; /* Ikusi green */
   --color-primary-dark: #006b54;
   --color-primary-light: #a5f1d3;
@@ -27,47 +27,19 @@
   --color-error: #dc2626;
   --color-info: #3b82f6;
 
-  /*── Legacy Backgrounds ─────────────────────────────────────────────────────*/
+  /*── Backgrounds ────────────────────────────────────────────────────────────*/
   --color-bg-default: #f9fafb; /* gray-50 */
   --color-bg-secondary: #ffffff;
   --color-bg-muted: #f3f4f6; /* gray-100 */
 
-  /*── Legacy Text ────────────────────────────────────────────────────────────*/
+  /*── Text ───────────────────────────────────────────────────────────────────*/
   --color-text-default: #111827; /* gray-900 */
   --color-text-secondary: var(--color-neutral-dark);
   --color-text-muted: var(--color-neutral);
 
-  /*── Legacy Borders & Focus ─────────────────────────────────────────────────*/
+  /*── Borders & Focus ────────────────────────────────────────────────────────*/
   --color-border: var(--color-neutral-light);
   --focus-ring: var(--color-accent);
-
-  /*── NEW DESIGN TOKENS (60-30-10 approach, digital/balanced/intuitive) ─────*/
-  
-  /* Neutral foundation (backgrounds/surfaces - 60%) */
-  --color-bg: #0f1113;         /* dark slate - Contrast with text: 16.7:1 ✓ */
-  --color-surface: #15181b;    /* cards - Contrast with text: 14.8:1 ✓ */
-  --color-border: #1f2428;     /* borders - Contrast with surface: 1.2:1 */
-
-  /* Secondary (structure/headers - 30%) */
-  --color-secondary: #1e2328;  /* section headers, subtle stripes - Contrast with text: 13.1:1 ✓ */
-
-  /* Accent (CTAs/links - 10%) */
-  --color-accent: #3ddc97;     /* modern green accent - Contrast with bg: 9.8:1 ✓ */
-  --color-accent-contrast: #0b0d0f; /* text on accent - Contrast: 15.2:1 ✓ */
-
-  /* Text hierarchy */
-  --color-text: #e8edf2;       /* body text - Contrast with bg: 16.7:1 ✓ */
-  --color-text-muted: #a7b1bb; /* muted text - Contrast with bg: 8.1:1 ✓ */
-
-  /* States */
-  --color-success: #34d399;    /* tailwind emerald-ish - Contrast: 8.4:1 ✓ */
-  --color-warning: #fbbf24;    /* warning yellow - Contrast: 11.2:1 ✓ */
-  --color-danger:  #ef4444;    /* danger red - Contrast: 5.9:1 ✓ */
-
-  /* Radii + spacing */
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --space-card: 1rem;
 
   /*── Spacing Scale ─────────────────────────────────────────────────────────*/
   --space-1: 0.25rem; /* 4px */
@@ -92,16 +64,14 @@
   --transition-slow: 0.5s;
 }
 
-/* Light mode fallback if needed (optional) */
-@media (prefers-color-scheme: light) {
+/*── Dark Mode Overrides ───────────────────────────────────────────────────────*/
+@media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #f6f8fa;
-    --color-surface: #ffffff;
-    --color-border: #e5e7eb;
-    --color-secondary: #f3f4f6;
-    --color-accent: #0ea5e9; /* swap to cyan in light if desired */
-    --color-accent-contrast: #ffffff;
-    --color-text: #0b0d0f;
-    --color-text-muted: #475569;
+    --color-bg-default: #1f2937; /* gray-800 */
+    --color-bg-secondary: #111827; /* gray-900 */
+    --color-bg-muted: #374151; /* gray-700 */
+
+    --color-text-default: #f9fafb; /* gray-50 */
+    --color-text-secondary: var(--color-neutral-light);
   }
 }

@@ -7,7 +7,6 @@
     "cypress/**/*.ts"
   ],
   "files": [
-    "tailwind.config.ts",
     "vite.config.ts",
     "vitest.config.ts",
     "src/sendProjectsForPM.ts",

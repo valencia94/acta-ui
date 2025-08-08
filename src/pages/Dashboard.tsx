@@ -17,7 +17,6 @@ import {
   getS3DownloadUrl,
   sendApprovalEmail,
 } from '@/lib/api';
-import { UX_TOKENS } from '@/utils/flags';
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -195,19 +194,11 @@ export default function Dashboard() {
   };
 
   if (authLoading) {
-    return <div className={
-      UX_TOKENS
-        ? "p-8 text-center text-[var(--color-text-muted)]"
-        : "p-8 text-center text-gray-600"
-    }>Loading...</div>;
+    return <div className="p-8 text-center text-gray-600">Loading...</div>;
   }
 
   return (
-    <div className={
-      UX_TOKENS
-        ? "min-h-screen bg-[var(--color-bg)]"
-        : "min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-gray-100"
-    }>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-gray-100">
       <Header />
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
@@ -226,22 +217,10 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className={
-            UX_TOKENS
-              ? "bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm rounded-xl p-card"
-              : "bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
-          }
+          className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
         >
-          <h1 className={
-            UX_TOKENS
-              ? "text-4xl font-bold text-[var(--color-text)] mb-4"
-              : "text-4xl font-bold text-gray-900 mb-4"
-          }>Welcome, {user?.email}</h1>
-          <p className={
-            UX_TOKENS
-              ? "text-lg text-[var(--color-text-muted)] leading-relaxed"
-              : "text-lg text-gray-600 leading-relaxed"
-          }>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome, {user?.email}</h1>
+          <p className="text-lg text-gray-600 leading-relaxed">
             View your projects and take action with ACTA tools.
           </p>
         </motion.div>
@@ -250,17 +229,9 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className={
-            UX_TOKENS
-              ? "bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm rounded-xl p-card"
-              : "bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
-          }
+          className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
         >
-          <h2 className={
-            UX_TOKENS
-              ? "text-2xl font-bold text-[var(--color-text)] mb-8"
-              : "text-2xl font-bold text-gray-800 mb-8"
-          }>Your Projects</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-8">Your Projects</h2>
           <DynamoProjectsView
             userEmail={user?.email || ''}
             onProjectSelect={handleProjectSelect}
@@ -272,17 +243,9 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className={
-            UX_TOKENS
-              ? "bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm rounded-xl p-card"
-              : "bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
-          }
+          className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
         >
-          <h2 className={
-            UX_TOKENS
-              ? "text-2xl font-bold text-[var(--color-text)] mb-8"
-              : "text-2xl font-bold text-gray-800 mb-8"
-          }>ACTA Actions</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-8">ACTA Actions</h2>
           <ActaButtons
             onGenerate={handleGenerateActa}
             onDownloadPdf={() => handleDownload('pdf')}
