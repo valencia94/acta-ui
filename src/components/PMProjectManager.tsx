@@ -7,6 +7,7 @@ import { generateSummariesForPM } from '@/api';
 import { getAllProjects, getProjectsByPM, PMProject } from '@/lib/api';
 
 import Button from './Button';
+import ProjectCard from './ProjectCard';
 
 interface PMProjectManagerProps {
   pmEmail?: string;
@@ -179,6 +180,10 @@ export default function PMProjectManager({
     return project.status || 'Active';
   };
 
+  function ensureArray<T>(value: T[] | undefined | null): T[] {
+    return Array.isArray(value) ? value : [];
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -237,9 +242,9 @@ export default function PMProjectManager({
         </div>
       ) : (
         <div className="space-y-3">
-          {projects.map((project) => (
-            <div
-              key={project.id}
+          {ensureArray(projects).map((project) => (
+            <ProjectCard
+              key={String(project.id)}
               className={`
                 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
                 hover:shadow-md hover:scale-[1.01]
@@ -278,7 +283,7 @@ export default function PMProjectManager({
                   </div>
                 )}
               </div>
-            </div>
+            </ProjectCard>
           ))}
         </div>
       )}
