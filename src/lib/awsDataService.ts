@@ -149,4 +149,12 @@ export async function getProjectsForCurrentUser(): Promise<any> {
     rows.sort((a, b) => {
       const aT = toDate(a.originalData?.card_comment_date) || toDate(a.originalData?.last_comment_date) || toDate(a.originalData?.last_updated);
       const bT = toDate(b.originalData?.card_comment_date) || toDate(b.originalData?.last_comment_date) || toDate(b.originalData?.last_updated);
-      return
+      return bT - aT;
+    });
+
+    return rows;
+  } catch (error) {
+    console.error('[ACTA] Error getting projects:', error);
+    throw error;
+  }
+}
