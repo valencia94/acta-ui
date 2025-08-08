@@ -440,18 +440,20 @@ describe('Dashboard Component', () => {
     });
   });
 
-  it('shows loading states for all buttons', () => {
+  it('shows loading states for all buttons', async () => {
     render(<Dashboard />);
   
     // First select a project
     const projectButton = screen.getByTestId('project-button');
     fireEvent.click(projectButton);
   
-    // All buttons should show normal state initially
-    expect(screen.getByText('Generate')).toBeInTheDocument();
-    expect(screen.getByText('Download PDF')).toBeInTheDocument();
-    expect(screen.getByText('Download Word')).toBeInTheDocument();
-    expect(screen.getByText('Preview')).toBeInTheDocument();
-    expect(screen.getByText('Send Approval')).toBeInTheDocument();
+    // Wait for UI updates if needed
+    await waitFor(() => {
+      expect(screen.getByText('Generate')).toBeInTheDocument();
+      expect(screen.getByText('Download PDF')).toBeInTheDocument();
+      expect(screen.getByText('Download Word')).toBeInTheDocument();
+      expect(screen.getByText('Preview')).toBeInTheDocument();
+      expect(screen.getByText('Send Approval')).toBeInTheDocument();
+    });
   });
-});
+
