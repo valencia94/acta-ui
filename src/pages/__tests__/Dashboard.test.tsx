@@ -456,4 +456,4 @@ describe('Dashboard Component', () => {
       expect(screen.getByText('Send Approval')).toBeInTheDocument();
     });
   });
-
+}));
