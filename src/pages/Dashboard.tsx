@@ -239,27 +239,30 @@ export default function Dashboard() {
           />
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-white/50"
-        >
-          <h2 className="text-2xl font-bold text-gray-800 mb-8">ACTA Actions</h2>
-          <ActaButtons
-            onGenerate={handleGenerateActa}
-            onDownloadPdf={() => handleDownload('pdf')}
-            onDownloadWord={() => handleDownload('docx')}
-            onPreviewPdf={handlePreview}
-            onSendForApproval={() => setIsEmailDialogOpen(true)}
-            disabled={!selectedProjectId || Object.values(actionLoading).some(Boolean)}
-            isGenerating={actionLoading.generating}
-            isDownloadingWord={actionLoading.downloadingWord}
-            isDownloadingPdf={actionLoading.downloadingPdf}
-            isPreviewingPdf={actionLoading.previewing}
-            isSendingApproval={actionLoading.sendingApproval}
-          />
-        </motion.div>
+        {/* ACTA Actions - Sticky positioned for easy access */}
+        <div className="sticky bottom-6 md:bottom-4 lg:bottom-6 z-40">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="bg-white/90 backdrop-blur-sm shadow-xl rounded-2xl p-6 lg:p-8 border border-white/50"
+          >
+            <h2 className="text-xl lg:text-2xl font-bold text-gray-800 mb-6 lg:mb-8">ACTA Actions</h2>
+            <ActaButtons
+              onGenerate={handleGenerateActa}
+              onDownloadPdf={() => handleDownload('pdf')}
+              onDownloadWord={() => handleDownload('docx')}
+              onPreviewPdf={handlePreview}
+              onSendForApproval={() => setIsEmailDialogOpen(true)}
+              disabled={!selectedProjectId || Object.values(actionLoading).some(Boolean)}
+              isGenerating={actionLoading.generating}
+              isDownloadingWord={actionLoading.downloadingWord}
+              isDownloadingPdf={actionLoading.downloadingPdf}
+              isPreviewingPdf={actionLoading.previewing}
+              isSendingApproval={actionLoading.sendingApproval}
+            />
+          </motion.div>
+        </div>
       </main>
 
       {pdfPreviewUrl && (
