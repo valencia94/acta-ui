@@ -1,42 +1,93 @@
-// src/components/ActaButtons.tsx
-import { Download, Eye, FileText, Send } from 'lucide-react';
+import { Download, Eye, FileText, Send } from "lucide-react";
+import { useState } from "react";
 
-import Button from '@/components/Button';
+import Button from "@/components/Button";
+import {
+  generateActaDocument,
+  getDownloadLink,
+  previewPdfBackend,
+  previewPdfViaS3,
+  sendApprovalEmail,
+} from "@/lib/api";
 
-export interface ActaButtonsProps {
-  onGenerate: () => void;
-  onDownloadWord: () => void;
-  onDownloadPdf: () => void;
-  onPreviewPdf: () => void;
-  onSendForApproval: () => void;
-  disabled: boolean;
-  isGenerating: boolean;
-  isDownloadingWord?: boolean;
-  isDownloadingPdf?: boolean;
-  isPreviewingPdf?: boolean;
-  isSendingApproval?: boolean;
+interface ActaButtonsProps {
+  project: { id: string };
+  onPreviewOpen: (url: string) => void;
 }
 
-export default function ActaButtons({
-  onGenerate,
-  onDownloadWord,
-  onDownloadPdf,
-  onPreviewPdf,
-  onSendForApproval,
-  disabled,
-  isGenerating,
-  isDownloadingWord = false,
-  isDownloadingPdf = false,
-  isPreviewingPdf = false,
-  isSendingApproval = false,
-}: ActaButtonsProps): JSX.Element {
-  const handleClick = (action: () => void, actionName: string, isLoading: boolean = false) => {
-    if (disabled || isLoading) {
-      console.log(`${actionName} clicked but disabled or loading`);
-      return;
+export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps): JSX.Element {
+  const [loading, setLoading] = useState<null | string>(null);
+
+  const disabled = !project?.id || loading !== null;
+  const isGenerating = loading === "generate";
+  const isDownloadingWord = loading === "download-docx";
+  const isDownloadingPdf = loading === "download-pdf";
+  const isPreviewingPdf = loading === "preview";
+  const isSendingApproval = loading === "email";
+
+  const onGenerate = async () => {
+    try {
+      setLoading("generate");
+      await generateActaDocument(project.id);
+      console.log("ACTA generation started");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(null);
     }
-    console.log(`${actionName} clicked`);
-    action();
+  };
+
+  const onDownloadPdf = async () => {
+    try {
+      setLoading("download-pdf");
+      const url = await getDownloadLink(project.id, "pdf");
+      window.location.href = url;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const onDownloadDocx = async () => {
+    try {
+      setLoading("download-docx");
+      const url = await getDownloadLink(project.id, "docx");
+      window.location.href = url;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const onPreviewPdf = async () => {
+    try {
+      setLoading("preview");
+      let url: string;
+      try {
+        url = await previewPdfBackend(project.id);
+      } catch {
+        url = await previewPdfViaS3(project.id);
+      }
+      onPreviewOpen(url);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const onSendEmail = async () => {
+    try {
+      setLoading("email");
+      await sendApprovalEmail(project.id, "approvals@ikusi.com");
+      console.log("Approval email sent");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(null);
+    }
   };
 
   return (
@@ -45,7 +96,7 @@ export default function ActaButtons({
       <div className="grid grid-cols-2 gap-3 w-full">
         {/* Primary Actions Row */}
         <Button
-          onClick={() => handleClick(onGenerate, 'Generate Acta', isGenerating)}
+          onClick={onGenerate}
           disabled={disabled || isGenerating}
           className="
             flex items-center justify-center gap-2.5
@@ -74,7 +125,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onSendForApproval, 'Send for Approval', isSendingApproval)}
+          onClick={onSendEmail}
           disabled={disabled || isSendingApproval}
           className="
             flex items-center justify-center gap-2.5
@@ -106,11 +157,11 @@ export default function ActaButtons({
       {/* Secondary Actions Row - 3 column grid */}
       <div className="grid grid-cols-3 gap-2 w-full mt-3">
         <Button
-          onClick={() => handleClick(onDownloadWord, 'Download Word', isDownloadingWord)}
+          onClick={onDownloadDocx}
           disabled={disabled || isDownloadingWord}
           className="
             flex items-center justify-center gap-2
-            bg-white hover:bg-green-50 
+            bg-white hover:bg-green-50
             border-2 border-green-200 hover:border-green-400
             text-green-700 hover:text-green-800 font-medium px-3 py-2.5 rounded-lg
             transition-all duration-300 ease-out
@@ -135,7 +186,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onPreviewPdf, 'Preview PDF', isPreviewingPdf)}
+          onClick={onPreviewPdf}
           disabled={disabled || isPreviewingPdf}
           className="
             flex items-center justify-center gap-2
@@ -164,7 +215,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onDownloadPdf, 'Download PDF', isDownloadingPdf)}
+          onClick={onDownloadPdf}
           disabled={disabled || isDownloadingPdf}
           className="
             flex items-center justify-center gap-2
@@ -202,4 +253,3 @@ export default function ActaButtons({
     </div>
   );
 }
-
