@@ -11,21 +11,34 @@ export async function fetcher<T = any>(url: string, init: RequestInit = {}): Pro
   const token = await getAuthToken();
   const headers = new Headers(init.headers || {});
   headers.set("Authorization", `Bearer ${token}`);
-  if (!headers.has("Content-Type") && init.body && typeof init.body !== "string") {
+
+  const body = init.body as any;
+  if (
+    !headers.has("Content-Type") &&
+    body &&
+    typeof body === "object" &&
+    !(body instanceof FormData) &&
+    !(body instanceof Blob)
+  ) {
     headers.set("Content-Type", "application/json");
   }
+
   const res = await fetch(url, {
     mode: "cors",
     credentials: "omit",
     ...init,
     headers,
   });
+
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status} ${res.statusText}: ${text}`);
   }
+
   const contentType = res.headers.get("Content-Type") || "";
   if (contentType.includes("application/json")) {
     return (await res.json()) as T;
   }
+
   return (await res.text()) as unknown as T;
 }

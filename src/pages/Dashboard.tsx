@@ -8,7 +8,7 @@ import Header from '@/components/Header';
 import PDFPreview from '@/components/PDFPreview';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function Dashboard() {
+export default function Dashboard(): JSX.Element {
   const { user, loading: authLoading } = useAuth();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -66,6 +66,7 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold text-gray-800 mb-8">ACTA Actions</h2>
           <ActaButtons
             project={{ id: selectedProject?.id || '' }}
+            approvalEmail={selectedProject?.originalData?.pm_email}
             onPreviewOpen={(url) => {
               setPdfPreviewUrl(url);
               setPdfPreviewFileName(`acta-${selectedProject?.id}.pdf`);

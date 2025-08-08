@@ -13,9 +13,14 @@ import {
 interface ActaButtonsProps {
   project: { id: string };
   onPreviewOpen: (url: string) => void;
+  approvalEmail?: string;
 }
 
-export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps): JSX.Element {
+export default function ActaButtons({
+  project,
+  onPreviewOpen,
+  approvalEmail,
+}: ActaButtonsProps): JSX.Element {
   const [loading, setLoading] = useState<null | string>(null);
 
   const disabled = !project?.id || loading !== null;
@@ -24,6 +29,15 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
   const isDownloadingPdf = loading === "download-pdf";
   const isPreviewingPdf = loading === "preview";
   const isSendingApproval = loading === "email";
+
+  const triggerDownload = (url: string, filename: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const onGenerate = async () => {
     try {
@@ -41,7 +55,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
     try {
       setLoading("download-pdf");
       const url = await getDownloadLink(project.id, "pdf");
-      window.location.href = url;
+      triggerDownload(url, `acta-${project.id}.pdf`);
     } catch (e) {
       console.error(e);
     } finally {
@@ -53,7 +67,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
     try {
       setLoading("download-docx");
       const url = await getDownloadLink(project.id, "docx");
-      window.location.href = url;
+      triggerDownload(url, `acta-${project.id}.docx`);
     } catch (e) {
       console.error(e);
     } finally {
@@ -81,7 +95,9 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
   const onSendEmail = async () => {
     try {
       setLoading("email");
-      await sendApprovalEmail(project.id, "approvals@ikusi.com");
+      const email =
+        approvalEmail ?? import.meta.env.VITE_APPROVAL_EMAIL ?? "approvals@ikusi.com";
+      await sendApprovalEmail(project.id, email);
       console.log("Approval email sent");
     } catch (e) {
       console.error(e);
@@ -96,7 +112,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
       <div className="grid grid-cols-2 gap-3 w-full">
         {/* Primary Actions Row */}
         <Button
-          onClick={onGenerate}
+          onClick={() => void onGenerate()}
           disabled={disabled || isGenerating}
           className="
             flex items-center justify-center gap-2.5
@@ -125,7 +141,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
         </Button>
 
         <Button
-          onClick={onSendEmail}
+          onClick={() => void onSendEmail()}
           disabled={disabled || isSendingApproval}
           className="
             flex items-center justify-center gap-2.5
@@ -157,7 +173,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
       {/* Secondary Actions Row - 3 column grid */}
       <div className="grid grid-cols-3 gap-2 w-full mt-3">
         <Button
-          onClick={onDownloadDocx}
+          onClick={() => void onDownloadDocx()}
           disabled={disabled || isDownloadingWord}
           className="
             flex items-center justify-center gap-2
@@ -186,7 +202,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
         </Button>
 
         <Button
-          onClick={onPreviewPdf}
+          onClick={() => void onPreviewPdf()}
           disabled={disabled || isPreviewingPdf}
           className="
             flex items-center justify-center gap-2
@@ -215,7 +231,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
         </Button>
 
         <Button
-          onClick={onDownloadPdf}
+          onClick={() => void onDownloadPdf()}
           disabled={disabled || isDownloadingPdf}
           className="
             flex items-center justify-center gap-2
