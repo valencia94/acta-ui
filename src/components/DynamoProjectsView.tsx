@@ -49,9 +49,21 @@ export default function DynamoProjectsView({
     setError(null);
     try {
       const data = await getProjectsForCurrentUser();
-      setProjects(data ?? []);
+      console.log('Loaded projects data:', data);
+      // Validate data structure
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid data format: expected array');
+      }
+      // Filter out any invalid projects
+      const validProjects = data.filter(project => 
+        project && 
+        (project.id || project.name) && 
+        typeof project === 'object'
+      );
+      console.log('Valid projects:', validProjects);
+      setProjects(validProjects);
     } catch (err) {
-      console.error(err);
+      console.error('Error loading projects:', err);
       setError('Failed to load projects.');
     } finally {
       setLoading(false);
@@ -59,7 +71,9 @@ export default function DynamoProjectsView({
   };
 
   useEffect(() => {
-    if (userEmail) void loadProjects();
+    if (userEmail) {
+      void loadProjects();
+    }
   }, [userEmail]);
 
   if (loading) return (
@@ -83,7 +97,7 @@ export default function DynamoProjectsView({
         </div>
       </div>
       <button
-        onClick={loadProjects}
+        onClick={() => void loadProjects()}
         disabled={loading}
         className="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
       >
@@ -113,7 +127,7 @@ export default function DynamoProjectsView({
         <h3 className="text-xl font-semibold text-gray-700 mb-3">No projects available</h3>
         <p className="text-gray-500 mb-6">No projects are assigned to your account yet.</p>
         <button
-          onClick={loadProjects}
+          onClick={() => void loadProjects()}
           disabled={loading}
           className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
         >
@@ -135,9 +149,9 @@ export default function DynamoProjectsView({
 
   return (
     <div className="space-y-6">
-      {ensureArray(projects).map((project) => (
+      {ensureArray(projects).map((project, index) => (
         <ProjectCard
-          key={String(project.id)}
+          key={project.id || project.name || `project-${index}`}
           onClick={() => onProjectSelect?.(project)}
           className={`
             bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer
