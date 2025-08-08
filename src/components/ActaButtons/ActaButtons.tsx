@@ -126,7 +126,7 @@ export default function ActaButtons({
           aria-label="Download PDF document"
           onClick={() => handleClick(onDownloadPdf, 'Download PDF')}
           disabled={disabled || isDownloadingPdf}
-          className="flex items-center justify-center gap-1.5 bg-white border border-borders text-body font-medium px-2 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:border-accent hover:bg-accent hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
+          className="flex items-center justify-center gap-1.5 bg-white border border-borders text-body font-medium px-2 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:border-accent hover:bg-accent hover:text-white hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
         >
           {isDownloadingPdf ? (
             <>
