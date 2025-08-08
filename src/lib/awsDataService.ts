@@ -1,12 +1,10 @@
 import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
-import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, QueryCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { fetchAuthSession } from 'aws-amplify/auth';
-
-import { useMockData } from '@/env.variables';
-import { fetcher } from '@/utils/fetchWrapper';
 
 const REGION = import.meta.env.VITE_COGNITO_REGION || 'us-east-2';
 const USER_POOL_ID = import.meta.env.VITE_COGNITO_POOL_ID || 'us-east-2_FyHLtOhiY';
@@ -64,89 +62,43 @@ export async function getDownloadUrl(key: string, expiresIn = 60): Promise<strin
   return await getSignedUrl(s3, command, { expiresIn });
 }
 
-// ✅ Fetch projects for the current authenticated user via SigV4-signed request
+// ✅ Fetch projects for the current authenticated user directly from DynamoDB
 export async function getProjectsForCurrentUser(): Promise<any> {
-  // Check if we should use mock data (only in development with explicit flag)
-  if (useMockData) {
-    console.log('[ACTA] Using MOCK data');
-    return getSampleProjects();
-  }
-
-  console.log('[ACTA] Using LIVE data');
-  
   try {
+    const { dynamoDB } = await getAwsClients();
+    const credentials = await getAwsCredentials();
+    const resolved = await credentials();
+    console.log('[ACTA] Cognito identity:', resolved.identityId);
+
     const { tokens } = await fetchAuthSession();
     const email = tokens?.idToken?.payload?.email as string | undefined;
     if (!email) throw new Error('❌ No user email available');
 
-    const base =
-      import.meta.env.VITE_API_BASE_URL ||
-      'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
-    const url = `${base}/projects-for-pm?email=${encodeURIComponent(email)}&admin=false`;
-    
-    // Use the centralized fetchWrapper for consistent SigV4 signing
-    const rawProjects = await fetcher<any[]>(url);
-    
-    // Map DynamoDB fields to UI interface
-    return rawProjects.map((project: any) => ({
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: 'pm_email-index',
+      KeyConditionExpression: 'pm_email = :email',
+      ExpressionAttributeValues: {
+        ':email': { S: email },
+      },
+    };
+    console.log('[ACTA] DynamoDB query params:', params);
+
+    const result = await dynamoDB.send(new QueryCommand(params));
+
+    const items = (result.Items || []).map((item) => unmarshall(item));
+
+    return items.map((project: any) => ({
       id: project.project_id || project.id,
       name: project.project_name || project.name || `Project ${project.project_id || project.id}`,
       pm: project.pm_email || project.pm || project.project_manager,
       status: mapProjectStatus(project),
-      // Keep original fields for reference
-      originalData: project
+      originalData: project,
     }));
   } catch (error) {
-    console.error('❌ Failed to fetch projects from API:', error);
-    
-    // In production, re-throw the error (no fallback to sample data)
+    console.error('[ACTA] Failed to fetch projects from DynamoDB:', error);
     throw error;
   }
-}
-
-// Helper function to return sample projects (only used when useMockData is true)
-function getSampleProjects() {
-  return [
-    {
-      id: 'sample-project-001',
-      name: 'Office Building Construction',
-      pm: 'admin@ikusi.com',
-      status: 'In Progress',
-      originalData: {
-        project_id: 'sample-project-001',
-        project_name: 'Office Building Construction',
-        pm_email: 'admin@ikusi.com',
-        last_updated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        has_acta_document: false
-      }
-    },
-    {
-      id: 'sample-project-002',
-      name: 'Infrastructure Upgrade',
-      pm: 'admin@ikusi.com', 
-      status: 'Completed',
-      originalData: {
-        project_id: 'sample-project-002',
-        project_name: 'Infrastructure Upgrade',
-        pm_email: 'admin@ikusi.com',
-        last_updated: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        has_acta_document: true
-      }
-    },
-    {
-      id: 'sample-project-003',
-      name: 'Smart City Initiative',
-      pm: 'admin@ikusi.com',
-      status: 'Active',
-      originalData: {
-        project_id: 'sample-project-003', 
-        project_name: 'Smart City Initiative',
-        pm_email: 'admin@ikusi.com',
-        last_updated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        has_acta_document: false
-      }
-    }
-  ];
 }
 
 // Helper function to map project status from DynamoDB data

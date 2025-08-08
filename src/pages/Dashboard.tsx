@@ -1,16 +1,14 @@
 // src/pages/Dashboard.tsx — Regenerated PM Dashboard using Admin layout
-import { fetchAuthSession } from 'aws-amplify/auth';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
-import DynamoProjectsView from '@/components/DynamoProjectsView';
+import DynamoProjectsView, { Project } from '@/components/DynamoProjectsView';
 import { EmailInputDialog } from '@/components/EmailInputDialog';
 import { CorsErrorBanner } from '@/components/ErrorHandling/CorsErrorBanner';
 import Header from '@/components/Header';
 import PDFPreview from '@/components/PDFPreview';
-import ResponsiveIndicator from '@/components/ResponsiveIndicator';
 import { useAuth } from '@/hooks/useAuth';
 import { useMetrics } from '@/hooks/useMetrics';
 import {
@@ -38,19 +36,10 @@ export default function Dashboard() {
   const [currentProjectName, setCurrentProjectName] = useState<string>('');
   const [corsError, setCorsError] = useState<Error | null>(null);
 
-  // Local verification script for Cognito credentials
-  useEffect(() => {
-    fetchAuthSession().then((session) => {
-      console.log('🧠 Identity ID:', (session?.credentials as any)?.identityId);
-    }).catch((err) => {
-      console.error('❌ Failed to get Cognito credentials:', err);
-    });
-  }, []);
-
-  const handleProjectSelect = (projectId: string) => {
-    setSelectedProjectId(projectId);
-    setCurrentProjectName(projectId);
-    toast.success(`Selected project: ${projectId}`, {
+  const handleProjectSelect = (project: Project) => {
+    setSelectedProjectId(project.id);
+    setCurrentProjectName(project.name);
+    toast.success(`Selected project: ${project.name}`, {
       duration: 2000,
       icon: '✅',
     });
@@ -291,8 +280,6 @@ export default function Dashboard() {
         description={`Send approval for project: ${currentProjectName}`}
         placeholder="Enter client email address"
       />
-
-      <ResponsiveIndicator />
     </div>
   );
 }
