@@ -14,7 +14,7 @@ import { useMetrics } from '@/hooks/useMetrics';
 import {
   checkDocumentInS3,
   generateActaDocument,
-  getDownloadUrl,
+  getS3DownloadUrl,
   sendApprovalEmail,
 } from '@/lib/api';
 
@@ -88,7 +88,7 @@ export default function Dashboard() {
     
     try {
       const url = await trackAction(`Download ${format.toUpperCase()}`, selectedProjectId, async () => {
-        return await getDownloadUrl(selectedProjectId, format);
+        return await getS3DownloadUrl(selectedProjectId, format);
       });
       
       window.open(url, '_blank');
@@ -124,7 +124,7 @@ export default function Dashboard() {
         if (!check.available) {
           throw new Error('Document not ready, try Generate first.');
         }
-        const url = await getDownloadUrl(selectedProjectId, 'pdf');
+        const url = await getS3DownloadUrl(selectedProjectId, 'pdf');
         setPdfPreviewUrl(url);
         setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
         return url;
