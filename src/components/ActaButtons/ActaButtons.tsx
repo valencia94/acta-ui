@@ -63,7 +63,7 @@ export default function ActaButtons({
           aria-label="Send document for approval"
           onClick={() => handleClick(onSendForApproval, 'Send for Approval')}
           disabled={disabled || isSendingApproval}
-          className="flex items-center justify-center gap-2.5 bg-white text-accent border border-accent font-medium px-4 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:bg-accent hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
+          className="flex items-center justify-center gap-2.5 bg-white text-accent border border-accent font-medium px-4 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:bg-accent hover:text-white hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
         >
           {isSendingApproval ? (
             <>
