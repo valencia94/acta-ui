@@ -30,11 +30,11 @@ vi.mock('../../lib/api', () => ({
 }));
 
 vi.mock('../../components/DynamoProjectsView', () => ({
-  default: ({ onProjectSelect }: { onProjectSelect: (id: string) => void }) => (
+  default: ({ onProjectSelect }: { onProjectSelect: (project: any) => void }) => (
     <div data-testid="projects-view">
       <button
         data-testid="project-button"
-        onClick={() => onProjectSelect('test-project-001')}
+        onClick={() => onProjectSelect({ id: 'test-project-001', name: 'Test Project' })}
       >
         Select Test Project
       </button>
@@ -448,7 +448,7 @@ describe('Dashboard Component', () => {
     fireEvent.click(projectButton);
   
     // Wait for UI updates if needed
-    await waitFor(() => {
+  await waitFor(() => {
       expect(screen.getByText('Generate')).toBeInTheDocument();
       expect(screen.getByText('Download PDF')).toBeInTheDocument();
       expect(screen.getByText('Download Word')).toBeInTheDocument();
@@ -456,4 +456,4 @@ describe('Dashboard Component', () => {
       expect(screen.getByText('Send Approval')).toBeInTheDocument();
     });
   });
-
+});
