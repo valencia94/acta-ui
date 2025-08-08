@@ -2,17 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global Styles */
+/* Ikusi UI Global Styles - Beautiful, digital feel, intuitive UI */
 body {
-  @apply bg-white text-slate-900 antialiased;
+  @apply bg-bg text-body antialiased;
 }
 
 @layer components {
   .input {
-    @apply w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-70;
+    @apply w-full border border-borders rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200;
   }
 
-  .btn {
-    @apply bg-green-500 text-white font-semibold px-4 py-2 rounded hover:bg-green-600 transition;
+  .btn-primary {
+    @apply bg-accent text-white font-medium px-4 py-2 rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-accent border border-accent font-medium px-4 py-2 rounded-xl hover:bg-accent transition-colors duration-200 shadow-sm;
+  }
+
+  .card {
+    @apply bg-surface border border-borders rounded-xl p-6 shadow-sm;
   }
 }
