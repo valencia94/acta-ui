@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 
 import { getProjectsForCurrentUser } from '@/lib/awsDataService';
 
+import ProjectCard from './ProjectCard';
+
 export interface Project {
   id: string;
   name: string;
@@ -20,6 +22,10 @@ export interface Project {
     has_acta_document?: boolean;
     [key: string]: any;
   };
+}
+
+function ensureArray<T>(value: T[] | undefined | null): T[] {
+  return Array.isArray(value) ? value : [];
 }
 
 interface Props {
@@ -129,16 +135,16 @@ export default function DynamoProjectsView({
 
   return (
     <div className="space-y-6">
-      {projects.map((project) => (
-        <div
-          key={project.id}
+      {ensureArray(projects).map((project) => (
+        <ProjectCard
+          key={String(project.id)}
           onClick={() => onProjectSelect?.(project)}
           className={`
             bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer
             transition-all duration-300 ease-out
             hover:shadow-xl hover:border-green-300 hover:-translate-y-1
             ${selectedProjectId === project.id
-              ? 'border-green-500 bg-gradient-to-br from-green-50 to-green-25 shadow-lg ring-2 ring-green-200 scale-[1.02]' 
+              ? 'border-green-500 bg-gradient-to-br from-green-50 to-green-25 shadow-lg ring-2 ring-green-200 scale-[1.02]'
               : 'shadow-lg hover:shadow-2xl'
             }
             backdrop-blur-sm border-opacity-60
@@ -246,7 +252,7 @@ export default function DynamoProjectsView({
               </div>
             </div>
           </div>
-        </div>
+        </ProjectCard>
       ))}
     </div>
   );
