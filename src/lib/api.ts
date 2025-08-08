@@ -34,7 +34,17 @@ async function request<T = unknown>(
 ): Promise<T> {
   const url = `${BASE}${endpoint}`;
 
-  const body = options.body ? JSON.parse(options.body as string) : undefined;
+  let body: unknown = undefined;
+  if (options.body) {
+    try {
+      body = JSON.parse(options.body as string);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('❌ Failed to parse request body as JSON:', options.body, err);
+      }
+      body = undefined;
+    }
+  }
 
   if (import.meta.env.DEV) {
     console.log('🌐 Request:', url, {
