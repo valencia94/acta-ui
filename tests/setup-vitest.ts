@@ -4,4 +4,4 @@
  * Adds DOM matchers (jest-dom) & extra expect power for unit tests.
  */
 
-import "@testing-library/jest-dom/vitest"; // 🍒 expect(element).toBeVisible() etc.
+import "@testing-library/jest-dom"; // 🍒 expect(element).toBeVisible() etc.

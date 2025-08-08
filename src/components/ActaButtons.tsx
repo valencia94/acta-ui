@@ -3,7 +3,7 @@ import { Download, Eye, FileText, Send } from 'lucide-react';
 
 import Button from '@/components/Button';
 
-interface ActaButtonsProps {
+export interface ActaButtonsProps {
   onGenerate: () => void;
   onDownloadWord: () => void;
   onDownloadPdf: () => void;

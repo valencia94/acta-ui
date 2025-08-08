@@ -113,16 +113,26 @@ describe('awsDataService', () => {
       });
     });
 
-    it('should fallback to sample data in development when API fails', async () => {
+    it('should fallback to sample data only when VITE_USE_MOCK is true in development', async () => {
       // Arrange
-      const originalEnv = import.meta.env.DEV;
+      const originalDev = import.meta.env.DEV;
+      const originalUseMock = import.meta.env.VITE_USE_MOCK;
+      
       // @ts-ignore - mocking environment variable
       import.meta.env.DEV = true;
+      // @ts-ignore - mocking environment variable  
+      import.meta.env.VITE_USE_MOCK = 'true';
       
-      mockFetcher.mockRejectedValue(new Error('API not accessible'));
+      // Mock the useMockData import to return true
+      vi.doMock('../../env.variables', () => ({
+        useMockData: true
+      }));
+      
+      // Re-import the module to get the mocked version
+      const { getProjectsForCurrentUser: mockedGetProjects } = await import('../awsDataService');
 
       // Act
-      const result = await getProjectsForCurrentUser();
+      const result = await mockedGetProjects();
 
       // Assert
       expect(result).toHaveLength(3);
@@ -132,14 +142,20 @@ describe('awsDataService', () => {
 
       // Restore environment
       // @ts-ignore
-      import.meta.env.DEV = originalEnv;
+      import.meta.env.DEV = originalDev;
+      // @ts-ignore
+      import.meta.env.VITE_USE_MOCK = originalUseMock;
     });
 
-    it('should throw error in production when API fails', async () => {
+    it('should throw error in production when API fails (no fallback)', async () => {
       // Arrange
-      const originalEnv = import.meta.env.DEV;
+      const originalDev = import.meta.env.DEV;
+      const originalUseMock = import.meta.env.VITE_USE_MOCK;
+      
       // @ts-ignore - mocking environment variable
       import.meta.env.DEV = false;
+      // @ts-ignore - mocking environment variable
+      import.meta.env.VITE_USE_MOCK = 'false';
       
       const apiError = new Error('Network error');
       mockFetcher.mockRejectedValue(apiError);
@@ -149,7 +165,9 @@ describe('awsDataService', () => {
 
       // Restore environment
       // @ts-ignore
-      import.meta.env.DEV = originalEnv;
+      import.meta.env.DEV = originalDev;
+      // @ts-ignore
+      import.meta.env.VITE_USE_MOCK = originalUseMock;
     });
 
     it('should handle missing email in session', async () => {
