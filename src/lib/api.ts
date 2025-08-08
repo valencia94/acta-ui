@@ -83,8 +83,10 @@ export async function getDownloadLink(
   // 1) GET /download-acta/{id}?format=... → 302 Location: <signed-url>
   // 2) GET /download-acta/{id}?format=... → 200 { url }
   // 3) GET /download-acta?project_id=...&format=... (legacy) → 302 or { url }
+  // 4) GET /s3-download-url/{id}?format=... → 302 or { url } or text/plain
   async function tryVariant(url: string): Promise<string | null> {
     const token = await getAuthToken();
+    console.log('[ACTA] Trying download endpoint:', url);
     const res = await fetch(url, {
       method: 'GET',
       redirect: 'manual',
@@ -99,12 +101,23 @@ export async function getDownloadLink(
     }
     // JSON body style
     if (res.ok) {
-      try {
-        const data = await res.json();
-        const u = data?.url || data?.downloadUrl || null;
-        if (u) return u;
-      } catch {
-        // ignore parse error
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          const data = await res.json();
+          const u = data?.url || data?.downloadUrl || null;
+          if (u) return u;
+        } catch {
+          // ignore parse error
+        }
+      } else {
+        // Some Lambdas return the URL as plain text
+        try {
+          const text = await res.text();
+          if (text && /^https?:\/\//i.test(text.trim())) return text.trim();
+        } catch {
+          // ignore
+        }
       }
     }
     // 400 with body may indicate wrong variant
@@ -121,6 +134,9 @@ export async function getDownloadLink(
   // Fallback to legacy query param variant
   const fallback = await tryVariant(`${BASE}/download-acta?project_id=${encodeURIComponent(projectId)}&format=${format}`);
   if (fallback) return fallback;
+  // Try alternative resource used by some stacks
+  const alt = await tryVariant(`${BASE}/s3-download-url/${encodeURIComponent(projectId)}?format=${format}`);
+  if (alt) return alt;
   throw new Error('No download URL returned from API');
 }
 
