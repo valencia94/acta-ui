@@ -158,19 +158,27 @@ export default function Dashboard(): JSX.Element {
         return await getS3DownloadUrl(selectedProjectId, format);
       });
       
+      console.log(`[ACTA] Triggering download for ${format.toUpperCase()}: ${url}`);
       window.open(url, '_blank');
       toast.success(`${format.toUpperCase()} download started successfully!`, {
         duration: 3000,
         icon: '📥',
       });
     } catch (error: any) {
-      if (error.message.includes('Failed to fetch')) {
+      console.error(`[ACTA] Download ${format.toUpperCase()} failed:`, error);
+      if (error.message === 'Document not ready, try again later') {
+        toast.error('Document not ready, try again later', {
+          duration: 4000,
+          icon: '⏳',
+        });
+      } else if (error.message.includes('Failed to fetch')) {
         setCorsError(error);
+      } else {
+        toast.error(error?.message || `Failed to download ${format.toUpperCase()}`, {
+          duration: 4000,
+          icon: '❌',
+        });
       }
-      toast.error(error?.message || `Failed to download ${format.toUpperCase()}`, {
-        duration: 4000,
-        icon: '❌',
-      });
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
@@ -188,6 +196,7 @@ export default function Dashboard(): JSX.Element {
     try {
       await trackAction('Preview PDF', selectedProjectId, async () => {
         const url = await getS3DownloadUrl(selectedProjectId, 'pdf');
+        console.log(`[ACTA] Opening PDF preview: ${url}`);
         setPdfPreviewUrl(url);
         setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
         return url;
@@ -198,13 +207,20 @@ export default function Dashboard(): JSX.Element {
         icon: '👁️',
       });
     } catch (error: any) {
-      if (error.message.includes('Failed to fetch')) {
+      console.error('[ACTA] Preview failed:', error);
+      if (error.message === 'Document not ready, try again later') {
+        toast.error('Document not ready, try again later', {
+          duration: 4000,
+          icon: '⏳',
+        });
+      } else if (error.message.includes('Failed to fetch')) {
         setCorsError(error);
+      } else {
+        toast.error(error?.message || 'Failed to preview document', {
+          duration: 4000,
+          icon: '❌',
+        });
       }
-      toast.error(error?.message || 'Failed to preview document', {
-        duration: 4000,
-        icon: '❌',
-      });
     } finally {
       setActionLoading(prev => ({ ...prev, previewing: false }));
     }

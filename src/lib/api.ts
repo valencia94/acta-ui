@@ -97,7 +97,10 @@ export async function getDownloadLink(
     // 302 redirect style
     if (res.status === 302) {
       const loc = res.headers.get('Location');
-      if (loc) return loc;
+      if (loc) {
+        console.log(`[ACTA] Resolved download URL: ${loc}`);
+        return loc;
+      }
     }
     // JSON body style
     if (res.ok) {
@@ -105,16 +108,32 @@ export async function getDownloadLink(
       if (contentType.includes('application/json')) {
         try {
           const data = await res.json();
-          const u = data?.url || data?.downloadUrl || null;
-          if (u) return u;
-        } catch {
-          // ignore parse error
+          // Handle multiple response formats: { url }, { signedUrl }, { downloadUrl }
+          const u = data?.url || data?.signedUrl || data?.downloadUrl || null;
+          if (u) {
+            console.log(`[ACTA] Resolved download URL: ${u}`);
+            return u;
+          }
+          // Check for "not_found" status to stop retries
+          if (data?.status === 'not_found') {
+            throw new Error('Document not ready, try again later');
+          }
+        } catch (parseError: any) {
+          // If it's our custom "not_found" error, re-throw it
+          if (parseError.message === 'Document not ready, try again later') {
+            throw parseError;
+          }
+          // ignore other parse errors
         }
       } else {
         // Some Lambdas return the URL as plain text
         try {
           const text = await res.text();
-          if (text && /^https?:\/\//i.test(text.trim())) return text.trim();
+          if (text && /^https?:\/\//i.test(text.trim())) {
+            const url = text.trim();
+            console.log(`[ACTA] Resolved download URL: ${url}`);
+            return url;
+          }
         } catch {
           // ignore
         }
@@ -152,9 +171,62 @@ export const getDownloadUrl = getDownloadLink;
  * Preview PDF helpers
  * -------------------------------------------------------------------- */
 export async function previewPdfBackend(projectId: string): Promise<string> {
-  const data = await get<{ url: string }>(`${BASE}/preview-pdf/${projectId}`);
-  if (!data?.url) throw new Error('No preview URL returned from API');
-  return data.url;
+  const token = await getAuthToken();
+  console.log('[ACTA] Trying preview endpoint:', `${BASE}/preview-pdf/${projectId}`);
+  const res = await fetch(`${BASE}/preview-pdf/${projectId}`, {
+    method: 'GET',
+    redirect: 'manual',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    credentials: 'omit',
+    mode: 'cors',
+  });
+
+  // Handle 302 redirect
+  if (res.status === 302) {
+    const loc = res.headers.get('Location');
+    if (loc) {
+      console.log(`[ACTA] Resolved preview URL: ${loc}`);
+      return loc;
+    }
+  }
+
+  // Handle JSON response
+  if (res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        const data = await res.json();
+        // Handle multiple response formats: { url }, { signedUrl }, { downloadUrl }
+        const u = data?.url || data?.signedUrl || data?.downloadUrl || null;
+        if (u) {
+          console.log(`[ACTA] Resolved preview URL: ${u}`);
+          return u;
+        }
+        // Check for "not_found" status
+        if (data?.status === 'not_found') {
+          throw new Error('Document not ready, try again later');
+        }
+      } catch (parseError: any) {
+        if (parseError.message === 'Document not ready, try again later') {
+          throw parseError;
+        }
+      }
+    } else {
+      // Handle plain text response
+      try {
+        const text = await res.text();
+        if (text && /^https?:\/\//i.test(text.trim())) {
+          const url = text.trim();
+          console.log(`[ACTA] Resolved preview URL: ${url}`);
+          return url;
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  throw new Error('No preview URL returned from API');
 }
 
 export function previewPdfViaS3(projectId: string): Promise<string> {
