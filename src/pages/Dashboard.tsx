@@ -250,9 +250,9 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-surface/90 border border-borders/70 rounded-2xl p-8 shadow-sm backdrop-blur-md [box-shadow:0_10px_30px_-15px_rgba(var(--color-accent),.35)]"
+          className="glass-card elevated p-8"
         >
-          <h1 className="text-lg font-semibold text-secondary mb-2">Welcome, {user?.email}</h1>
+          <h1 className="section-title mb-2">Welcome, {user?.email}</h1>
           <p className="text-sm text-body">
             View your projects and take action with ACTA tools.
           </p>
@@ -262,9 +262,9 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-surface/90 border border-borders/70 rounded-2xl p-8 shadow-sm backdrop-blur-md"
+          className="glass-card elevated p-8"
         >
-          <h2 className="text-lg font-semibold text-secondary mb-6">YOUR PROJECTS</h2>
+          <h2 className="section-title mb-6">YOUR PROJECTS</h2>
           <DynamoProjectsView
             userEmail={user?.email || ''}
             onProjectSelect={handleProjectSelect}
@@ -276,9 +276,9 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-surface/90 border border-borders/70 rounded-2xl p-8 shadow-sm backdrop-blur-md"
+          className="glass-card elevated p-8"
         >
-          <h2 className="text-lg font-semibold text-secondary mb-6">ACTA ACTIONS</h2>
+          <h2 className="section-title mb-6">ACTA ACTIONS</h2>
           <div className="md:sticky md:bottom-4">
             <ActaButtons
               onGenerate={handleGenerateActa}

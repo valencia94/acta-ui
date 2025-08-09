@@ -153,16 +153,7 @@ export default function DynamoProjectsView({
         <ProjectCard
           key={project.id || project.name || `project-${index}`}
           onClick={() => onProjectSelect?.(project)}
-          className={`
-            bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer
-            transition-all duration-300 ease-out
-            hover:shadow-xl hover:border-green-300 hover:-translate-y-1
-            ${selectedProjectId === project.id
-              ? 'border-green-500 bg-gradient-to-br from-green-50 to-green-25 shadow-lg ring-2 ring-green-200 scale-[1.02]'
-              : 'shadow-lg hover:shadow-2xl'
-            }
-            backdrop-blur-sm border-opacity-60
-          `}
+          className={`${selectedProjectId === project.id ? 'ring-2 ring-emerald-300' : ''}`}
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -171,7 +162,7 @@ export default function DynamoProjectsView({
                   {project.name || `Project ${project.id}`}
                 </h3>
                 {selectedProjectId === project.id && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                     Selected
                   </span>
                 )}
@@ -179,7 +170,7 @@ export default function DynamoProjectsView({
                 {project.originalData?.has_acta_document !== undefined && (
                   <div className="flex items-center">
                     {project.originalData.has_acta_document ? (
-                      <div className="flex items-center text-green-600">
+                      <div className="flex items-center text-emerald-600">
                         <CheckCircle className="h-5 w-5 mr-1" />
                         <span className="text-sm font-medium">ACTA Ready</span>
                       </div>
@@ -211,12 +202,12 @@ export default function DynamoProjectsView({
                   <dd>
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
                       project.status === 'Active' 
-                        ? 'bg-green-100 text-green-800 border border-green-200'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : project.status === 'Completed'
-                        ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200' 
                         : project.status === 'In Progress'
-                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                        : 'bg-gray-100 text-gray-800 border border-gray-200'
+                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                        : 'bg-gray-50 text-gray-700 border border-gray-200'
                     }`}>
                       {project.status || 'Active'}
                     </span>

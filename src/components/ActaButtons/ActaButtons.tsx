@@ -43,7 +43,7 @@ export default function ActaButtons({
           aria-label="Generate ACTA document"
           onClick={() => handleClick(onGenerate, 'Generate Acta')}
           disabled={disabled}
-          className="flex items-center justify-center gap-2.5 bg-accent text-white font-medium px-4 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:bg-accent-hover hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
+          className="btn-ikusi w-full"
         >
           {isGenerating ? (
             <>
@@ -63,7 +63,7 @@ export default function ActaButtons({
           aria-label="Send document for approval"
           onClick={() => handleClick(onSendForApproval, 'Send for Approval')}
           disabled={disabled || isSendingApproval}
-          className="flex items-center justify-center gap-2.5 bg-white text-accent border border-accent font-medium px-4 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:bg-accent hover:text-white hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
+          className="btn-ikusi-outline w-full"
         >
           {isSendingApproval ? (
             <>
@@ -85,7 +85,7 @@ export default function ActaButtons({
           aria-label="Download Word document"
           onClick={() => handleClick(onDownloadWord, 'Download Word')}
           disabled={disabled || isDownloadingWord}
-          className="flex items-center justify-center gap-1.5 bg-white border border-borders text-body font-medium px-2 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:border-accent hover:bg-accent hover:text-white hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
+          className="btn-ghost w-full"
         >
           {isDownloadingWord ? (
             <>
@@ -106,7 +106,7 @@ export default function ActaButtons({
           aria-label="Preview PDF document"
           onClick={() => handleClick(onPreviewPdf, 'Preview PDF')}
           disabled={disabled || isPreviewingPdf}
-          className="flex items-center justify-center gap-1.5 bg-white border border-borders text-body font-medium px-2 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:border-accent hover:bg-accent hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
+          className="btn-ghost w-full"
         >
           {isPreviewingPdf ? (
             <>
@@ -126,7 +126,7 @@ export default function ActaButtons({
           aria-label="Download PDF document"
           onClick={() => handleClick(onDownloadPdf, 'Download PDF')}
           disabled={disabled || isDownloadingPdf}
-          className="flex items-center justify-center gap-1.5 bg-white border border-borders text-body font-medium px-2 py-2 min-h-10 rounded-xl transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:border-accent hover:bg-accent hover:text-white hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 w-full"
+          className="btn-ghost w-full"
         >
           {isDownloadingPdf ? (
             <>
