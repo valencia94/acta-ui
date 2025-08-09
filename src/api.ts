@@ -172,7 +172,7 @@ export async function checkDocumentInS3(
 
     if (response.status === 404) {
       console.log(`📄 Document not found in S3: ${projectId}.${format}`);
-      toast('Document not ready yet.', { icon: '⏳' });
+      showDocumentNotReadyToast();
       return { available: false, status: 'not_found', s3Key: `acta-documents/acta-${projectId}.${format}` };
     }
 
