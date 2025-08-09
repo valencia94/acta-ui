@@ -60,6 +60,7 @@ s^@n^@a^@p^@s^@h^@o^@t^@-^@j^@u^@l^@y^@1^@0^@/^@^M^@
 
 
 # Allow lint & dev scripts
+!scripts/
 scripts/*
 !scripts/*.js
 !scripts/*.cjs
