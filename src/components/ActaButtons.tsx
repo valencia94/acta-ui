@@ -97,7 +97,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
   const isPreviewingPdf = loading === "preview";
   const isSendingApproval = loading === "email";
   const disabled = !project?.id;
-  const resolvedEmail = project.pm_email || "approvals@ikusi.com";
+  const resolvedEmail = project.pm_email || FALLBACK_PM_EMAIL;
 
   return (
     <div className="w-full max-w-3xl mx-auto">
