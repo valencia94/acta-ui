@@ -140,7 +140,10 @@ export default function Dashboard(): JSX.Element {
     
     try {
       // Pre-check; proceed anyway to allow backend to resolve redirects
-      const check = await checkDocumentInS3(selectedProjectId, 'pdf').catch(() => null);
+      const check = await checkDocumentInS3(selectedProjectId, 'pdf').catch((err) => {
+        console.error("Error checking document in S3 (preview):", err);
+        return null;
+      });
       if (check?.available === false || check?.status === "not_found") {
         toast("Generating or syncing… attempting live preview if available.", { icon: "⏳" });
       }
