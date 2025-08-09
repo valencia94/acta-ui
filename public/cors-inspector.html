@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ACTA CORS Inspector</title>
+    <style>
+      body { font-family: Inter, system-ui, Arial, sans-serif; margin: 0; padding: 24px; background: #f9fafb; color: #111827; }
+      .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.04) }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; }
+      input, select { padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; }
+      button { padding: 8px 12px; border-radius: 8px; border: 1px solid #19b27b; color: #fff; background: #19b27b; cursor: pointer; }
+      pre { background: #0b1020; color: #e6efff; padding: 12px; border-radius: 8px; overflow: auto; max-height: 240px; }
+      code { white-space: pre-wrap; word-break: break-word; }
+      .warn { color: #b45309; }
+      .ok { color: #065f46; }
+      .err { color: #991b1b; }
+    </style>
+  </head>
+  <body>
+    <h1>ACTA CORS Inspector</h1>
+    <p>Quickly test preflight (OPTIONS) and actual requests to your API endpoints.</p>
+
+    <div class="card">
+      <div class="row">
+        <label>API Base URL
+          <input id="api" size="56" value="https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod" />
+        </label>
+        <label>Project ID
+          <input id="pid" size="22" value="1000000055914011" />
+        </label>
+        <label>Email (send approval)
+          <input id="email" size="28" value="christian.valencia@ikusi.com" />
+        </label>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="btnCheck">Check All</button>
+        <button id="btnOpts">OPTIONS Only</button>
+        <button id="btnNoAuth">GET w/o Authorization</button>
+      </div>
+    </div>
+
+    <div id="out"></div>
+
+    <script>
+      const out = document.getElementById('out');
+      const write = (title, data, cls='') => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = `<strong class="${cls}">${title}</strong><pre><code>${data}</code></pre>`;
+        out.prepend(el);
+      };
+
+      const j = (o) => JSON.stringify(o, null, 2);
+
+      async function doOptions(url) {
+        const res = await fetch(url, { method: 'OPTIONS' });
+        const headers = {};
+        res.headers.forEach((v,k) => headers[k] = v);
+        return { status: res.status, ok: res.ok, headers };
+      }
+
+      async function doGet(url, withAuth=true) {
+        const headers = new Headers();
+        if (withAuth) headers.set('Authorization', 'Bearer dummy-token');
+        const res = await fetch(url, { method: 'GET', headers, mode: 'cors', credentials: 'omit' });
+        const headersObj = {}; res.headers.forEach((v,k)=> headersObj[k]=v);
+        let body='';
+        try { body = await res.text(); } catch {}
+        return { status: res.status, ok: res.ok, headers: headersObj, body: body.slice(0,1000) };
+      }
+
+      async function runAll() {
+        out.innerHTML = '';
+        const base = document.getElementById('api').value.trim().replace(/\/$/,'');
+        const id = document.getElementById('pid').value.trim();
+        const email = document.getElementById('email').value.trim();
+
+        const endpoints = {
+          checkPdf: `${base}/check-document/${id}?format=pdf`,
+          downloadPdf: `${base}/download-acta/${id}?format=pdf`,
+          previewPdf: `${base}/preview-pdf/${id}`,
+          extract: `${base}/extract-project-place/${id}`,
+          sendApproval: `${base}/send-approval-email`
+        };
+
+        for (const [name, url] of Object.entries(endpoints)) {
+          try {
+            const pre = await doOptions(url);
+            write(`${name} • OPTIONS`, j(pre), pre.ok ? 'ok' : 'warn');
+          } catch (e) {
+            write(`${name} • OPTIONS failed`, String(e), 'err');
+          }
+          try {
+            const actual = await doGet(name==='sendApproval' ? `${url}?dryRun=1&to=${encodeURIComponent(email)}` : url, true);
+            write(`${name} • GET (with Authorization)`, j(actual), actual.ok ? 'ok' : 'warn');
+          } catch (e) {
+            write(`${name} • GET failed`, String(e), 'err');
+          }
+        }
+      }
+
+      async function runOptionsOnly(){
+        out.innerHTML='';
+        const base = document.getElementById('api').value.trim().replace(/\/$/,'');
+        const id = document.getElementById('pid').value.trim();
+        const endpoints = [
+          `${base}/check-document/${id}?format=pdf`,
+          `${base}/download-acta/${id}?format=pdf`,
+          `${base}/preview-pdf/${id}`,
+          `${base}/extract-project-place/${id}`,
+          `${base}/send-approval-email`
+        ];
+        for (const url of endpoints) {
+          try { const r = await doOptions(url); write(`OPTIONS ${url}`, j(r), r.ok ? 'ok' : 'warn'); }
+          catch(e){ write(`OPTIONS ${url} failed`, String(e), 'err'); }
+        }
+      }
+
+      async function runNoAuth(){
+        out.innerHTML='';
+        const base = document.getElementById('api').value.trim().replace(/\/$/,'');
+        const id = document.getElementById('pid').value.trim();
+        const urls = [
+          `${base}/check-document/${id}?format=pdf`,
+          `${base}/download-acta/${id}?format=pdf`,
+          `${base}/preview-pdf/${id}`
+        ];
+        for (const url of urls) {
+          try { const r = await doGet(url, false); write(`GET (no auth) ${url}`, j(r), r.ok ? 'ok' : 'warn'); }
+          catch(e){ write(`GET (no auth) ${url} failed`, String(e), 'err'); }
+        }
+      }
+
+      document.getElementById('btnCheck').onclick = () => runAll();
+      document.getElementById('btnOpts').onclick = () => runOptionsOnly();
+      document.getElementById('btnNoAuth').onclick = () => runNoAuth();
+    </script>
+  </body>
+</html>
