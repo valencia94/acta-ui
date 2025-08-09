@@ -22,7 +22,11 @@ export async function fetcher(url: string, init: RequestInit = {}): Promise<Resp
   const res = await fetch(url, { mode: "cors", credentials: "omit", ...init, headers });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status}: ${res.statusText}\n${body}`);
+    const maxBodyLength = 100;
+    const sanitizedBody = body.length > maxBodyLength
+      ? body.slice(0, maxBodyLength) + "...[truncated]"
+      : body;
+    throw new Error(`HTTP ${res.status}: ${res.statusText}\n${sanitizedBody}`);
   }
   return res;
 }
