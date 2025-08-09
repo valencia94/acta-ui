@@ -13,7 +13,8 @@ async function extractUrlFromResponse(res: Response): Promise<string> {
   if (ctype.includes("text/plain")) {
     const text = (await res.text()).trim();
     if (/^https?:\/\//i.test(text)) return text;
-    throw new Error(`Unexpected text response: ${text.slice(0, 200)}`);
+    console.error("Unexpected text response from server:", text);
+    throw new Error("Unexpected text response from server");
   }
 
   if (ctype.includes("application/json")) {
