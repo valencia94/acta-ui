@@ -45,7 +45,7 @@ export async function generateActaDocument(
 ) {
   const res = await fetcher(
     `${API}/extract-project-place/${encodeURIComponent(projectId)}`,
-    { method: "POST", body: "{}" }
+    { method: "POST", body: {} }
   );
   return res.json().catch(() => ({}));
 }
