@@ -92,7 +92,10 @@ export default function Dashboard(): JSX.Element {
     try {
       // Quick pre-check; if not found, we still attempt backend which may redirect
       // to an existing artifact. This prevents false negatives when S3 listing lags.
-      const check = await checkDocumentInS3(selectedProjectId, format).catch(() => null);
+      const check = await checkDocumentInS3(selectedProjectId, format).catch((err) => {
+        console.error('Error checking document in S3:', err);
+        return null;
+      });
       if (check?.available === false || check?.status === "not_found") {
         toast("Generating or syncing… attempting direct download if available.", { icon: "⏳" });
       }
