@@ -82,7 +82,7 @@ export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps
   const onSendEmail = async () => {
     try {
       setLoading("email");
-      const recipient = project.pm_email || "approvals@ikusi.com";
+      const recipient = project.pm_email || FALLBACK_APPROVAL_EMAIL;
       await sendApprovalEmail(project.id, recipient);
     } catch (e) {
       console.error("Send email failed", project.id, e);
