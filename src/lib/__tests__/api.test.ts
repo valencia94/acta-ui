@@ -7,9 +7,28 @@ import * as fetchWrapper from '../../utils/fetchWrapper';
 import { getProjectsByPM } from '../api';
 
 // Mock fetchWrapper module
-vi.mock('../../utils/fetchWrapper', () => ({
-  getAuthToken: vi.fn(),
-}));
+vi.mock('../../utils/fetchWrapper', () => {
+  const mod: any = {
+    getAuthToken: vi.fn(),
+    get: vi.fn(async (url: string) => {
+      let token: string | null = null;
+      try {
+        token = await mod.getAuthToken();
+      } catch {
+        token = null;
+      }
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res: any = await fetch(url, { headers });
+      if (!res.ok) {
+        const text = (await res.text?.()) || '';
+        throw new Error(`${res.status}: ${text || res.statusText}`);
+      }
+      return res.json();
+    }),
+  };
+  return mod;
+});
 
 // Mock fetch
 const mockFetch = vi.fn();

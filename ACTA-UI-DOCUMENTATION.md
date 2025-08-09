@@ -235,6 +235,10 @@ The API integration is centered around the following files:
 | `checkDocumentInS3`    | Verifies if a document exists in S3      |
 | `sendApprovalEmail`    | Sends an approval email for a document   |
 
+- `generateActaDocument` posts to `/extract-project-place/{id}` with only `{ pmEmail, userRole, requestSource, generateDocuments, extractMetadata, timestamp }` in the body.
+- `checkDocumentInS3` performs a `HEAD` request to `/document-validator/{id}?format=pdf|docx`. Any 2xx indicates availability; a `404` yields a `not_found` status and surfaces a toast.
+- Lambda outputs are stored under the `acta-documents/` prefix in S3. Ensure the Cognito identity used by the UI has read/write access to this bucket and that bucket CORS allows the CloudFront origin.
+
 ### Authentication in API Calls
 
 API calls use the following pattern for authentication:

@@ -1,5 +1,7 @@
 // src/api.ts
 
+import { toast } from 'react-hot-toast';
+
 import { apiBaseUrl } from '@/env.variables';
 import { getAuthToken } from '@/utils/fetchWrapper';
 
@@ -103,17 +105,10 @@ export async function generateActaDocument(
   documentId?: string;
 }> {
   console.log('🔄 Generating ACTA document for project:', projectId);
-  console.log(
-    '📦 Target S3 bucket:',
-    import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b'
-  );
-
-  // CORRECT PAYLOAD STRUCTURE for ProjectPlaceDataExtractor
+  // Minimal payload required by backend
   const payload = {
-    projectId: projectId,
     pmEmail: userEmail,
     userRole: userRole,
-    s3Bucket: import.meta.env.VITE_S3_BUCKET || 'projectplace-dv-2025-x9a7b',
     requestSource: 'acta-ui',
     generateDocuments: true,
     extractMetadata: true,
@@ -149,6 +144,7 @@ export async function checkDocumentInS3(
   lastModified?: string;
   size?: number;
   s3Key?: string;
+  status?: string;
 }> {
   console.log(`🔍 Checking document availability in S3: ${projectId}.${format}`);
 
@@ -170,16 +166,17 @@ export async function checkDocumentInS3(
         available: true,
         lastModified: lastModified || undefined,
         size,
-        s3Key: `acta/${projectId}.${format}`,
+        s3Key: `acta-documents/acta-${projectId}.${format}`,
       };
     }
 
     if (response.status === 404) {
       console.log(`📄 Document not found in S3: ${projectId}.${format}`);
-    } else {
-      console.warn(`⚠️ S3 check failed: ${response.status} ${response.statusText}`);
+      toast('Document not ready yet.', { icon: '⏳' });
+      return { available: false, status: 'not_found', s3Key: `acta-documents/acta-${projectId}.${format}` };
     }
 
+    console.warn(`⚠️ S3 check failed: ${response.status} ${response.statusText}`);
     return { available: false };
   } catch (error) {
     console.warn('❌ Error checking document availability in S3:', error);
@@ -204,7 +201,7 @@ export async function getS3DownloadUrl(
   };
 }> {
   console.log(`📥 Getting S3 download URL for: ${projectId}.${format}`);
-  console.log(`📦 Expected S3 path: s3://${S3_BUCKET}/acta/${projectId}.${format}`);
+  console.log(`📦 Expected S3 path: s3://${S3_BUCKET}/acta-documents/acta-${projectId}.${format}`);
 
   try {
     const endpoint = `${BASE}/download-acta/${projectId}?format=${format}`;
@@ -236,7 +233,7 @@ export async function getS3DownloadUrl(
               downloadUrl: signedUrl,
               s3Info: {
                 bucket: S3_BUCKET,
-                key: `acta/${projectId}.${format}`,
+                key: `acta-documents/acta-${projectId}.${format}`,
                 signedUrl,
               },
             };

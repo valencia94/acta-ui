@@ -2,13 +2,9 @@
 // Endpoint base and AWS configuration are taken from environment variables
 // to keep the code contract-safe and production ready.
 
-import {
-  apiBaseUrl,
-  cloudfrontDistributionId,
-  cloudfrontUrl,
-  s3Bucket,
-  s3Region,
-} from '@/env.variables';
+import { toast } from 'react-hot-toast';
+
+import { apiBaseUrl } from '@/env.variables';
 import { fetcherRaw,get, post, postFireAndForget } from '@/utils/fetchWrapper';
 
 // S3 presigning is not used client-side to avoid CORS and least-privilege issues
@@ -16,8 +12,6 @@ import { fetcherRaw,get, post, postFireAndForget } from '@/utils/fetchWrapper';
 export const BASE =
   apiBaseUrl || 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
 export const API = BASE;
-export const S3_BUCKET = s3Bucket || 'projectplace-dv-2025-x9a7b';
-export const AWS_REGION = s3Region || 'us-east-2';
 
 /** -----------------------------------------------------------------------
  * Project metadata helpers
@@ -51,13 +45,8 @@ export async function generateActaDocument(
   userRole: 'pm' | 'admin' = 'pm',
 ): Promise<{ message: string; success: boolean }> {
   const payload = {
-    projectId,
     pmEmail: userEmail,
     userRole,
-    s3Bucket: S3_BUCKET,
-    s3Region: AWS_REGION,
-    cloudfrontDistributionId,
-    cloudfrontUrl,
     requestSource: 'acta-ui',
     generateDocuments: true,
     extractMetadata: true,
@@ -193,34 +182,38 @@ export async function checkDocumentInS3(
   format: 'pdf' | 'docx',
 ): Promise<DocumentCheckResult> {
   try {
-    const data = await get<any>(
-      `${BASE}/check-document/${projectId}?format=${format}`,
+    const res = await fetcherRaw(
+      `${BASE}/document-validator/${projectId}?format=${format}`,
+      { method: 'HEAD' },
     );
-    // Normalize various backend shapes into { available, ... }
-    const exists: boolean | undefined = data?.exists;
-    const availableFlag: boolean | undefined = data?.available;
-    const status: string | undefined = data?.status || data?.State || data?.result?.status;
-
-    const available =
-      availableFlag === true ||
-      exists === true ||
-      (typeof status === 'string' && /^(found|ready|available|exists)$/i.test(status));
-
-    return {
-      available: !!available,
-      lastModified: data?.lastModified || data?.LastModified || data?.metadata?.lastModified,
-      size: data?.size || data?.Size,
-      s3Key: data?.s3Key || data?.key || data?.Key,
-      status: status,
-    };
+    if (res.ok) {
+      const lastModified =
+        res.headers.get('Last-Modified') || res.headers.get('last-modified') || undefined;
+      const len = res.headers.get('Content-Length') || res.headers.get('content-length');
+      const size = len ? parseInt(len, 10) : undefined;
+      return {
+        available: true,
+        lastModified,
+        size,
+        s3Key: `acta-documents/acta-${projectId}.${format}`,
+      };
+    }
+    if (res.status === 404) {
+      toast('Document not ready yet.', { icon: '⏳' });
+      return {
+        available: false,
+        status: 'not_found',
+        s3Key: `acta-documents/acta-${projectId}.${format}`,
+      };
+    }
+    return { available: false };
   } catch (err) {
     console.warn(`Document check failed for ${projectId}.${format}:`, err);
-    // For network errors, assume document might exist but check failed
     if (err instanceof Error && err.message.includes('Network error')) {
-      return { 
-        available: false, 
-        s3Key: `acta-${projectId}.${format}`,
-        checkFailed: true 
+      return {
+        available: false,
+        s3Key: `acta-documents/acta-${projectId}.${format}`,
+        checkFailed: true,
       };
     }
     return { available: false };
