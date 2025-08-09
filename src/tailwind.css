@@ -5,6 +5,8 @@
 /* Ikusi UI Global Styles - Beautiful, digital feel, intuitive UI */
 body {
   @apply bg-bg text-body antialiased;
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
 }
 
 @layer components {

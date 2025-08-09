@@ -90,11 +90,11 @@ export default function Dashboard(): JSX.Element {
     setCorsError(null);
     
     try {
-      // Pre-check to avoid infinite polling
-      const check = await checkDocumentInS3(selectedProjectId, format);
+      // Quick pre-check; if not found, we still attempt backend which may redirect
+      // to an existing artifact. This prevents false negatives when S3 listing lags.
+      const check = await checkDocumentInS3(selectedProjectId, format).catch(() => null);
       if (check?.available === false || check?.status === "not_found") {
-        toast("Document not ready yet—use Generate, then try again in ~1–2 min.", { icon: "⏳" });
-        return;
+        toast("Generating or syncing… attempting direct download if available.", { icon: "⏳" });
       }
 
       const url = await trackAction(`Download ${format.toUpperCase()}`, selectedProjectId, async () => {
@@ -136,11 +136,10 @@ export default function Dashboard(): JSX.Element {
     setCorsError(null);
     
     try {
-      // Pre-check to avoid infinite polling
-      const check = await checkDocumentInS3(selectedProjectId, 'pdf');
+      // Pre-check; proceed anyway to allow backend to resolve redirects
+      const check = await checkDocumentInS3(selectedProjectId, 'pdf').catch(() => null);
       if (check?.available === false || check?.status === "not_found") {
-        toast("Document not ready yet—use Generate, then try again in ~1–2 min.", { icon: "⏳" });
-        return;
+        toast("Generating or syncing… attempting live preview if available.", { icon: "⏳" });
       }
 
       await trackAction('Preview PDF', selectedProjectId, async () => {
@@ -230,7 +229,7 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-surface/95 border border-borders/80 rounded-2xl p-8 shadow-sm backdrop-blur-sm"
+          className="bg-surface/90 border border-borders/70 rounded-2xl p-8 shadow-sm backdrop-blur-md [box-shadow:0_10px_30px_-15px_rgba(25,178,123,.35)]"
         >
           <h1 className="text-lg font-semibold text-secondary mb-2">Welcome, {user?.email}</h1>
           <p className="text-sm text-body">
@@ -242,7 +241,7 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-surface/95 border border-borders/80 rounded-2xl p-8 shadow-sm"
+          className="bg-surface/90 border border-borders/70 rounded-2xl p-8 shadow-sm backdrop-blur-md"
         >
           <h2 className="text-lg font-semibold text-secondary mb-6">YOUR PROJECTS</h2>
           <DynamoProjectsView
@@ -256,7 +255,7 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-surface/95 border border-borders/80 rounded-2xl p-8 shadow-sm"
+          className="bg-surface/90 border border-borders/70 rounded-2xl p-8 shadow-sm backdrop-blur-md"
         >
           <h2 className="text-lg font-semibold text-secondary mb-6">ACTA ACTIONS</h2>
           <div className="md:sticky md:bottom-4">

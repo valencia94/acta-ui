@@ -46,7 +46,7 @@ export default function Header(): JSX.Element {
   };
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-emerald-400 px-8 py-5 shadow-md">
+  <header className="sticky top-0 z-50 flex items-center justify-between bg-gradient-to-r from-[#19b27b] to-[#00a08f] px-8 py-5 shadow-md">
       <div className="flex items-center gap-4">
         <img src={logoSrc} alt="Ikusi logo" className="h-10 w-auto" />
         <div className="leading-tight text-white">
