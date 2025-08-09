@@ -21,7 +21,6 @@ test-results/
 
 # Package manager lockfiles (optional to ignore)
 pnpm-lock.yaml
-package-lock.json
 
 # Local environment variables
 .env
