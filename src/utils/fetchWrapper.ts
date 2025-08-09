@@ -3,7 +3,7 @@ import { fetchAuthSession } from "aws-amplify/auth";
 export async function getAuthToken(): Promise<string> {
   const { tokens } = await fetchAuthSession();
   const token = tokens?.idToken?.toString();
-  if (!token) throw new Error("No ID token");
+  if (!token) throw new Error("Authentication failed: No ID token available. Please log in again.");
   return token;
 }
 
