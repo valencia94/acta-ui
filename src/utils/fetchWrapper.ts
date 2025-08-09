@@ -40,29 +40,31 @@ export async function fetcherRaw(input: RequestInfo, init: RequestInit = {}): Pr
   const enhancedInit: RequestInit = {
     ...init,
     headers,
-  // Important: do NOT send cookies/credentials on cross-origin requests.
-  // If credentials are included, the browser requires a non-wildcard
-  // Access-Control-Allow-Origin and Access-Control-Allow-Credentials: true.
-  // Our API intentionally sets ACAO: * for simplicity, so we must omit
-  // credentials to avoid a CORS "TypeError: Failed to fetch".
-  credentials: 'omit',
-  mode: 'cors',
+    // CORS discipline: never send cookies, rely on Bearer only
+    credentials: 'omit',
+    mode: 'cors',
   };
 
-  console.log(`🌐 Fetching: ${url}`, {
-    method: enhancedInit.method || 'GET',
+  // Single-line request log for debugging (reduced noise)
+  console.log('🌐 Fetching', {
+    url,
+    method: (enhancedInit.method || 'GET').toUpperCase(),
     hasAuth: !!token,
-    headers: Object.fromEntries(headers.entries()),
   });
 
   try {
     const res = await fetch(url, enhancedInit);
-    console.log(`📡 Response: ${res.status} ${res.statusText}`);
     return res;
-  } catch (error) {
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      console.error('❌ Network error (CORS or connectivity):', error);
-      throw new Error('Network error: Unable to connect to API. Please check your connection and try again.');
+  } catch (error: any) {
+    // Unified CORS/network debug line
+    if (error instanceof TypeError || String(error?.message || '').includes('Failed to fetch')) {
+      console.error('[ACTA CORS Debug]', {
+        attemptedUrl: url,
+        region: 'us-east-2',
+        errorType: 'TypeError',
+        timestamp: new Date().toISOString(),
+      });
+  throw new Error('Network error: Unable to connect to API...');
     }
     throw error;
   }
@@ -81,25 +83,19 @@ export async function fetcher<T>(input: RequestInfo, init: RequestInit = {}): Pr
   const enhancedInit: RequestInit = {
     ...init,
     headers,
-  // Important: do NOT send cookies/credentials on cross-origin requests.
-  // If credentials are included, the browser requires a non-wildcard
-  // Access-Control-Allow-Origin and Access-Control-Allow-Credentials: true.
-  // Our API intentionally sets ACAO: * for simplicity, so we must omit
-  // credentials to avoid a CORS "TypeError: Failed to fetch".
-  credentials: 'omit',
-  mode: 'cors',
+    credentials: 'omit',
+    mode: 'cors',
   };
 
-  console.log(`🌐 Fetching: ${url}`, {
-    method: enhancedInit.method || 'GET',
+  // Single-line request log for debugging (reduced noise)
+  console.log('🌐 Fetching', {
+    url,
+    method: (enhancedInit.method || 'GET').toUpperCase(),
     hasAuth: !!token,
-    headers: Object.fromEntries(headers.entries()),
   });
 
   try {
     const res = await fetch(url, enhancedInit);
-
-    console.log(`📡 Response: ${res.status} ${res.statusText}`);
 
     if (!res.ok) {
       let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
@@ -109,22 +105,24 @@ export async function fetcher<T>(input: RequestInfo, init: RequestInit = {}): Pr
       } catch {
         // ignore
       }
-      console.error('❌ Fetch error:', errorMessage);
       throw new Error(errorMessage);
     }
 
     try {
       const data = await res.json();
-      console.log('✅ Response data:', data);
       return data as T;
-    } catch (error) {
-      console.error('❌ Failed to parse JSON response:', error);
+    } catch {
       throw new Error('Invalid JSON response from server');
     }
-  } catch (error) {
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      console.error('❌ Network error (CORS or connectivity):', error);
-      throw new Error('Network error: Unable to connect to API. Please check your connection and try again.');
+  } catch (error: any) {
+    if (error instanceof TypeError || String(error?.message || '').includes('Failed to fetch')) {
+      console.error('[ACTA CORS Debug]', {
+        attemptedUrl: url,
+        region: 'us-east-2',
+        errorType: 'TypeError',
+        timestamp: new Date().toISOString(),
+      });
+  throw new Error('Network error: Unable to connect to API...');
     }
     throw error;
   }
