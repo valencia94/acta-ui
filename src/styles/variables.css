@@ -9,8 +9,9 @@
   --color-surface: #ffffff; /* White; cards, modals, panels */
   --color-borders: #e5e7eb; /* Tailwind gray-200; card borders, dividers */
   
-  --color-accent: #4ac795; /* Ikusi green; buttons, highlights */
-  --color-accent-hover: #3aa87f; /* ~10% darker for hover state */
+  /* Ikusi green accent tuned for a more digital/tech feel */
+  --color-accent: #19b27b; /* Primary Ikusi green */
+  --color-accent-hover: #139b6b; /* ~12% darker for hover state */
   
   --color-secondary: #1a1a1a; /* Dark gray-black for headers */
   --color-body: #374151; /* Tailwind gray-700; normal body copy */
@@ -45,6 +46,11 @@
   /*── Borders & Focus ────────────────────────────────────────────────────────*/
   --color-border: var(--color-neutral-light);
   --focus-ring: var(--color-accent);
+  
+  /* Subtle background gradient to modernize feel without layout changes */
+  --bg-gradient: radial-gradient(1200px 600px at 10% -10%, rgba(25, 178, 123, 0.12), transparent 60%),
+                  radial-gradient(800px 400px at 90% 10%, rgba(0, 148, 168, 0.10), transparent 60%),
+                  linear-gradient(180deg, #f9fbfb 0%, #f6faf8 35%, #f9fafb 100%);
 
   /*── Spacing Scale ─────────────────────────────────────────────────────────*/
   --space-1: 0.25rem; /* 4px */
@@ -78,5 +84,10 @@
 
     --color-text-default: #f9fafb; /* gray-50 */
     --color-text-secondary: var(--color-neutral-light);
+    
+  /* Dark mode gradient */
+  --bg-gradient: radial-gradient(1200px 600px at 10% -10%, rgba(25, 178, 123, 0.15), transparent 60%),
+          radial-gradient(800px 400px at 90% 10%, rgba(0, 148, 168, 0.15), transparent 60%),
+          linear-gradient(180deg, #0f172a 0%, #111827 60%, #1f2937 100%);
   }
 }
