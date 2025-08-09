@@ -199,8 +199,23 @@ export default function Dashboard(): JSX.Element {
         });
       }
     } catch (error: any) {
-      if (error.message.includes('Failed to fetch')) {
+      const msg = String(error?.message || '');
+      if (msg.includes('Failed to fetch') || msg.toLowerCase().includes('network error')) {
         setCorsError(error);
+        // Graceful fallback: open default mail client prefilled
+        const subject = encodeURIComponent(`ACTA Approval Request • ${currentProjectName || 'Project'} (${selectedProjectId})`);
+        const bodyLines = [
+          `Hello,`,
+          '',
+          `Please review and approve the ACTA document for project: ${currentProjectName || 'N/A'} (${selectedProjectId}).`,
+          '',
+          'If the document is already generated, you can preview/download from the Acta Platform.',
+          '',
+          `Acta Platform: ${window.location.origin}`,
+        ];
+        const mailto = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
+        window.location.href = mailto;
+        toast('API connectivity issue detected (CORS). Opened your email client as a fallback.', { icon: '✉️' });
       }
       toast.error(error?.message || 'Failed to send approval email', {
         duration: 4000,
