@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import { generateSummariesForPM } from '@/api';
-import { getAllProjects, getProjectsByPM, PMProject } from '@/lib/api';
-import type { ProjectSummary } from '@/lib/api';
+import type { ProjectSummary, PMProject } from '@/lib/api';
+import { getAllProjects, getProjectsByPM } from '@/lib/api';
 
 import Button from './Button';
 import ProjectCard from './ProjectCard';
@@ -18,13 +18,65 @@ interface PMProjectManagerProps {
   isAdminView?: boolean;
 }
 
-/** The bulk-generate endpoint may return either:
- *  - ProjectSummary[]  (current behavior)
- *  - { success: ProjectSummary[], failed?: ProjectSummary[] } (future/alt)
+/**
+ * The backend may return either:
+ *  - an array of ProjectSummary
+ *  - an object with success/failed arrays of ProjectSummary
  */
 type SummariesResponse =
   | ProjectSummary[]
   | { success: ProjectSummary[]; failed?: ProjectSummary[] };
+
+type NormalizedResult = { success: PMProject[]; failed: PMProject[] };
+
+function isBulkResult(
+  v: SummariesResponse,
+): v is { success: ProjectSummary[]; failed?: ProjectSummary[] } {
+  return !!v && typeof v === 'object' && 'success' in v;
+}
+
+function toPMProject(summary: ProjectSummary, fallbackPM?: string): PMProject {
+  return {
+    id: String(
+      // common possibilities coming from various endpoints
+      (summary as any).id ??
+        (summary as any).project_id ??
+        (summary as any).projectId ??
+        'unknown',
+    ),
+    name: String(
+      (summary as any).name ??
+        (summary as any).project_name ??
+        (summary as any).title ??
+        'Unknown Project',
+    ),
+    pm: String(
+      (summary as any).pm ??
+        (summary as any).project_manager ??
+        fallbackPM ??
+        'unknown@example.com',
+    ),
+    status: String(
+      (summary as any).status ??
+        (summary as any).project_status ??
+        'active',
+    ),
+  };
+}
+
+function normalizeSummaries(
+  res: SummariesResponse,
+  fallbackPM?: string,
+): NormalizedResult {
+  if (isBulkResult(res)) {
+    const success = (res.success ?? []).map((s) => toPMProject(s, fallbackPM));
+    const failed = (res.failed ?? []).map((s) => toPMProject(s, fallbackPM));
+    return { success, failed };
+  }
+  // plain array case
+  const success = (res ?? []).map((s) => toPMProject(s, fallbackPM));
+  return { success, failed: [] };
+}
 
 export default function PMProjectManager({
   pmEmail,
@@ -40,42 +92,48 @@ export default function PMProjectManager({
   useEffect(() => {
     const shouldLoadAll = isAdminView || isAdminMode;
     if (shouldLoadAll) {
-      loadAllProjects();
+      void loadAllProjects();
     } else if (pmEmail) {
-      loadPMProjects();
+      void loadPMProjects();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pmEmail, isAdminView, isAdminMode]);
 
   async function loadPMProjects() {
     if (!pmEmail) return;
+
     setLoading(true);
     try {
       const projectSummaries = await getProjectsByPM(pmEmail, false);
-      const pmProjects: PMProject[] = projectSummaries.map((summary: any) => ({
-        id: String(summary.id ?? summary.project_id ?? 'unknown'),
-        name: String(summary.name ?? summary.project_name ?? 'Unknown Project'),
-        pm: String(summary.pm ?? summary.project_manager ?? pmEmail),
-        status: String(summary.status ?? summary.project_status ?? 'active'),
-      }));
+      const pmProjects = projectSummaries.map((summary: any) =>
+        toPMProject(summary, pmEmail),
+      );
       setProjects(pmProjects);
 
       if (pmProjects.length > 0) {
         toast.success(
-          `Found ${pmProjects.length} projects${isAdminMode ? ' (admin access)' : ' assigned to you'}`
+          `Found ${pmProjects.length} projects${
+            isAdminMode ? ' (admin access)' : ' assigned to you'
+          }`,
         );
       } else {
-        const message = isAdminMode
-          ? 'No projects found in the system. Backend may not be configured yet.'
-          : 'No projects found for your email. You can still enter Project IDs manually.';
-        toast(message, { icon: isAdminMode ? '⚠️' : '💡', duration: 5000 });
+        toast(
+          isAdminMode
+            ? 'No projects found in the system. Backend may not be configured yet.'
+            : 'No projects found for your email. You can still enter Project IDs manually.',
+          {
+            icon: isAdminMode ? '⚠️' : '💡',
+            duration: 5000,
+          },
+        );
       }
     } catch (error) {
       console.error('Error loading PM projects:', error);
-      const message = isAdminMode
-        ? 'Could not load projects. Backend endpoints may not be implemented yet.'
-        : 'Could not load your assigned projects. You can still enter Project IDs manually.';
-      toast.error(message);
+      toast.error(
+        isAdminMode
+          ? 'Could not load projects. Backend endpoints may not be implemented yet.'
+          : 'Could not load your assigned projects. You can still enter Project IDs manually.',
+      );
     } finally {
       setLoading(false);
     }
@@ -85,18 +143,16 @@ export default function PMProjectManager({
     setLoading(true);
     try {
       const allProjects = await getAllProjects();
-      const transformed: PMProject[] = allProjects.map((p: any) => ({
-        id: String(p.id ?? p.project_id ?? 'unknown'),
-        name: String(p.name ?? p.project_name ?? 'Unknown Project'),
-        pm: String(p.pm ?? p.project_manager ?? 'unknown@example.com'),
-        status: String(p.status ?? p.project_status ?? 'active'),
-      }));
+      const transformed = allProjects.map((p) => toPMProject(p));
       setProjects(transformed);
+
       const adminLabel = isAdminView ? '(admin dashboard)' : '(admin access)';
       toast.success(`Loaded ${transformed.length} projects ${adminLabel}`);
     } catch (error) {
       console.error('Error loading all projects:', error);
-      toast.error('Could not load projects. Backend endpoints may not be implemented yet.');
+      toast.error(
+        'Could not load projects. Backend endpoints may not be implemented yet.',
+      );
     } finally {
       setLoading(false);
     }
@@ -110,54 +166,61 @@ export default function PMProjectManager({
     if (projects.length === 0) {
       toast.error(
         'No projects available for bulk generation. Please load projects first or use manual entry.',
-        { duration: 6000 }
+        { duration: 6000 },
       );
       return;
     }
 
     setBulkGenerating(true);
     try {
-      toast('Starting bulk Acta generation for all your projects... This may take several minutes.', {
-        icon: '⚡',
-        duration: 6000,
-      });
+      toast(
+        'Starting bulk Acta generation for all your projects... This may take several minutes.',
+        { icon: '⚡', duration: 6000 },
+      );
 
-      const res: SummariesResponse = await generateSummariesForPM(pmEmail);
-      const successArr = Array.isArray(res) ? res : (res.success ?? []);
-      const failedArr = Array.isArray(res) ? [] : (res.failed ?? []);
+      const raw: SummariesResponse = await generateSummariesForPM(pmEmail);
+      const normalized = normalizeSummaries(raw, pmEmail);
 
-      const successCount = successArr.length;
-      const failureCount = failedArr.length;
+      const successCount = normalized.success.length;
+      const failureCount = normalized.failed.length;
 
       if (successCount > 0) {
         toast.success(
-          `🎉 Bulk generation complete! Successfully processed ${successCount} projects.` +
-            (failureCount ? ` ${failureCount} failed.` : ''),
-          { duration: 8000 }
+          `🎉 Bulk generation complete! Successfully processed ${successCount} projects${
+            failureCount ? `, ${failureCount} failed` : ''
+          }.`,
+          { duration: 8000 },
         );
       } else {
-        toast.error('❌ No projects found for bulk generation.', { duration: 10000 });
+        toast.error('❌ No projects found for bulk generation.', {
+          duration: 10000,
+        });
       }
 
+      // Refresh project list
       if (isAdminView || isAdminMode) {
-        loadAllProjects();
+        void loadAllProjects();
       } else {
-        loadPMProjects();
+        void loadPMProjects();
       }
     } catch (error) {
       console.error('Bulk generation error:', error);
       toast.error(
         'Bulk generation failed. Backend API may not be available. You can still generate Actas individually using manual entry.',
-        { duration: 8000 }
+        { duration: 8000 },
       );
     } finally {
       setBulkGenerating(false);
     }
   }
 
-  const getProjectStatusIcon = (_project: PMProject) => (
-    <Clock className="h-4 w-4 text-blue-500" />
-  );
+  const getProjectStatusIcon = (_project: PMProject) => {
+    return <Clock className="h-4 w-4 text-blue-500" />;
+  };
+
+  const getProjectStatusText = (project: PMProject) => {
+    return project.status || 'Active';
+  };
 
   function ensureArray<T>(value: T[] | undefined | null): T[] {
     return Array.isArray(value) ? value : [];
@@ -248,7 +311,7 @@ export default function PMProjectManager({
 
                   <div className="flex items-center gap-2 text-sm">
                     {getProjectStatusIcon(project)}
-                    <span className="text-gray-600">{project.status || 'Active'}</span>
+                    <span className="text-gray-600">{getProjectStatusText(project)}</span>
                   </div>
 
                   <div className="text-xs text-gray-400 mt-1">PM: {project.pm}</div>
