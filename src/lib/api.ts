@@ -4,7 +4,7 @@
 // - Works with fetchWrapper that returns Response
 // - Prefers same-origin /api base behind CloudFront to avoid CORS when available
 
-import { toast } from "react-hot-toast";
+import { cloudfrontUrl } from "@/env.variables";
 import { fetcher } from "@/utils/fetchWrapper";
 
 // -------- Base URL resolution (prefer same-origin /api if present) --------
@@ -96,6 +96,25 @@ async function resolveUrlFromResponse(res: Response): Promise<string> {
   throw new Error("No download URL returned from API");
 }
 
+// Attempt to build and validate a CloudFront URL for the document directly
+async function tryCloudfrontDocUrl(
+  projectId: string,
+  format: "pdf" | "docx",
+): Promise<string | null> {
+  try {
+    if (!cloudfrontUrl) return null;
+    const url = `${cloudfrontUrl.replace(/\/$/, "")}/acta-documents/${encodeURIComponent(
+      projectId,
+    )}.${format}`;
+    // HEAD request without auth using native fetch
+    const res = await fetch(url, { method: "HEAD", mode: "cors" });
+    if (res.ok) return url;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // -------- Project metadata --------
 export const getSummary = (id: string): Promise<ProjectSummary> =>
   fetcher(`${API}/project-summary/${encodeURIComponent(id)}`).then((r) => r.json());
@@ -147,9 +166,17 @@ export async function getDownloadLink(
     `${API}/download-acta/${encodeURIComponent(projectId)}?format=${format}`,
     { redirect: "manual" as RequestRedirect },
   );
-  const url = await resolveUrlFromResponse(res);
-  console.info("[ACTA] Resolved download URL:", url);
-  return url;
+  try {
+    const url = await resolveUrlFromResponse(res);
+    return url;
+  } catch {
+    // Fallback: if no URL returned, check availability first to surface clearer status
+    await checkDocumentInS3(projectId, format);
+  // Try direct CloudFront path if document already exists
+  const cf = await tryCloudfrontDocUrl(projectId, format);
+  if (cf) return cf;
+  throw new Error("No download URL returned from API");
+  }
 }
 export const getDownloadUrl = getDownloadLink;
 
@@ -158,9 +185,15 @@ export async function previewPdfBackend(projectId: string): Promise<string> {
   const res = await fetcher(`${API}/preview-pdf/${encodeURIComponent(projectId)}`, {
     redirect: "manual" as RequestRedirect,
   });
-  const url = await resolveUrlFromResponse(res);
-  console.info("[ACTA] Resolved preview URL:", url);
-  return url;
+  try {
+    const url = await resolveUrlFromResponse(res);
+    return url;
+  } catch {
+    // Fallback to the canonical download link
+  const cf = await tryCloudfrontDocUrl(projectId, "pdf");
+  if (cf) return cf;
+  return previewPdfViaS3(projectId);
+  }
 }
 
 // Fallback preview via the same download link (keeps one canonical resolver)
@@ -186,11 +219,16 @@ export async function checkDocumentInS3(
   format: "pdf" | "docx",
 ): Promise<DocumentCheckResult> {
   try {
+    // Prefer HEAD to avoid CORS body restrictions; API should support HEAD
     const res = await fetcher(
       `${API}/check-document/${encodeURIComponent(projectId)}?format=${format}`,
+      { method: 'HEAD' },
     );
-    const data: any = await res.json().catch(() => ({}));
-    return { available: true, ...data };
+    // For HEAD, any 2xx implies availability
+    if (res.ok) {
+      return { available: true, s3Key: `acta-documents/${projectId}.${format}`, status: 'ok' };
+    }
+    return { available: false };
   } catch (err: any) {
     if (String(err?.message || "").includes("Network error")) {
       return { available: false, s3Key: `acta-${projectId}.${format}`, checkFailed: true };

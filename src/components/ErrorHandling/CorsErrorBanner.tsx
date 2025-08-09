@@ -18,14 +18,14 @@ export function CorsErrorBanner({
   region,
   onRetry, 
   onDismiss 
-}: CorsErrorBannerProps) {
+}: CorsErrorBannerProps): JSX.Element | null {
   const [isRetrying, setIsRetrying] = useState(false);
 
   const isCorsError = error.message.includes('Failed to fetch') || 
                      error.message.includes('CORS') ||
                      error.message.includes('Network request failed');
 
-  const handleRetry = async () => {
+  const handleRetry = async (): Promise<void> => {
     setIsRetrying(true);
     try {
       await onRetry();
@@ -74,7 +74,7 @@ export function CorsErrorBanner({
           </div>
           <div className="mt-4 flex gap-3">
             <button
-              onClick={handleRetry}
+              onClick={() => void handleRetry()}
               disabled={isRetrying}
               className="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >

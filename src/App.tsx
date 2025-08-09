@@ -11,6 +11,7 @@ import { useIdleLogout } from '@/hooks/useIdleLogout';
 import { useThemedFavicon } from '@/hooks/useThemedFavicon';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Dashboard from '@/pages/Dashboard';
+import LiveFlowTest from '@/pages/LiveFlowTest';
 import Login from '@/pages/Login';
 
 console.log('VITE ENV:', import.meta.env);
@@ -23,6 +24,7 @@ if (import.meta.env.DEV) {
     '/admin',
     '/profile',
     '/projects-for-pm',
+  '/live-test',
   ]);
 }
 
@@ -167,6 +169,7 @@ export default function App(): JSX.Element {
             )
           }
         />
+  <Route path="/live-test" element={<LiveFlowTest />} />
         <Route
           path="*"
           element={<Navigate to={skipAuth || isAuthed ? '/dashboard' : '/login'} replace />}

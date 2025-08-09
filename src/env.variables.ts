@@ -69,7 +69,9 @@ export const isDevelopment = import.meta.env.DEV;
 
 // Debug logging for environment variables (only in development)
 if (isDevelopment || authDebug) {
+  // eslint-disable-next-line no-console
   console.log('🔧 Environment Configuration Loaded:');
+  // eslint-disable-next-line no-console
   console.table({
     'API Base URL': apiBaseUrl,
     'CloudFront URL': cloudfrontUrl,

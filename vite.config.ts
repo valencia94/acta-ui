@@ -14,7 +14,9 @@ const __dirname = path.dirname(__filename);
 function copyAwsExports() {
   return {
     name: "copy-aws-exports",
-    closeBundle() {
+    apply: "build",
+    enforce: "post",
+    writeBundle() {
       const src = path.resolve(process.cwd(), "public/aws-exports.js");
       const dest = path.resolve(process.cwd(), "dist/aws-exports.js");
       const destDir = path.dirname(dest);
@@ -30,26 +32,26 @@ function copyAwsExports() {
         } catch (error: any) {
           console.warn("⚠️ Failed to copy aws-exports.js:", error.message);
         }
-
-        // 🔄 Create 404.html fallback for S3/CloudFront
-        const indexSrc = path.resolve(process.cwd(), "dist/index.html");
-        const fallbackDest = path.resolve(process.cwd(), "dist/404.html");
-        console.log(`🔄 Copying index.html to 404.html: ${indexSrc} → ${fallbackDest}`);
-
-        if (fs.existsSync(indexSrc)) {
-          try {
-            fs.copyFileSync(indexSrc, fallbackDest);
-            console.log("✅ 404.html created successfully.");
-          } catch (error) {
-            console.warn("⚠️ Failed to create 404.html:", error.message);
-          }
-        } else {
-          console.warn("⚠️ index.html not found in dist. Cannot create 404.html.");
-        }
       } else {
         console.warn("⚠️ aws-exports.js not found. Skipping copy.");
       }
-    },
+
+      // 🔄 Always create 404.html fallback for S3/CloudFront SPA routing
+      const indexSrc = path.resolve(process.cwd(), "dist/index.html");
+      const fallbackDest = path.resolve(process.cwd(), "dist/404.html");
+      console.log(`🔄 Ensuring 404.html exists (copy index.html): ${indexSrc} → ${fallbackDest}`);
+
+      if (fs.existsSync(indexSrc)) {
+        try {
+          fs.copyFileSync(indexSrc, fallbackDest);
+          console.log("✅ 404.html created successfully.");
+        } catch (error) {
+          console.warn("⚠️ Failed to create 404.html:", (error as any).message);
+        }
+      } else {
+        console.warn("⚠️ index.html not found in dist. Cannot create 404.html.");
+      }
+  },
   };
 }
 

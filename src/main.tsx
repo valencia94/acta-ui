@@ -16,23 +16,26 @@ import awsExports from './aws-exports';
 
 declare global {
   interface Window {
-    debugAuth?: () => void;
+  debugAuth?: () => Promise<void>;
   }
 }
 
 window.debugAuth = async () => {
   try {
     const session = await fetchAuthSession({ forceRefresh: true });
-    console.log('🧠 Auth Session:', session);
-    console.log('🧠 Identity ID:', (session?.credentials as any)?.identityId);
+  // eslint-disable-next-line no-console
+  console.log('🧠 Auth Session:', session);
+  // eslint-disable-next-line no-console
+  console.log('🧠 Identity ID:', (session?.credentials as any)?.identityId);
   } catch (err) {
-    console.error('❌ Auth debug failed:', err);
+  // eslint-disable-next-line no-console
+  console.error('❌ Auth debug failed:', err);
   }
 };
 
 let amplifyConfigured = false;
 
-const configureAmplify = async () => {
+const configureAmplify = async (): Promise<void> => {
   if (amplifyConfigured) return;
 
   // Wait up to 5s for window.awsmobile to be injected
@@ -45,16 +48,20 @@ const configureAmplify = async () => {
     const config = (window as any).awsmobile || awsExports;
     Amplify.configure(config);
     amplifyConfigured = true;
+    // eslint-disable-next-line no-console
     console.log('✅ Amplify configured with:', config);
     const session = await fetchAuthSession().catch(() => null);
+    // eslint-disable-next-line no-console
     console.log('Amplify Identity Pool:', config.aws_cognito_identity_pool_id);
+    // eslint-disable-next-line no-console
     console.log('🧠 Identity ID:', (session?.credentials as any)?.identityId);
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error('❌ Amplify configuration failed:', err);
   }
 };
 
-async function init() {
+async function init(): Promise<void> {
   await configureAmplify();
 
   createRoot(document.getElementById('root')!).render(
@@ -68,4 +75,4 @@ async function init() {
   );
 }
 
-init();
+void init();

@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { generateActaDocument, checkDocumentInS3 } from '../api';
-import * as fetchWrapper from '../../utils/fetchWrapper';
 import { toast } from 'react-hot-toast';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import * as fetchWrapper from '../../utils/fetchWrapper';
+import { checkDocumentInS3, generateActaDocument } from '../api';
 
 vi.mock('react-hot-toast', () => ({ toast: vi.fn() }));
 

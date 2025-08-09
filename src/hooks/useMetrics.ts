@@ -11,16 +11,20 @@ export interface MetricsData {
   timestamp: string;
 }
 
-export function useMetrics() {
-  const logAction = (data: Omit<MetricsData, 'timestamp'>) => {
+export function useMetrics(): {
+  logAction: (data: Omit<MetricsData, 'timestamp'>) => void;
+  trackAction: <T>(actionName: string, projectId: string | undefined, actionFn: () => Promise<T>) => Promise<T>;
+} {
+  const logAction = (data: Omit<MetricsData, 'timestamp'>): void => {
     const metrics: MetricsData = {
       ...data,
       timestamp: new Date().toISOString(),
     };
 
     // Log to console for DevTools tracing (no PII)
-    const logLevel = metrics.success ? 'info' : 'warn';
-    console[logLevel]('[ACTA Metrics]', {
+  const logLevel: 'info' | 'warn' = metrics.success ? 'info' : 'warn';
+  // eslint-disable-next-line no-console
+  console[logLevel]('[ACTA Metrics]', {
       action: metrics.action,
       projectId: metrics.projectId ? `${metrics.projectId.substring(0, 8)}...` : undefined,
       success: metrics.success,

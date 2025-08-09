@@ -1,14 +1,13 @@
 // src/components/PMProjectManager.tsx
-import { Clock, FileText, RefreshCw, Users } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+import { Clock, FileText, RefreshCw, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 
-import { generateSummariesForPM } from "@/api";
-import type { ProjectSummary, PMProject } from "@/lib/api";
-import { getAllProjects, getProjectsByPM } from "@/lib/api";
+import { generateSummariesForPM } from '@/api';
+import { getAllProjects, getProjectsByPM, type PMProject, type ProjectSummary } from '@/lib/api';
 
-import Button from "./Button";
-import ProjectCard from "./ProjectCard";
+import Button from './Button';
+import ProjectCard from './ProjectCard';
 
 interface PMProjectManagerProps {
   pmEmail?: string;
@@ -31,21 +30,20 @@ function asPMProject(input: Partial<ProjectSummary & PMProject>, fallbackPM?: st
         input.project_id ??
         input.projectId ??
         input.projectID ??
-        "unknown"
+  'unknown'
     ),
     name: String(
       input.name ??
         input.project_name ??
         input.title ??
-        `Project ${input.project_id ?? input.id ?? "unknown"}`
+  `Project ${input.project_id ?? input.id ?? 'unknown'}`
     ),
     pm: String(
       input.pm ??
         input.project_manager ??
-        fallbackPM ??
-        "unknown@example.com"
+  fallbackPM ?? 'unknown@example.com'
     ),
-    status: String(input.status ?? (input as any).project_status ?? "active"),
+  status: String(input.status ?? (input as any).project_status ?? 'active'),
   };
 }
 
@@ -55,7 +53,7 @@ export default function PMProjectManager({
   selectedProjectId,
   isAdminMode = false,
   isAdminView = false,
-}: PMProjectManagerProps) {
+}: PMProjectManagerProps): JSX.Element {
   const [projects, setProjects] = useState<PMProject[]>([]);
   const [loading, setLoading] = useState(false);
   const [bulkGenerating, setBulkGenerating] = useState(false);
@@ -192,33 +190,33 @@ export default function PMProjectManager({
         <div className="flex items-center gap-3">
           <Users className="h-6 w-6 text-blue-500" />
           <h2 className="text-xl font-bold text-gray-800">
-            {isAdminView ? "All Projects" : "Your Projects"}
+            {isAdminView ? 'All Projects' : 'Your Projects'}
           </h2>
           {projects.length > 0 && (
             <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded-full">
-              {projects.length} project{projects.length === 1 ? "" : "s"}
+              {projects.length} project{projects.length === 1 ? '' : 's'}
             </span>
           )}
         </div>
 
         <div className="flex gap-2">
           <Button
-            onClick={isAdminView || isAdminMode ? loadAllProjects : loadPMProjects}
+            onClick={() => void ((isAdminView || isAdminMode) ? loadAllProjects() : loadPMProjects())}
             disabled={loading}
             className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
 
           {projects.length > 0 && (
             <Button
-              onClick={handleBulkGenerate}
+              onClick={() => void handleBulkGenerate()}
               disabled={bulkGenerating || loading}
               className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
             >
               <FileText className={`h-4 w-4 ${bulkGenerating ? "animate-pulse" : ""}`} />
-              {bulkGenerating ? "Generating All..." : "Generate All Actas"}
+              {bulkGenerating ? 'Generating All...' : 'Generate All Actas'}
             </Button>
           )}
         </div>
@@ -236,7 +234,7 @@ export default function PMProjectManager({
           <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-700 mb-2">No Projects Found</h3>
           <p className="text-gray-500 mb-4">
-            No projects found for <strong>{pmEmail ?? "your account"}</strong> in the DynamoDB table.
+            No projects found for <strong>{pmEmail ?? 'your account'}</strong> in the DynamoDB table.
           </p>
           <p className="text-sm text-gray-400">
             You can still enter Project IDs manually in the section above.
@@ -252,7 +250,7 @@ export default function PMProjectManager({
                 ${
                   selectedProjectId === project.id
                     ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-blue-300"
+                    : 'border-gray-200 hover:border-blue-300'
                 }`}
               onClick={() => onProjectSelect?.(project.id)}
             >
@@ -269,7 +267,7 @@ export default function PMProjectManager({
 
                   <div className="flex items-center gap-2 text-sm">
                     {getProjectStatusIcon(project)}
-                    <span className="text-gray-600">{project.status || "Active"}</span>
+                    <span className="text-gray-600">{project.status || 'Active'}</span>
                   </div>
 
                   <div className="text-xs text-gray-400 mt-1">PM: {project.pm}</div>
@@ -296,7 +294,8 @@ export default function PMProjectManager({
               <h4 className="font-medium text-blue-800 mb-1">Quick Actions</h4>
               <ul className="text-sm text-blue-600 space-y-1">
                 <li>• Click any project to select it for individual actions</li>
-                <li>• Use "Generate All Actas" to create documents for all projects</li>
+                <li>• Use &quot;Generate All Actas&quot; to bulk-generate summaries for all projects</li>
+                <li>• Use &quot;Refresh&quot; to reload the latest project list</li>
                 <li>• Individual project actions will appear in the section above</li>
               </ul>
             </div>

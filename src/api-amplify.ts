@@ -12,7 +12,7 @@ import { apiBaseUrl, skipAuth } from '@/env.variables';
 export const apiCall = async (
   path: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' = 'GET',
-  payload?: any,
+  payload?: unknown,
   options?: {
     timeout?: number;
     headers?: Record<string, string>;
@@ -35,9 +35,11 @@ export const apiCall = async (
         const token = session.tokens?.idToken?.toString();
         if (token) {
           requestHeaders['Authorization'] = `Bearer ${token}`;
+          // eslint-disable-next-line no-console
           console.log('🔐 Authentication token added to request');
         }
       } catch (authError) {
+        // eslint-disable-next-line no-console
         console.warn('⚠️ Authentication failed, proceeding without token:', authError);
       }
     }
@@ -47,7 +49,8 @@ export const apiCall = async (
       ? path
       : `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 
-    console.log('🌐 API Request:', {
+  // eslint-disable-next-line no-console
+  console.log('🌐 API Request:', {
       method,
       url: fullUrl,
       hasAuth: !!requestHeaders['Authorization'],
@@ -67,7 +70,8 @@ export const apiCall = async (
 
     clearTimeout(timeoutId);
 
-    console.log('📡 API Response:', {
+  // eslint-disable-next-line no-console
+  console.log('📡 API Response:', {
       status: response.status,
       statusText: response.statusText,
       url: fullUrl,
@@ -92,7 +96,8 @@ export const apiCall = async (
       throw new Error(`API request timeout after ${timeout}ms`);
     }
 
-    console.error('❌ API call failed:', {
+  // eslint-disable-next-line no-console
+  console.error('❌ API call failed:', {
       path,
       method,
       error: error instanceof Error ? error.message : error,
@@ -117,7 +122,7 @@ export const apiGet = async <T = any>(
  */
 export const apiPost = async <T = any>(
   path: string,
-  payload?: any,
+  payload?: unknown,
   options?: { timeout?: number; headers?: Record<string, string> }
 ): Promise<T> => {
   return apiCall(path, 'POST', payload, options);
@@ -128,7 +133,7 @@ export const apiPost = async <T = any>(
  */
 export const apiPut = async <T = any>(
   path: string,
-  payload?: any,
+  payload?: unknown,
   options?: { timeout?: number; headers?: Record<string, string> }
 ): Promise<T> => {
   return apiCall(path, 'PUT', payload, options);
@@ -189,7 +194,8 @@ export const getCurrentUser = async (): Promise<any> => {
       iat: token.payload.iat,
     };
   } catch (error) {
-    console.warn('Failed to get current user info:', error);
+  // eslint-disable-next-line no-console
+  console.warn('Failed to get current user info:', error);
     return null;
   }
 };
