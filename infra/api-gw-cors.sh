@@ -6,10 +6,11 @@ set -euo pipefail
 echo "🔧 API Gateway CORS OPTIONS Integration Fix"
 echo "============================================="
 
-API_ID="q2b9avfwv5"
-STAGE="prod"
-REGION="us-east-2"
-CLOUDFRONT_ORIGIN="https://d7t9x3j66yd8k.cloudfront.net"
+# Allow overrides via env or args: API_ID STAGE REGION ORIGIN
+API_ID="${API_ID:-q2b9avfwv5}"
+STAGE="${STAGE:-prod}"
+REGION="${REGION:-us-east-2}"
+CLOUDFRONT_ORIGIN="${ORIGIN:-https://d7t9x3j66yd8k.cloudfront.net}"
 
 echo "📋 Configuration:"
 echo "   API ID: $API_ID"
@@ -26,6 +27,7 @@ declare -a RESOURCES=(
   "timeline/{id}"
   "project-summary/{id}"
   "download-acta/{id}"
+  "preview-pdf/{id}"
   "extract-project-place/{id}"
   "send-approval-email"
   "pm-manager/all-projects"

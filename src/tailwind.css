@@ -10,16 +10,36 @@ body {
 }
 
 @layer components {
+  /* Section titles */
+  .section-title {
+    @apply text-lg font-semibold text-secondary tracking-tight;
+  }
+
+  /* Glassy card surface with subtle elevation */
+  .glass-card {
+  @apply bg-surface bg-opacity-90 border border-borders border-opacity-70 rounded-2xl backdrop-blur-md;
+  }
+
+  .elevated {
+    box-shadow: 0 10px 30px -18px rgba(25, 178, 123, 0.35), 0 2px 8px rgba(16, 24, 40, 0.06);
+  }
+
   .input {
     @apply w-full border border-borders rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200;
   }
 
-  .btn-primary {
-    @apply bg-accent text-white font-medium px-4 py-2 rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-sm;
+  /* Buttons */
+  .btn-ikusi {
+    @apply inline-flex items-center justify-center gap-2.5 bg-accent text-white font-medium px-4 py-2 min-h-10 rounded-xl shadow-sm hover:bg-accent-hover transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent;
+  }
+  .btn-ikusi:active { transform: translateY(0.5px) scale(0.995); }
+
+  .btn-ikusi-outline {
+    @apply inline-flex items-center justify-center gap-2.5 bg-white text-accent border border-accent font-medium px-4 py-2 min-h-10 rounded-xl shadow-sm hover:bg-accent hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent;
   }
 
-  .btn-secondary {
-    @apply bg-white text-accent border border-accent font-medium px-4 py-2 rounded-xl hover:bg-accent transition-colors duration-200 shadow-sm;
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 bg-white border border-borders text-body font-medium px-3 py-2 min-h-10 rounded-xl shadow-sm hover:border-accent hover:bg-accent hover:text-white transition-all duration-200;
   }
 
   .card {
