@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 
 import { generateSummariesForPM } from '@/api';
 import { getAllProjects, getProjectsByPM, PMProject } from '@/lib/api';
+import type { ProjectSummary } from '@/lib/api';
 
 import Button from './Button';
 import ProjectCard from './ProjectCard';
@@ -17,9 +18,13 @@ interface PMProjectManagerProps {
   isAdminView?: boolean;
 }
 
+/** The bulk-generate endpoint may return either:
+ *  - ProjectSummary[]  (current behavior)
+ *  - { success: ProjectSummary[], failed?: ProjectSummary[] } (future/alt)
+ */
 type SummariesResponse =
-  | PMProject[] // some backends return an array directly
-  | { success: PMProject[]; failed?: PMProject[] }; // others return an object
+  | ProjectSummary[]
+  | { success: ProjectSummary[]; failed?: ProjectSummary[] };
 
 export default function PMProjectManager({
   pmEmail,
