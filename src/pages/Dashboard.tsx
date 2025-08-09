@@ -276,10 +276,10 @@ export default function Dashboard(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-gradient-to-br from-green-100 via-teal-50 to-emerald-100">
       <Header />
 
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
+      <main className="max-w-7xl mx-auto p-6 space-y-8">
         {/* CORS Error Banner */}
         {corsError && (
           <CorsErrorBanner
@@ -295,10 +295,10 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-surface border border-borders rounded-xl p-6 shadow-sm"
+          className="bg-white/90 border border-gray-200/20 rounded-xl p-8 shadow-lg backdrop-blur-sm"
         >
-          <h1 className="text-lg font-semibold text-secondary mb-2">Welcome, {user?.email}</h1>
-          <p className="text-sm text-body">
+          <h1 className="text-lg font-semibold text-gray-900 mb-3">Welcome, {user?.email}</h1>
+          <p className="text-sm text-gray-600">
             View your projects and take action with ACTA tools.
           </p>
         </motion.div>
@@ -307,9 +307,9 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-surface border border-borders rounded-xl p-6 shadow-sm"
+          className="bg-white/90 border border-gray-200/20 rounded-xl p-8 shadow-lg backdrop-blur-sm"
         >
-          <h2 className="text-lg font-semibold text-secondary mb-6">YOUR PROJECTS</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-8">YOUR PROJECTS</h2>
           <DynamoProjectsView
             userEmail={user?.email || ''}
             onProjectSelect={handleProjectSelect}
@@ -321,13 +321,13 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-surface border border-borders rounded-xl p-6 shadow-sm"
+          className="bg-white/90 border border-gray-200/20 rounded-xl p-8 shadow-lg backdrop-blur-sm"
         >
-          <h2 className="text-lg font-semibold text-secondary mb-6">ACTA ACTIONS</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-8">ACTA ACTIONS</h2>
           {regenState.active && (
-            <div className="mb-4 text-xs text-body">
+            <div className="mb-6 text-xs text-gray-600">
               <span className="inline-flex items-center gap-2">
-                <span className="animate-spin rounded-full h-3 w-3 border-2 border-accent border-t-transparent"></span>
+                <span className="animate-spin rounded-full h-3 w-3 border-2 border-teal-500 border-t-transparent"></span>
                 Regenerating document… We’ll notify when the new version is ready.
               </span>
               {regenState.baseline && (

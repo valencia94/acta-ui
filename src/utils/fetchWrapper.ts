@@ -49,11 +49,7 @@ export async function fetcherRaw(input: RequestInfo, init: RequestInit = {}): Pr
   mode: 'cors',
   };
 
-  console.log(`🌐 Fetching: ${url}`, {
-    method: enhancedInit.method || 'GET',
-    hasAuth: !!token,
-    headers: Object.fromEntries(headers.entries()),
-  });
+  console.log(`🌐 Fetching`, enhancedInit.method || 'GET', token ? 'with auth' : 'no auth');
 
   try {
     const res = await fetch(url, enhancedInit);
@@ -61,7 +57,12 @@ export async function fetcherRaw(input: RequestInfo, init: RequestInit = {}): Pr
     return res;
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      console.error('❌ Network error (CORS or connectivity):', error);
+      console.error('[ACTA CORS Debug]', { 
+        attemptedUrl: url, 
+        region: 'us-east-2', 
+        errorType: 'TypeError', 
+        timestamp: new Date().toISOString() 
+      });
       throw new Error('Network error: Unable to connect to API. Please check your connection and try again.');
     }
     throw error;
@@ -90,11 +91,7 @@ export async function fetcher<T>(input: RequestInfo, init: RequestInit = {}): Pr
   mode: 'cors',
   };
 
-  console.log(`🌐 Fetching: ${url}`, {
-    method: enhancedInit.method || 'GET',
-    hasAuth: !!token,
-    headers: Object.fromEntries(headers.entries()),
-  });
+  console.log(`🌐 Fetching`, enhancedInit.method || 'GET', token ? 'with auth' : 'no auth');
 
   try {
     const res = await fetch(url, enhancedInit);
@@ -123,7 +120,12 @@ export async function fetcher<T>(input: RequestInfo, init: RequestInit = {}): Pr
     }
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      console.error('❌ Network error (CORS or connectivity):', error);
+      console.error('[ACTA CORS Debug]', { 
+        attemptedUrl: url, 
+        region: 'us-east-2', 
+        errorType: 'TypeError', 
+        timestamp: new Date().toISOString() 
+      });
       throw new Error('Network error: Unable to connect to API. Please check your connection and try again.');
     }
     throw error;
