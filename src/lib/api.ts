@@ -1,21 +1,32 @@
-// Unified API helpers for ACTA UI buttons and dashboard flows
-// Endpoint base and AWS configuration are taken from environment variables
-// to keep the code contract-safe and production ready.
+// src/lib/api.ts
+// Unified API layer for ACTA UI: buttons + dashboard flows
+// - Robust URL extraction (302/JSON/text)
+// - Works with fetchWrapper that returns Response
+// - Prefers same-origin /api base behind CloudFront to avoid CORS when available
 
-import { toast } from 'react-hot-toast';
+import { toast } from "react-hot-toast";
+import { fetcher } from "@/utils/fetchWrapper";
 
-import { apiBaseUrl } from '@/env.variables';
-import { fetcherRaw,get, post, postFireAndForget } from '@/utils/fetchWrapper';
+// -------- Base URL resolution (prefer same-origin /api if present) --------
+function inferBase(): string {
+  const envBase =
+    (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+    (typeof process !== "undefined" &&
+      (process.env.VITE_API_BASE_URL as string | undefined));
 
-// S3 presigning is not used client-side to avoid CORS and least-privilege issues
+  // If we’re on CloudFront and the distribution maps /api/* → API Gateway,
+  // same-origin calls avoid CORS at the browser layer:contentReference[oaicite:4]{index=4}.
+  if (typeof window !== "undefined" && window.location?.origin) {
+    const sameOriginApi = `${window.location.origin}/api`;
+    // Heuristic: use same-origin if env isn’t set or explicitly points elsewhere
+    if (!envBase || envBase.includes("execute-api.")) return sameOriginApi;
+  }
+  return envBase || "https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod";
+}
 
-export const BASE =
-  apiBaseUrl || 'https://q2b9avfwv5.execute-api.us-east-2.amazonaws.com/prod';
-export const API = BASE;
+export const API = inferBase();
 
-/** -----------------------------------------------------------------------
- * Project metadata helpers
- * -------------------------------------------------------------------- */
+// -------- Types --------
 export interface ProjectSummary {
   project_id: string;
   project_name: string;
@@ -31,50 +42,34 @@ export interface TimelineEvent {
   fecha: string;
 }
 
-export const getSummary = (id: string): Promise<ProjectSummary> =>
-  get<ProjectSummary>(`${BASE}/project-summary/${id}`);
-export const getTimeline = (id: string): Promise<TimelineEvent[]> =>
-  get<TimelineEvent[]>(`${BASE}/timeline/${id}`);
-
-/** -----------------------------------------------------------------------
- * Generate ACTA document
- * -------------------------------------------------------------------- */
-export async function generateActaDocument(
-  projectId: string,
-  userEmail?: string,
-  userRole: 'pm' | 'admin' = 'pm',
-): Promise<{ message: string; success: boolean }> {
-  const payload = {
-    pmEmail: userEmail,
-    userRole,
-    requestSource: 'acta-ui',
-    generateDocuments: true,
-    extractMetadata: true,
-    timestamp: new Date().toISOString(),
-  };
-
-  // Fire-and-forget: we treat immediate 2xx/202/504/timeout as accepted and move on.
-  const result = await postFireAndForget(
-    `${BASE}/extract-project-place/${projectId}`,
-    payload,
-    { timeoutMs: 5000 },
-  );
-  return { message: 'accepted', success: result.accepted };
+export interface PMProject {
+  id: string;
+  name: string;
+  pm: string;
+  status: string;
+  [k: string]: unknown;
 }
 
-/** -----------------------------------------------------------------------
- * Shared URL extraction from Response (handles 302, JSON, text formats)
- * -------------------------------------------------------------------- */
-async function extractUrlFromResponse(res: Response): Promise<string> {
-  // 1) 302 Location (support both header casings)
+export interface DocumentCheckResult {
+  available: boolean;
+  lastModified?: string;
+  size?: number;
+  s3Key?: string;
+  checkFailed?: boolean;
+  status?: string;
+}
+
+// -------- Shared URL extraction (302, JSON shapes, text/plain, fallback) --------
+async function resolveUrlFromResponse(res: Response): Promise<string> {
+  // 1) 302 Location (support both casings)
   const loc = res.headers.get("location") || res.headers.get("Location");
   if (loc && /^https?:\/\//i.test(loc)) return loc;
 
   const ctype = res.headers.get("content-type") || "";
 
-  // 2) JSON shapes
+  // 2) JSON bodies with various URL keys
   if (ctype.includes("application/json")) {
-    const data = await res.json().catch(() => ({}));
+    const data: any = await res.json().catch(() => ({}));
     const candidate =
       data?.url ??
       data?.signedUrl ??
@@ -90,175 +85,122 @@ async function extractUrlFromResponse(res: Response): Promise<string> {
 
   // 3) text/plain
   if (ctype.includes("text/plain")) {
-    const trimmed = (await res.text()).trim();
-    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    const text = (await res.text()).trim();
+    if (/^https?:\/\//i.test(text)) return text;
   }
 
-  // 4) last‑ditch: try body as text
+  // 4) last‑ditch try: body as text
   const fallback = (await res.text().catch(() => "")).trim();
   if (/^https?:\/\//i.test(fallback)) return fallback;
 
   throw new Error("No download URL returned from API");
 }
 
-/** -----------------------------------------------------------------------
- * Download links (PDF or DOCX)
- * -------------------------------------------------------------------- */
-export async function getDownloadLink(
-  projectId: string,
-  format: 'pdf' | 'docx',
-): Promise<string> {
-  const url = `${API}/download-acta/${encodeURIComponent(projectId)}?format=${format}`;
-  console.info("[ACTA] Trying download endpoint:", url);
-  const res = await fetcherRaw(url, { method: "GET", redirect: "manual" as RequestRedirect });
-  if (!res.ok && res.status !== 302) throw new Error(`Download link failed: ${res.status} ${res.statusText}`);
-  const resolved = await extractUrlFromResponse(res);
-  console.info("[ACTA] Resolved download URL:", resolved);
-  return resolved;
-}
+// -------- Project metadata --------
+export const getSummary = (id: string): Promise<ProjectSummary> =>
+  fetcher(`${API}/project-summary/${encodeURIComponent(id)}`).then((r) => r.json());
 
-export async function getS3DownloadUrl(projectId: string, format: 'pdf' | 'docx'): Promise<string> {
-  // Use backend endpoint to obtain a signed URL or redirect, avoiding direct S3 bucket listing from the browser.
-  const apiUrl = await getDownloadLink(projectId, format);
-  if (apiUrl) return apiUrl;
-  throw new Error(`No ${format.toUpperCase()} download URL available for project ${projectId}`);
-}
-export const getDownloadUrl = getDownloadLink;
+export const getTimeline = (id: string): Promise<TimelineEvent[]> =>
+  fetcher(`${API}/timeline/${encodeURIComponent(id)}`).then((r) => r.json());
 
-/** -----------------------------------------------------------------------
- * Preview PDF helpers
- * -------------------------------------------------------------------- */
-export async function previewPdfBackend(projectId: string): Promise<string> {
-  const url = `${API}/preview-pdf/${encodeURIComponent(projectId)}`;
-  console.info("[ACTA] Trying preview endpoint:", url);
-  const res = await fetcherRaw(url, { method: "GET", redirect: "manual" as RequestRedirect });
-  if (!res.ok && res.status !== 302) throw new Error(`Preview link failed: ${res.status} ${res.statusText}`);
-  const resolved = await extractUrlFromResponse(res);
-  console.info("[ACTA] Resolved preview URL:", resolved);
-  return resolved;
-}
+export const getAllProjects = (): Promise<PMProject[]> =>
+  fetcher(`${API}/pm-manager/all-projects`).then((r) => r.json());
 
-export function previewPdfViaS3(projectId: string): Promise<string> {
-  // Use the download link helper to obtain a previewable URL
-  return getDownloadLink(projectId, 'pdf');
-}
-
-/** -----------------------------------------------------------------------
- * Send approval email
- * -------------------------------------------------------------------- */
-export async function sendApprovalEmail(
-  projectId: string,
-  recipientEmail?: string,
-): Promise<{ message: string }> {
-  const fallbackEmail =
-    recipientEmail ||
-    (process.env.VITE_APPROVAL_EMAIL as string | undefined) ||
-    (import.meta.env.VITE_APPROVAL_EMAIL as string | undefined);
-
-  if (!fallbackEmail) {
-    throw new Error('Please provide an email address for approval.');
-  }
-
-  return post<{ message: string }>(`${BASE}/send-approval-email`, {
-    projectId,
-    recipientEmail: fallbackEmail,
-  });
-}
-
-/** -----------------------------------------------------------------------
- * Check document availability in S3
- * -------------------------------------------------------------------- */
-export interface DocumentCheckResult {
-  available: boolean;
-  lastModified?: string;
-  size?: number;
-  s3Key?: string;
-  checkFailed?: boolean;
-  status?: string;
-}
-
-export async function checkDocumentInS3(
-  projectId: string,
-  format: 'pdf' | 'docx',
-): Promise<DocumentCheckResult> {
-  try {
-    const res = await fetcherRaw(
-      `${BASE}/document-validator/${projectId}?format=${format}`,
-      { method: 'HEAD' },
-    );
-    if (res.ok) {
-      const lastModified =
-        res.headers.get('Last-Modified') || res.headers.get('last-modified') || undefined;
-      const len = res.headers.get('Content-Length') || res.headers.get('content-length');
-      const size = len ? parseInt(len, 10) : undefined;
-      return {
-        available: true,
-        lastModified,
-        size,
-        s3Key: `acta-documents/acta-${projectId}.${format}`,
-      };
-    }
-    if (res.status === 404) {
-      toast('Document not ready yet.', { icon: '⏳' });
-      return {
-        available: false,
-        status: 'not_found',
-        s3Key: `acta-documents/acta-${projectId}.${format}`,
-      };
-    }
-    return { available: false };
-  } catch (err) {
-    console.warn(`Document check failed for ${projectId}.${format}:`, err);
-    if (err instanceof Error && err.message.includes('Network error')) {
-      return {
-        available: false,
-        s3Key: `acta-documents/acta-${projectId}.${format}`,
-        checkFailed: true,
-      };
-    }
-    return { available: false };
-  }
-}
-
-export const checkDocumentAvailability = checkDocumentInS3;
-export const documentExists = checkDocumentInS3;
-
-/** -----------------------------------------------------------------------
- * Project helpers
- * -------------------------------------------------------------------- */
-export interface PMProject {
-  id: string;
-  name: string;
-  pm: string;
-  status: string;
-  [k: string]: unknown;
-}
-
-export const getAllProjects = (): Promise<PMProject[]> => get<PMProject[]>(`${BASE}/pm-manager/all-projects`);
-
-// Additional project lookups used by other modules
 export const getProjectsByPM = (pmEmail: string, isAdmin: boolean): Promise<PMProject[]> =>
-  get<PMProject[]>(
-    `${BASE}/projects-for-pm?email=${encodeURIComponent(pmEmail)}&admin=${isAdmin}`,
-  );
+  fetcher(
+    `${API}/projects-for-pm?email=${encodeURIComponent(pmEmail)}&admin=${isAdmin}`,
+  ).then((r) => r.json());
 
 export const generateSummariesForPM = (pmEmail: string): Promise<ProjectSummary[]> =>
-  get<ProjectSummary[]>(
-    `${BASE}/project-summaries?email=${encodeURIComponent(pmEmail)}`,
+  fetcher(`${API}/project-summaries?email=${encodeURIComponent(pmEmail)}`).then((r) =>
+    r.json(),
   );
 
 export const getProjectSummaryForPM = (projectId: string): Promise<ProjectSummary> =>
-  get<ProjectSummary>(`${BASE}/project-summary/${projectId}`);
+  fetcher(`${API}/project-summary/${encodeURIComponent(projectId)}`).then((r) => r.json());
 
 export const getPMProjectsWithSummary = (pmEmail: string): Promise<ProjectSummary[]> =>
-  get<ProjectSummary[]>(
-    `${BASE}/projects-with-summary?email=${encodeURIComponent(pmEmail)}`,
+  fetcher(`${API}/projects-with-summary?email=${encodeURIComponent(pmEmail)}`).then((r) =>
+    r.json(),
   );
 
-/** -----------------------------------------------------------------------
- * Dev helpers – expose functions for debugging
- * -------------------------------------------------------------------- */
-if (import.meta.env.DEV && typeof window !== 'undefined') {
+// -------- Generate (fire-and-forget semantics implemented server-side) --------
+export async function generateActaDocument(
+  projectId: string,
+  _userEmail?: string,
+  _userRole: "pm" | "admin" = "pm",
+): Promise<{ message: string; success?: boolean }> {
+  const res = await fetcher(
+    `${API}/extract-project-place/${encodeURIComponent(projectId)}`,
+    { method: "POST", body: "{}" },
+  );
+  // Backend may return 202/200 JSON; normalize to {message}
+  return res.json().catch(() => ({ message: "accepted" }));
+}
+
+// -------- Download links (PDF/DOCX) --------
+export async function getDownloadLink(
+  projectId: string,
+  format: "pdf" | "docx",
+): Promise<string> {
+  const res = await fetcher(
+    `${API}/download-acta/${encodeURIComponent(projectId)}?format=${format}`,
+    { redirect: "manual" as RequestRedirect },
+  );
+  const url = await resolveUrlFromResponse(res);
+  console.info("[ACTA] Resolved download URL:", url);
+  return url;
+}
+export const getDownloadUrl = getDownloadLink;
+
+// -------- Preview PDF --------
+export async function previewPdfBackend(projectId: string): Promise<string> {
+  const res = await fetcher(`${API}/preview-pdf/${encodeURIComponent(projectId)}`, {
+    redirect: "manual" as RequestRedirect,
+  });
+  const url = await resolveUrlFromResponse(res);
+  console.info("[ACTA] Resolved preview URL:", url);
+  return url;
+}
+
+// Fallback preview via the same download link (keeps one canonical resolver)
+export function previewPdfViaS3(projectId: string): Promise<string> {
+  return getDownloadLink(projectId, "pdf");
+}
+
+// -------- Send approval email --------
+export async function sendApprovalEmail(
+  projectId: string,
+  recipientEmail: string,
+): Promise<{ message?: string }> {
+  const res = await fetcher(`${API}/send-approval-email`, {
+    method: "POST",
+    body: JSON.stringify({ projectId, recipientEmail }),
+  });
+  return res.json().catch(() => ({}));
+}
+
+// -------- Document availability check --------
+export async function checkDocumentInS3(
+  projectId: string,
+  format: "pdf" | "docx",
+): Promise<DocumentCheckResult> {
+  try {
+    const res = await fetcher(
+      `${API}/check-document/${encodeURIComponent(projectId)}?format=${format}`,
+    );
+    const data: any = await res.json().catch(() => ({}));
+    return { available: true, ...data };
+  } catch (err: any) {
+    if (String(err?.message || "").includes("Network error")) {
+      return { available: false, s3Key: `acta-${projectId}.${format}`, checkFailed: true };
+    }
+    return { available: false };
+  }
+}
+
+// -------- Dev exposure (handy in console during manual QA) --------
+if (import.meta.env.DEV && typeof window !== "undefined") {
   (window as any).__actaApi = {
     generateActaDocument,
     getDownloadLink,
@@ -272,8 +214,8 @@ if (import.meta.env.DEV && typeof window !== 'undefined') {
   };
 }
 
-// Maintain window exports for backward compatibility with test files
-if (typeof window !== 'undefined') {
+// Back-compat globals used by some tests
+if (typeof window !== "undefined") {
   (window as any).getSummary = getSummary;
   (window as any).getTimeline = getTimeline;
   (window as any).getDownloadUrl = getDownloadLink;
@@ -282,4 +224,3 @@ if (typeof window !== 'undefined') {
   (window as any).checkDocumentInS3 = checkDocumentInS3;
   (window as any).generateActaDocument = generateActaDocument;
 }
-
