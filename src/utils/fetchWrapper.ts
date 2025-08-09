@@ -27,6 +27,47 @@ export async function getAuthToken(): Promise<string | null> {
   }
 }
 
+export async function fetcherRaw(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
+  const url = typeof input === 'string' ? input : input.url;
+  const token = await getAuthToken();
+
+  const headers = new Headers(init.headers);
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  if (!headers.has('Content-Type') && init.method && init.method !== 'GET') {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const enhancedInit: RequestInit = {
+    ...init,
+    headers,
+  // Important: do NOT send cookies/credentials on cross-origin requests.
+  // If credentials are included, the browser requires a non-wildcard
+  // Access-Control-Allow-Origin and Access-Control-Allow-Credentials: true.
+  // Our API intentionally sets ACAO: * for simplicity, so we must omit
+  // credentials to avoid a CORS "TypeError: Failed to fetch".
+  credentials: 'omit',
+  mode: 'cors',
+  };
+
+  console.log(`🌐 Fetching: ${url}`, {
+    method: enhancedInit.method || 'GET',
+    hasAuth: !!token,
+    headers: Object.fromEntries(headers.entries()),
+  });
+
+  try {
+    const res = await fetch(url, enhancedInit);
+    console.log(`📡 Response: ${res.status} ${res.statusText}`);
+    return res;
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      console.error('❌ Network error (CORS or connectivity):', error);
+      throw new Error('Network error: Unable to connect to API. Please check your connection and try again.');
+    }
+    throw error;
+  }
+}
+
 export async function fetcher<T>(input: RequestInfo, init: RequestInit = {}): Promise<T> {
   const url = typeof input === 'string' ? input : input.url;
   const token = await getAuthToken();

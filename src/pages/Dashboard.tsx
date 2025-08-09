@@ -14,7 +14,8 @@ import { useMetrics } from '@/hooks/useMetrics';
 import {
   checkDocumentInS3,
   generateActaDocument,
-  getS3DownloadUrl,
+  getDownloadLink,
+  previewPdfBackend,
   sendApprovalEmail,
 } from '@/lib/api';
 
@@ -154,11 +155,25 @@ export default function Dashboard(): JSX.Element {
     setCorsError(null);
     
     try {
+      // Pre-check to avoid infinite polling
+      const check = await checkDocumentInS3(selectedProjectId, format);
+      if (check?.available === false || check?.status === "not_found") {
+        toast("Document not ready yet—use Generate, then try again in ~1–2 min.", { icon: "⏳" });
+        return;
+      }
+
       const url = await trackAction(`Download ${format.toUpperCase()}`, selectedProjectId, async () => {
-        return await getS3DownloadUrl(selectedProjectId, format);
+        return await getDownloadLink(selectedProjectId, format);
       });
       
-      window.open(url, '_blank');
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `acta-${selectedProjectId}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
       toast.success(`${format.toUpperCase()} download started successfully!`, {
         duration: 3000,
         icon: '📥',
@@ -186,8 +201,15 @@ export default function Dashboard(): JSX.Element {
     setCorsError(null);
     
     try {
+      // Pre-check to avoid infinite polling
+      const check = await checkDocumentInS3(selectedProjectId, 'pdf');
+      if (check?.available === false || check?.status === "not_found") {
+        toast("Document not ready yet—use Generate, then try again in ~1–2 min.", { icon: "⏳" });
+        return;
+      }
+
       await trackAction('Preview PDF', selectedProjectId, async () => {
-        const url = await getS3DownloadUrl(selectedProjectId, 'pdf');
+        const url = await previewPdfBackend(selectedProjectId);
         setPdfPreviewUrl(url);
         setPdfPreviewFileName(`acta-${selectedProjectId}.pdf`);
         return url;
