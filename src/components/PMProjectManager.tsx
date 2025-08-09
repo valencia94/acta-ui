@@ -47,6 +47,12 @@ function asPMProject(input: Partial<ProjectSummary & PMProject>, fallbackPM?: st
   };
 }
 
+function isSummaryObject(
+  value: unknown,
+): value is { success: ProjectSummary[]; failed?: ProjectSummary[] } {
+  return !!value && typeof value === 'object' && 'success' in (value as any);
+}
+
 export default function PMProjectManager({
   pmEmail,
   onProjectSelect,
@@ -142,8 +148,15 @@ export default function PMProjectManager({
       });
 
       const res: SummariesResponse = await generateSummariesForPM(pmEmail);
-      const successArr = Array.isArray(res) ? res : res.success ?? [];
-      const failedArr = Array.isArray(res) ? [] : res.failed ?? [];
+      let successArr: ProjectSummary[] = [];
+      let failedArr: ProjectSummary[] = [];
+
+      if (isSummaryObject(res)) {
+        successArr = res.success ?? [];
+        failedArr = res.failed ?? [];
+      } else {
+        successArr = res;
+      }
 
       const successCount = successArr.length;
       const failureCount = failedArr.length;
