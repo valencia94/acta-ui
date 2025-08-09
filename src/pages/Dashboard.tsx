@@ -235,7 +235,7 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-surface/90 border border-borders/70 rounded-2xl p-8 shadow-sm backdrop-blur-md [box-shadow:0_10px_30px_-15px_rgba(25,178,123,.35)]"
+          className="bg-surface/90 border border-borders/70 rounded-2xl p-8 shadow-sm backdrop-blur-md [box-shadow:0_10px_30px_-15px_rgba(var(--color-accent),.35)]"
         >
           <h1 className="text-lg font-semibold text-secondary mb-2">Welcome, {user?.email}</h1>
           <p className="text-sm text-body">
