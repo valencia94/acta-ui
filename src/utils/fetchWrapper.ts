@@ -1,162 +1,45 @@
-// Lightweight fetch wrapper that attaches the current Cognito ID token
-// as a Bearer token and surfaces useful error messages. This version
-// intentionally avoids SigV4 signing – all requests rely solely on the
-// JWT provided by Amplify.
+import { fetchAuthSession } from "aws-amplify/auth";
 
-import { fetchAuthSession } from 'aws-amplify/auth';
-
-import { skipAuth } from '@/env.variables';
-
-export async function getAuthToken(): Promise<string | null> {
-  if (skipAuth) {
-    console.log('🔓 Skip auth mode: Using mock token');
-    return 'mock-auth-token-skip-mode';
-  }
-
-  try {
-    const session = await fetchAuthSession();
-    const token = session.tokens?.idToken?.toString();
-    if (token) {
-      return token;
-    }
-    console.warn('⚠️ No ID token found in session');
-    return null;
-  } catch (error) {
-    console.error('❌ Failed to fetch authentication session:', error);
-    return null;
-  }
+export async function getAuthToken(): Promise<string> {
+  const { tokens } = await fetchAuthSession();
+  const token = tokens?.idToken?.toString();
+  if (!token) throw new Error("No ID token");
+  return token;
 }
 
-export async function fetcher<T>(input: RequestInfo, init: RequestInit = {}): Promise<T> {
-  const url = typeof input === 'string' ? input : input.url;
+export async function fetcher(url: string, init: RequestInit = {}): Promise<Response> {
   const token = await getAuthToken();
-
-  const headers = new Headers(init.headers);
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-  if (!headers.has('Content-Type') && init.method && init.method !== 'GET') {
-    headers.set('Content-Type', 'application/json');
+  const headers = new Headers(init.headers || {});
+  headers.set("Authorization", `Bearer ${token}`);
+  if (
+    !headers.has("Content-Type") &&
+    init.body &&
+    typeof init.body === "object" &&
+    !(init.body instanceof FormData)
+  ) {
+    headers.set("Content-Type", "application/json");
   }
+  const res = await fetch(url, { mode: "cors", credentials: "omit", ...init, headers });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}: ${res.statusText}\n${body}`);
+  }
+  return res;
+}
 
-  const enhancedInit: RequestInit = {
-    ...init,
-    headers,
-  // Important: do NOT send cookies/credentials on cross-origin requests.
-  // If credentials are included, the browser requires a non-wildcard
-  // Access-Control-Allow-Origin and Access-Control-Allow-Credentials: true.
-  // Our API intentionally sets ACAO: * for simplicity, so we must omit
-  // credentials to avoid a CORS "TypeError: Failed to fetch".
-  credentials: 'omit',
-  mode: 'cors',
+export async function get<T>(url: string): Promise<T> {
+  const res = await fetcher(url);
+  return res.json();
+}
+
+export async function post<T>(url: string, body?: unknown): Promise<T> {
+  const init: RequestInit = {
+    method: "POST",
+    body:
+      body && typeof body === "object" && !(body instanceof FormData)
+        ? JSON.stringify(body)
+        : (body as BodyInit | undefined),
   };
-
-  console.log(`🌐 Fetching: ${url}`, {
-    method: enhancedInit.method || 'GET',
-    hasAuth: !!token,
-    headers: Object.fromEntries(headers.entries()),
-  });
-
-  try {
-    const res = await fetch(url, enhancedInit);
-
-    console.log(`📡 Response: ${res.status} ${res.statusText}`);
-
-    if (!res.ok) {
-      let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
-      try {
-        const errorText = await res.text();
-        if (errorText) errorMessage += ` - ${errorText}`;
-      } catch {
-        // ignore
-      }
-      console.error('❌ Fetch error:', errorMessage);
-      throw new Error(errorMessage);
-    }
-
-    try {
-      const data = await res.json();
-      console.log('✅ Response data:', data);
-      return data as T;
-    } catch (error) {
-      console.error('❌ Failed to parse JSON response:', error);
-      throw new Error('Invalid JSON response from server');
-    }
-  } catch (error) {
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      console.error('❌ Network error (CORS or connectivity):', error);
-      throw new Error('Network error: Unable to connect to API. Please check your connection and try again.');
-    }
-    throw error;
-  }
+  const res = await fetcher(url, init);
+  return res.json();
 }
-
-export function get<T>(url: string): Promise<T> {
-  return fetcher<T>(url, { method: 'GET' });
-}
-
-export function post<T>(url: string, body?: unknown): Promise<T> {
-  return fetcher<T>(url, {
-    method: 'POST',
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-/**
- * Fire-and-forget style POST for long-running backends behind API Gateway.
- * - Adds Authorization header (Amplify ID token)
- * - Uses credentials: 'omit' and mode: 'cors'
- * - Uses keepalive to allow the browser to send during unload
- * - Optional client-side timeout; treats AbortError as accepted
- * - Treats API Gateway 504 (Endpoint request timed out) as "accepted"
- */
-export async function postFireAndForget(
-  url: string,
-  body?: unknown,
-  options?: { timeoutMs?: number },
-): Promise<{ accepted: boolean; timeout?: boolean; status?: number }> {
-  const token = await getAuthToken();
-  const headers = new Headers({ 'Content-Type': 'application/json' });
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-
-  const controller = new AbortController();
-  const timeoutMs = options?.timeoutMs ?? 5000;
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      headers,
-      credentials: 'omit',
-      mode: 'cors',
-      keepalive: true,
-      signal: controller.signal,
-    });
-
-    // Consider 2xx and 202 as accepted
-    if (res.ok || res.status === 202) {
-      return { accepted: true, status: res.status };
-    }
-    // Treat API Gateway timeout as accepted (Lambda likely still running)
-    if (res.status === 504) {
-      return { accepted: true, status: res.status };
-    }
-
-    // Surface other errors
-    const text = await res.text().catch(() => '');
-    throw new Error(`HTTP ${res.status}: ${res.statusText}${text ? ` - ${text}` : ''}`);
-  } catch (err: any) {
-    if (err?.name === 'AbortError') {
-      return { accepted: true, timeout: true };
-    }
-    // Some browsers wrap network timeouts differently
-    const msg = String(err?.message || '').toLowerCase();
-    if (msg.includes('timeout') || msg.includes('timed out')) {
-      return { accepted: true, timeout: true };
-    }
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-

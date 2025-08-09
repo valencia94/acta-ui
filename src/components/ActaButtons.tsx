@@ -1,64 +1,103 @@
-// src/components/ActaButtons.tsx
-import { Download, Eye, FileText, Send } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { Download, Eye, FileText, Send } from "lucide-react";
+import { useState } from "react";
 
-import Button from '@/components/Button';
+import Button from "@/components/Button";
+import {
+  generateActaDocument,
+  getDownloadLink,
+  previewPdfBackend,
+  previewPdfViaS3,
+  sendApprovalEmail,
+} from "@/lib/api";
 
-// Loading gates inside this component prevent API calls while actions
-// are already in progress or the buttons are disabled.
+export type ActaButtonsProps = {
+  project: { id: string; pm_email?: string };
+  onPreviewOpen: (url: string) => void;
+};
 
-export interface ActaButtonsProps {
-  onGenerate: () => void;
-  onDownloadWord: () => void;
-  onDownloadPdf: () => void;
-  onPreviewPdf: () => void;
-  onSendForApproval: () => void;
-  disabled: boolean;
-  isGenerating: boolean;
-  isDownloadingWord?: boolean;
-  isDownloadingPdf?: boolean;
-  isPreviewingPdf?: boolean;
-  isSendingApproval?: boolean;
-  /** Optional email used when sending for approval */
-  approvalEmail?: string;
-}
+export default function ActaButtons({ project, onPreviewOpen }: ActaButtonsProps): JSX.Element {
+  const [loading, setLoading] = useState<string | null>(null);
 
-export default function ActaButtons({
-  onGenerate,
-  onDownloadWord,
-  onDownloadPdf,
-  onPreviewPdf,
-  onSendForApproval,
-  disabled,
-  isGenerating,
-  isDownloadingWord = false,
-  isDownloadingPdf = false,
-  isPreviewingPdf = false,
-  isSendingApproval = false,
-  approvalEmail,
-}: ActaButtonsProps): JSX.Element {
-  const envEmail =
-    (import.meta.env.VITE_APPROVAL_EMAIL as string | undefined) ||
-    (process.env.VITE_APPROVAL_EMAIL as string | undefined);
-  const resolvedEmail = approvalEmail || envEmail;
-
-  const handleClick = (
-    action: () => void,
-    actionName: string,
-    isLoading: boolean = false,
-    requiresEmail = false,
-  ) => {
-    if (disabled || isLoading || (requiresEmail && !resolvedEmail)) {
-      if (requiresEmail && !resolvedEmail) {
-        toast.error('Please provide an approval email address');
-      } else {
-        console.log(`${actionName} clicked but disabled or loading`);
-      }
-      return;
+  const onGenerate = async () => {
+    try {
+      setLoading("generate");
+      await generateActaDocument(project.id);
+    } catch (e) {
+      console.error("Generate failed", project.id, e);
+    } finally {
+      setLoading(null);
     }
-    console.log(`${actionName} clicked`);
-    action();
   };
+
+  const triggerDownload = (url: string, filename: string) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const onDownloadPdf = async () => {
+    try {
+      setLoading("download-pdf");
+      const url = await getDownloadLink(project.id, "pdf");
+      triggerDownload(url, `acta-${project.id}.pdf`);
+    } catch (e) {
+      console.error("PDF download failed", project.id, e);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const onDownloadDocx = async () => {
+    try {
+      setLoading("download-docx");
+      const url = await getDownloadLink(project.id, "docx");
+      triggerDownload(url, `acta-${project.id}.docx`);
+    } catch (e) {
+      console.error("DOCX download failed", project.id, e);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const onPreviewPdf = async () => {
+    try {
+      setLoading("preview");
+      let url = "";
+      try {
+        url = await previewPdfBackend(project.id);
+      } catch {
+        url = await previewPdfViaS3(project.id);
+      }
+      onPreviewOpen(url);
+    } catch (e) {
+      console.error("Preview failed", project.id, e);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const onSendEmail = async () => {
+    try {
+      setLoading("email");
+      const recipient = project.pm_email || "approvals@ikusi.com";
+      await sendApprovalEmail(project.id, recipient);
+    } catch (e) {
+      console.error("Send email failed", project.id, e);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const isGenerating = loading === "generate";
+  const isDownloadingWord = loading === "download-docx";
+  const isDownloadingPdf = loading === "download-pdf";
+  const isPreviewingPdf = loading === "preview";
+  const isSendingApproval = loading === "email";
+  const disabled = !project?.id;
+  const resolvedEmail = project.pm_email || "approvals@ikusi.com";
 
   return (
     <div className="w-full max-w-3xl mx-auto">
@@ -66,7 +105,7 @@ export default function ActaButtons({
       <div className="grid grid-cols-2 gap-3 w-full">
         {/* Primary Actions Row */}
         <Button
-          onClick={() => handleClick(onGenerate, 'Generate Acta', isGenerating)}
+          onClick={onGenerate}
           disabled={disabled || isGenerating}
           className="
             flex items-center justify-center gap-2.5
@@ -95,9 +134,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() =>
-            handleClick(onSendForApproval, 'Send for Approval', isSendingApproval, true)
-          }
+          onClick={onSendEmail}
           disabled={disabled || isSendingApproval || !resolvedEmail}
           className="
             flex items-center justify-center gap-2.5
@@ -129,11 +166,11 @@ export default function ActaButtons({
       {/* Secondary Actions Row - 3 column grid */}
       <div className="grid grid-cols-3 gap-2 w-full mt-3">
         <Button
-          onClick={() => handleClick(onDownloadWord, 'Download Word', isDownloadingWord)}
+          onClick={onDownloadDocx}
           disabled={disabled || isDownloadingWord}
           className="
             flex items-center justify-center gap-2
-            bg-white hover:bg-green-50 
+            bg-white hover:bg-green-50
             border-2 border-green-200 hover:border-green-400
             text-green-700 hover:text-green-800 font-medium px-3 py-2.5 rounded-lg
             transition-all duration-300 ease-out
@@ -158,7 +195,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onPreviewPdf, 'Preview PDF', isPreviewingPdf)}
+          onClick={onPreviewPdf}
           disabled={disabled || isPreviewingPdf}
           className="
             flex items-center justify-center gap-2
@@ -187,7 +224,7 @@ export default function ActaButtons({
         </Button>
 
         <Button
-          onClick={() => handleClick(onDownloadPdf, 'Download PDF', isDownloadingPdf)}
+          onClick={onDownloadPdf}
           disabled={disabled || isDownloadingPdf}
           className="
             flex items-center justify-center gap-2
@@ -225,4 +262,3 @@ export default function ActaButtons({
     </div>
   );
 }
-
