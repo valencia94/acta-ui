@@ -29,7 +29,7 @@ async function extractUrlFromResponse(res: Response): Promise<string> {
       (data as any)?.data?.signedUrl ||
       (data as any)?.result?.url;
     if (candidate && /^https?:\/\//i.test(candidate)) return String(candidate);
-    throw new Error(`No URL field in JSON response. Keys: ${Object.keys(data || {}).join(", ")}`);
+    throw new Error("No URL field found in JSON response.");
   }
 
   const fallback = (await res.text().catch(() => "")).trim();
