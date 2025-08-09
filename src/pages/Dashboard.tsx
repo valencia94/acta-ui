@@ -1,6 +1,6 @@
 // src/pages/Dashboard.tsx — Regenerated PM Dashboard using Admin layout
 import { motion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import ActaButtons from '@/components/ActaButtons/ActaButtons';
@@ -37,60 +37,7 @@ export default function Dashboard(): JSX.Element {
   const [currentProjectName, setCurrentProjectName] = useState<string>('');
   const [corsError, setCorsError] = useState<Error | null>(null);
 
-  // Regeneration watcher for Generate flow
-  const [regenState, setRegenState] = useState<{ active: boolean; baseline?: string | null; updated?: string | null; tries: number; startedAt?: number }>({ active: false, baseline: null, updated: null, tries: 0 });
-  const regenTimerRef = useRef<number | null>(null);
-
-  function stopRegenTimer() {
-    if (regenTimerRef.current) {
-      window.clearInterval(regenTimerRef.current);
-      regenTimerRef.current = null;
-    }
-  }
-
-  useEffect(() => {
-    return () => {
-      // cleanup on unmount
-      stopRegenTimer();
-    };
-  }, []);
-
-  function startRegenerationWatch(projectId: string, baselineLastMod: string | null | undefined) {
-    stopRegenTimer();
-    setRegenState({ active: true, baseline: baselineLastMod ?? null, updated: null, tries: 0, startedAt: Date.now() });
-    const maxTries = 24; // ~2 minutes at 5s
-    let tries = 0;
-    regenTimerRef.current = window.setInterval(() => {
-      void (async () => {
-        try {
-          const res = await checkDocumentInS3(projectId, 'pdf');
-          const lastMod = res.lastModified || null;
-          const updated = !!lastMod && lastMod !== (baselineLastMod ?? null);
-          tries += 1;
-          setRegenState(prev => ({ ...prev, updated: lastMod, tries }));
-          if (updated) {
-            stopRegenTimer();
-            setRegenState(prev => ({ ...prev, active: false }));
-            toast.success('New ACTA document is ready. You can Preview or Download now.', { duration: 4000, icon: '✅' });
-          }
-          // Stop after max tries
-          if (regenTimerRef.current && tries >= maxTries) {
-            stopRegenTimer();
-            setRegenState(prev => ({ ...prev, active: false }));
-            toast('Generate is still processing in the background. You can use the current document meanwhile.', { duration: 4000 });
-          }
-        } catch {
-          // transient errors – continue polling unless we exceed max
-          tries += 1;
-          setRegenState(prev => ({ ...prev, tries }));
-          if (regenTimerRef.current && tries >= maxTries) {
-            stopRegenTimer();
-            setRegenState(prev => ({ ...prev, active: false }));
-          }
-        }
-      })();
-    }, 5000);
-  }
+  // No auto-polling: generate is fire-and-forget only
 
   const handleProjectSelect = (project: Project) => {
     setSelectedProjectId(project.id);
@@ -111,23 +58,11 @@ export default function Dashboard(): JSX.Element {
     setCorsError(null);
     
     try {
-      // Capture baseline lastModified before generating to detect fresh output
-      let baselineLastMod: string | null = null;
-      try {
-        const before = await checkDocumentInS3(selectedProjectId, 'pdf');
-        baselineLastMod = before.lastModified ?? null;
-      } catch {
-        // ignore check baseline errors
-      }
-
       await trackAction('Generate ACTA', selectedProjectId, async () => {
         return await generateActaDocument(selectedProjectId, user.email, 'pm');
       });
-      
-      // Start background watcher – non-blocking for user
-      void startRegenerationWatch(selectedProjectId, baselineLastMod);
 
-      toast.success("ACTA regeneration started. We’ll notify when the new version is ready.", {
+  toast.success('Regenerating… You can preview/download when ready.', {
         duration: 5000,
         icon: '✅',
       });
@@ -279,7 +214,7 @@ export default function Dashboard(): JSX.Element {
     <div className="min-h-screen bg-bg">
       <Header />
 
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
+  <main className="max-w-7xl mx-auto p-8 space-y-8">
         {/* CORS Error Banner */}
         {corsError && (
           <CorsErrorBanner
@@ -295,7 +230,7 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-surface border border-borders rounded-xl p-6 shadow-sm"
+          className="bg-surface/95 border border-borders/80 rounded-2xl p-8 shadow-sm backdrop-blur-sm"
         >
           <h1 className="text-lg font-semibold text-secondary mb-2">Welcome, {user?.email}</h1>
           <p className="text-sm text-body">
@@ -307,7 +242,7 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-surface border border-borders rounded-xl p-6 shadow-sm"
+          className="bg-surface/95 border border-borders/80 rounded-2xl p-8 shadow-sm"
         >
           <h2 className="text-lg font-semibold text-secondary mb-6">YOUR PROJECTS</h2>
           <DynamoProjectsView
@@ -321,36 +256,24 @@ export default function Dashboard(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-surface border border-borders rounded-xl p-6 shadow-sm"
+          className="bg-surface/95 border border-borders/80 rounded-2xl p-8 shadow-sm"
         >
           <h2 className="text-lg font-semibold text-secondary mb-6">ACTA ACTIONS</h2>
-          {regenState.active && (
-            <div className="mb-4 text-xs text-body">
-              <span className="inline-flex items-center gap-2">
-                <span className="animate-spin rounded-full h-3 w-3 border-2 border-accent border-t-transparent"></span>
-                Regenerating document… We’ll notify when the new version is ready.
-              </span>
-              {regenState.baseline && (
-                <div className="mt-1">Last known version: <span className="font-medium">{regenState.baseline}</span></div>
-              )}
-              {regenState.updated && regenState.updated !== regenState.baseline && (
-                <div className="mt-1">New version detected: <span className="font-medium">{regenState.updated}</span></div>
-              )}
-            </div>
-          )}
-          <ActaButtons
-            onGenerate={handleGenerateActa}
-            onDownloadPdf={() => handleDownload('pdf')}
-            onDownloadWord={() => handleDownload('docx')}
-            onPreviewPdf={handlePreview}
-            onSendForApproval={() => setIsEmailDialogOpen(true)}
-            disabled={!selectedProjectId || Object.values(actionLoading).some(Boolean)}
-            isGenerating={actionLoading.generating}
-            isDownloadingWord={actionLoading.downloadingWord}
-            isDownloadingPdf={actionLoading.downloadingPdf}
-            isPreviewingPdf={actionLoading.previewing}
-            isSendingApproval={actionLoading.sendingApproval}
-          />
+          <div className="md:sticky md:bottom-4">
+            <ActaButtons
+              onGenerate={handleGenerateActa}
+              onDownloadPdf={() => handleDownload('pdf')}
+              onDownloadWord={() => handleDownload('docx')}
+              onPreviewPdf={handlePreview}
+              onSendForApproval={() => setIsEmailDialogOpen(true)}
+              disabled={!selectedProjectId || Object.values(actionLoading).some(Boolean)}
+              isGenerating={actionLoading.generating}
+              isDownloadingWord={actionLoading.downloadingWord}
+              isDownloadingPdf={actionLoading.downloadingPdf}
+              isPreviewingPdf={actionLoading.previewing}
+              isSendingApproval={actionLoading.sendingApproval}
+            />
+          </div>
         </motion.div>
       </main>
 

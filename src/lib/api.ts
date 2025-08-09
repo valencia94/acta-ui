@@ -193,10 +193,26 @@ export async function checkDocumentInS3(
   format: 'pdf' | 'docx',
 ): Promise<DocumentCheckResult> {
   try {
-    const data = await get<DocumentCheckResult>(
+    const data = await get<any>(
       `${BASE}/check-document/${projectId}?format=${format}`,
     );
-    return { available: true, ...data };
+    // Normalize various backend shapes into { available, ... }
+    const exists: boolean | undefined = data?.exists;
+    const availableFlag: boolean | undefined = data?.available;
+    const status: string | undefined = data?.status || data?.State || data?.result?.status;
+
+    const available =
+      availableFlag === true ||
+      exists === true ||
+      (typeof status === 'string' && /^(found|ready|available|exists)$/i.test(status));
+
+    return {
+      available: !!available,
+      lastModified: data?.lastModified || data?.LastModified || data?.metadata?.lastModified,
+      size: data?.size || data?.Size,
+      s3Key: data?.s3Key || data?.key || data?.Key,
+      status: status,
+    };
   } catch (err) {
     console.warn(`Document check failed for ${projectId}.${format}:`, err);
     // For network errors, assume document might exist but check failed
